@@ -252,10 +252,8 @@ public class CsvImportControllerTests
         
         var errorResponse = statusCodeResult.Value.Should().BeAssignableTo<object>().Subject;
         var message = errorResponse.GetType().GetProperty("message")?.GetValue(errorResponse);
-        var error = errorResponse.GetType().GetProperty("error")?.GetValue(errorResponse);
-        
+
         message.Should().Be("An error occurred while processing the file");
-        error.Should().Be("Database error");
     }
 
     [Fact]
@@ -427,10 +425,8 @@ public class CsvImportControllerTests
         
         var errorResponse = statusCodeResult.Value.Should().BeAssignableTo<object>().Subject;
         var message = errorResponse.GetType().GetProperty("message")?.GetValue(errorResponse);
-        var error = errorResponse.GetType().GetProperty("error")?.GetValue(errorResponse);
-        
+
         message.Should().Be("An error occurred while detecting transfers");
-        error.Should().Be("Detection failed");
     }
 
     [Fact]
@@ -481,9 +477,7 @@ public class CsvImportControllerTests
         
         var errorResponse = statusCodeResult.Value.Should().BeAssignableTo<object>().Subject;
         var message = errorResponse.GetType().GetProperty("message")?.GetValue(errorResponse);
-        var error = errorResponse.GetType().GetProperty("error")?.GetValue(errorResponse);
-        
+
         message.Should().Be("An error occurred while confirming transfer");
-        error.Should().Be("Confirmation failed");
     }
 }

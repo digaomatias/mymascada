@@ -6,9 +6,9 @@ import { ImportAnalysisResult, ConflictType, ConflictResolution, TransactionSour
 import * as apiClient from '@/lib/api-client';
 
 // Mock the API client
-jest.mock('@/lib/api-client', () => ({
+vi.mock('@/lib/api-client', () => ({
   apiClient: {
-    executeImportReview: jest.fn()
+    executeImportReview: vi.fn()
   }
 }));
 
@@ -118,11 +118,11 @@ describe('Import Review Integration Tests', () => {
     errors: []
   };
 
-  const mockOnImportComplete = jest.fn();
-  const mockOnCancel = jest.fn();
+  const mockOnImportComplete = vi.fn();
+  const mockOnCancel = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Complete Import Review Workflow', () => {
@@ -165,7 +165,7 @@ describe('Import Review Integration Tests', () => {
         targetAccountId: 123
       };
 
-      (apiClient.apiClient.executeImportReview as jest.Mock).mockResolvedValue(mockExecutionResponse);
+      (apiClient.apiClient.executeImportReview as ReturnType<typeof vi.fn>).mockResolvedValue(mockExecutionResponse);
 
       render(
         <ImportReviewScreen
@@ -293,7 +293,7 @@ describe('Import Review Integration Tests', () => {
 
     test('handles API errors during execution gracefully', async () => {
       const mockError = new Error('Server error occurred');
-      (apiClient.apiClient.executeImportReview as jest.Mock).mockRejectedValue(mockError);
+      (apiClient.apiClient.executeImportReview as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
       // Create a resolved state
       const resolvedAnalysisResult = {
@@ -404,7 +404,7 @@ describe('Import Review Integration Tests', () => {
         targetAccountId: 123
       };
 
-      (apiClient.apiClient.executeImportReview as jest.Mock).mockResolvedValue(mockExecutionResponse);
+      (apiClient.apiClient.executeImportReview as ReturnType<typeof vi.fn>).mockResolvedValue(mockExecutionResponse);
 
       render(
         <ImportReviewScreen

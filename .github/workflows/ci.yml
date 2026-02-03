@@ -35,7 +35,7 @@ jobs:
         run: npm run lint
 
       - name: Unit tests
-        continue-on-error: true
+        continue-on-error: true  # TODO: Fix pre-existing test failures (next-intl context, stale API signatures)
         run: npm run test:run
 
   backend:

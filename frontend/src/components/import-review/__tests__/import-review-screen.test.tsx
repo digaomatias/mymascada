@@ -6,23 +6,23 @@ import { ImportAnalysisResult, ConflictType, ConflictResolution, TransactionSour
 import * as apiClient from '@/lib/api-client';
 
 // Mock the API client
-jest.mock('@/lib/api-client', () => ({
+vi.mock('@/lib/api-client', () => ({
   apiClient: {
-    executeImportReview: jest.fn()
+    executeImportReview: vi.fn()
   }
 }));
 
 // Mock toast notifications
-jest.mock('sonner', () => ({
+vi.mock('sonner', () => ({
   toast: {
-    success: jest.fn(),
-    error: jest.fn(),
-    warning: jest.fn()
+    success: vi.fn(),
+    error: vi.fn(),
+    warning: vi.fn()
   }
 }));
 
 // Mock utilities
-jest.mock('@/lib/utils', () => ({
+vi.mock('@/lib/utils', () => ({
   formatCurrency: (amount: number) => `$${amount.toFixed(2)}`,
   formatDate: (date: string) => new Date(date).toLocaleDateString()
 }));
@@ -81,11 +81,11 @@ const mockAnalysisResult: ImportAnalysisResult = {
 };
 
 describe('ImportReviewScreen', () => {
-  const mockOnImportComplete = jest.fn();
-  const mockOnCancel = jest.fn();
+  const mockOnImportComplete = vi.fn();
+  const mockOnCancel = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('renders review screen with correct header', () => {
@@ -193,7 +193,7 @@ describe('ImportReviewScreen', () => {
       errors: []
     };
 
-    (apiClient.apiClient.executeImportReview as jest.Mock).mockResolvedValue(mockExecuteResponse);
+    (apiClient.apiClient.executeImportReview as ReturnType<typeof vi.fn>).mockResolvedValue(mockExecuteResponse);
 
     // Create a resolved analysis result
     const resolvedAnalysisResult = {
@@ -246,7 +246,7 @@ describe('ImportReviewScreen', () => {
       errors: []
     };
 
-    (apiClient.apiClient.executeImportReview as jest.Mock).mockResolvedValue(mockExecuteResponse);
+    (apiClient.apiClient.executeImportReview as ReturnType<typeof vi.fn>).mockResolvedValue(mockExecuteResponse);
 
     const resolvedAnalysisResult = {
       ...mockAnalysisResult,
@@ -275,7 +275,7 @@ describe('ImportReviewScreen', () => {
 
   test('handles import execution error', async () => {
     const mockError = new Error('Network error');
-    (apiClient.apiClient.executeImportReview as jest.Mock).mockRejectedValue(mockError);
+    (apiClient.apiClient.executeImportReview as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
     const resolvedAnalysisResult = {
       ...mockAnalysisResult,

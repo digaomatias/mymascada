@@ -5,7 +5,7 @@ import { ConflictResolutionCard } from '../conflict-resolution-card';
 import { ImportReviewItem, ConflictType, ConflictResolution, TransactionSource } from '@/types/import-review';
 
 // Mock the formatCurrency and formatDate functions
-jest.mock('@/lib/utils', () => ({
+vi.mock('@/lib/utils', () => ({
   formatCurrency: (amount: number) => `$${amount.toFixed(2)}`,
   formatDate: (date: string) => new Date(date).toLocaleDateString()
 }));
@@ -56,7 +56,7 @@ const cleanReviewItem: ImportReviewItem = {
 };
 
 describe('ConflictResolutionCard', () => {
-  const mockOnDecisionChange = jest.fn();
+  const mockOnDecisionChange = vi.fn();
 
   beforeEach(() => {
     mockOnDecisionChange.mockClear();
