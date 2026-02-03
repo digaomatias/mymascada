@@ -152,6 +152,7 @@ jobs:
         echo "Running EF Core migrations..."
         docker run --rm \
           -e ConnectionStrings__DefaultConnection="Host=localhost;Database=mymascada_db;Username=mymascada_user;Password=${{ secrets.DB_PASSWORD }}" \
+          -e Jwt__Key="${{ secrets.JWT_KEY }}" \
           -e ASPNETCORE_ENVIRONMENT=Production \
           --network host \
           mymascada-migration:latest
