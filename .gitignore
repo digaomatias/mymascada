@@ -146,7 +146,7 @@ setup-forgejo.sh
 ._*
 
 # Self-hosting runtime data
-data/
+/data/
 caddy-data/
 caddy-config/
 
