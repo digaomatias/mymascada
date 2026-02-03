@@ -65,10 +65,23 @@ export function MonthlySummary() {
     router.push(`/transactions?${params.toString()}`);
   };
 
-  const loadMonthlySummary = async (year: number, month: number) => {
+  const loadMonthlySummary = async (year: number, month: number, autoFallback = false) => {
     try {
       setLoading(true);
       const data = await apiClient.getMonthlySummary(year, month) as MonthlySummary;
+
+      // If current month has no transactions and this is the initial load,
+      // automatically show the previous month instead
+      if (autoFallback && data.transactionCount === 0) {
+        const now = new Date();
+        const isCurrentMonth = year === now.getFullYear() && month === now.getMonth() + 1;
+        if (isCurrentMonth) {
+          const prevDate = new Date(year, month - 2, 1); // month-2 because month is 1-based
+          setCurrentDate(prevDate);
+          return; // useEffect will re-trigger with the new date
+        }
+      }
+
       setSummary(data);
     } catch (error) {
       console.error('Failed to load monthly summary:', error);
@@ -78,8 +91,12 @@ export function MonthlySummary() {
     }
   };
 
+  const initialLoadRef = React.useRef(true);
+
   useEffect(() => {
-    loadMonthlySummary(currentDate.getFullYear(), currentDate.getMonth() + 1);
+    const isInitial = initialLoadRef.current;
+    initialLoadRef.current = false;
+    loadMonthlySummary(currentDate.getFullYear(), currentDate.getMonth() + 1, isInitial);
   }, [currentDate]);
 
   const navigateMonth = (direction: 'prev' | 'next') => {

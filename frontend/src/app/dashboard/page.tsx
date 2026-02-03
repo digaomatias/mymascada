@@ -448,19 +448,8 @@ function DashboardContent() {
           </div>
         )}
 
-
-        {/* Monthly Summary */}
-        <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-          <MonthlySummary />
-        </div>
-
-        {/* Budget Summary */}
-        <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-          <BudgetSummaryWidget />
-        </div>
-
         {/* Recent Transactions Section */}
-        <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg animate-bounce-in">
+        <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg mb-8 animate-bounce-in">
           <CardHeader>
             <div className="flex justify-between items-center">
               <CardTitle className="text-2xl font-bold text-gray-900">{t('recentTransactions')}</CardTitle>
@@ -522,7 +511,7 @@ function DashboardContent() {
                   <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-success-400 to-success-600 rounded-full opacity-60 animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                   <div className="absolute -bottom-1 -left-3 w-4 h-4 bg-gradient-to-br from-info-400 to-info-600 rounded-full opacity-40 animate-bounce" style={{ animationDelay: '0.8s' }}></div>
                 </div>
-                
+
                 <div className="max-w-lg mx-auto">
                   <h3 className="text-2xl font-bold text-gray-900 mb-3">{t('emptyState.title')}</h3>
                   <p className="text-gray-600 text-lg mb-8 leading-relaxed">
@@ -592,6 +581,16 @@ function DashboardContent() {
             )}
           </CardContent>
         </Card>
+
+        {/* Monthly Summary */}
+        <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+          <MonthlySummary />
+        </div>
+
+        {/* Budget Summary */}
+        <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+          <BudgetSummaryWidget />
+        </div>
         </>
         )}
       </main>

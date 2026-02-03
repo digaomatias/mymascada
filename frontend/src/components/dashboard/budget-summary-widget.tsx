@@ -69,33 +69,21 @@ export function BudgetSummaryWidget() {
     );
   }
 
-  // No budgets case
+  // No budgets case - compact inline CTA
   if (budgets.length === 0) {
     return (
-      <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <WalletIcon className="h-6 w-6 text-primary-600" />
-              <CardTitle className="text-xl font-bold text-gray-900">{t('title')}</CardTitle>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-6">
-            <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <WalletIcon className="h-6 w-6 text-primary-600" />
-            </div>
-            <p className="text-gray-600 mb-4">{t('noBudgetsDescription')}</p>
-            <Link href="/budgets/new">
-              <Button size="sm">
-                <PlusIcon className="h-4 w-4 mr-1" />
-                {t('createFirstBudget')}
-              </Button>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-between bg-white/90 backdrop-blur-xs rounded-lg shadow-sm border border-gray-100 px-4 py-3">
+        <div className="flex items-center gap-3">
+          <WalletIcon className="h-5 w-5 text-primary-600 flex-shrink-0" />
+          <p className="text-sm text-gray-600">{t('noBudgetsDescription')}</p>
+        </div>
+        <Link href="/budgets/new">
+          <Button size="sm" variant="secondary" className="flex-shrink-0">
+            <PlusIcon className="h-4 w-4 mr-1" />
+            {t('createFirstBudget')}
+          </Button>
+        </Link>
+      </div>
     );
   }
 
