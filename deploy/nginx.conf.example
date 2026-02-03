@@ -1,0 +1,87 @@
+# =============================================================================
+# MyMascada - Nginx Reverse Proxy Configuration (Example)
+# =============================================================================
+# If you prefer Nginx over Caddy, use this as a starting point.
+# Place this in /etc/nginx/sites-available/ and symlink to sites-enabled/.
+#
+# You'll need to manage SSL certificates separately (e.g., with certbot):
+#   sudo certbot --nginx -d finance.example.com
+# =============================================================================
+
+upstream mymascada_api {
+    server 127.0.0.1:5126;
+}
+
+upstream mymascada_frontend {
+    server 127.0.0.1:3000;
+}
+
+server {
+    listen 80;
+    server_name finance.example.com;
+
+    # Redirect HTTP to HTTPS
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name finance.example.com;
+
+    # SSL certificates (managed by certbot or similar)
+    ssl_certificate /etc/letsencrypt/live/finance.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/finance.example.com/privkey.pem;
+
+    # SSL configuration
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+
+    # Security headers
+    add_header X-Content-Type-Options nosniff;
+    add_header X-Frame-Options DENY;
+    add_header Referrer-Policy strict-origin-when-cross-origin;
+
+    # API routes
+    location /api/ {
+        proxy_pass http://mymascada_api;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+
+        # WebSocket support (if needed in the future)
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+
+    # Health check
+    location /health {
+        proxy_pass http://mymascada_api;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Frontend (everything else)
+    location / {
+        proxy_pass http://mymascada_frontend;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+    }
+
+    # Static assets caching
+    location /_next/static/ {
+        proxy_pass http://mymascada_frontend;
+        proxy_cache_valid 60m;
+        add_header Cache-Control "public, max-age=3600, immutable";
+    }
+
+    # Request size limit (for file uploads like CSV imports)
+    client_max_body_size 50M;
+}

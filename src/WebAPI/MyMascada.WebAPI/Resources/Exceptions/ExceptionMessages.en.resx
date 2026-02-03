@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter</value>
+  </resheader>
+
+  <!-- General Exceptions -->
+  <data name="RequiredInfoMissing" xml:space="preserve">
+    <value>Required information is missing. Please provide all necessary data.</value>
+  </data>
+  <data name="InvalidInput" xml:space="preserve">
+    <value>Invalid input provided. Please check your request and try again.</value>
+  </data>
+  <data name="InvalidOperation" xml:space="preserve">
+    <value>This operation is not valid in the current state.</value>
+  </data>
+  <data name="Unauthorized" xml:space="preserve">
+    <value>You are not authorized to perform this action.</value>
+  </data>
+  <data name="NotFound" xml:space="preserve">
+    <value>The requested resource was not found.</value>
+  </data>
+  <data name="Timeout" xml:space="preserve">
+    <value>The request timed out. Please try again later.</value>
+  </data>
+  <data name="HighLoad" xml:space="preserve">
+    <value>The system is currently experiencing high load. Please try again in a few moments.</value>
+  </data>
+  <data name="SystemError" xml:space="preserve">
+    <value>A system error occurred. Please try again later.</value>
+  </data>
+  <data name="Unexpected" xml:space="preserve">
+    <value>An unexpected error occurred. Our team has been notified.</value>
+  </data>
+  <data name="ValidationFailed" xml:space="preserve">
+    <value>Validation failed. Please check your input and try again.</value>
+  </data>
+  <data name="ConcurrencyConflict" xml:space="preserve">
+    <value>The data was modified by another user. Please refresh and try again.</value>
+  </data>
+  <data name="ServiceUnavailable" xml:space="preserve">
+    <value>The service is temporarily unavailable. Please try again later.</value>
+  </data>
+
+</root>

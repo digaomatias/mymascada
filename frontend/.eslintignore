@@ -1,0 +1,21 @@
+# Test files and setup
+**/__tests__/**
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+test-setup.ts
+vitest.config.ts
+
+# Build output
+.next/
+out/
+
+# Node modules
+node_modules/
+
+# Environment files
+.env*
+
+# Other
+*.log

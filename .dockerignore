@@ -1,0 +1,49 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+!src/**/*.md
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Frontend (has its own Dockerfile/context)
+frontend/node_modules
+frontend/.next
+frontend/out
+frontend/dist
+frontend/test-results
+frontend/playwright-report
+
+# IDE
+.idea
+.vs
+.vscode
+
+# Test artifacts
+**/TestResults
+**/test-results
+
+# CI/CD
+.forgejo
+.github
+
+# Self-hosting runtime
+data/
+caddy-data/
+caddy-config/
+logs/
+
+# macOS
+.DS_Store
+
+# Playwright MCP
+.playwright-mcp/
+
+# Misc
+*.tmp
+*.temp

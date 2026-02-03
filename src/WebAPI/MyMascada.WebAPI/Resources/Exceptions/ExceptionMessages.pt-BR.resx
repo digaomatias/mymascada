@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter</value>
+  </resheader>
+
+  <!-- General Exceptions -->
+  <data name="RequiredInfoMissing" xml:space="preserve">
+    <value>Informacoes obrigatorias estao faltando. Por favor, forneca todos os dados necessarios.</value>
+  </data>
+  <data name="InvalidInput" xml:space="preserve">
+    <value>Entrada invalida fornecida. Por favor, verifique sua solicitacao e tente novamente.</value>
+  </data>
+  <data name="InvalidOperation" xml:space="preserve">
+    <value>Esta operacao nao e valida no estado atual.</value>
+  </data>
+  <data name="Unauthorized" xml:space="preserve">
+    <value>Voce nao esta autorizado a realizar esta acao.</value>
+  </data>
+  <data name="NotFound" xml:space="preserve">
+    <value>O recurso solicitado nao foi encontrado.</value>
+  </data>
+  <data name="Timeout" xml:space="preserve">
+    <value>A solicitacao expirou. Por favor, tente novamente mais tarde.</value>
+  </data>
+  <data name="HighLoad" xml:space="preserve">
+    <value>O sistema esta com alta demanda no momento. Por favor, tente novamente em alguns instantes.</value>
+  </data>
+  <data name="SystemError" xml:space="preserve">
+    <value>Ocorreu um erro no sistema. Por favor, tente novamente mais tarde.</value>
+  </data>
+  <data name="Unexpected" xml:space="preserve">
+    <value>Ocorreu um erro inesperado. Nossa equipe foi notificada.</value>
+  </data>
+  <data name="ValidationFailed" xml:space="preserve">
+    <value>Falha na validacao. Por favor, verifique sua entrada e tente novamente.</value>
+  </data>
+  <data name="ConcurrencyConflict" xml:space="preserve">
+    <value>Os dados foram modificados por outro usuario. Por favor, atualize e tente novamente.</value>
+  </data>
+  <data name="ServiceUnavailable" xml:space="preserve">
+    <value>O servico esta temporariamente indisponivel. Por favor, tente novamente mais tarde.</value>
+  </data>
+
+</root>

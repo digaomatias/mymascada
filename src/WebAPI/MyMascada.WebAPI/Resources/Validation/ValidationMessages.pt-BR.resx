@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter</value>
+  </resheader>
+
+  <!-- Email Validation -->
+  <data name="Email.Required" xml:space="preserve">
+    <value>E-mail e obrigatorio</value>
+  </data>
+  <data name="Email.Invalid" xml:space="preserve">
+    <value>Por favor, informe um endereco de e-mail valido</value>
+  </data>
+  <data name="Email.TooLong" xml:space="preserve">
+    <value>O endereco de e-mail e muito longo (maximo 254 caracteres)</value>
+  </data>
+
+  <!-- Password Validation -->
+  <data name="Password.Required" xml:space="preserve">
+    <value>Senha e obrigatoria</value>
+  </data>
+  <data name="Password.MinLength" xml:space="preserve">
+    <value>A senha deve ter pelo menos 8 caracteres</value>
+  </data>
+  <data name="Password.MaxLength" xml:space="preserve">
+    <value>A senha nao pode exceder 128 caracteres</value>
+  </data>
+  <data name="Password.RequireUppercase" xml:space="preserve">
+    <value>A senha deve conter pelo menos uma letra maiuscula</value>
+  </data>
+  <data name="Password.RequireLowercase" xml:space="preserve">
+    <value>A senha deve conter pelo menos uma letra minuscula</value>
+  </data>
+  <data name="Password.RequireDigit" xml:space="preserve">
+    <value>A senha deve conter pelo menos um numero</value>
+  </data>
+  <data name="Password.RequireSpecialChar" xml:space="preserve">
+    <value>A senha deve conter pelo menos um caractere especial (!@#$%^&amp;*()_+-=[]{}|;:,&lt;&gt;?)</value>
+  </data>
+  <data name="Password.TooCommon" xml:space="preserve">
+    <value>Senha muito comum. Por favor, escolha uma senha mais forte</value>
+  </data>
+  <data name="Password.ContainsPersonalInfo" xml:space="preserve">
+    <value>A senha nao pode conter seu nome, e-mail ou nome de usuario</value>
+  </data>
+  <data name="PasswordConfirm.Required" xml:space="preserve">
+    <value>Confirmacao de senha e obrigatoria</value>
+  </data>
+  <data name="PasswordConfirm.NotMatch" xml:space="preserve">
+    <value>As senhas nao coincidem</value>
+  </data>
+
+  <!-- Name Validation -->
+  <data name="FirstName.Required" xml:space="preserve">
+    <value>Nome e obrigatorio</value>
+  </data>
+  <data name="FirstName.TooLong" xml:space="preserve">
+    <value>Nome muito longo (maximo 50 caracteres)</value>
+  </data>
+  <data name="FirstName.InvalidChars" xml:space="preserve">
+    <value>Nome contem caracteres invalidos</value>
+  </data>
+  <data name="LastName.Required" xml:space="preserve">
+    <value>Sobrenome e obrigatorio</value>
+  </data>
+  <data name="LastName.TooLong" xml:space="preserve">
+    <value>Sobrenome muito longo (maximo 50 caracteres)</value>
+  </data>
+  <data name="LastName.InvalidChars" xml:space="preserve">
+    <value>Sobrenome contem caracteres invalidos</value>
+  </data>
+
+  <!-- Username Validation -->
+  <data name="Username.Required" xml:space="preserve">
+    <value>Nome de usuario e obrigatorio</value>
+  </data>
+  <data name="Username.MinLength" xml:space="preserve">
+    <value>Nome de usuario deve ter pelo menos 3 caracteres</value>
+  </data>
+  <data name="Username.MaxLength" xml:space="preserve">
+    <value>Nome de usuario nao pode exceder 30 caracteres</value>
+  </data>
+  <data name="Username.InvalidChars" xml:space="preserve">
+    <value>Nome de usuario pode conter apenas letras, numeros, pontos, hifens e underscores</value>
+  </data>
+
+  <!-- Currency and Locale Validation -->
+  <data name="Currency.Required" xml:space="preserve">
+    <value>Moeda e obrigatoria</value>
+  </data>
+  <data name="Currency.InvalidFormat" xml:space="preserve">
+    <value>A moeda deve ser um codigo de 3 letras valido (ex: USD, EUR, BRL)</value>
+  </data>
+  <data name="TimeZone.Required" xml:space="preserve">
+    <value>Fuso horario e obrigatorio</value>
+  </data>
+  <data name="TimeZone.Invalid" xml:space="preserve">
+    <value>Por favor, informe um identificador de fuso horario valido</value>
+  </data>
+
+  <!-- Phone Validation -->
+  <data name="PhoneNumber.Invalid" xml:space="preserve">
+    <value>Por favor, informe um numero de telefone valido</value>
+  </data>
+
+  <!-- Transfer Validation -->
+  <data name="Transfer.SourceAccountRequired" xml:space="preserve">
+    <value>Conta de origem e obrigatoria</value>
+  </data>
+  <data name="Transfer.DestinationAccountRequired" xml:space="preserve">
+    <value>Conta de destino e obrigatoria</value>
+  </data>
+  <data name="Transfer.AccountsSame" xml:space="preserve">
+    <value>As contas de origem e destino devem ser diferentes</value>
+  </data>
+  <data name="Transfer.AmountRequired" xml:space="preserve">
+    <value>Valor da transferencia e obrigatorio</value>
+  </data>
+  <data name="Transfer.AmountPositive" xml:space="preserve">
+    <value>O valor da transferencia deve ser maior que zero</value>
+  </data>
+  <data name="Transfer.AmountTooLarge" xml:space="preserve">
+    <value>O valor da transferencia excede o maximo permitido</value>
+  </data>
+  <data name="Transfer.CurrencyRequired" xml:space="preserve">
+    <value>Moeda e obrigatoria para a transferencia</value>
+  </data>
+  <data name="Transfer.CurrencyInvalid" xml:space="preserve">
+    <value>A moeda deve ser um codigo de 3 letras maiusculas valido</value>
+  </data>
+  <data name="Transfer.ExchangeRateInvalid" xml:space="preserve">
+    <value>A taxa de cambio deve ser maior que zero</value>
+  </data>
+  <data name="Transfer.FeeNegative" xml:space="preserve">
+    <value>A taxa de transferencia nao pode ser negativa</value>
+  </data>
+  <data name="Transfer.DescriptionTooLong" xml:space="preserve">
+    <value>Descricao muito longa (maximo 500 caracteres)</value>
+  </data>
+  <data name="Transfer.NotesTooLong" xml:space="preserve">
+    <value>Observacoes muito longas (maximo 1000 caracteres)</value>
+  </data>
+  <data name="Transfer.DateRequired" xml:space="preserve">
+    <value>Data da transferencia e obrigatoria</value>
+  </data>
+  <data name="Transfer.DateInFuture" xml:space="preserve">
+    <value>A data da transferencia nao pode ser no futuro</value>
+  </data>
+  <data name="Transfer.UserRequired" xml:space="preserve">
+    <value>ID do usuario e obrigatorio para a transferencia</value>
+  </data>
+
+  <!-- Token Validation -->
+  <data name="Token.Required" xml:space="preserve">
+    <value>Token de redefinicao e obrigatorio</value>
+  </data>
+  <data name="Token.Invalid" xml:space="preserve">
+    <value>Token de redefinicao invalido ou expirado</value>
+  </data>
+
+  <!-- Account Validation -->
+  <data name="Account.NameRequired" xml:space="preserve">
+    <value>Nome da conta e obrigatorio</value>
+  </data>
+  <data name="Account.NameTooLong" xml:space="preserve">
+    <value>Nome da conta muito longo (maximo 100 caracteres)</value>
+  </data>
+  <data name="Account.TypeRequired" xml:space="preserve">
+    <value>Tipo de conta e obrigatorio</value>
+  </data>
+  <data name="Account.CurrencyRequired" xml:space="preserve">
+    <value>Moeda da conta e obrigatoria</value>
+  </data>
+
+  <!-- Transaction Validation -->
+  <data name="Transaction.DescriptionRequired" xml:space="preserve">
+    <value>Descricao da transacao e obrigatoria</value>
+  </data>
+  <data name="Transaction.AmountRequired" xml:space="preserve">
+    <value>Valor da transacao e obrigatorio</value>
+  </data>
+  <data name="Transaction.DateRequired" xml:space="preserve">
+    <value>Data da transacao e obrigatoria</value>
+  </data>
+  <data name="Transaction.AccountRequired" xml:space="preserve">
+    <value>Conta e obrigatoria para a transacao</value>
+  </data>
+
+  <!-- Category Validation -->
+  <data name="Category.NameRequired" xml:space="preserve">
+    <value>Nome da categoria e obrigatorio</value>
+  </data>
+  <data name="Category.NameTooLong" xml:space="preserve">
+    <value>Nome da categoria muito longo (maximo 100 caracteres)</value>
+  </data>
+
+  <!-- Rule Validation -->
+  <data name="Rule.NameRequired" xml:space="preserve">
+    <value>Nome da regra e obrigatorio</value>
+  </data>
+  <data name="Rule.PatternRequired" xml:space="preserve">
+    <value>Padrao da regra e obrigatorio</value>
+  </data>
+  <data name="Rule.CategoryRequired" xml:space="preserve">
+    <value>Categoria e obrigatoria para a regra</value>
+  </data>
+
+</root>

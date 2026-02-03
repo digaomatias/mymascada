@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter</value>
+  </resheader>
+
+  <!-- Email Validation -->
+  <data name="Email.Required" xml:space="preserve">
+    <value>Email is required</value>
+  </data>
+  <data name="Email.Invalid" xml:space="preserve">
+    <value>Please provide a valid email address</value>
+  </data>
+  <data name="Email.TooLong" xml:space="preserve">
+    <value>Email address is too long (maximum 254 characters)</value>
+  </data>
+
+  <!-- Password Validation -->
+  <data name="Password.Required" xml:space="preserve">
+    <value>Password is required</value>
+  </data>
+  <data name="Password.MinLength" xml:space="preserve">
+    <value>Password must be at least 8 characters long</value>
+  </data>
+  <data name="Password.MaxLength" xml:space="preserve">
+    <value>Password must not exceed 128 characters</value>
+  </data>
+  <data name="Password.RequireUppercase" xml:space="preserve">
+    <value>Password must contain at least one uppercase letter</value>
+  </data>
+  <data name="Password.RequireLowercase" xml:space="preserve">
+    <value>Password must contain at least one lowercase letter</value>
+  </data>
+  <data name="Password.RequireDigit" xml:space="preserve">
+    <value>Password must contain at least one digit</value>
+  </data>
+  <data name="Password.RequireSpecialChar" xml:space="preserve">
+    <value>Password must contain at least one special character (!@#$%^&amp;*()_+-=[]{}|;:,&lt;&gt;?)</value>
+  </data>
+  <data name="Password.TooCommon" xml:space="preserve">
+    <value>Password is too common. Please choose a stronger password</value>
+  </data>
+  <data name="Password.ContainsPersonalInfo" xml:space="preserve">
+    <value>Password cannot contain your name, email, or username</value>
+  </data>
+  <data name="PasswordConfirm.Required" xml:space="preserve">
+    <value>Password confirmation is required</value>
+  </data>
+  <data name="PasswordConfirm.NotMatch" xml:space="preserve">
+    <value>Passwords do not match</value>
+  </data>
+
+  <!-- Name Validation -->
+  <data name="FirstName.Required" xml:space="preserve">
+    <value>First name is required</value>
+  </data>
+  <data name="FirstName.TooLong" xml:space="preserve">
+    <value>First name is too long (maximum 50 characters)</value>
+  </data>
+  <data name="FirstName.InvalidChars" xml:space="preserve">
+    <value>First name contains invalid characters</value>
+  </data>
+  <data name="LastName.Required" xml:space="preserve">
+    <value>Last name is required</value>
+  </data>
+  <data name="LastName.TooLong" xml:space="preserve">
+    <value>Last name is too long (maximum 50 characters)</value>
+  </data>
+  <data name="LastName.InvalidChars" xml:space="preserve">
+    <value>Last name contains invalid characters</value>
+  </data>
+
+  <!-- Username Validation -->
+  <data name="Username.Required" xml:space="preserve">
+    <value>Username is required</value>
+  </data>
+  <data name="Username.MinLength" xml:space="preserve">
+    <value>Username must be at least 3 characters long</value>
+  </data>
+  <data name="Username.MaxLength" xml:space="preserve">
+    <value>Username must not exceed 30 characters</value>
+  </data>
+  <data name="Username.InvalidChars" xml:space="preserve">
+    <value>Username can only contain letters, numbers, dots, dashes, and underscores</value>
+  </data>
+
+  <!-- Currency and Locale Validation -->
+  <data name="Currency.Required" xml:space="preserve">
+    <value>Currency is required</value>
+  </data>
+  <data name="Currency.InvalidFormat" xml:space="preserve">
+    <value>Currency must be a valid 3-letter code (e.g., USD, EUR, BRL)</value>
+  </data>
+  <data name="TimeZone.Required" xml:space="preserve">
+    <value>Time zone is required</value>
+  </data>
+  <data name="TimeZone.Invalid" xml:space="preserve">
+    <value>Please provide a valid time zone identifier</value>
+  </data>
+
+  <!-- Phone Validation -->
+  <data name="PhoneNumber.Invalid" xml:space="preserve">
+    <value>Please provide a valid phone number</value>
+  </data>
+
+  <!-- Transfer Validation -->
+  <data name="Transfer.SourceAccountRequired" xml:space="preserve">
+    <value>Source account is required</value>
+  </data>
+  <data name="Transfer.DestinationAccountRequired" xml:space="preserve">
+    <value>Destination account is required</value>
+  </data>
+  <data name="Transfer.AccountsSame" xml:space="preserve">
+    <value>Source and destination accounts must be different</value>
+  </data>
+  <data name="Transfer.AmountRequired" xml:space="preserve">
+    <value>Transfer amount is required</value>
+  </data>
+  <data name="Transfer.AmountPositive" xml:space="preserve">
+    <value>Transfer amount must be greater than zero</value>
+  </data>
+  <data name="Transfer.AmountTooLarge" xml:space="preserve">
+    <value>Transfer amount exceeds maximum allowed</value>
+  </data>
+  <data name="Transfer.CurrencyRequired" xml:space="preserve">
+    <value>Currency is required for the transfer</value>
+  </data>
+  <data name="Transfer.CurrencyInvalid" xml:space="preserve">
+    <value>Currency must be a valid 3-letter uppercase code</value>
+  </data>
+  <data name="Transfer.ExchangeRateInvalid" xml:space="preserve">
+    <value>Exchange rate must be greater than zero</value>
+  </data>
+  <data name="Transfer.FeeNegative" xml:space="preserve">
+    <value>Transfer fee cannot be negative</value>
+  </data>
+  <data name="Transfer.DescriptionTooLong" xml:space="preserve">
+    <value>Description is too long (maximum 500 characters)</value>
+  </data>
+  <data name="Transfer.NotesTooLong" xml:space="preserve">
+    <value>Notes are too long (maximum 1000 characters)</value>
+  </data>
+  <data name="Transfer.DateRequired" xml:space="preserve">
+    <value>Transfer date is required</value>
+  </data>
+  <data name="Transfer.DateInFuture" xml:space="preserve">
+    <value>Transfer date cannot be in the future</value>
+  </data>
+  <data name="Transfer.UserRequired" xml:space="preserve">
+    <value>User ID is required for the transfer</value>
+  </data>
+
+  <!-- Token Validation -->
+  <data name="Token.Required" xml:space="preserve">
+    <value>Reset token is required</value>
+  </data>
+  <data name="Token.Invalid" xml:space="preserve">
+    <value>Invalid or expired reset token</value>
+  </data>
+
+  <!-- Account Validation -->
+  <data name="Account.NameRequired" xml:space="preserve">
+    <value>Account name is required</value>
+  </data>
+  <data name="Account.NameTooLong" xml:space="preserve">
+    <value>Account name is too long (maximum 100 characters)</value>
+  </data>
+  <data name="Account.TypeRequired" xml:space="preserve">
+    <value>Account type is required</value>
+  </data>
+  <data name="Account.CurrencyRequired" xml:space="preserve">
+    <value>Account currency is required</value>
+  </data>
+
+  <!-- Transaction Validation -->
+  <data name="Transaction.DescriptionRequired" xml:space="preserve">
+    <value>Transaction description is required</value>
+  </data>
+  <data name="Transaction.AmountRequired" xml:space="preserve">
+    <value>Transaction amount is required</value>
+  </data>
+  <data name="Transaction.DateRequired" xml:space="preserve">
+    <value>Transaction date is required</value>
+  </data>
+  <data name="Transaction.AccountRequired" xml:space="preserve">
+    <value>Account is required for the transaction</value>
+  </data>
+
+  <!-- Category Validation -->
+  <data name="Category.NameRequired" xml:space="preserve">
+    <value>Category name is required</value>
+  </data>
+  <data name="Category.NameTooLong" xml:space="preserve">
+    <value>Category name is too long (maximum 100 characters)</value>
+  </data>
+
+  <!-- Rule Validation -->
+  <data name="Rule.NameRequired" xml:space="preserve">
+    <value>Rule name is required</value>
+  </data>
+  <data name="Rule.PatternRequired" xml:space="preserve">
+    <value>Rule pattern is required</value>
+  </data>
+  <data name="Rule.CategoryRequired" xml:space="preserve">
+    <value>Category is required for the rule</value>
+  </data>
+
+</root>

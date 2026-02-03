@@ -1,0 +1,510 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap')
+layer(base);
+
+@import 'tailwindcss';
+
+@theme {
+  --color-primary-50: #f5f3ff;
+  --color-primary-100: #ede9fe;
+  --color-primary-200: #ddd6fe;
+  --color-primary-300: #c4b5fd;
+  --color-primary-400: #a78bfa;
+  --color-primary-500: #8b5cf6;
+  --color-primary-600: #6b46c1;
+  --color-primary-700: #553c9a;
+  --color-primary-800: #6b46c1;
+  --color-primary-900: #4c1d95;
+  --color-primary: #6b46c1;
+  --color-primary-light: #8b5cf6;
+  --color-primary-dark: #553c9a;
+
+  --color-success-50: #ecfdf5;
+  --color-success-100: #d1fae5;
+  --color-success-200: #a7f3d0;
+  --color-success-300: #6ee7b7;
+  --color-success-400: #34d399;
+  --color-success-500: #10b981;
+  --color-success-600: #059669;
+  --color-success-700: #047857;
+  --color-success-800: #065f46;
+  --color-success-900: #064e3b;
+  --color-success: #10b981;
+
+  --color-warning-50: #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-200: #fde68a;
+  --color-warning-300: #fcd34d;
+  --color-warning-400: #fbbf24;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+  --color-warning-700: #b45309;
+  --color-warning-800: #92400e;
+  --color-warning-900: #78350f;
+  --color-warning: #f59e0b;
+
+  --color-danger-50: #fef2f2;
+  --color-danger-100: #fee2e2;
+  --color-danger-200: #fecaca;
+  --color-danger-300: #fca5a5;
+  --color-danger-400: #f87171;
+  --color-danger-500: #ef4444;
+  --color-danger-600: #dc2626;
+  --color-danger-700: #b91c1c;
+  --color-danger-800: #991b1b;
+  --color-danger-900: #7f1d1d;
+  --color-danger: #ef4444;
+
+  --color-info-50: #eff6ff;
+  --color-info-100: #dbeafe;
+  --color-info-200: #bfdbfe;
+  --color-info-300: #93bbfc;
+  --color-info-400: #60a5fa;
+  --color-info-500: #3b82f6;
+  --color-info-600: #2563eb;
+  --color-info-700: #1d4ed8;
+  --color-info-800: #1e40af;
+  --color-info-900: #1e3a8a;
+  --color-info: #3b82f6;
+
+  --font-sans:
+    Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif;
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+@utility btn {
+  /* Button Styles */
+  @apply inline-flex items-center justify-center px-6 py-3 text-sm font-medium rounded-md 
+           shadow-xs transition-all duration-200 ease-in-out cursor-pointer
+           focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+@utility btn-primary {
+  @apply btn bg-primary text-white hover:bg-primary-700 
+           focus-visible:ring-primary;
+}
+
+@utility btn-secondary {
+  @apply btn bg-transparent text-primary border border-primary 
+           hover:bg-primary-50 focus-visible:ring-primary;
+}
+
+@utility btn-danger {
+  @apply btn bg-danger text-white hover:bg-danger-600 
+           focus-visible:ring-danger;
+}
+
+@utility input {
+  /* Input Styles */
+  @apply w-full px-4 py-3 text-sm border border-gray-300 rounded-md
+           bg-white placeholder-gray-400
+           focus:border-primary focus:ring-2 focus:ring-primary/20
+           disabled:bg-gray-50 disabled:cursor-not-allowed;
+}
+
+@utility select {
+  /* Select Styles */
+  @apply w-full px-4 py-3 text-sm border border-gray-300 rounded-md
+           bg-white cursor-pointer
+           focus:border-primary focus:ring-2 focus:ring-primary/20
+           disabled:bg-gray-50 disabled:cursor-not-allowed;
+  
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
+
+@utility checkbox {
+  /* Checkbox Styles */
+  @apply cursor-pointer;
+}
+
+@utility card {
+  /* Card Styles */
+  @apply bg-white border border-gray-200 rounded-lg p-6 shadow-xs;
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    @apply border-2 border-gray-900;
+  }
+
+  /* Reduced motion support */
+}
+
+@utility card-hover {
+  @apply card transition-shadow duration-200 hover:shadow-md cursor-pointer;
+}
+
+@utility table {
+  /* Table Styles */
+  @apply w-full border-collapse;
+
+  & thead {
+    @apply bg-gray-50 border-b border-gray-200;
+  }
+
+  & th {
+    @apply px-4 py-3 text-left text-sm font-semibold text-gray-700;
+  }
+
+  & td {
+    @apply px-4 py-3 text-sm border-b border-gray-100;
+  }
+
+  & tbody tr {
+    @apply hover:bg-gray-50 transition-colors duration-150;
+  }
+}
+
+@utility amount {
+  /* Amount Display */
+  @apply text-2xl font-semibold;
+}
+
+@utility amount-positive {
+  @apply amount text-success;
+}
+
+@utility amount-negative {
+  @apply amount text-danger;
+}
+
+@utility amount-neutral {
+  @apply amount text-gray-500;
+}
+
+@utility badge {
+  /* Badge Styles */
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+@utility badge-primary {
+  @apply badge bg-primary-100 text-primary-700;
+}
+
+@utility badge-success {
+  @apply badge bg-success-100 text-success-700;
+}
+
+@utility badge-warning {
+  @apply badge bg-warning-100 text-warning-700;
+}
+
+@utility badge-danger {
+  @apply badge bg-danger-100 text-danger-700;
+}
+
+@utility skeleton {
+  /* Loading States */
+  @apply animate-pulse bg-gray-200 rounded-sm;
+}
+
+@utility modal-overlay {
+  /* Modal Overlay */
+  @apply fixed inset-0 bg-black/50 z-40;
+}
+
+@utility modal-content {
+  @apply bg-white rounded-xl p-8 shadow-2xl max-w-lg mx-auto;
+}
+
+@utility modal-scroll {
+  /* Custom scrollbar for modals */
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f3f4f6;
+}
+
+@layer base {
+  .modal-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .modal-scroll::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    border-radius: 3px;
+  }
+  
+  .modal-scroll::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
+  }
+  
+  .modal-scroll::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+  }
+}
+
+@utility nav-link {
+  /* Navigation Active State */
+  @apply px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150;
+}
+
+@utility nav-link-active {
+  @apply bg-primary-100 text-primary-700;
+}
+
+@utility form-group {
+  /* Form Group */
+  @apply space-y-2;
+}
+
+@utility form-label {
+  @apply block text-sm font-medium text-gray-700;
+}
+
+@utility form-error {
+  @apply text-xs text-danger mt-1;
+}
+
+@utility container-responsive {
+  /* Responsive Container */
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+@utility animate-count {
+  /* Custom animations */
+  animation: countUp 0.5s ease-out;
+
+  /* High contrast mode support */
+
+  /* Reduced motion support */
+}
+
+@utility animate-fade-in-up {
+  /* Animation utility classes */
+  animation: fadeInUp 0.6s ease-out;
+
+  /* High contrast mode support */
+
+  /* Reduced motion support */
+}
+
+@utility animate-slide-in-right {
+  animation: slideInRight 0.5s ease-out;
+
+  /* High contrast mode support */
+
+  /* Reduced motion support */
+}
+
+@utility animate-bounce-in {
+  animation: bounceIn 0.8s ease-out;
+
+  /* High contrast mode support */
+
+  /* Reduced motion support */
+}
+
+@utility animate-dropdown {
+  animation: dropdownOpen 0.15s ease-out;
+}
+
+@utility animate-slide-up {
+  animation: modalSlideUp 0.3s ease-out;
+}
+
+@utility touch-target {
+  /* Utility for touch targets */
+  @apply min-h-[44px] min-w-[44px];
+
+  /* High contrast mode support */
+
+  /* Reduced motion support */
+}
+
+@utility mobile-form-safe {
+  /* Mobile form safe area utility - ensures forms don't get hidden behind bottom navigation */
+  @apply pb-24 md:pb-8;
+  
+  /* Add safe area for devices with home indicators */
+  @media (max-width: 767px) {
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0));
+  }
+}
+
+@layer base {
+  html {
+    color: #1e293b;
+  }
+
+  body {
+    @apply bg-white text-sm antialiased;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  h1 {
+    @apply text-3xl font-bold text-gray-800;
+  }
+
+  h2 {
+    @apply text-2xl font-semibold text-gray-800;
+  }
+
+  h3 {
+    @apply text-xl font-semibold text-gray-800;
+  }
+
+  h4 {
+    @apply text-lg font-semibold text-gray-800;
+  }
+
+  /* Focus styles for accessibility */
+  *:focus {
+    @apply outline-hidden;
+  }
+
+  *:focus-visible {
+    @apply ring-2 ring-primary ring-offset-1;
+  }
+}
+
+@layer utilities {
+
+  @keyframes countUp {
+    from {
+      transform: translateY(10px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideInRight {
+    from {
+      opacity: 0;
+      transform: translateX(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes bounceIn {
+    0% {
+      opacity: 0;
+      transform: scale(0.3);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+    70% {
+      transform: scale(0.9);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes dropdownOpen {
+    from {
+      opacity: 0;
+      transform: translateY(-4px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /* Mobile-specific modal animation */
+  @keyframes modalSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Prevent animation conflicts on mobile */
+  @media (max-width: 768px) {
+    .animate-dropdown {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* Mobile Bottom Navigation Padding */
+  @media (max-width: 767px) {
+    main {
+      padding-bottom: 5rem; /* Space for bottom navigation (h-16 = 4rem + buffer) */
+    }
+    
+    /* Additional padding for form containers on mobile */
+    .mobile-form-container {
+      padding-bottom: 6rem; /* Extra space for forms with action buttons */
+    }
+    
+    /* Safe area handling for devices with home indicators */
+    main.pb-safe-area {
+      padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0));
+    }
+  }
+
+  /* Safe area padding for mobile devices */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0);
+  }
+}
+
+/* Import mobile-specific overrides */
+@import '../styles/mobile-overrides.css';

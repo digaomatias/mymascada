@@ -1,0 +1,58 @@
+/* Mobile-specific style overrides */
+
+/* Disable desktop dropdown animations on mobile */
+@media (max-width: 768px) {
+  /* Headless UI transitions */
+  [data-headlessui-state="open"] {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  /* Disable transform transitions that cause jumping */
+  .transform-gpu {
+    transform: none !important;
+  }
+  
+  /* Mobile-optimized dropdown/modal animations */
+  .mobile-slide-up {
+    animation: mobileSlideUp 0.2s ease-out;
+  }
+  
+  @keyframes mobileSlideUp {
+    from {
+      transform: translateY(100%);
+      opacity: 0.8;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  /* Ensure dropdowns open from bottom on mobile */
+  [role="listbox"],
+  [role="menu"] {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    max-height: 70vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Better touch targets */
+  [role="option"],
+  [role="menuitem"] {
+    min-height: 44px;
+    padding: 12px 16px;
+  }
+  
+  /* Prevent body scroll when dropdown is open */
+  body.dropdown-open {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+  }
+}

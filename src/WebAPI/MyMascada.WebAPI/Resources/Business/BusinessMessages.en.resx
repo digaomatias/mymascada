@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter</value>
+  </resheader>
+
+  <!-- Account Business Logic -->
+  <data name="Account.NotFound" xml:space="preserve">
+    <value>Account not found</value>
+  </data>
+  <data name="Account.NotAccessible" xml:space="preserve">
+    <value>You don't have access to this account</value>
+  </data>
+  <data name="Account.HasTransactions" xml:space="preserve">
+    <value>Cannot delete account that has transactions. Please delete or move all transactions first.</value>
+  </data>
+  <data name="Account.AlreadyArchived" xml:space="preserve">
+    <value>Account is already archived</value>
+  </data>
+
+  <!-- Category Business Logic -->
+  <data name="Category.NotFound" xml:space="preserve">
+    <value>Category not found</value>
+  </data>
+  <data name="Category.NotAccessible" xml:space="preserve">
+    <value>You don't have permission to access this category</value>
+  </data>
+  <data name="Category.ParentNotFound" xml:space="preserve">
+    <value>Parent category not found or not accessible</value>
+  </data>
+  <data name="Category.HasTransactions" xml:space="preserve">
+    <value>Cannot delete category that has transactions. Please reassign or delete all transactions in this category first.</value>
+  </data>
+  <data name="Category.HasSubcategories" xml:space="preserve">
+    <value>Cannot delete category that has subcategories. Please delete or move all subcategories first.</value>
+  </data>
+  <data name="Category.CircularReference" xml:space="preserve">
+    <value>This parent assignment would create a circular reference</value>
+  </data>
+  <data name="Category.SelfParent" xml:space="preserve">
+    <value>A category cannot be its own parent</value>
+  </data>
+  <data name="Category.CannotDeleteDefault" xml:space="preserve">
+    <value>Cannot delete the default category</value>
+  </data>
+
+  <!-- Transaction Business Logic -->
+  <data name="Transaction.NotFound" xml:space="preserve">
+    <value>Transaction not found</value>
+  </data>
+  <data name="Transaction.NotAccessible" xml:space="preserve">
+    <value>You don't have access to this transaction</value>
+  </data>
+  <data name="Transaction.AlreadyCategorized" xml:space="preserve">
+    <value>Transaction is already categorized</value>
+  </data>
+  <data name="Transaction.IsPartOfTransfer" xml:space="preserve">
+    <value>Cannot modify this transaction directly as it is part of a transfer</value>
+  </data>
+
+  <!-- Transfer Business Logic -->
+  <data name="Transfer.NotFound" xml:space="preserve">
+    <value>Transfer not found</value>
+  </data>
+  <data name="Transfer.SourceNotFound" xml:space="preserve">
+    <value>Source account not found</value>
+  </data>
+  <data name="Transfer.DestinationNotFound" xml:space="preserve">
+    <value>Destination account not found</value>
+  </data>
+  <data name="Transfer.SameAccount" xml:space="preserve">
+    <value>Cannot transfer to the same account</value>
+  </data>
+  <data name="Transfer.InsufficientFunds" xml:space="preserve">
+    <value>Insufficient funds in source account</value>
+  </data>
+
+  <!-- Rule Business Logic -->
+  <data name="Rule.NotFound" xml:space="preserve">
+    <value>Categorization rule not found</value>
+  </data>
+  <data name="Rule.NotAccessible" xml:space="preserve">
+    <value>You don't have access to this rule</value>
+  </data>
+  <data name="Rule.DuplicateName" xml:space="preserve">
+    <value>A rule with this name already exists</value>
+  </data>
+  <data name="Rule.InvalidPattern" xml:space="preserve">
+    <value>Invalid pattern format</value>
+  </data>
+
+  <!-- Authentication Business Logic -->
+  <data name="Auth.InvalidCredentials" xml:space="preserve">
+    <value>Invalid email or password</value>
+  </data>
+  <data name="Auth.AccountLocked" xml:space="preserve">
+    <value>Account is locked. Please try again later.</value>
+  </data>
+  <data name="Auth.EmailNotConfirmed" xml:space="preserve">
+    <value>Please confirm your email address before signing in</value>
+  </data>
+  <data name="Auth.EmailAlreadyExists" xml:space="preserve">
+    <value>An account with this email already exists</value>
+  </data>
+  <data name="Auth.UsernameAlreadyExists" xml:space="preserve">
+    <value>This username is already taken</value>
+  </data>
+  <data name="Auth.InvalidResetToken" xml:space="preserve">
+    <value>Invalid or expired password reset link</value>
+  </data>
+  <data name="Auth.TooManyResetRequests" xml:space="preserve">
+    <value>Too many password reset requests. Please try again later.</value>
+  </data>
+
+  <!-- Import Business Logic -->
+  <data name="Import.InvalidFile" xml:space="preserve">
+    <value>Invalid file format</value>
+  </data>
+  <data name="Import.NoTransactionsFound" xml:space="preserve">
+    <value>No transactions found in the file</value>
+  </data>
+  <data name="Import.DuplicatesDetected" xml:space="preserve">
+    <value>Some transactions appear to be duplicates</value>
+  </data>
+  <data name="Import.ProcessingFailed" xml:space="preserve">
+    <value>Failed to process the import file</value>
+  </data>
+
+  <!-- Bank Connection Business Logic -->
+  <data name="BankConnection.NotFound" xml:space="preserve">
+    <value>Bank connection not found</value>
+  </data>
+  <data name="BankConnection.SyncFailed" xml:space="preserve">
+    <value>Failed to sync with bank. Please try again later.</value>
+  </data>
+  <data name="BankConnection.AuthExpired" xml:space="preserve">
+    <value>Bank connection authorization has expired. Please reconnect.</value>
+  </data>
+
+  <!-- Reconciliation Business Logic -->
+  <data name="Reconciliation.NotFound" xml:space="preserve">
+    <value>Reconciliation not found</value>
+  </data>
+  <data name="Reconciliation.AlreadyCompleted" xml:space="preserve">
+    <value>This reconciliation has already been completed</value>
+  </data>
+  <data name="Reconciliation.BalanceMismatch" xml:space="preserve">
+    <value>The calculated balance does not match the expected balance</value>
+  </data>
+
+</root>

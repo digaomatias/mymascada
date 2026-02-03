@@ -1,0 +1,46 @@
+# Build stage
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /app
+
+# Copy only the src directory to avoid double nesting
+COPY src/ ./
+
+# Restore dependencies from the WebAPI project
+RUN dotnet restore WebAPI/MyMascada.WebAPI/MyMascada.WebAPI.csproj
+
+# Build and publish
+RUN dotnet publish WebAPI/MyMascada.WebAPI/MyMascada.WebAPI.csproj -c Release -o /app/publish
+
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+WORKDIR /app
+
+# Install curl for health checks and gosu for dropping privileges
+RUN apt-get update && apt-get install -y curl gosu && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN groupadd -r mymascada && useradd -r -g mymascada mymascada
+
+# Create directories for volumes
+RUN mkdir -p /app/data/keys /app/logs
+
+# Copy published files
+COPY --from=build /app/publish .
+
+# Copy entrypoint script
+COPY src/docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+
+# Expose ports
+EXPOSE 5126
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:5126/health || exit 1
+
+# Set environment variables
+ENV ASPNETCORE_URLS="http://+:5126"
+ENV ASPNETCORE_ENVIRONMENT=Production
+
+# Entrypoint fixes volume permissions then drops to non-root user
+ENTRYPOINT ["/app/docker-entrypoint.sh"]

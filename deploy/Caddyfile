@@ -1,0 +1,48 @@
+# =============================================================================
+# MyMascada - Caddy Reverse Proxy Configuration
+# =============================================================================
+# Caddy automatically provisions HTTPS via Let's Encrypt.
+#
+# Usage:
+#   Set DOMAIN in your .env file, then:
+#   docker compose --profile proxy up -d
+#
+# For local development (no HTTPS):
+#   DOMAIN=localhost
+# =============================================================================
+
+{$DOMAIN:localhost} {
+    # API requests
+    handle /api/* {
+        reverse_proxy api:5126
+    }
+
+    # Health check endpoint
+    handle /health {
+        reverse_proxy api:5126
+    }
+
+    # Hangfire dashboard (development only)
+    handle /hangfire* {
+        reverse_proxy api:5126
+    }
+
+    # Everything else goes to the frontend
+    handle {
+        reverse_proxy frontend:3000
+    }
+
+    # Security headers
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+        -Server
+    }
+
+    # Logging
+    log {
+        output stdout
+        format console
+    }
+}

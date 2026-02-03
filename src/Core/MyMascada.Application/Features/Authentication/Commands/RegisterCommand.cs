@@ -1,0 +1,124 @@
+using FluentValidation;
+using MediatR;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using MyMascada.Application.Common.Configuration;
+using MyMascada.Application.Common.Interfaces;
+using MyMascada.Application.Features.Authentication.DTOs;
+using MyMascada.Domain.Entities;
+
+namespace MyMascada.Application.Features.Authentication.Commands;
+
+public class RegisterCommand : IRequest<AuthenticationResponse>
+{
+    public string Email { get; set; } = string.Empty;
+    public string UserName { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+    public string ConfirmPassword { get; set; } = string.Empty;
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; }
+    public string Currency { get; set; } = "USD";
+    public string TimeZone { get; set; } = "UTC";
+    public string? IpAddress { get; set; }
+    public string? UserAgent { get; set; }
+    public string? InviteCode { get; set; }
+}
+
+public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthenticationResponse>
+{
+    private readonly IUserRepository _userRepository;
+    private readonly IAuthenticationService _authenticationService;
+    private readonly IValidator<RegisterCommand> _validator;
+    private readonly IRegistrationStrategy _registrationStrategy;
+    private readonly ILogger<RegisterCommandHandler> _logger;
+    private readonly BetaAccessOptions _betaAccessOptions;
+
+    public RegisterCommandHandler(
+        IUserRepository userRepository,
+        IAuthenticationService authenticationService,
+        IValidator<RegisterCommand> validator,
+        IRegistrationStrategy registrationStrategy,
+        ILogger<RegisterCommandHandler> logger,
+        IOptions<BetaAccessOptions> betaAccessOptions)
+    {
+        _userRepository = userRepository;
+        _authenticationService = authenticationService;
+        _validator = validator;
+        _registrationStrategy = registrationStrategy;
+        _logger = logger;
+        _betaAccessOptions = betaAccessOptions.Value;
+    }
+
+    public async Task<AuthenticationResponse> Handle(RegisterCommand request, CancellationToken cancellationToken)
+    {
+        var response = new AuthenticationResponse();
+
+        // Validate the command using FluentValidation
+        var validationResult = await _validator.ValidateAsync(request, cancellationToken);
+        if (!validationResult.IsValid)
+        {
+            response.Errors.AddRange(validationResult.Errors.Select(e => e.ErrorMessage));
+            return response;
+        }
+
+        // Validate invite code if required
+        if (_betaAccessOptions.RequireInviteCode)
+        {
+            var validCodes = _betaAccessOptions.GetValidCodes();
+            if (string.IsNullOrWhiteSpace(request.InviteCode) ||
+                !validCodes.Any(c => string.Equals(c, request.InviteCode.Trim(), StringComparison.OrdinalIgnoreCase)))
+            {
+                _logger.LogWarning("Registration attempted with invalid invite code: {InviteCode}", request.InviteCode ?? "(empty)");
+                response.Errors.Add("A valid invite code is required to register during the beta period.");
+                return response;
+            }
+        }
+
+        // Check if email already exists
+        if (await _userRepository.ExistsByEmailAsync(request.Email))
+        {
+            response.Errors.Add("Email is already registered");
+            return response;
+        }
+
+        // Check if username already exists
+        if (await _userRepository.ExistsByUserNameAsync(request.UserName))
+        {
+            response.Errors.Add("Username is already taken");
+            return response;
+        }
+
+        // Create new user
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = request.Email,
+            NormalizedEmail = request.Email.ToUpperInvariant(),
+            UserName = request.UserName,
+            NormalizedUserName = request.UserName.ToUpperInvariant(),
+            PasswordHash = await _authenticationService.HashPasswordAsync(request.Password),
+            SecurityStamp = _authenticationService.GenerateSecurityStamp(),
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            PhoneNumber = request.PhoneNumber,
+            Currency = request.Currency,
+            TimeZone = request.TimeZone,
+            EmailConfirmed = _registrationStrategy.AutoConfirmEmail,
+            PhoneNumberConfirmed = false,
+            TwoFactorEnabled = false,
+            LockoutEnabled = true,
+            AccessFailedCount = 0
+        };
+
+        // Save user
+        await _userRepository.AddAsync(user);
+
+        // Note: Categories are no longer auto-seeded at registration.
+        // Users seed default categories from Settings with their preferred locale.
+
+        // Delegate post-creation flow to the strategy (email verification or direct JWT)
+        return await _registrationStrategy.CompleteRegistrationAsync(
+            user, request.IpAddress, request.UserAgent, cancellationToken);
+    }
+}

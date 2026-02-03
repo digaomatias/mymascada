@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter</value>
+  </resheader>
+
+  <!-- Account Business Logic -->
+  <data name="Account.NotFound" xml:space="preserve">
+    <value>Conta nao encontrada</value>
+  </data>
+  <data name="Account.NotAccessible" xml:space="preserve">
+    <value>Voce nao tem acesso a esta conta</value>
+  </data>
+  <data name="Account.HasTransactions" xml:space="preserve">
+    <value>Nao e possivel excluir conta que possui transacoes. Por favor, exclua ou mova todas as transacoes primeiro.</value>
+  </data>
+  <data name="Account.AlreadyArchived" xml:space="preserve">
+    <value>A conta ja esta arquivada</value>
+  </data>
+
+  <!-- Category Business Logic -->
+  <data name="Category.NotFound" xml:space="preserve">
+    <value>Categoria nao encontrada</value>
+  </data>
+  <data name="Category.NotAccessible" xml:space="preserve">
+    <value>Voce nao tem permissao para acessar esta categoria</value>
+  </data>
+  <data name="Category.ParentNotFound" xml:space="preserve">
+    <value>Categoria pai nao encontrada ou inacessivel</value>
+  </data>
+  <data name="Category.HasTransactions" xml:space="preserve">
+    <value>Nao e possivel excluir categoria que possui transacoes. Por favor, reatribua ou exclua todas as transacoes desta categoria primeiro.</value>
+  </data>
+  <data name="Category.HasSubcategories" xml:space="preserve">
+    <value>Nao e possivel excluir categoria que possui subcategorias. Por favor, exclua ou mova todas as subcategorias primeiro.</value>
+  </data>
+  <data name="Category.CircularReference" xml:space="preserve">
+    <value>Esta atribuicao de categoria pai criaria uma referencia circular</value>
+  </data>
+  <data name="Category.SelfParent" xml:space="preserve">
+    <value>Uma categoria nao pode ser pai de si mesma</value>
+  </data>
+  <data name="Category.CannotDeleteDefault" xml:space="preserve">
+    <value>Nao e possivel excluir a categoria padrao</value>
+  </data>
+
+  <!-- Transaction Business Logic -->
+  <data name="Transaction.NotFound" xml:space="preserve">
+    <value>Transacao nao encontrada</value>
+  </data>
+  <data name="Transaction.NotAccessible" xml:space="preserve">
+    <value>Voce nao tem acesso a esta transacao</value>
+  </data>
+  <data name="Transaction.AlreadyCategorized" xml:space="preserve">
+    <value>A transacao ja esta categorizada</value>
+  </data>
+  <data name="Transaction.IsPartOfTransfer" xml:space="preserve">
+    <value>Nao e possivel modificar esta transacao diretamente pois faz parte de uma transferencia</value>
+  </data>
+
+  <!-- Transfer Business Logic -->
+  <data name="Transfer.NotFound" xml:space="preserve">
+    <value>Transferencia nao encontrada</value>
+  </data>
+  <data name="Transfer.SourceNotFound" xml:space="preserve">
+    <value>Conta de origem nao encontrada</value>
+  </data>
+  <data name="Transfer.DestinationNotFound" xml:space="preserve">
+    <value>Conta de destino nao encontrada</value>
+  </data>
+  <data name="Transfer.SameAccount" xml:space="preserve">
+    <value>Nao e possivel transferir para a mesma conta</value>
+  </data>
+  <data name="Transfer.InsufficientFunds" xml:space="preserve">
+    <value>Saldo insuficiente na conta de origem</value>
+  </data>
+
+  <!-- Rule Business Logic -->
+  <data name="Rule.NotFound" xml:space="preserve">
+    <value>Regra de categorizacao nao encontrada</value>
+  </data>
+  <data name="Rule.NotAccessible" xml:space="preserve">
+    <value>Voce nao tem acesso a esta regra</value>
+  </data>
+  <data name="Rule.DuplicateName" xml:space="preserve">
+    <value>Ja existe uma regra com este nome</value>
+  </data>
+  <data name="Rule.InvalidPattern" xml:space="preserve">
+    <value>Formato de padrao invalido</value>
+  </data>
+
+  <!-- Authentication Business Logic -->
+  <data name="Auth.InvalidCredentials" xml:space="preserve">
+    <value>E-mail ou senha invalidos</value>
+  </data>
+  <data name="Auth.AccountLocked" xml:space="preserve">
+    <value>Conta bloqueada. Por favor, tente novamente mais tarde.</value>
+  </data>
+  <data name="Auth.EmailNotConfirmed" xml:space="preserve">
+    <value>Por favor, confirme seu endereco de e-mail antes de entrar</value>
+  </data>
+  <data name="Auth.EmailAlreadyExists" xml:space="preserve">
+    <value>Ja existe uma conta com este e-mail</value>
+  </data>
+  <data name="Auth.UsernameAlreadyExists" xml:space="preserve">
+    <value>Este nome de usuario ja esta em uso</value>
+  </data>
+  <data name="Auth.InvalidResetToken" xml:space="preserve">
+    <value>Link de redefinicao de senha invalido ou expirado</value>
+  </data>
+  <data name="Auth.TooManyResetRequests" xml:space="preserve">
+    <value>Muitas solicitacoes de redefinicao de senha. Por favor, tente novamente mais tarde.</value>
+  </data>
+
+  <!-- Import Business Logic -->
+  <data name="Import.InvalidFile" xml:space="preserve">
+    <value>Formato de arquivo invalido</value>
+  </data>
+  <data name="Import.NoTransactionsFound" xml:space="preserve">
+    <value>Nenhuma transacao encontrada no arquivo</value>
+  </data>
+  <data name="Import.DuplicatesDetected" xml:space="preserve">
+    <value>Algumas transacoes parecem ser duplicadas</value>
+  </data>
+  <data name="Import.ProcessingFailed" xml:space="preserve">
+    <value>Falha ao processar o arquivo de importacao</value>
+  </data>
+
+  <!-- Bank Connection Business Logic -->
+  <data name="BankConnection.NotFound" xml:space="preserve">
+    <value>Conexao bancaria nao encontrada</value>
+  </data>
+  <data name="BankConnection.SyncFailed" xml:space="preserve">
+    <value>Falha ao sincronizar com o banco. Por favor, tente novamente mais tarde.</value>
+  </data>
+  <data name="BankConnection.AuthExpired" xml:space="preserve">
+    <value>A autorizacao da conexao bancaria expirou. Por favor, reconecte.</value>
+  </data>
+
+  <!-- Reconciliation Business Logic -->
+  <data name="Reconciliation.NotFound" xml:space="preserve">
+    <value>Reconciliacao nao encontrada</value>
+  </data>
+  <data name="Reconciliation.AlreadyCompleted" xml:space="preserve">
+    <value>Esta reconciliacao ja foi concluida</value>
+  </data>
+  <data name="Reconciliation.BalanceMismatch" xml:space="preserve">
+    <value>O saldo calculado nao corresponde ao saldo esperado</value>
+  </data>
+
+</root>

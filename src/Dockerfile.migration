@@ -1,0 +1,19 @@
+# Migration-specific Dockerfile that includes EF Core tools
+FROM mcr.microsoft.com/dotnet/sdk:10.0
+WORKDIR /app
+
+# Copy source files
+COPY src/ ./
+
+# Restore dependencies
+RUN dotnet restore WebAPI/MyMascada.WebAPI/MyMascada.WebAPI.csproj
+
+# Install EF Core tools
+RUN dotnet tool install --global dotnet-ef --version 10.0.0
+ENV PATH="$PATH:/root/.dotnet/tools"
+
+# Set working directory to the WebAPI project for migrations
+WORKDIR /app/WebAPI/MyMascada.WebAPI
+
+# Default command to run migrations
+ENTRYPOINT ["dotnet", "ef", "database", "update", "--verbose"]
