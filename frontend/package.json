@@ -47,7 +47,7 @@
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.10",
     "typescript": "^5.8.3",
-    "workbox-webpack-plugin": "^7.3.0"
+    "workbox-webpack-plugin": "^7.4.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.53.1",
