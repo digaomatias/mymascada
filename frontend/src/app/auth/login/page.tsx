@@ -280,6 +280,12 @@ export default function LoginPage() {
             </div>
           </CardContent>
         </Card>
+
+        <div className="text-center text-xs text-gray-500">
+          <Link href="/terms" className="hover:text-gray-700 underline">{t('termsLink')}</Link>
+          {' · '}
+          <Link href="/privacy" className="hover:text-gray-700 underline">{t('privacyLink')}</Link>
+        </div>
       </div>
     </div>
   );

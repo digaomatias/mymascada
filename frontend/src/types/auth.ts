@@ -14,6 +14,7 @@ export interface RegisterRequest {
   phoneNumber?: string;
   currency: string;
   timeZone: string;
+  inviteCode?: string;
 }
 
 export interface UserDto {

@@ -1,0 +1,211 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: [macos-latest]
+
+    steps:
+    - name: Checkout repository
+      uses: https://github.com/actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Build Docker Images on Runner
+      run: |
+        echo "=== Building Docker images on runner (MacBook Pro) ==="
+        echo "Building for linux/amd64 platform (Mordor architecture)"
+
+        # Build API image
+        echo "Building API image..."
+        docker build --platform linux/amd64 \
+          -t mymascada-api:latest \
+          -f src/Dockerfile.api \
+          .
+
+        # Build Migration image
+        echo "Building Migration image..."
+        docker build --platform linux/amd64 \
+          -t mymascada-migration:latest \
+          -f src/Dockerfile.migration \
+          .
+
+        # Build Frontend image
+        echo "Building Frontend image..."
+        docker build --platform linux/amd64 \
+          --build-arg NEXT_PUBLIC_API_URL=https://api.mymascada.com \
+          -t mymascada-frontend:latest \
+          -f frontend/Dockerfile \
+          frontend/
+
+        echo "✅ All images built successfully on runner"
+
+    - name: Save Docker Images to Files
+      run: |
+        echo "=== Saving Docker images to tar files ==="
+        docker save mymascada-api:latest | gzip > api-image.tar.gz
+        docker save mymascada-migration:latest | gzip > migration-image.tar.gz
+        docker save mymascada-frontend:latest | gzip > frontend-image.tar.gz
+
+        echo "Image sizes:"
+        ls -lh *-image.tar.gz
+
+    - name: Deploy to Mordor
+      env:
+        SSH_KEY: ${{ secrets.MORDOR_SSH_KEY }}
+        HOST: ${{ secrets.MORDOR_HOST }}
+        USER: ${{ secrets.MORDOR_USER }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        JWT_KEY: ${{ secrets.JWT_KEY }}
+        GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID_PROD }}
+        GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET_PROD }}
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
+      run: |
+        echo "=== Starting Deploy to Mordor step ==="
+
+        # Setup SSH with dedicated deployment key
+        echo "Setting up SSH..."
+        mkdir -p ~/.ssh
+        echo "$SSH_KEY" > ~/.ssh/mymascada_deploy_key
+        chmod 600 ~/.ssh/mymascada_deploy_key
+        ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
+        echo "SSH setup completed"
+
+        # Transfer images
+        echo "Transferring Docker images to Mordor..."
+        scp -i ~/.ssh/mymascada_deploy_key -o ConnectTimeout=30 api-image.tar.gz $USER@$HOST:/tmp/
+        scp -i ~/.ssh/mymascada_deploy_key -o ConnectTimeout=30 migration-image.tar.gz $USER@$HOST:/tmp/
+        scp -i ~/.ssh/mymascada_deploy_key -o ConnectTimeout=30 frontend-image.tar.gz $USER@$HOST:/tmp/
+
+        # Create deployment script
+        cat > deploy.sh << 'EOF'
+        #!/bin/bash
+        set -e
+
+        echo "=== MyMascada Deployment Started ==="
+        TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+        echo "Timestamp: $TIMESTAMP"
+
+        # Stop and remove existing containers
+        echo "Stopping and removing existing MyMascada containers..."
+        docker stop mymascada-api 2>/dev/null || true
+        docker stop mymascada-frontend 2>/dev/null || true
+        docker rm mymascada-api 2>/dev/null || true
+        docker rm mymascada-frontend 2>/dev/null || true
+
+        # Load new images (NO BUILDING!)
+        echo "Loading API image..."
+        gunzip -c /tmp/api-image.tar.gz | docker load
+
+        echo "Loading Migration image..."
+        gunzip -c /tmp/migration-image.tar.gz | docker load
+
+        echo "Loading Frontend image..."
+        gunzip -c /tmp/frontend-image.tar.gz | docker load
+
+        echo "✅ All images loaded successfully"
+
+        # Start PostgreSQL if not running
+        if ! docker ps | grep -q mymascada-postgres; then
+          echo "Starting PostgreSQL..."
+          # Remove existing stopped container if it exists
+          docker rm mymascada-postgres 2>/dev/null || true
+
+          docker run -d --name mymascada-postgres \
+            -e POSTGRES_DB=mymascada_db \
+            -e POSTGRES_USER=mymascada_user \
+            -e POSTGRES_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+            -v mymascada_postgres_data:/var/lib/postgresql/data \
+            --network host \
+            postgres:15
+
+          echo "Waiting for PostgreSQL to be ready..."
+          sleep 15
+        else
+          echo "PostgreSQL already running, skipping..."
+        fi
+
+        # Start Seq if not running (centralized log aggregation)
+        if ! docker ps | grep -q mymascada-seq; then
+          echo "Starting Seq log server..."
+          docker rm mymascada-seq 2>/dev/null || true
+
+          docker run -d --name mymascada-seq \
+            -e ACCEPT_EULA=Y \
+            -v mymascada_seq_data:/data \
+            -p 5341:80 \
+            --network host \
+            --restart unless-stopped \
+            datalust/seq:latest
+
+          echo "Waiting for Seq to be ready..."
+          sleep 5
+        else
+          echo "Seq already running, skipping..."
+        fi
+
+        # Run migrations
+        echo "Running EF Core migrations..."
+        docker run --rm \
+          -e ConnectionStrings__DefaultConnection="Host=localhost;Database=mymascada_db;Username=mymascada_user;Password=${{ secrets.DB_PASSWORD }}" \
+          -e ASPNETCORE_ENVIRONMENT=Production \
+          --network host \
+          mymascada-migration:latest
+
+        echo "✅ Migrations completed"
+
+        # Start API
+        echo "Starting API..."
+        docker run -d --name mymascada-api \
+          -e ConnectionStrings__DefaultConnection="Host=localhost;Database=mymascada_db;Username=mymascada_user;Password=${{ secrets.DB_PASSWORD }}" \
+          -e ASPNETCORE_ENVIRONMENT=Production \
+          -e ASPNETCORE_URLS=http://+:5000 \
+          -e Jwt__Key="${{ secrets.JWT_KEY }}" \
+          -e Jwt__Issuer="https://mymascada.com" \
+          -e Jwt__Audience="https://mymascada.com" \
+          -e Authentication__Google__ClientId="${{ secrets.GOOGLE_CLIENT_ID_PROD }}" \
+          -e Authentication__Google__ClientSecret="${{ secrets.GOOGLE_CLIENT_SECRET_PROD }}" \
+          -e LLM__OpenAI__ApiKey="${{ secrets.OPENAI_API_KEY }}" \
+          -e LLM__OpenAI__Model="${{ secrets.OPENAI_MODEL }}" \
+          -e Cors__AllowedOrigins="${{ vars.CORS_ALLOWED_ORIGINS }}" \
+          -e App__FrontendUrl="${{ vars.FRONTEND_URL }}" \
+          -v mymascada_dataprotection_keys:/app/data/keys \
+          --network host \
+          mymascada-api:latest
+
+        # Start Frontend
+        echo "Starting Frontend..."
+        docker run -d --name mymascada-frontend \
+          -e NEXT_PUBLIC_API_URL=https://api.mymascada.com \
+          -e NODE_ENV=production \
+          -p 3001:3000 \
+          --restart unless-stopped \
+          mymascada-frontend:latest
+
+        # Health checks
+        echo "Performing health checks..."
+        sleep 10
+
+        docker ps --filter name=mymascada
+
+        echo "🎉 DEPLOYMENT COMPLETED SUCCESSFULLY"
+        echo "API: http://localhost:5000"
+        echo "Frontend: http://localhost:3001"
+
+        # Cleanup
+        rm -f /tmp/*-image.tar.gz
+        EOF
+
+        # Transfer and execute
+        scp -i ~/.ssh/mymascada_deploy_key -o ConnectTimeout=30 deploy.sh $USER@$HOST:/tmp/deploy-mymascada.sh
+        ssh -i ~/.ssh/mymascada_deploy_key \
+            -o ConnectTimeout=30 \
+            -o ServerAliveInterval=60 \
+            -o ServerAliveCountMax=5 \
+            $USER@$HOST "chmod +x /tmp/deploy-mymascada.sh && timeout 600 /tmp/deploy-mymascada.sh"
+
+        echo "=== Deployment completed ==="

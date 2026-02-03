@@ -221,7 +221,14 @@
     },
     "passwordsMatch": "✓ Passwords match",
     "passwordsDoNotMatch": "✗ Passwords do not match",
-    "resettingPassword": "Resetting Password..."
+    "resettingPassword": "Resetting Password...",
+    "inviteCode": "Invite Code",
+    "inviteCodePlaceholder": "Enter your invite code",
+    "acceptTerms": "I agree to the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>",
+    "termsLink": "Terms of Service",
+    "privacyLink": "Privacy Policy",
+    "acceptTermsRequired": "You must accept the Terms of Service and Privacy Policy",
+    "legalFooter": "By using MyMascada, you agree to our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>."
   },
   "dashboard": {
     "title": "Dashboard",

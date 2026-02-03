@@ -220,7 +220,14 @@
     },
     "passwordsMatch": "✓ Senhas coincidem",
     "passwordsDoNotMatch": "✗ Senhas não coincidem",
-    "resettingPassword": "Redefinindo senha..."
+    "resettingPassword": "Redefinindo senha...",
+    "inviteCode": "Código de Convite",
+    "inviteCodePlaceholder": "Digite seu código de convite",
+    "acceptTerms": "Eu concordo com os <terms>Termos de Serviço</terms> e a <privacy>Política de Privacidade</privacy>",
+    "termsLink": "Termos de Serviço",
+    "privacyLink": "Política de Privacidade",
+    "acceptTermsRequired": "Você deve aceitar os Termos de Serviço e a Política de Privacidade",
+    "legalFooter": "Ao usar o MyMascada, você concorda com nossos <terms>Termos de Serviço</terms> e <privacy>Política de Privacidade</privacy>."
   },
   "dashboard": {
     "title": "Painel",

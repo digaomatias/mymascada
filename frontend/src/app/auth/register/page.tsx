@@ -32,7 +32,9 @@ export default function RegisterPage() {
     phoneNumber: '',
     currency: 'NZD', // Default to New Zealand Dollar
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    inviteCode: '',
   });
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
@@ -116,6 +118,10 @@ export default function RegisterPage() {
       newErrors.confirmPassword = t('errors.passwordRequired');
     } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = t('errors.passwordsNotMatch');
+    }
+
+    if (!acceptedTerms) {
+      newErrors.acceptTerms = t('acceptTermsRequired');
     }
 
     setValidationErrors(newErrors);
@@ -296,6 +302,16 @@ export default function RegisterPage() {
               />
 
               <Input
+                id="inviteCode"
+                name="inviteCode"
+                type="text"
+                value={formData.inviteCode || ''}
+                onChange={handleInputChange}
+                label={t('inviteCode')}
+                placeholder={t('inviteCodePlaceholder')}
+              />
+
+              <Input
                 id="password"
                 name="password"
                 type="password"
@@ -318,6 +334,43 @@ export default function RegisterPage() {
                 error={!!validationErrors.confirmPassword}
                 errorMessage={validationErrors.confirmPassword}
               />
+
+              <div>
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={acceptedTerms}
+                    onChange={(e) => {
+                      setAcceptedTerms(e.target.checked);
+                      if (validationErrors.acceptTerms) {
+                        setValidationErrors(prev => {
+                          const newErrors = { ...prev };
+                          delete newErrors.acceptTerms;
+                          return newErrors;
+                        });
+                      }
+                    }}
+                    className="h-4 w-4 mt-0.5 text-primary border-gray-300 rounded-sm focus:ring-primary"
+                  />
+                  <span className="text-sm text-gray-600">
+                    {t.rich('acceptTerms', {
+                      terms: (chunks) => (
+                        <Link href="/terms" className="font-medium text-primary hover:text-primary-600 underline" target="_blank">
+                          {chunks}
+                        </Link>
+                      ),
+                      privacy: (chunks) => (
+                        <Link href="/privacy" className="font-medium text-primary hover:text-primary-600 underline" target="_blank">
+                          {chunks}
+                        </Link>
+                      ),
+                    })}
+                  </span>
+                </label>
+                {validationErrors.acceptTerms && (
+                  <p className="mt-1 text-sm text-danger-600">{validationErrors.acceptTerms}</p>
+                )}
+              </div>
 
               <Button
                 type="submit"
@@ -356,6 +409,12 @@ export default function RegisterPage() {
             </form>
           </CardContent>
         </Card>
+
+        <div className="text-center text-xs text-gray-500">
+          <Link href="/terms" className="hover:text-gray-700 underline">{t('termsLink')}</Link>
+          {' · '}
+          <Link href="/privacy" className="hover:text-gray-700 underline">{t('privacyLink')}</Link>
+        </div>
       </div>
     </div>
   );
