@@ -564,12 +564,9 @@ public class AuthController : ControllerBase
                     CreatedAt = DateTime.UtcNow
                 });
                 var authCode = _dataProtector.Protect(codePayload);
-                Console.WriteLine($"[GoogleResponse] Protected code length: {authCode.Length}, first 50 chars: {authCode[..Math.Min(50, authCode.Length)]}");
 
                 var separator = redirectTarget.Contains('?') ? "&" : "?";
-                var redirectUrl = $"{redirectTarget}{separator}code={Uri.EscapeDataString(authCode)}";
-                Console.WriteLine($"[GoogleResponse] Redirect URL length: {redirectUrl.Length}");
-                return Redirect(redirectUrl);
+                return Redirect($"{redirectTarget}{separator}code={Uri.EscapeDataString(authCode)}");
             }
 
             return BadRequest(authResult);
@@ -586,7 +583,6 @@ public class AuthController : ControllerBase
     {
         try
         {
-            Console.WriteLine($"[ExchangeCode] Received code length: {request.Code?.Length ?? -1}, first 50 chars: {(request.Code?.Length > 50 ? request.Code[..50] : request.Code ?? "(null)")}");
             var json = _dataProtector.Unprotect(request.Code);
             var payload = JsonSerializer.Deserialize<JsonElement>(json);
 
@@ -597,13 +593,15 @@ public class AuthController : ControllerBase
             }
 
             var token = payload.GetProperty("Token").GetString();
-            var expiresAt = payload.GetProperty("ExpiresAt").GetDateTime();
+            var expiresAtElement = payload.GetProperty("ExpiresAt");
+            var expiresAt = expiresAtElement.ValueKind != JsonValueKind.Null
+                ? expiresAtElement.GetDateTime()
+                : DateTime.SpecifyKind(DateTime.UtcNow.AddDays(7), DateTimeKind.Utc);
 
             return Ok(new { Token = token, ExpiresAt = expiresAt });
         }
-        catch (Exception ex)
+        catch
         {
-            Console.WriteLine($"[ExchangeCode] Unprotect failed: {ex.GetType().Name}: {ex.Message}");
             return BadRequest(new { Error = "Invalid or expired code" });
         }
     }

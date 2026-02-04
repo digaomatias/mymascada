@@ -141,11 +141,12 @@ public class AuthenticationService : IAuthenticationService
 
                 var token = await GenerateJwtTokenAsync(existingUser);
                 var refreshToken = await GenerateRefreshTokenAsync(existingUser, defaultIpAddress);
-                
+
                 return new AuthenticationResponse
                 {
                     IsSuccess = true,
                     Token = token,
+                    ExpiresAt = DateTime.SpecifyKind(DateTime.UtcNow.AddDays(7), DateTimeKind.Utc),
                     RefreshToken = refreshToken.Token,
                     RefreshTokenExpiresAt = refreshToken.ExpiryDate,
                     User = new UserDto
@@ -196,6 +197,7 @@ public class AuthenticationService : IAuthenticationService
                 {
                     IsSuccess = true,
                     Token = newUserToken,
+                    ExpiresAt = DateTime.SpecifyKind(DateTime.UtcNow.AddDays(7), DateTimeKind.Utc),
                     RefreshToken = newUserRefreshToken.Token,
                     RefreshTokenExpiresAt = newUserRefreshToken.ExpiryDate,
                     User = new UserDto
