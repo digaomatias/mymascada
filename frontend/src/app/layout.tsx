@@ -16,8 +16,8 @@ export const metadata: Metadata = {
   description: 'AI-powered personal finance management application',
   manifest: '/manifest.json',
   icons: {
-    icon: '/icon.svg',
-    apple: '/icon-192x192.png',
+    icon: '/favicon.png',
+    apple: '/apple-touch-icon.png',
   },
 };
 
@@ -26,7 +26,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#3b82f6',
+  themeColor: '#6b46c1',
 };
 
 // Force dynamic rendering since locale detection requires cookies at request time
