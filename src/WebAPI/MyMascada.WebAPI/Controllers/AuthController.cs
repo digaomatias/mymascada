@@ -416,7 +416,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("google-login-url")]
-    public IActionResult GetGoogleLoginUrl(string? returnUrl = null)
+    public IActionResult GetGoogleLoginUrl(string? returnUrl = null, string? inviteCode = null)
     {
         var configuration = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
         var clientId = configuration["Authentication:Google:ClientId"];
@@ -445,7 +445,8 @@ public class AuthController : ControllerBase
         var statePayload = new
         {
             Nonce = Guid.NewGuid().ToString("N"),
-            ReturnUrl = safeReturnUrl
+            ReturnUrl = safeReturnUrl,
+            InviteCode = inviteCode
         };
 
         // Protect the payload
@@ -492,6 +493,11 @@ public class AuthController : ControllerBase
 
         var statePayload = JsonSerializer.Deserialize<JsonElement>(unprotectedState);
         var finalReturnUrl = statePayload.GetProperty("ReturnUrl").GetString();
+        string? inviteCode = null;
+        if (statePayload.TryGetProperty("InviteCode", out var inviteCodeElement) && inviteCodeElement.ValueKind != JsonValueKind.Null)
+        {
+            inviteCode = inviteCodeElement.GetString();
+        }
 
         try
         {
@@ -530,10 +536,11 @@ public class AuthController : ControllerBase
             }
 
             var authResult = await _authService.GoogleLoginAsync(
-                userInfo.email, 
-                userInfo.given_name, 
-                userInfo.family_name, 
-                userInfo.id);
+                userInfo.email,
+                userInfo.given_name,
+                userInfo.family_name,
+                userInfo.id,
+                inviteCode);
 
             if (authResult.IsSuccess)
             {

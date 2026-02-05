@@ -3,7 +3,9 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using MyMascada.Application.Common.Configuration;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Authentication.DTOs;
 using MyMascada.Domain.Entities;
@@ -17,13 +19,20 @@ public class AuthenticationService : IAuthenticationService
     private readonly IUserRepository _userRepository;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly ICategorySeedingService _categorySeedingService;
+    private readonly BetaAccessOptions _betaAccessOptions;
 
-    public AuthenticationService(IConfiguration configuration, IUserRepository userRepository, IRefreshTokenRepository refreshTokenRepository, ICategorySeedingService categorySeedingService)
+    public AuthenticationService(
+        IConfiguration configuration,
+        IUserRepository userRepository,
+        IRefreshTokenRepository refreshTokenRepository,
+        ICategorySeedingService categorySeedingService,
+        IOptions<BetaAccessOptions> betaAccessOptions)
     {
         _configuration = configuration;
         _userRepository = userRepository;
         _refreshTokenRepository = refreshTokenRepository;
         _categorySeedingService = categorySeedingService;
+        _betaAccessOptions = betaAccessOptions.Value;
     }
 
     public async Task<string> GenerateJwtTokenAsync(User user)
@@ -107,7 +116,7 @@ public class AuthenticationService : IAuthenticationService
         return Convert.ToBase64String(randomBytes);
     }
 
-    public async Task<AuthenticationResponse> GoogleLoginAsync(string email, string? firstName, string? lastName, string? googleId)
+    public async Task<AuthenticationResponse> GoogleLoginAsync(string email, string? firstName, string? lastName, string? googleId, string? inviteCode = null)
     {
         try
         {
@@ -161,6 +170,21 @@ public class AuthenticationService : IAuthenticationService
                         TimeZone = existingUser.TimeZone
                     }
                 };
+            }
+
+            // Validate invite code for new registrations if required
+            if (_betaAccessOptions.RequireInviteCode)
+            {
+                var validCodes = _betaAccessOptions.GetValidCodes();
+                if (string.IsNullOrWhiteSpace(inviteCode) ||
+                    !validCodes.Any(c => string.Equals(c, inviteCode.Trim(), StringComparison.OrdinalIgnoreCase)))
+                {
+                    return new AuthenticationResponse
+                    {
+                        IsSuccess = false,
+                        Errors = new List<string> { "A valid invite code is required to register during the beta period." }
+                    };
+                }
             }
 
             // Create new user

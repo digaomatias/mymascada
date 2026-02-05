@@ -394,6 +394,7 @@ export default function RegisterPage() {
 
                   <GoogleSignInButton
                     onError={(error) => setErrors([error])}
+                    inviteCode={formData.inviteCode}
                   />
                 </>
               )}

@@ -6,17 +6,22 @@ import { apiClient } from '@/lib/api-client';
 
 interface GoogleSignInButtonProps {
   onError?: (error: string) => void;
+  inviteCode?: string;
 }
 
-export function GoogleSignInButton({ onError }: GoogleSignInButtonProps) {
+export function GoogleSignInButton({ onError, inviteCode }: GoogleSignInButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
-    
+
     try {
       const returnUrl = encodeURIComponent(window.location.origin + '/dashboard');
-      const { redirectUrl } = await apiClient.request<{ redirectUrl: string }>(`/api/auth/google-login-url?returnUrl=${returnUrl}`);
+      let url = `/api/auth/google-login-url?returnUrl=${returnUrl}`;
+      if (inviteCode) {
+        url += `&inviteCode=${encodeURIComponent(inviteCode)}`;
+      }
+      const { redirectUrl } = await apiClient.request<{ redirectUrl: string }>(url);
       
       window.location.href = redirectUrl;
     } catch (error) {

@@ -9,7 +9,7 @@ public interface IAuthenticationService
     Task<string> HashPasswordAsync(string password);
     Task<bool> VerifyPasswordAsync(string password, string hashedPassword);
     string GenerateSecurityStamp();
-    Task<AuthenticationResponse> GoogleLoginAsync(string email, string? firstName, string? lastName, string? googleId);
+    Task<AuthenticationResponse> GoogleLoginAsync(string email, string? firstName, string? lastName, string? googleId, string? inviteCode = null);
     Task<AuthenticationResponse> GoogleTokenLoginAsync(string idToken);
     
     // Refresh token methods
