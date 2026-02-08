@@ -81,6 +81,16 @@ public record AkahuBalanceComparisonDto
     /// Indicates this is current account balance, not a statement balance
     /// </summary>
     public bool IsCurrentBalance { get; init; } = true;
+
+    /// <summary>
+    /// Total amount of pending transactions (included in Akahu balance but not in cleared transactions)
+    /// </summary>
+    public decimal PendingTransactionsTotal { get; init; }
+
+    /// <summary>
+    /// Number of pending transactions at the time of reconciliation
+    /// </summary>
+    public int PendingTransactionsCount { get; init; }
 }
 
 /// <summary>

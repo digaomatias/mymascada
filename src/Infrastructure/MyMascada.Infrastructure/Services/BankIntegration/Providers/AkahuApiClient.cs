@@ -251,6 +251,24 @@ public class AkahuApiClient : IAkahuApiClient
     }
 
     /// <summary>
+    /// Get pending transactions for an account
+    /// </summary>
+    public async Task<IReadOnlyList<AkahuPendingTransaction>> GetPendingTransactionsAsync(
+        string appIdToken,
+        string userToken,
+        string accountId,
+        CancellationToken ct = default)
+    {
+        var url = $"accounts/{accountId}/transactions/pending";
+        var request = CreateAuthenticatedRequest(HttpMethod.Get, url, appIdToken, userToken);
+        var response = await _httpClient.SendAsync(request, ct);
+        await EnsureSuccessAsync(response, "Get pending transactions", ct);
+
+        var result = await response.Content.ReadFromJsonAsync<AkahuListResponse<AkahuPendingTransaction>>(JsonOptions, ct);
+        return result?.Items ?? Array.Empty<AkahuPendingTransaction>();
+    }
+
+    /// <summary>
     /// Revoke user access token
     /// </summary>
     public async Task RevokeTokenAsync(string accessToken, CancellationToken ct = default)
@@ -418,4 +436,16 @@ public record AkahuConversion
     public decimal Amount { get; init; }
     public string Currency { get; init; } = string.Empty;
     public decimal Rate { get; init; }
+}
+
+public record AkahuPendingTransaction
+{
+    [JsonPropertyName("_account")]
+    public string AccountId { get; init; } = string.Empty;
+    public DateTime Date { get; init; }
+    public string Description { get; init; } = string.Empty;
+    public decimal Amount { get; init; }
+    public string Type { get; init; } = string.Empty;
+    [JsonPropertyName("updated_at")]
+    public DateTime UpdatedAt { get; init; }
 }

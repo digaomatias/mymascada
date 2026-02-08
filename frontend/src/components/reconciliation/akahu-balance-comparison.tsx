@@ -10,6 +10,8 @@ interface AkahuBalanceComparisonProps {
   difference: number;
   isBalanced: boolean;
   isCurrentBalance?: boolean;
+  pendingTransactionsTotal?: number;
+  pendingTransactionsCount?: number;
 }
 
 export function AkahuBalanceComparison({
@@ -17,7 +19,9 @@ export function AkahuBalanceComparison({
   myMascadaBalance,
   difference,
   isBalanced,
-  isCurrentBalance = true
+  isCurrentBalance = true,
+  pendingTransactionsTotal,
+  pendingTransactionsCount
 }: AkahuBalanceComparisonProps) {
   const t = useTranslations('reconciliation');
   return (
@@ -98,6 +102,15 @@ export function AkahuBalanceComparison({
       {isCurrentBalance && (
         <p className="mt-2 text-xs text-gray-500 italic">
           {t('akahuBalanceComparison.currentBalanceNote')}
+        </p>
+      )}
+
+      {pendingTransactionsTotal != null && pendingTransactionsTotal !== 0 && (
+        <p className="mt-1 text-xs text-gray-500 italic">
+          {t('akahuBalanceComparison.pendingAdjustment', {
+            amount: formatCurrency(Math.abs(pendingTransactionsTotal)),
+            count: pendingTransactionsCount ?? 0
+          })}
         </p>
       )}
     </div>

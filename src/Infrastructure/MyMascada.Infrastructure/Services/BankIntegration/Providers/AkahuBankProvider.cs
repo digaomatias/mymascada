@@ -162,6 +162,41 @@ public class AkahuBankProvider : IBankProvider
     }
 
     /// <summary>
+    /// Fetches the summary of pending transactions for the account.
+    /// Used to adjust the Akahu balance for reconciliation since the current balance
+    /// includes pending transactions but only cleared transactions are available for matching.
+    /// </summary>
+    public async Task<PendingTransactionsSummary> FetchPendingTransactionsSummaryAsync(BankConnectionConfig config, CancellationToken ct = default)
+    {
+        try
+        {
+            var (appIdToken, userToken, credentialError) = await GetUserCredentialsAsync(config.UserId, ct);
+            if (credentialError != null)
+                return new PendingTransactionsSummary(0m, 0);
+
+            var settings = GetSettings(config);
+            var accountId = settings?.AkahuAccountId ?? config.ExternalAccountId;
+            if (string.IsNullOrEmpty(accountId))
+                return new PendingTransactionsSummary(0m, 0);
+
+            var pendingTransactions = await _apiClient.GetPendingTransactionsAsync(appIdToken!, userToken!, accountId, ct);
+
+            var total = pendingTransactions.Sum(t => t.Amount);
+
+            _logger.LogInformation(
+                "Fetched {Count} pending transactions totalling {Total:C} for account {AccountId}",
+                pendingTransactions.Count, total, accountId);
+
+            return new PendingTransactionsSummary(total, pendingTransactions.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to fetch pending transactions summary, returning zeros");
+            return new PendingTransactionsSummary(0m, 0);
+        }
+    }
+
+    /// <summary>
     /// Gets the user's Akahu credentials from the database.
     /// Returns (appIdToken, userToken, errorMessage). If errorMessage is non-null, credentials failed.
     /// </summary>
@@ -230,7 +265,7 @@ public class AkahuBankProvider : IBankProvider
             ExternalId = tx.Id,
             Date = tx.Date,
             Amount = tx.Amount,  // Akahu uses standard convention: negative = expense
-            Description = tx.Merchant?.Name ?? tx.Description,
+            Description = tx.Description,
             Reference = reference,
             Category = tx.Category?.Name,
             MerchantName = tx.Merchant?.Name,

@@ -1157,7 +1157,8 @@
       "balanced": "Equilibrado",
       "minorDifference": "Diferença pequena provavelmente devido a arredondamento. Revise as transações correspondidas para garantir precisão.",
       "reviewUnmatched": "Revise as transações não correspondidas abaixo para identificar a diferença.",
-      "currentBalanceNote": "Observação: este é o saldo atual do Akahu, não o saldo do extrato."
+      "currentBalanceNote": "Observação: este é o saldo atual do Akahu, não o saldo do extrato.",
+      "pendingAdjustment": "Saldo bancário ajustado em {amount} ({count, plural, one {# transação pendente} other {# transações pendentes}} excluídas)."
     }
   },
   "categories": {

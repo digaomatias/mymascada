@@ -1158,7 +1158,8 @@
       "balanced": "Balanced",
       "minorDifference": "Minor difference likely due to rounding. Review the matched transactions for accuracy.",
       "reviewUnmatched": "Review unmatched transactions below to identify the discrepancy.",
-      "currentBalanceNote": "Note: This is the current balance from Akahu, not a statement balance."
+      "currentBalanceNote": "Note: This is the current balance from Akahu, not a statement balance.",
+      "pendingAdjustment": "Bank balance adjusted by {amount} ({count, plural, one {# pending transaction} other {# pending transactions}} excluded)."
     }
   },
   "categories": {

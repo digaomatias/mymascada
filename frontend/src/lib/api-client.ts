@@ -1178,6 +1178,8 @@ class ApiClient {
       difference: number;
       isBalanced: boolean;
       isCurrentBalance: boolean;
+      pendingTransactionsTotal: number;
+      pendingTransactionsCount: number;
     };
   }> {
     return this.request('/api/reconciliation/akahu', {

@@ -42,6 +42,8 @@ interface AkahuBalanceData {
   difference: number;
   isBalanced: boolean;
   isCurrentBalance?: boolean;
+  pendingTransactionsTotal?: number;
+  pendingTransactionsCount?: number;
 }
 
 interface ReconciliationData {
@@ -298,6 +300,8 @@ export default function ReconcileAccountPage() {
       difference: number;
       isBalanced: boolean;
       isCurrentBalance: boolean;
+      pendingTransactionsTotal?: number;
+      pendingTransactionsCount?: number;
     };
   }) => {
     // Update reconciliation with the ID
@@ -323,7 +327,9 @@ export default function ReconcileAccountPage() {
         myMascadaBalance: result.balanceComparison.myMascadaBalance,
         difference: result.balanceComparison.difference,
         isBalanced: result.balanceComparison.isBalanced,
-        isCurrentBalance: result.balanceComparison.isCurrentBalance
+        isCurrentBalance: result.balanceComparison.isCurrentBalance,
+        pendingTransactionsTotal: result.balanceComparison.pendingTransactionsTotal,
+        pendingTransactionsCount: result.balanceComparison.pendingTransactionsCount
       });
     }
 
@@ -643,6 +649,8 @@ export default function ReconcileAccountPage() {
                     difference={akahuBalanceData.difference}
                     isBalanced={akahuBalanceData.isBalanced}
                     isCurrentBalance={akahuBalanceData.isCurrentBalance}
+                    pendingTransactionsTotal={akahuBalanceData.pendingTransactionsTotal}
+                    pendingTransactionsCount={akahuBalanceData.pendingTransactionsCount}
                   />
                 </CardContent>
               </Card>

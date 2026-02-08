@@ -27,9 +27,7 @@ public static class AkahuTransactionMapper
             BankTransactionId = source.ExternalId,
             TransactionDate = source.Date,
             Amount = source.Amount,
-            Description = !string.IsNullOrEmpty(source.MerchantName)
-                ? source.MerchantName
-                : source.Description,
+            Description = source.Description,
             BankCategory = source.Category,
             Reference = source.Reference
         };
@@ -42,18 +40,13 @@ public static class AkahuTransactionMapper
     /// </summary>
     public static Dictionary<string, object?> CreateBankReferenceData(ProviderBankTransactionDto source)
     {
-        // Use the display description (merchant name if available)
-        var displayDescription = !string.IsNullOrEmpty(source.MerchantName)
-            ? source.MerchantName
-            : source.Description;
-
         var referenceData = new Dictionary<string, object?>
         {
             // Match BankTransactionDto property names for proper deserialization
             ["BankTransactionId"] = source.ExternalId,
             ["TransactionDate"] = source.Date.ToString("O"),
             ["Amount"] = source.Amount,
-            ["Description"] = displayDescription,
+            ["Description"] = source.Description,
             ["Reference"] = source.Reference,
             ["BankCategory"] = source.Category,
             // Also store original values for import

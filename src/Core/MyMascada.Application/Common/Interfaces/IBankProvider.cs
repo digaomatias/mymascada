@@ -56,4 +56,20 @@ public interface IBankProvider
     /// <param name="ct">Cancellation token</param>
     /// <returns>Result containing balance information, null if not supported, or error details</returns>
     Task<BankBalanceResult?> FetchBalanceAsync(BankConnectionConfig config, CancellationToken ct = default);
+
+    /// <summary>
+    /// Fetch pending transactions summary for the account.
+    /// Pending transactions are included in the bank's current balance but are not yet
+    /// available as cleared transactions. Used to adjust balance comparison during reconciliation.
+    /// </summary>
+    /// <param name="config">The bank connection configuration containing credentials and settings</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Summary of pending transactions (total amount and count). Returns zeros if not supported.</returns>
+    Task<PendingTransactionsSummary> FetchPendingTransactionsSummaryAsync(BankConnectionConfig config, CancellationToken ct = default)
+        => Task.FromResult(new PendingTransactionsSummary(0m, 0));
 }
+
+/// <summary>
+/// Summary of pending transactions for balance adjustment.
+/// </summary>
+public record PendingTransactionsSummary(decimal Total, int Count);

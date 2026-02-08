@@ -140,17 +140,26 @@ public class CreateAkahuReconciliationCommandHandler
             var balanceResult = await provider.FetchBalanceAsync(connectionConfig, cancellationToken);
             if (balanceResult?.IsSuccess == true)
             {
+                // Fetch pending transactions to adjust the balance.
+                // Akahu's current balance includes pending transactions, but only cleared
+                // transactions are available for matching, so we subtract pending to get
+                // a comparable "cleared balance".
+                var pendingSummary = await provider.FetchPendingTransactionsSummaryAsync(connectionConfig, cancellationToken);
+                var adjustedAkahuBalance = balanceResult.CurrentBalance - pendingSummary.Total;
+
                 var myMascadaBalance = await _transactionRepository.GetAccountBalanceAsync(
                     request.AccountId,
                     request.UserId);
 
                 balanceComparison = new AkahuBalanceComparisonDto
                 {
-                    AkahuBalance = balanceResult.CurrentBalance,
+                    AkahuBalance = adjustedAkahuBalance,
                     MyMascadaBalance = myMascadaBalance,
-                    Difference = balanceResult.CurrentBalance - myMascadaBalance,
-                    IsBalanced = Math.Abs(balanceResult.CurrentBalance - myMascadaBalance) <= 0.01m,
-                    IsCurrentBalance = true
+                    Difference = adjustedAkahuBalance - myMascadaBalance,
+                    IsBalanced = Math.Abs(adjustedAkahuBalance - myMascadaBalance) <= 0.01m,
+                    IsCurrentBalance = true,
+                    PendingTransactionsTotal = pendingSummary.Total,
+                    PendingTransactionsCount = pendingSummary.Count
                 };
             }
         }
