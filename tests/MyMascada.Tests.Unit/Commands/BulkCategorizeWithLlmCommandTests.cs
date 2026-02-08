@@ -14,6 +14,7 @@ namespace MyMascada.Tests.Unit.Commands;
 public class BulkCategorizeWithLlmCommandTests
 {
     private readonly ITransactionRepository _transactionRepository;
+    private readonly IAccountAccessService _accountAccessService;
     private readonly ISharedCategorizationService _sharedCategorizationService;
     private readonly ICategorizationCandidatesService _candidatesService;
     private readonly ILogger<BulkCategorizeWithLlmCommandHandler> _logger;
@@ -23,12 +24,17 @@ public class BulkCategorizeWithLlmCommandTests
     public BulkCategorizeWithLlmCommandTests()
     {
         _transactionRepository = Substitute.For<ITransactionRepository>();
+        _accountAccessService = Substitute.For<IAccountAccessService>();
         _sharedCategorizationService = Substitute.For<ISharedCategorizationService>();
         _candidatesService = Substitute.For<ICategorizationCandidatesService>();
         _logger = Substitute.For<ILogger<BulkCategorizeWithLlmCommandHandler>>();
-        
+
+        // Default: allow modify access on all accounts
+        _accountAccessService.CanModifyAccountAsync(Arg.Any<Guid>(), Arg.Any<int>()).Returns(true);
+
         _handler = new BulkCategorizeWithLlmCommandHandler(
             _transactionRepository,
+            _accountAccessService,
             _sharedCategorizationService,
             _candidatesService,
             _logger);

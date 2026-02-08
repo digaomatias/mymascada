@@ -7,23 +7,28 @@ using MyMascada.Infrastructure.Data;
 namespace MyMascada.Infrastructure.Services;
 
 /// <summary>
-/// Service for building consistent transaction queries across different contexts
+/// Service for building consistent transaction queries across different contexts.
+/// Uses IAccountAccessService to determine which accounts the user can see.
 /// </summary>
 public class TransactionQueryService : ITransactionQueryService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IAccountAccessService _accountAccess;
 
-    public TransactionQueryService(ApplicationDbContext context)
+    public TransactionQueryService(ApplicationDbContext context, IAccountAccessService accountAccess)
     {
         _context = context;
+        _accountAccess = accountAccess;
     }
 
-    public IQueryable<Transaction> BuildTransactionQuery(TransactionQueryParameters parameters)
+    public async Task<IQueryable<Transaction>> BuildTransactionQueryAsync(TransactionQueryParameters parameters)
     {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(parameters.UserId);
+
         var query = _context.Transactions
             .Include(t => t.Account)
             .Include(t => t.Category)
-            .Where(t => t.Account.UserId == parameters.UserId && !t.Account.IsDeleted);
+            .Where(t => accessibleIds.Contains(t.AccountId) && !t.Account.IsDeleted);
 
         // Apply filters using the same logic as TransactionRepository
         if (parameters.AccountId.HasValue)
@@ -78,7 +83,7 @@ public class TransactionQueryService : ITransactionQueryService
         if (!string.IsNullOrEmpty(parameters.SearchTerm))
         {
             var searchTerm = parameters.SearchTerm.ToLower();
-            query = query.Where(t => 
+            query = query.Where(t =>
                 t.Description.ToLower().Contains(searchTerm) ||
                 (t.UserDescription != null && t.UserDescription.ToLower().Contains(searchTerm)) ||
                 (t.Notes != null && t.Notes.ToLower().Contains(searchTerm)) ||
@@ -110,22 +115,22 @@ public class TransactionQueryService : ITransactionQueryService
 
         return sortBy.ToLower() switch
         {
-            "transactiondate" => isDescending 
+            "transactiondate" => isDescending
                 ? query.OrderByDescending(t => t.TransactionDate)
                 : query.OrderBy(t => t.TransactionDate),
-            "amount" => isDescending 
+            "amount" => isDescending
                 ? query.OrderByDescending(t => Math.Abs(t.Amount))
                 : query.OrderBy(t => Math.Abs(t.Amount)),
-            "description" => isDescending 
+            "description" => isDescending
                 ? query.OrderByDescending(t => t.Description)
                 : query.OrderBy(t => t.Description),
-            "category" => isDescending 
+            "category" => isDescending
                 ? query.OrderByDescending(t => t.Category != null ? t.Category.Name : "")
                 : query.OrderBy(t => t.Category != null ? t.Category.Name : ""),
-            "account" => isDescending 
+            "account" => isDescending
                 ? query.OrderByDescending(t => t.Account.Name)
                 : query.OrderBy(t => t.Account.Name),
-            _ => isDescending 
+            _ => isDescending
                 ? query.OrderByDescending(t => t.TransactionDate)
                 : query.OrderBy(t => t.TransactionDate)
         };
@@ -140,7 +145,7 @@ public class TransactionQueryService : ITransactionQueryService
 
     public async Task<List<int>> GetTransactionIdsAsync(TransactionQueryParameters parameters)
     {
-        var query = BuildTransactionQuery(parameters);
+        var query = await BuildTransactionQueryAsync(parameters);
         var sortedQuery = ApplySorting(query, parameters.SortBy, parameters.SortDirection);
         var paginatedQuery = ApplyPagination(sortedQuery, parameters.Page, parameters.PageSize);
 

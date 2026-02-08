@@ -14,15 +14,18 @@ public class LinkTransactionsAsTransferCommandHandler : IRequestHandler<LinkTran
 {
     private readonly ITransactionRepository _transactionRepository;
     private readonly ITransferRepository _transferRepository;
+    private readonly IAccountAccessService _accountAccessService;
     private readonly IMapper _mapper;
 
     public LinkTransactionsAsTransferCommandHandler(
         ITransactionRepository transactionRepository,
         ITransferRepository transferRepository,
+        IAccountAccessService accountAccessService,
         IMapper mapper)
     {
         _transactionRepository = transactionRepository;
         _transferRepository = transferRepository;
+        _accountAccessService = accountAccessService;
         _mapper = mapper;
     }
 
@@ -50,6 +53,16 @@ public class LinkTransactionsAsTransferCommandHandler : IRequestHandler<LinkTran
                 response.Message = "Destination transaction not found";
                 response.Errors.Add("Destination transaction not found");
                 return response;
+            }
+
+            // Verify the user has modify permission on both accounts (owner or Manager role)
+            if (!await _accountAccessService.CanModifyAccountAsync(request.UserId, sourceTransaction.AccountId))
+            {
+                throw new UnauthorizedAccessException("You do not have permission to modify transactions on the source account.");
+            }
+            if (!await _accountAccessService.CanModifyAccountAsync(request.UserId, destinationTransaction.AccountId))
+            {
+                throw new UnauthorizedAccessException("You do not have permission to modify transactions on the destination account.");
             }
 
             // Validate transactions are from different accounts

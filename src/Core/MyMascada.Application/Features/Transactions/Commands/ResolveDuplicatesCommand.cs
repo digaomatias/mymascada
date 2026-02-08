@@ -23,13 +23,16 @@ public class ResolveDuplicatesCommandHandler : IRequestHandler<ResolveDuplicates
 {
     private readonly ITransactionRepository _transactionRepository;
     private readonly IDuplicateExclusionRepository _duplicateExclusionRepository;
+    private readonly IAccountAccessService _accountAccessService;
 
     public ResolveDuplicatesCommandHandler(
         ITransactionRepository transactionRepository,
-        IDuplicateExclusionRepository duplicateExclusionRepository)
+        IDuplicateExclusionRepository duplicateExclusionRepository,
+        IAccountAccessService accountAccessService)
     {
         _transactionRepository = transactionRepository;
         _duplicateExclusionRepository = duplicateExclusionRepository;
+        _accountAccessService = accountAccessService;
     }
 
     public async Task<ResolveDuplicatesResponse> Handle(ResolveDuplicatesCommand request, CancellationToken cancellationToken)
@@ -80,6 +83,16 @@ public class ResolveDuplicatesCommandHandler : IRequestHandler<ResolveDuplicates
                 {
                     errors.Add($"Group {resolution.GroupId}: Transactions not found or access denied: {string.Join(", ", missingIds)}");
                     continue;
+                }
+
+                // Verify the user has modify permission on all affected accounts
+                var accountIds = transactions.Select(t => t.AccountId).Distinct();
+                foreach (var accountId in accountIds)
+                {
+                    if (!await _accountAccessService.CanModifyAccountAsync(request.UserId, accountId))
+                    {
+                        throw new UnauthorizedAccessException("You do not have permission to resolve duplicates on one or more of these accounts.");
+                    }
                 }
 
                 // Delete the specified transactions

@@ -40,6 +40,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<RecurringOccurrence> RecurringOccurrences => Set<RecurringOccurrence>();
     public DbSet<WaitlistEntry> WaitlistEntries => Set<WaitlistEntry>();
     public DbSet<InvitationCode> InvitationCodes => Set<InvitationCode>();
+    public DbSet<AccountShare> AccountShares => Set<AccountShare>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -676,6 +677,41 @@ public class ApplicationDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.ClaimedByUserId)
                 .OnDelete(DeleteBehavior.SetNull);
+            entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+        // AccountShare configuration
+        modelBuilder.Entity<AccountShare>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.InvitationToken).HasMaxLength(64); // SHA-256 hex
+
+            entity.HasOne(e => e.Account)
+                .WithMany(a => a.Shares)
+                .HasForeignKey(e => e.AccountId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.SharedWithUser)
+                .WithMany(u => u.AccountSharesReceived)
+                .HasForeignKey(e => e.SharedWithUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.SharedByUser)
+                .WithMany(u => u.AccountSharesGiven)
+                .HasForeignKey(e => e.SharedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Prevent duplicate active shares (same account + same user)
+            entity.HasIndex(e => new { e.AccountId, e.SharedWithUserId })
+                .HasFilter("\"Status\" IN (1, 2) AND \"IsDeleted\" = false")
+                .IsUnique();
+
+            // For looking up shares by recipient
+            entity.HasIndex(e => e.SharedWithUserId);
+
+            // For invitation token lookups
+            entity.HasIndex(e => e.InvitationToken)
+                .HasFilter("\"InvitationToken\" IS NOT NULL");
+
             entity.HasQueryFilter(e => !e.IsDeleted);
         });
     }

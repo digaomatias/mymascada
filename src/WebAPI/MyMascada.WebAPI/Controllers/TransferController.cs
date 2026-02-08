@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Transfers.Commands;
 using MyMascada.Application.Features.Transfers.DTOs;
+using MyMascada.Domain.Common;
 
 namespace MyMascada.WebAPI.Controllers;
 
@@ -17,11 +18,16 @@ public class TransferController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ICurrentUserService _currentUserService;
+    private readonly ITransferRedactionService _redactionService;
 
-    public TransferController(IMediator mediator, ICurrentUserService currentUserService)
+    public TransferController(
+        IMediator mediator,
+        ICurrentUserService currentUserService,
+        ITransferRedactionService redactionService)
     {
         _mediator = mediator;
         _currentUserService = currentUserService;
+        _redactionService = redactionService;
     }
 
     /// <summary>
@@ -51,7 +57,8 @@ public class TransferController : ControllerBase
             };
 
             var result = await _mediator.Send(command);
-            return CreatedAtAction(nameof(GetTransfer), new { id = result.Id }, result);
+            var redacted = await _redactionService.RedactForViewerAsync(result, userId);
+            return CreatedAtAction(nameof(GetTransfer), new { id = redacted.Id }, redacted);
         }
         catch (ArgumentException ex)
         {
@@ -188,7 +195,7 @@ public class CreateTransferRequest
     /// <summary>
     /// Date when the transfer occurred
     /// </summary>
-    public DateTime TransferDate { get; set; } = DateTime.UtcNow;
+    public DateTime TransferDate { get; set; } = DateTimeProvider.UtcNow;
 }
 
 /// <summary>

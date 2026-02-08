@@ -16,6 +16,7 @@ public class ManualMatchTransactionCommandTests
     private readonly IReconciliationItemRepository _reconciliationItemRepository;
     private readonly ITransactionRepository _transactionRepository;
     private readonly IMatchConfidenceCalculator _matchConfidenceCalculator;
+    private readonly IAccountAccessService _accountAccessService;
     private readonly ManualMatchTransactionCommandHandler _handler;
 
     private readonly Guid _userId = Guid.NewGuid();
@@ -28,12 +29,17 @@ public class ManualMatchTransactionCommandTests
         _reconciliationItemRepository = Substitute.For<IReconciliationItemRepository>();
         _transactionRepository = Substitute.For<ITransactionRepository>();
         _matchConfidenceCalculator = Substitute.For<IMatchConfidenceCalculator>();
-        
+        _accountAccessService = Substitute.For<IAccountAccessService>();
+
+        // Default: allow modify access on all accounts
+        _accountAccessService.CanModifyAccountAsync(Arg.Any<Guid>(), Arg.Any<int>()).Returns(true);
+
         _handler = new ManualMatchTransactionCommandHandler(
             _reconciliationRepository,
             _reconciliationItemRepository,
             _transactionRepository,
-            _matchConfidenceCalculator);
+            _matchConfidenceCalculator,
+            _accountAccessService);
     }
 
     [Fact]

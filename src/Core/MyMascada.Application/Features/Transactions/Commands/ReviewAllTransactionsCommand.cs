@@ -18,10 +18,14 @@ public class ReviewAllTransactionsResponse
 public class ReviewAllTransactionsCommandHandler : IRequestHandler<ReviewAllTransactionsCommand, ReviewAllTransactionsResponse>
 {
     private readonly ITransactionRepository _transactionRepository;
+    private readonly IAccountAccessService _accountAccessService;
 
-    public ReviewAllTransactionsCommandHandler(ITransactionRepository transactionRepository)
+    public ReviewAllTransactionsCommandHandler(
+        ITransactionRepository transactionRepository,
+        IAccountAccessService accountAccessService)
     {
         _transactionRepository = transactionRepository;
+        _accountAccessService = accountAccessService;
     }
 
     public async Task<ReviewAllTransactionsResponse> Handle(ReviewAllTransactionsCommand request, CancellationToken cancellationToken)
@@ -30,7 +34,7 @@ public class ReviewAllTransactionsCommandHandler : IRequestHandler<ReviewAllTran
         {
             // Get all unreviewed transactions for the user
             var unreviewedTransactions = await _transactionRepository.GetUnreviewedAsync(request.UserId);
-            
+
             if (!unreviewedTransactions.Any())
             {
                 return new ReviewAllTransactionsResponse
@@ -41,8 +45,28 @@ public class ReviewAllTransactionsCommandHandler : IRequestHandler<ReviewAllTran
                 };
             }
 
-            // Mark all as reviewed
+            // Only review transactions on accounts the user can modify (owner or Manager role)
+            var modifiableTransactions = new List<Domain.Entities.Transaction>();
             foreach (var transaction in unreviewedTransactions)
+            {
+                if (await _accountAccessService.CanModifyAccountAsync(request.UserId, transaction.AccountId))
+                {
+                    modifiableTransactions.Add(transaction);
+                }
+            }
+
+            if (!modifiableTransactions.Any())
+            {
+                return new ReviewAllTransactionsResponse
+                {
+                    Success = true,
+                    ReviewedCount = 0,
+                    Message = "No transactions need review"
+                };
+            }
+
+            // Mark all modifiable as reviewed
+            foreach (var transaction in modifiableTransactions)
             {
                 transaction.IsReviewed = true;
                 transaction.UpdatedAt = DateTime.UtcNow;
@@ -52,8 +76,8 @@ public class ReviewAllTransactionsCommandHandler : IRequestHandler<ReviewAllTran
             return new ReviewAllTransactionsResponse
             {
                 Success = true,
-                ReviewedCount = unreviewedTransactions.Count(),
-                Message = $"Successfully reviewed {unreviewedTransactions.Count()} transaction(s)"
+                ReviewedCount = modifiableTransactions.Count,
+                Message = $"Successfully reviewed {modifiableTransactions.Count} transaction(s)"
             };
         }
         catch (Exception ex)

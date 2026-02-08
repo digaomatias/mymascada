@@ -15,17 +15,20 @@ public class CreateMissingTransferCommandHandler : IRequestHandler<CreateMissing
     private readonly ITransactionRepository _transactionRepository;
     private readonly IAccountRepository _accountRepository;
     private readonly ITransferRepository _transferRepository;
+    private readonly IAccountAccessService _accountAccessService;
     private readonly IMapper _mapper;
 
     public CreateMissingTransferCommandHandler(
         ITransactionRepository transactionRepository,
         IAccountRepository accountRepository,
         ITransferRepository transferRepository,
+        IAccountAccessService accountAccessService,
         IMapper mapper)
     {
         _transactionRepository = transactionRepository;
         _accountRepository = accountRepository;
         _transferRepository = transferRepository;
+        _accountAccessService = accountAccessService;
         _mapper = mapper;
     }
 
@@ -53,6 +56,16 @@ public class CreateMissingTransferCommandHandler : IRequestHandler<CreateMissing
                 response.Message = "Destination account not found";
                 response.Errors.Add("Account not found");
                 return response;
+            }
+
+            // Verify the user has modify permission on both accounts (owner or Manager role)
+            if (!await _accountAccessService.CanModifyAccountAsync(request.UserId, existingTransaction.AccountId))
+            {
+                throw new UnauthorizedAccessException("You do not have permission to modify transactions on the existing transaction's account.");
+            }
+            if (!await _accountAccessService.CanModifyAccountAsync(request.UserId, request.MissingAccountId))
+            {
+                throw new UnauthorizedAccessException("You do not have permission to create transactions on the target account.");
             }
 
             // Validate not creating transfer to same account

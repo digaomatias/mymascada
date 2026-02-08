@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
+using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Transactions.Queries;
 using MyMascada.Domain.Entities;
 using MyMascada.Domain.Enums;
 using MyMascada.Infrastructure.Data;
 using MyMascada.Infrastructure.Repositories;
+using NSubstitute;
 using Xunit;
 
 namespace MyMascada.Tests.Unit.Repositories;
@@ -22,8 +24,35 @@ public class TransactionRepositoryTests : IDisposable
             .Options;
 
         _context = new ApplicationDbContext(options);
-        var queryService = new MyMascada.Infrastructure.Services.TransactionQueryService(_context);
-        _repository = new TransactionRepository(_context, queryService);
+
+        // Create a mock IAccountAccessService that grants full access (Phase 0 behavior)
+        var accountAccess = Substitute.For<IAccountAccessService>();
+        accountAccess.GetAccessibleAccountIdsAsync(Arg.Any<Guid>())
+            .Returns(callInfo =>
+            {
+                var ids = _context.Accounts
+                    .Where(a => a.UserId == callInfo.Arg<Guid>() && !a.IsDeleted)
+                    .Select(a => a.Id)
+                    .ToHashSet();
+                return Task.FromResult<IReadOnlySet<int>>(ids);
+            });
+        accountAccess.CanAccessAccountAsync(Arg.Any<Guid>(), Arg.Any<int>())
+            .Returns(callInfo =>
+            {
+                var userId = callInfo.ArgAt<Guid>(0);
+                var accountId = callInfo.ArgAt<int>(1);
+                return Task.FromResult(_context.Accounts.Any(a => a.Id == accountId && a.UserId == userId && !a.IsDeleted));
+            });
+        accountAccess.IsOwnerAsync(Arg.Any<Guid>(), Arg.Any<int>())
+            .Returns(callInfo =>
+            {
+                var userId = callInfo.ArgAt<Guid>(0);
+                var accountId = callInfo.ArgAt<int>(1);
+                return Task.FromResult(_context.Accounts.Any(a => a.Id == accountId && a.UserId == userId && !a.IsDeleted));
+            });
+
+        var queryService = new MyMascada.Infrastructure.Services.TransactionQueryService(_context, accountAccess);
+        _repository = new TransactionRepository(_context, queryService, accountAccess);
 
         // Seed test data
         SeedTestData().Wait();

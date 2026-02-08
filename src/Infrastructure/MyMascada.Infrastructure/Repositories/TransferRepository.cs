@@ -9,19 +9,23 @@ namespace MyMascada.Infrastructure.Repositories;
 public class TransferRepository : ITransferRepository
 {
     private readonly ApplicationDbContext _context;
+    private readonly IAccountAccessService _accountAccess;
 
-    public TransferRepository(ApplicationDbContext context)
+    public TransferRepository(ApplicationDbContext context, IAccountAccessService accountAccess)
     {
         _context = context;
+        _accountAccess = accountAccess;
     }
 
     public async Task<Transfer?> GetByIdAsync(int id, Guid userId)
     {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
         return await _context.Transfers
             .Include(t => t.SourceAccount)
             .Include(t => t.DestinationAccount)
             .Include(t => t.Transactions)
-            .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
+            .FirstOrDefaultAsync(t => t.Id == id &&
+                (accessibleIds.Contains(t.SourceAccountId) || accessibleIds.Contains(t.DestinationAccountId)));
     }
 
     public async Task<Transfer?> GetByIdAsync(Guid transferId, Guid userId)
@@ -31,19 +35,22 @@ public class TransferRepository : ITransferRepository
 
     public async Task<Transfer?> GetByTransferIdAsync(Guid transferId, Guid userId)
     {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
         return await _context.Transfers
             .Include(t => t.SourceAccount)
             .Include(t => t.DestinationAccount)
             .Include(t => t.Transactions)
-            .FirstOrDefaultAsync(t => t.TransferId == transferId && t.UserId == userId);
+            .FirstOrDefaultAsync(t => t.TransferId == transferId &&
+                (accessibleIds.Contains(t.SourceAccountId) || accessibleIds.Contains(t.DestinationAccountId)));
     }
 
     public async Task<IEnumerable<Transfer>> GetByUserIdAsync(Guid userId)
     {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
         return await _context.Transfers
             .Include(t => t.SourceAccount)
             .Include(t => t.DestinationAccount)
-            .Where(t => t.UserId == userId)
+            .Where(t => accessibleIds.Contains(t.SourceAccountId) || accessibleIds.Contains(t.DestinationAccountId))
             .OrderByDescending(t => t.TransferDate)
             .ToListAsync();
     }
@@ -62,10 +69,11 @@ public class TransferRepository : ITransferRepository
         string sortBy = "TransferDate",
         string sortDirection = "desc")
     {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
         var query = _context.Transfers
             .Include(t => t.SourceAccount)
             .Include(t => t.DestinationAccount)
-            .Where(t => t.UserId == userId);
+            .Where(t => accessibleIds.Contains(t.SourceAccountId) || accessibleIds.Contains(t.DestinationAccountId));
 
         // Apply filters
         if (sourceAccountId.HasValue)
@@ -95,14 +103,14 @@ public class TransferRepository : ITransferRepository
         // Apply sorting
         query = sortBy.ToLower() switch
         {
-            "amount" => sortDirection.ToLower() == "asc" 
-                ? query.OrderBy(t => t.Amount) 
+            "amount" => sortDirection.ToLower() == "asc"
+                ? query.OrderBy(t => t.Amount)
                 : query.OrderByDescending(t => t.Amount),
-            "status" => sortDirection.ToLower() == "asc" 
-                ? query.OrderBy(t => t.Status) 
+            "status" => sortDirection.ToLower() == "asc"
+                ? query.OrderBy(t => t.Status)
                 : query.OrderByDescending(t => t.Status),
-            _ => sortDirection.ToLower() == "asc" 
-                ? query.OrderBy(t => t.TransferDate) 
+            _ => sortDirection.ToLower() == "asc"
+                ? query.OrderBy(t => t.TransferDate)
                 : query.OrderByDescending(t => t.TransferDate)
         };
 
@@ -141,10 +149,11 @@ public class TransferRepository : ITransferRepository
 
     public async Task<IEnumerable<Transfer>> GetRecentAsync(Guid userId, int count = 10)
     {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
         return await _context.Transfers
             .Include(t => t.SourceAccount)
             .Include(t => t.DestinationAccount)
-            .Where(t => t.UserId == userId)
+            .Where(t => accessibleIds.Contains(t.SourceAccountId) || accessibleIds.Contains(t.DestinationAccountId))
             .OrderByDescending(t => t.TransferDate)
             .Take(count)
             .ToListAsync();

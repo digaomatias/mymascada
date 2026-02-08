@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@/contexts/auth-context';
+import { useFeatures } from '@/contexts/features-context';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Navigation from '@/components/navigation';
@@ -18,10 +19,12 @@ import {
   EllipsisVerticalIcon,
   PencilIcon,
   TrashIcon,
-  DocumentArrowUpIcon
+  DocumentArrowUpIcon,
+  UserGroupIcon
 } from '@heroicons/react/24/outline';
 import { AddAccountButton } from '@/components/buttons/add-account-button';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import { ShareAccountModal } from '@/components/modals/share-account-modal';
 import { useTranslations } from 'next-intl';
 
 interface Account {
@@ -36,12 +39,17 @@ interface Account {
   notes?: string;
   createdAt: string;
   updatedAt: string;
+  isOwner: boolean;
+  isSharedWithMe: boolean;
+  shareRole?: number;
+  sharedByUserName?: string;
 }
 
 // Account type mapping removed - now using utility functions from lib/utils
 
 export default function AccountsPage() {
   const { isAuthenticated, isLoading } = useAuth();
+  const { features } = useFeatures();
   const router = useRouter();
   const t = useTranslations('accounts');
   const tCommon = useTranslations('common');
@@ -50,6 +58,7 @@ export default function AccountsPage() {
   const [totalBalance, setTotalBalance] = useState(0);
   const [archiveConfirm, setArchiveConfirm] = useState<{ show: boolean; account?: Account }>({ show: false });
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; account?: Account }>({ show: false });
+  const [shareModal, setShareModal] = useState<{ show: boolean; account?: Account }>({ show: false });
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -69,7 +78,7 @@ export default function AccountsPage() {
       setLoading(true);
       const accountsData = await apiClient.getAccountsWithBalances() as Account[];
       setAccounts(accountsData || []);
-      
+
       // Calculate total balance using calculated balance (excluding credit cards and loans which are liabilities)
       const total = (accountsData || [])
         .filter((account: Account) => account.type !== 2 && account.type !== 4) // Exclude credit cards (2) and loans (4) - 0-based values
@@ -114,6 +123,10 @@ export default function AccountsPage() {
     }
   };
 
+  const getShareRoleName = (role?: number) => {
+    return role === 2 ? t('sharing.roleManager') : t('sharing.roleViewer');
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200 flex items-center justify-center">
@@ -134,7 +147,7 @@ export default function AccountsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200">
       <Navigation />
-      
+
       <main className="container-responsive py-4 sm:py-6 lg:py-8">
         {/* Header */}
         <div className="mb-6 lg:mb-8">
@@ -266,6 +279,14 @@ export default function AccountsPage() {
                             {account.institution && (
                               <span className="text-xs sm:text-sm text-gray-500 truncate">{account.institution}</span>
                             )}
+                            {account.isSharedWithMe && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                <UserGroupIcon className="w-3 h-3" />
+                                {t('sharing.sharedByName', { name: account.sharedByUserName || '' })}
+                                {' - '}
+                                {getShareRoleName(account.shareRole)}
+                              </span>
+                            )}
                           </div>
                         </div>
 
@@ -276,35 +297,50 @@ export default function AccountsPage() {
                           </Button>
 
                           <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto">
-                            <Link
-                              href={`/transactions/new?accountId=${account.id}`}
-                              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                            >
-                              <DocumentArrowUpIcon className="w-4 h-4" />
-                              {t('addTransaction')}
-                            </Link>
-                            <Link
-                              href={`/accounts/${account.id}/edit`}
-                              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                            >
-                              <PencilIcon className="w-4 h-4" />
-                              {t('editAccount')}
-                            </Link>
-                            <button
-                              onClick={() => setArchiveConfirm({ show: true, account })}
-                              className="flex items-center gap-2 px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 w-full text-left cursor-pointer"
-                            >
-                              <TrashIcon className="w-4 h-4" />
-                              {t('archiveAccount')}
-                            </button>
-                            <div className="border-t border-gray-200 my-1"></div>
-                            <button
-                              onClick={() => setDeleteConfirm({ show: true, account })}
-                              className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left cursor-pointer"
-                            >
-                              <TrashIcon className="w-4 h-4" />
-                              {t('deletePermanently')}
-                            </button>
+                            {(!account.isSharedWithMe || account.shareRole === 2) && (
+                              <Link
+                                href={`/transactions/new?accountId=${account.id}`}
+                                className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                              >
+                                <DocumentArrowUpIcon className="w-4 h-4" />
+                                {t('addTransaction')}
+                              </Link>
+                            )}
+                            {account.isOwner && (
+                              <>
+                                {features.accountSharing && (
+                                  <button
+                                    onClick={() => setShareModal({ show: true, account })}
+                                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full text-left cursor-pointer"
+                                  >
+                                    <UserGroupIcon className="w-4 h-4" />
+                                    {t('sharing.shareAccount')}
+                                  </button>
+                                )}
+                                <Link
+                                  href={`/accounts/${account.id}/edit`}
+                                  className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                >
+                                  <PencilIcon className="w-4 h-4" />
+                                  {t('editAccount')}
+                                </Link>
+                                <button
+                                  onClick={() => setArchiveConfirm({ show: true, account })}
+                                  className="flex items-center gap-2 px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 w-full text-left cursor-pointer"
+                                >
+                                  <TrashIcon className="w-4 h-4" />
+                                  {t('archiveAccount')}
+                                </button>
+                                <div className="border-t border-gray-200 my-1"></div>
+                                <button
+                                  onClick={() => setDeleteConfirm({ show: true, account })}
+                                  className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left cursor-pointer"
+                                >
+                                  <TrashIcon className="w-4 h-4" />
+                                  {t('deletePermanently')}
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -327,35 +363,50 @@ export default function AccountsPage() {
                           </Button>
 
                           <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto">
-                            <Link
-                              href={`/transactions/new?accountId=${account.id}`}
-                              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                            >
-                              <DocumentArrowUpIcon className="w-4 h-4" />
-                              {t('addTransaction')}
-                            </Link>
-                            <Link
-                              href={`/accounts/${account.id}/edit`}
-                              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                            >
-                              <PencilIcon className="w-4 h-4" />
-                              {t('editAccount')}
-                            </Link>
-                            <button
-                              onClick={() => setArchiveConfirm({ show: true, account })}
-                              className="flex items-center gap-2 px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 w-full text-left cursor-pointer"
-                            >
-                              <TrashIcon className="w-4 h-4" />
-                              {t('archiveAccount')}
-                            </button>
-                            <div className="border-t border-gray-200 my-1"></div>
-                            <button
-                              onClick={() => setDeleteConfirm({ show: true, account })}
-                              className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left cursor-pointer"
-                            >
-                              <TrashIcon className="w-4 h-4" />
-                              {t('deletePermanently')}
-                            </button>
+                            {(!account.isSharedWithMe || account.shareRole === 2) && (
+                              <Link
+                                href={`/transactions/new?accountId=${account.id}`}
+                                className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                              >
+                                <DocumentArrowUpIcon className="w-4 h-4" />
+                                {t('addTransaction')}
+                              </Link>
+                            )}
+                            {account.isOwner && (
+                              <>
+                                {features.accountSharing && (
+                                  <button
+                                    onClick={() => setShareModal({ show: true, account })}
+                                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full text-left cursor-pointer"
+                                  >
+                                    <UserGroupIcon className="w-4 h-4" />
+                                    {t('sharing.shareAccount')}
+                                  </button>
+                                )}
+                                <Link
+                                  href={`/accounts/${account.id}/edit`}
+                                  className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                >
+                                  <PencilIcon className="w-4 h-4" />
+                                  {t('editAccount')}
+                                </Link>
+                                <button
+                                  onClick={() => setArchiveConfirm({ show: true, account })}
+                                  className="flex items-center gap-2 px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 w-full text-left cursor-pointer"
+                                >
+                                  <TrashIcon className="w-4 h-4" />
+                                  {t('archiveAccount')}
+                                </button>
+                                <div className="border-t border-gray-200 my-1"></div>
+                                <button
+                                  onClick={() => setDeleteConfirm({ show: true, account })}
+                                  className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left cursor-pointer"
+                                >
+                                  <TrashIcon className="w-4 h-4" />
+                                  {t('deletePermanently')}
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -391,6 +442,16 @@ export default function AccountsPage() {
         onConfirm={() => deleteConfirm.account && handleDeleteAccount(deleteConfirm.account)}
         onClose={() => setDeleteConfirm({ show: false })}
       />
+
+      {/* Share Account Modal */}
+      {shareModal.account && (
+        <ShareAccountModal
+          isOpen={shareModal.show}
+          onClose={() => setShareModal({ show: false })}
+          accountId={shareModal.account.id}
+          accountName={shareModal.account.name}
+        />
+      )}
     </div>
   );
 }

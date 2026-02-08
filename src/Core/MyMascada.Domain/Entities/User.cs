@@ -39,4 +39,6 @@ public class User : BaseEntity<Guid>
     public ICollection<Category> Categories { get; set; } = new List<Category>();
     public ICollection<CategorizationRule> CategorizationRules { get; set; } = new List<CategorizationRule>();
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+    public ICollection<AccountShare> AccountSharesReceived { get; set; } = new List<AccountShare>();
+    public ICollection<AccountShare> AccountSharesGiven { get; set; } = new List<AccountShare>();
 }

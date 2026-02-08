@@ -26,6 +26,12 @@ public static class ApplicationServiceExtensions
         // Add AutoMapper
         services.AddAutoMapper(typeof(MyMascada.Application.Features.Accounts.Mappings.AccountMappingProfile).Assembly);
 
+        // Account access service (central authorization choke point)
+        services.AddScoped<IAccountAccessService, AccountAccessService>();
+
+        // Transfer redaction service (for shared account privacy)
+        services.AddScoped<ITransferRedactionService, TransferRedactionService>();
+
         // Transaction services
         services.AddScoped<ITransactionQueryService, MyMascada.Infrastructure.Services.TransactionQueryService>();
         services.AddScoped<MyMascada.Application.Features.Transactions.Services.TransactionReviewService>();

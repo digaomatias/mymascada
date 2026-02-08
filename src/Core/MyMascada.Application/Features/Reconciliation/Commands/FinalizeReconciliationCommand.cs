@@ -20,19 +20,22 @@ public class FinalizeReconciliationCommandHandler : IRequestHandler<FinalizeReco
     private readonly IReconciliationAuditLogRepository _auditLogRepository;
     private readonly IAccountRepository _accountRepository;
     private readonly ITransactionRepository _transactionRepository;
+    private readonly IAccountAccessService _accountAccessService;
 
     public FinalizeReconciliationCommandHandler(
         IReconciliationRepository reconciliationRepository,
         IReconciliationItemRepository reconciliationItemRepository,
         IReconciliationAuditLogRepository auditLogRepository,
         IAccountRepository accountRepository,
-        ITransactionRepository transactionRepository)
+        ITransactionRepository transactionRepository,
+        IAccountAccessService accountAccessService)
     {
         _reconciliationRepository = reconciliationRepository;
         _reconciliationItemRepository = reconciliationItemRepository;
         _auditLogRepository = auditLogRepository;
         _accountRepository = accountRepository;
         _transactionRepository = transactionRepository;
+        _accountAccessService = accountAccessService;
     }
 
     public async Task<ReconciliationDto> Handle(FinalizeReconciliationCommand request, CancellationToken cancellationToken)
@@ -41,6 +44,10 @@ public class FinalizeReconciliationCommandHandler : IRequestHandler<FinalizeReco
         var reconciliation = await _reconciliationRepository.GetByIdAsync(request.ReconciliationId, request.UserId);
         if (reconciliation == null)
             throw new ArgumentException($"Reconciliation with ID {request.ReconciliationId} not found or does not belong to user");
+
+        // Verify the user has modify permission on the reconciliation's account (owner or Manager role)
+        if (!await _accountAccessService.CanModifyAccountAsync(request.UserId, reconciliation.AccountId))
+            throw new UnauthorizedAccessException("You do not have permission to finalize reconciliations on this account.");
 
         // Check if reconciliation is already finalized
         if (reconciliation.Status == ReconciliationStatus.Completed)

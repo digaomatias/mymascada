@@ -27,18 +27,21 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
     private readonly ITransactionRepository _transactionRepository;
     private readonly ICategoryRepository _categoryRepository;
     private readonly ITransferRepository _transferRepository;
+    private readonly IAccountAccessService _accountAccessService;
     private readonly IMapper _mapper;
 
     public UpdateTransactionCommandHandler(
         ITransactionRepository transactionRepository,
         ICategoryRepository categoryRepository,
         ITransferRepository transferRepository,
+        IAccountAccessService accountAccessService,
         IMapper mapper)
     {
         _transactionRepository = transactionRepository;
         _mapper = mapper;
         _categoryRepository = categoryRepository;
         _transferRepository = transferRepository;
+        _accountAccessService = accountAccessService;
     }
 
     public async Task<TransactionDto> Handle(UpdateTransactionCommand request, CancellationToken cancellationToken)
@@ -48,6 +51,12 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
         if (transaction == null)
         {
             throw new ArgumentException($"Transaction with ID {request.Id} not found or does not belong to user");
+        }
+
+        // Verify the user has modify permission on the transaction's account (owner or Manager role)
+        if (!await _accountAccessService.CanModifyAccountAsync(request.UserId, transaction.AccountId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to update transactions on this account.");
         }
 
         // Validate category if provided

@@ -15,40 +15,46 @@ public class TransactionRepository : ITransactionRepository
 {
     private readonly ApplicationDbContext _context;
     private readonly ITransactionQueryService _queryService;
+    private readonly IAccountAccessService _accountAccess;
 
-    public TransactionRepository(ApplicationDbContext context, ITransactionQueryService queryService)
+    public TransactionRepository(ApplicationDbContext context, ITransactionQueryService queryService, IAccountAccessService accountAccess)
     {
         _context = context;
         _queryService = queryService;
+        _accountAccess = accountAccess;
     }
 
     public async Task<Transaction?> GetByIdAsync(int id, Guid userId)
     {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
         return await _context.Transactions
             .Include(t => t.Account)
             .Include(t => t.Category)
-            .FirstOrDefaultAsync(t => t.Id == id && 
-                                     t.Account.UserId == userId);
+            .FirstOrDefaultAsync(t => t.Id == id &&
+                                     accessibleIds.Contains(t.AccountId));
     }
 
     public async Task<IEnumerable<Transaction>> GetByAccountIdAsync(int accountId, Guid userId)
     {
+        if (!await _accountAccess.CanAccessAccountAsync(userId, accountId))
+            return Enumerable.Empty<Transaction>();
+
         return await _context.Transactions
             .Include(t => t.Account)
             .Include(t => t.Category)
-            .Where(t => t.AccountId == accountId && 
-                       t.Account.UserId == userId)
+            .Where(t => t.AccountId == accountId)
             .OrderByDescending(t => t.TransactionDate)
             .ToListAsync();
     }
 
     public async Task<IEnumerable<Transaction>> GetByCategoryIdAsync(int categoryId, Guid userId)
     {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
         return await _context.Transactions
             .Include(t => t.Account)
             .Include(t => t.Category)
-            .Where(t => t.CategoryId == categoryId && 
-                       t.Account.UserId == userId)
+            .Where(t => t.CategoryId == categoryId &&
+                       accessibleIds.Contains(t.AccountId))
             .OrderByDescending(t => t.TransactionDate)
             .ToListAsync();
     }
@@ -56,17 +62,17 @@ public class TransactionRepository : ITransactionRepository
     public async Task<(IEnumerable<Transaction> transactions, int totalCount)> GetFilteredAsync(GetTransactionsQuery request)
     {
         var parameters = TransactionQueryParameters.FromGetTransactionsQuery(request);
-        
-        // Build base query using shared service
-        var baseQuery = _queryService.BuildTransactionQuery(parameters);
-        
+
+        // Build base query using shared service (which now uses IAccountAccessService)
+        var baseQuery = await _queryService.BuildTransactionQueryAsync(parameters);
+
         // Get total count before pagination
         var totalCount = await baseQuery.CountAsync();
-        
+
         // Apply sorting and pagination
         var sortedQuery = _queryService.ApplySorting(baseQuery, request.SortBy, request.SortDirection);
         var paginatedQuery = _queryService.ApplyPagination(sortedQuery, request.Page, request.PageSize);
-        
+
         var transactions = await paginatedQuery.ToListAsync();
 
         return (transactions, totalCount);
@@ -75,15 +81,18 @@ public class TransactionRepository : ITransactionRepository
     public async Task<TransactionSummaryDto> GetSummaryAsync(GetTransactionsQuery request)
     {
         var parameters = TransactionQueryParameters.FromGetTransactionsQuery(request);
-        var query = _queryService.BuildTransactionQuery(parameters);
+        var query = await _queryService.BuildTransactionQueryAsync(parameters);
 
         // If an account ID is provided, calculate the balance for that specific account.
         if (request.AccountId.HasValue)
         {
-            // Get the account's initial balance.
-            var account = await _context.Accounts
-                .AsNoTracking()
-                .FirstOrDefaultAsync(a => a.Id == request.AccountId.Value && a.UserId == request.UserId);
+            Account? account = null;
+            if (await _accountAccess.CanAccessAccountAsync(request.UserId, request.AccountId.Value))
+            {
+                account = await _context.Accounts
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(a => a.Id == request.AccountId.Value);
+            }
 
             var initialBalance = account?.CurrentBalance ?? 0m;
 
@@ -92,7 +101,7 @@ public class TransactionRepository : ITransactionRepository
 
             // The total balance is the initial balance plus the sum of all transactions matching the query.
             var totalBalance = initialBalance + transactionsSum;
-            
+
             var summary = await query
                 .GroupBy(t => 1)
                 .Select(g => new TransactionSummaryDto
@@ -125,7 +134,7 @@ public class TransactionRepository : ITransactionRepository
                     UnreviewedTransactionCount = g.Count(t => !t.IsReviewed)
                 })
                 .FirstOrDefaultAsync();
-            
+
             return summary ?? new TransactionSummaryDto();
         }
     }
@@ -134,9 +143,9 @@ public class TransactionRepository : ITransactionRepository
     {
         await _context.Transactions.AddAsync(transaction);
         await _context.SaveChangesAsync();
-        
-        
-        
+
+
+
         return transaction;
     }
 
@@ -156,8 +165,11 @@ public class TransactionRepository : ITransactionRepository
 
     public async Task DeleteByAccountIdAsync(int accountId, Guid userId)
     {
+        if (!await _accountAccess.IsOwnerAsync(userId, accountId))
+            return;
+
         var transactions = await _context.Transactions
-            .Where(t => t.AccountId == accountId && t.Account.UserId == userId && !t.IsDeleted)
+            .Where(t => t.AccountId == accountId && !t.IsDeleted)
             .ToListAsync();
 
         if (transactions.Any())
@@ -176,18 +188,20 @@ public class TransactionRepository : ITransactionRepository
 
     public async Task<decimal> GetAccountBalanceAsync(int accountId, Guid userId)
     {
+        if (!await _accountAccess.CanAccessAccountAsync(userId, accountId))
+            return 0;
+
         // Get the account's initial balance
         var account = await _context.Accounts
-            .Where(a => a.Id == accountId && a.UserId == userId && !a.IsDeleted)
+            .Where(a => a.Id == accountId && !a.IsDeleted)
             .FirstOrDefaultAsync();
-        
+
         if (account == null)
             return 0;
 
         // Get transaction balance
         var transactionBalance = await _context.Transactions
-            .Where(t => t.AccountId == accountId && 
-                       t.Account.UserId == userId && 
+            .Where(t => t.AccountId == accountId &&
                        t.Status != TransactionStatus.Cancelled &&
                        !t.IsDeleted)
             .SumAsync(t => (decimal?)t.Amount) ?? 0;
@@ -198,10 +212,11 @@ public class TransactionRepository : ITransactionRepository
 
     public async Task<IEnumerable<Transaction>> GetRecentTransactionsAsync(Guid userId, int count = 10, CancellationToken cancellationToken = default)
     {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
         return await _context.Transactions
             .Include(t => t.Account)
             .Include(t => t.Category)
-            .Where(t => t.Account.UserId == userId && !t.Account.IsDeleted)
+            .Where(t => accessibleIds.Contains(t.AccountId) && !t.Account.IsDeleted)
             .OrderByDescending(t => t.TransactionDate)
             .Take(count)
             .ToListAsync(cancellationToken);
@@ -226,7 +241,7 @@ public class TransactionRepository : ITransactionRepository
         return await _context.Transactions
             .Include(t => t.Account)
             .Include(t => t.Category)
-            .FirstOrDefaultAsync(t => 
+            .FirstOrDefaultAsync(t =>
                 t.AccountId == accountId &&
                 t.Amount == amount &&
                 t.Description.Trim() == description &&
@@ -237,11 +252,11 @@ public class TransactionRepository : ITransactionRepository
     public async Task<Transaction?> GetRecentDuplicateAsync(int accountId, decimal amount, string description, TimeSpan timeWindow)
     {
         var cutoffTime = DateTime.UtcNow.Subtract(timeWindow);
-        
+
         return await _context.Transactions
             .Include(t => t.Account)
             .Include(t => t.Category)
-            .FirstOrDefaultAsync(t => 
+            .FirstOrDefaultAsync(t =>
                 t.AccountId == accountId &&
                 t.Amount == amount &&
                 t.Description.Trim() == description &&
@@ -250,10 +265,11 @@ public class TransactionRepository : ITransactionRepository
 
     public async Task<IEnumerable<Transaction>> GetRecentAsync(Guid userId, int count = 5)
     {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
         return await _context.Transactions
             .Include(t => t.Account)
             .Include(t => t.Category)
-            .Where(t => t.Account.UserId == userId && !t.Account.IsDeleted)
+            .Where(t => accessibleIds.Contains(t.AccountId) && !t.Account.IsDeleted)
             .OrderByDescending(t => t.TransactionDate)
             .Take(count)
             .ToListAsync();
@@ -261,13 +277,15 @@ public class TransactionRepository : ITransactionRepository
 
     public async Task<IEnumerable<Transaction>> GetByDateRangeAsync(Guid userId, int accountId, DateTime startDate, DateTime endDate, bool excludeReconciled = false)
     {
+        if (!await _accountAccess.CanAccessAccountAsync(userId, accountId))
+            return Enumerable.Empty<Transaction>();
+
         var inclusiveEndDate = endDate.EndOfDayUtc();
 
         var query = _context.Transactions
             .Include(t => t.Account)
             .Include(t => t.Category)
-            .Where(t => t.Account.UserId == userId &&
-                       t.AccountId == accountId &&
+            .Where(t => t.AccountId == accountId &&
                        !t.Account.IsDeleted &&
                        t.TransactionDate >= startDate &&
                        t.TransactionDate <= inclusiveEndDate);
@@ -285,12 +303,13 @@ public class TransactionRepository : ITransactionRepository
 
     public async Task<IEnumerable<Transaction>> GetByDateRangeAsync(Guid userId, DateTime startDate, DateTime endDate)
     {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
         var inclusiveEndDate = endDate.EndOfDayUtc();
 
         return await _context.Transactions
             .Include(t => t.Account)
             .Include(t => t.Category)
-            .Where(t => t.Account.UserId == userId &&
+            .Where(t => accessibleIds.Contains(t.AccountId) &&
                        !t.Account.IsDeleted &&
                        t.TransactionDate >= startDate &&
                        t.TransactionDate <= inclusiveEndDate)
@@ -300,13 +319,15 @@ public class TransactionRepository : ITransactionRepository
 
     public async Task<IEnumerable<Transaction>> GetTransactionsByDateRangeAsync(int accountId, DateTime startDate, DateTime endDate, Guid userId)
     {
+        if (!await _accountAccess.CanAccessAccountAsync(userId, accountId))
+            return Enumerable.Empty<Transaction>();
+
         var inclusiveEndDate = endDate.EndOfDayUtc();
 
         return await _context.Transactions
             .Include(t => t.Account)
             .Include(t => t.Category)
             .Where(t => t.AccountId == accountId &&
-                       t.Account.UserId == userId &&
                        !t.Account.IsDeleted &&
                        t.TransactionDate >= startDate &&
                        t.TransactionDate <= inclusiveEndDate)
@@ -316,8 +337,9 @@ public class TransactionRepository : ITransactionRepository
 
     public async Task<int> GetCountByUserIdAsync(Guid userId)
     {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
         return await _context.Transactions
-            .Where(t => t.Account.UserId == userId && !t.Account.IsDeleted)
+            .Where(t => accessibleIds.Contains(t.AccountId) && !t.Account.IsDeleted)
             .CountAsync();
     }
 
@@ -331,28 +353,31 @@ public class TransactionRepository : ITransactionRepository
 
     public async Task<IEnumerable<Transaction>> GetUnreviewedAsync(Guid userId)
     {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
         return await _context.Transactions
             .Include(t => t.Account)
             .Include(t => t.Category)
-            .Where(t => t.Account.UserId == userId && !t.Account.IsDeleted && !t.IsReviewed && !t.IsDeleted)
+            .Where(t => accessibleIds.Contains(t.AccountId) && !t.Account.IsDeleted && !t.IsReviewed && !t.IsDeleted)
             .OrderBy(t => t.TransactionDate)
             .ToListAsync();
     }
 
     public async Task<Dictionary<int, decimal>> GetAccountBalancesAsync(Guid userId)
     {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
+
         // Get transaction balances
         var transactionBalances = await _context.Transactions
-            .Where(t => t.Account.UserId == userId && !t.Account.IsDeleted &&
-                       t.Status != TransactionStatus.Cancelled && 
+            .Where(t => accessibleIds.Contains(t.AccountId) && !t.Account.IsDeleted &&
+                       t.Status != TransactionStatus.Cancelled &&
                        !t.IsDeleted)
             .GroupBy(t => t.AccountId)
             .Select(g => new { AccountId = g.Key, Balance = g.Sum(t => t.Amount) })
             .ToDictionaryAsync(x => x.AccountId, x => x.Balance);
 
-        // Get all accounts and their initial balances
+        // Get all accessible accounts and their initial balances
         var accounts = await _context.Accounts
-            .Where(a => a.UserId == userId && !a.IsDeleted)
+            .Where(a => accessibleIds.Contains(a.Id) && !a.IsDeleted)
             .Select(a => new { a.Id, a.CurrentBalance })
             .ToListAsync();
 
@@ -369,18 +394,20 @@ public class TransactionRepository : ITransactionRepository
 
     public async Task<Transaction?> GetTransactionByExternalIdAsync(string userId, string externalId)
     {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(Guid.Parse(userId));
         return await _context.Transactions
             .Include(t => t.Account)
-            .Where(t => t.Account.UserId == Guid.Parse(userId) && 
-                       t.ExternalId == externalId && 
+            .Where(t => accessibleIds.Contains(t.AccountId) &&
+                       t.ExternalId == externalId &&
                        !t.IsDeleted)
             .FirstOrDefaultAsync();
     }
 
     public async Task<IEnumerable<string>> GetUniqueDescriptionsAsync(Guid userId, string? searchTerm = null, int limit = 10)
     {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
         var query = _context.Transactions
-            .Where(t => t.Account.UserId == userId && !t.IsDeleted)
+            .Where(t => accessibleIds.Contains(t.AccountId) && !t.IsDeleted)
             .Select(t => t.Description)
             .Distinct();
 
@@ -400,14 +427,14 @@ public class TransactionRepository : ITransactionRepository
         await _context.SaveChangesAsync();
     }
 
-    // Data integrity methods
+    // Data integrity methods - owner-only operations
     public async Task<IEnumerable<Transaction>> GetOrphanedTransactionsAsync(Guid userId)
     {
         return await _context.Transactions
             .Include(t => t.Account)
             .Include(t => t.Category)
-            .Where(t => t.Account.UserId == userId && 
-                       t.Account.IsDeleted && 
+            .Where(t => t.Account.UserId == userId &&
+                       t.Account.IsDeleted &&
                        !t.IsDeleted)
             .OrderByDescending(t => t.TransactionDate)
             .ToListAsync();
@@ -416,17 +443,19 @@ public class TransactionRepository : ITransactionRepository
     public async Task<int> GetOrphanedTransactionCountAsync(Guid userId)
     {
         return await _context.Transactions
-            .Where(t => t.Account.UserId == userId && 
-                       t.Account.IsDeleted && 
+            .Where(t => t.Account.UserId == userId &&
+                       t.Account.IsDeleted &&
                        !t.IsDeleted)
             .CountAsync();
     }
 
     public async Task UpdateAccountIdAsync(int oldAccountId, int newAccountId, Guid userId)
     {
+        if (!await _accountAccess.IsOwnerAsync(userId, oldAccountId))
+            return;
+
         var transactions = await _context.Transactions
-            .Where(t => t.AccountId == oldAccountId && 
-                       t.Account.UserId == userId && 
+            .Where(t => t.AccountId == oldAccountId &&
                        !t.IsDeleted)
             .ToListAsync();
 
@@ -445,9 +474,11 @@ public class TransactionRepository : ITransactionRepository
 
     public async Task HardDeleteTransactionsByAccountIdAsync(int accountId, Guid userId)
     {
+        if (!await _accountAccess.IsOwnerAsync(userId, accountId))
+            return;
+
         var transactions = await _context.Transactions
-            .Where(t => t.AccountId == accountId && 
-                       t.Account.UserId == userId)
+            .Where(t => t.AccountId == accountId)
             .ToListAsync();
 
         if (transactions.Any())
@@ -460,11 +491,12 @@ public class TransactionRepository : ITransactionRepository
     // LLM Categorization support methods
     public async Task<IEnumerable<Transaction>> GetTransactionsByIdsAsync(IEnumerable<int> transactionIds, Guid userId, CancellationToken cancellationToken = default)
     {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
         return await _context.Transactions
             .Include(t => t.Account)
             .Include(t => t.Category)
-            .Where(t => transactionIds.Contains(t.Id) && 
-                       t.Account.UserId == userId)
+            .Where(t => transactionIds.Contains(t.Id) &&
+                       accessibleIds.Contains(t.AccountId))
             .ToListAsync(cancellationToken);
     }
 
@@ -488,10 +520,11 @@ public class TransactionRepository : ITransactionRepository
 
     public async Task<List<Transaction>> GetAllForDuplicateDetectionAsync(Guid userId, bool includeReviewed = false)
     {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
         var query = _context.Transactions
             .Include(t => t.Account)
             .Include(t => t.Category)
-            .Where(t => t.Account.UserId == userId && 
+            .Where(t => accessibleIds.Contains(t.AccountId) &&
                        !t.IsDeleted &&
                        t.TransferId == null); // Exclude transfer transactions
 
@@ -508,10 +541,11 @@ public class TransactionRepository : ITransactionRepository
 
     public async Task<List<Transaction>> GetUserTransactionsAsync(Guid userId, bool includeDeleted = false, bool includeReviewed = true, bool includeTransfers = true)
     {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
         var query = _context.Transactions
             .Include(t => t.Account)
             .Include(t => t.Category)
-            .Where(t => t.Account.UserId == userId);
+            .Where(t => accessibleIds.Contains(t.AccountId));
 
         if (!includeDeleted)
         {
@@ -536,16 +570,20 @@ public class TransactionRepository : ITransactionRepository
 
     public async Task<List<Transaction>> GetByTransferIdAsync(Guid transferId, Guid userId)
     {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
         return await _context.Transactions
             .Include(t => t.Account)
             .Include(t => t.Category)
-            .Where(t => t.TransferId == transferId && t.Account.UserId == userId && !t.IsDeleted)
+            .Where(t => t.TransferId == transferId && accessibleIds.Contains(t.AccountId) && !t.IsDeleted)
             .OrderBy(t => t.Id)
             .ToListAsync();
     }
 
     public async Task<(decimal currentMonth, decimal previousMonth)> GetMonthlySpendingAsync(int accountId, Guid userId)
     {
+        if (!await _accountAccess.CanAccessAccountAsync(userId, accountId))
+            return (0, 0);
+
         var now = DateTime.UtcNow;
         var currentMonthStart = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
         var currentMonthEnd = currentMonthStart.AddMonths(1);
@@ -554,7 +592,6 @@ public class TransactionRepository : ITransactionRepository
         // Get current month spending (only expenses - negative amounts)
         var currentMonthSpending = await _context.Transactions
             .Where(t => t.AccountId == accountId
-                && t.Account.UserId == userId
                 && !t.IsDeleted
                 && t.Status != TransactionStatus.Cancelled
                 && t.TransactionDate >= currentMonthStart
@@ -565,7 +602,6 @@ public class TransactionRepository : ITransactionRepository
         // Get previous month spending (only expenses - negative amounts)
         var previousMonthSpending = await _context.Transactions
             .Where(t => t.AccountId == accountId
-                && t.Account.UserId == userId
                 && !t.IsDeleted
                 && t.Status != TransactionStatus.Cancelled
                 && t.TransactionDate >= previousMonthStart
@@ -585,11 +621,12 @@ public class TransactionRepository : ITransactionRepository
 
     public async Task<IEnumerable<Transaction>> GetCategorizedTransactionsAsync(Guid userId, int count = 200, CancellationToken cancellationToken = default)
     {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
         return await _context.Transactions
             .Include(t => t.Account)
             .Include(t => t.Category)
-            .Where(t => t.Account.UserId == userId && 
-                       t.CategoryId.HasValue && 
+            .Where(t => accessibleIds.Contains(t.AccountId) &&
+                       t.CategoryId.HasValue &&
                        !t.IsDeleted)
             .OrderByDescending(t => t.CreatedAt)
             .Take(count)
@@ -598,10 +635,11 @@ public class TransactionRepository : ITransactionRepository
 
     public async Task<IEnumerable<Transaction>> GetUncategorizedTransactionsAsync(Guid userId, int maxCount = 500, CancellationToken cancellationToken = default)
     {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
         return await _context.Transactions
             .Include(t => t.Account)
-            .Where(t => t.Account.UserId == userId && 
-                       !t.CategoryId.HasValue && 
+            .Where(t => accessibleIds.Contains(t.AccountId) &&
+                       !t.CategoryId.HasValue &&
                        !t.IsDeleted)
             .OrderByDescending(t => t.CreatedAt)
             .Take(maxCount)
@@ -625,8 +663,6 @@ public class TransactionRepository : ITransactionRepository
     public async Task BulkUpdateCategorizationAsync<T>(IEnumerable<T> updates, CancellationToken cancellationToken = default)
         where T : class
     {
-        // This method expects updates to have the properties: TransactionId, CategoryId, CategorizationMethod, 
-        // ConfidenceScore, AutoCategorizedBy, AutoCategorizedAt, IsReviewed
         var updateList = updates.ToList();
         if (!updateList.Any())
             return;
@@ -650,9 +686,6 @@ public class TransactionRepository : ITransactionRepository
             updateData[transactionId] = (categoryId, method, confidence, by, at, reviewed);
         }
 
-        // Since ExecuteUpdate doesn't support joins/complex updates with different values per row,
-        // we need to update each transaction individually. This is still more efficient than
-        // loading entities into the change tracker.
         foreach (var kvp in updateData)
         {
             var transactionId = kvp.Key;

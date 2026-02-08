@@ -32,6 +32,7 @@ public class CreateTransactionCommandHandler : IRequestHandler<CreateTransaction
     private readonly ITransactionRepository _transactionRepository;
     private readonly IAccountRepository _accountRepository;
     private readonly ICategoryRepository _categoryRepository;
+    private readonly IAccountAccessService _accountAccessService;
     private readonly IMapper _mapper;
     private readonly TransactionDuplicateChecker _duplicateChecker;
     private readonly ICategorizationPipeline _categorizationPipeline;
@@ -40,6 +41,7 @@ public class CreateTransactionCommandHandler : IRequestHandler<CreateTransaction
         ITransactionRepository transactionRepository,
         IAccountRepository accountRepository,
         ICategoryRepository categoryRepository,
+        IAccountAccessService accountAccessService,
         IMapper mapper,
         TransactionDuplicateChecker duplicateChecker,
         ICategorizationPipeline categorizationPipeline)
@@ -47,6 +49,7 @@ public class CreateTransactionCommandHandler : IRequestHandler<CreateTransaction
         _transactionRepository = transactionRepository;
         _accountRepository = accountRepository;
         _categoryRepository = categoryRepository;
+        _accountAccessService = accountAccessService;
         _mapper = mapper;
         _duplicateChecker = duplicateChecker;
         _categorizationPipeline = categorizationPipeline;
@@ -59,6 +62,12 @@ public class CreateTransactionCommandHandler : IRequestHandler<CreateTransaction
         if (account == null)
         {
             throw new ArgumentException($"Account with ID {request.AccountId} not found or does not belong to user");
+        }
+
+        // Verify the user has modify permission on this account (owner or Manager role)
+        if (!await _accountAccessService.CanModifyAccountAsync(request.UserId, request.AccountId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to create transactions on this account.");
         }
 
         // Validate category if provided

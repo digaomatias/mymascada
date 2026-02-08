@@ -1,6 +1,8 @@
+using MyMascada.Domain.Enums;
+
 namespace MyMascada.Application.Features.Accounts.DTOs;
 
-public class AccountWithBalanceDto
+public class AccountWithBalanceDto : ISharingMetadata
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
@@ -13,4 +15,10 @@ public class AccountWithBalanceDto
     public string? Notes { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+
+    // Sharing metadata
+    public bool IsOwner { get; set; } = true;
+    public bool IsSharedWithMe { get; set; }
+    public AccountShareRole? ShareRole { get; set; }
+    public string? SharedByUserName { get; set; }
 }

@@ -15,6 +15,7 @@ public class FinalizeReconciliationCommandTests
     private readonly IReconciliationAuditLogRepository _auditLogRepository;
     private readonly IAccountRepository _accountRepository;
     private readonly ITransactionRepository _transactionRepository;
+    private readonly IAccountAccessService _accountAccessService;
     private readonly FinalizeReconciliationCommandHandler _handler;
 
     private readonly Guid _userId = Guid.NewGuid();
@@ -27,13 +28,18 @@ public class FinalizeReconciliationCommandTests
         _auditLogRepository = Substitute.For<IReconciliationAuditLogRepository>();
         _accountRepository = Substitute.For<IAccountRepository>();
         _transactionRepository = Substitute.For<ITransactionRepository>();
+        _accountAccessService = Substitute.For<IAccountAccessService>();
+
+        // Default: allow modify access on all accounts
+        _accountAccessService.CanModifyAccountAsync(Arg.Any<Guid>(), Arg.Any<int>()).Returns(true);
 
         _handler = new FinalizeReconciliationCommandHandler(
             _reconciliationRepository,
             _reconciliationItemRepository,
             _auditLogRepository,
             _accountRepository,
-            _transactionRepository);
+            _transactionRepository,
+            _accountAccessService);
     }
 
     [Fact]

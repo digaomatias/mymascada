@@ -40,6 +40,9 @@ public static class RepositoryServiceExtensions
         services.AddScoped<IWaitlistRepository, WaitlistRepository>();
         services.AddScoped<IInvitationCodeRepository, InvitationCodeRepository>();
 
+        // Account sharing repositories
+        services.AddScoped<IAccountShareRepository, AccountShareRepository>();
+
         return services;
     }
 }

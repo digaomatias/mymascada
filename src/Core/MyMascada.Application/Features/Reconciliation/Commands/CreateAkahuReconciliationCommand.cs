@@ -37,6 +37,8 @@ public class CreateAkahuReconciliationCommandHandler
     private readonly ITransactionMatchingService _matchingService;
     private readonly IApplicationLogger<CreateAkahuReconciliationCommandHandler> _logger;
 
+    private readonly IAccountAccessService _accountAccessService;
+
     public CreateAkahuReconciliationCommandHandler(
         IAccountRepository accountRepository,
         IBankConnectionRepository bankConnectionRepository,
@@ -46,6 +48,7 @@ public class CreateAkahuReconciliationCommandHandler
         IReconciliationAuditLogRepository auditLogRepository,
         ITransactionRepository transactionRepository,
         ITransactionMatchingService matchingService,
+        IAccountAccessService accountAccessService,
         IApplicationLogger<CreateAkahuReconciliationCommandHandler> logger)
     {
         _accountRepository = accountRepository;
@@ -56,6 +59,7 @@ public class CreateAkahuReconciliationCommandHandler
         _auditLogRepository = auditLogRepository;
         _transactionRepository = transactionRepository;
         _matchingService = matchingService;
+        _accountAccessService = accountAccessService;
         _logger = logger;
     }
 
@@ -68,6 +72,12 @@ public class CreateAkahuReconciliationCommandHandler
         if (account == null)
         {
             throw new ArgumentException($"Account with ID {request.AccountId} not found or does not belong to user");
+        }
+
+        // Verify the user has modify permission on this account (owner or Manager role)
+        if (!await _accountAccessService.CanModifyAccountAsync(request.UserId, request.AccountId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to create reconciliations on this account.");
         }
 
         // Get the bank connection

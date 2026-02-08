@@ -6,7 +6,7 @@ namespace MyMascada.Application.Features.Accounts.DTOs;
 /// <summary>
 /// Basic account information for list views and general operations
 /// </summary>
-public class AccountDto
+public class AccountDto : ISharingMetadata
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
@@ -20,4 +20,10 @@ public class AccountDto
     public string? Notes { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+
+    // Sharing metadata (populated when AccountSharing feature is enabled)
+    public bool IsOwner { get; set; } = true;
+    public bool IsSharedWithMe { get; set; }
+    public AccountShareRole? ShareRole { get; set; }
+    public string? SharedByUserName { get; set; }
 }

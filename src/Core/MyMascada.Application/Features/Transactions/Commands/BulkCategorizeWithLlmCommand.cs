@@ -34,17 +34,20 @@ public class BulkLlmCategorizationResult
 public class BulkCategorizeWithLlmCommandHandler : IRequestHandler<BulkCategorizeWithLlmCommand, BulkLlmCategorizationResult>
 {
     private readonly ITransactionRepository _transactionRepository;
+    private readonly IAccountAccessService _accountAccessService;
     private readonly ISharedCategorizationService _sharedCategorizationService;
     private readonly ICategorizationCandidatesService _candidatesService;
     private readonly ILogger<BulkCategorizeWithLlmCommandHandler> _logger;
 
     public BulkCategorizeWithLlmCommandHandler(
         ITransactionRepository transactionRepository,
+        IAccountAccessService accountAccessService,
         ISharedCategorizationService sharedCategorizationService,
         ICategorizationCandidatesService candidatesService,
         ILogger<BulkCategorizeWithLlmCommandHandler> logger)
     {
         _transactionRepository = transactionRepository;
+        _accountAccessService = accountAccessService;
         _sharedCategorizationService = sharedCategorizationService;
         _candidatesService = candidatesService;
         _logger = logger;
@@ -66,12 +69,22 @@ public class BulkCategorizeWithLlmCommandHandler : IRequestHandler<BulkCategoriz
             // Fetch transactions
             var transactions = await _transactionRepository.GetTransactionsByIdsAsync(
                 request.TransactionIds, request.UserId, cancellationToken);
-            
+
             var transactionsList = transactions.ToList();
             if (!transactionsList.Any())
             {
                 result.Message = "No valid transactions found for the provided IDs";
                 return result;
+            }
+
+            // Verify the user has modify permission on all affected accounts
+            var accountIds = transactionsList.Select(t => t.AccountId).Distinct();
+            foreach (var accountId in accountIds)
+            {
+                if (!await _accountAccessService.CanModifyAccountAsync(request.UserId, accountId))
+                {
+                    throw new UnauthorizedAccessException("You do not have permission to categorize transactions on one or more of these accounts.");
+                }
             }
 
             // Process in batches to respect limits

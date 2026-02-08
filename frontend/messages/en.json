@@ -850,6 +850,28 @@
       "AUD": "Australian Dollar (AUD)",
       "CAD": "Canadian Dollar (CAD)",
       "JPY": "Japanese Yen (JPY)"
+    },
+    "sharing": {
+      "sharedByName": "Shared by {name}",
+      "roleViewer": "Viewer",
+      "roleManager": "Manager",
+      "shareAccount": "Share Account",
+      "shareWith": "Share with",
+      "emailPlaceholder": "Enter email address",
+      "selectRole": "Select role",
+      "sendInvitation": "Send Invitation",
+      "invitationSent": "Invitation sent successfully",
+      "invitationSentDetails": "An invitation has been sent to {email}",
+      "currentShares": "Current Shares",
+      "noShares": "This account hasn't been shared with anyone yet",
+      "revokeAccess": "Revoke Access",
+      "revokeConfirm": "Are you sure you want to revoke {name}'s access to this account?",
+      "accessRevoked": "Access revoked",
+      "roleUpdated": "Role updated",
+      "pendingInvitation": "Pending",
+      "accepted": "Active",
+      "declined": "Declined",
+      "revoked": "Revoked"
     }
   },
   "reconciliation": {

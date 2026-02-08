@@ -12,10 +12,14 @@ public class ReviewTransactionCommand : IRequest<bool>
 public class ReviewTransactionCommandHandler : IRequestHandler<ReviewTransactionCommand, bool>
 {
     private readonly ITransactionRepository _transactionRepository;
+    private readonly IAccountAccessService _accountAccessService;
 
-    public ReviewTransactionCommandHandler(ITransactionRepository transactionRepository)
+    public ReviewTransactionCommandHandler(
+        ITransactionRepository transactionRepository,
+        IAccountAccessService accountAccessService)
     {
         _transactionRepository = transactionRepository;
+        _accountAccessService = accountAccessService;
     }
 
     public async Task<bool> Handle(ReviewTransactionCommand request, CancellationToken cancellationToken)
@@ -25,6 +29,12 @@ public class ReviewTransactionCommandHandler : IRequestHandler<ReviewTransaction
         if (transaction == null)
         {
             return false;
+        }
+
+        // Verify the user has modify permission on the transaction's account (owner or Manager role)
+        if (!await _accountAccessService.CanModifyAccountAsync(request.UserId, transaction.AccountId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to review transactions on this account.");
         }
 
         // Mark as reviewed

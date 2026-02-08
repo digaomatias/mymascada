@@ -84,6 +84,11 @@ public class Account : BaseEntity
     public BankConnection? BankConnection { get; set; }
 
     /// <summary>
+    /// Sharing relationships for this account
+    /// </summary>
+    public ICollection<AccountShare> Shares { get; set; } = new List<AccountShare>();
+
+    /// <summary>
     /// Calculates the total balance including pending transactions
     /// </summary>
     public decimal GetTotalBalance()

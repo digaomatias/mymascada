@@ -35,6 +35,8 @@ public class ImportUnmatchedTransactionsCommandHandler
     /// </summary>
     private const decimal AutoCategorizeMinConfidence = 0.9m;
 
+    private readonly IAccountAccessService _accountAccessService;
+
     public ImportUnmatchedTransactionsCommandHandler(
         IReconciliationRepository reconciliationRepository,
         IReconciliationItemRepository reconciliationItemRepository,
@@ -42,6 +44,7 @@ public class ImportUnmatchedTransactionsCommandHandler
         IReconciliationAuditLogRepository auditLogRepository,
         IBankCategoryMappingService categoryMappingService,
         IBankConnectionRepository bankConnectionRepository,
+        IAccountAccessService accountAccessService,
         IApplicationLogger<ImportUnmatchedTransactionsCommandHandler> logger)
     {
         _reconciliationRepository = reconciliationRepository;
@@ -50,6 +53,7 @@ public class ImportUnmatchedTransactionsCommandHandler
         _auditLogRepository = auditLogRepository;
         _categoryMappingService = categoryMappingService;
         _bankConnectionRepository = bankConnectionRepository;
+        _accountAccessService = accountAccessService;
         _logger = logger;
     }
 
@@ -65,6 +69,12 @@ public class ImportUnmatchedTransactionsCommandHandler
         if (reconciliation == null)
         {
             throw new ArgumentException($"Reconciliation with ID {request.ReconciliationId} not found or does not belong to user");
+        }
+
+        // Verify the user has modify permission on the reconciliation's account (owner or Manager role)
+        if (!await _accountAccessService.CanModifyAccountAsync(request.UserId, reconciliation.AccountId))
+        {
+            throw new UnauthorizedAccessException("You do not have permission to import transactions on this account.");
         }
 
         // Get reconciliation items

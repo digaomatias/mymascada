@@ -14,13 +14,16 @@ public class UnlinkTransactionCommandHandler : IRequestHandler<UnlinkTransaction
 {
     private readonly IReconciliationItemRepository _reconciliationItemRepository;
     private readonly IReconciliationRepository _reconciliationRepository;
+    private readonly IAccountAccessService _accountAccessService;
 
     public UnlinkTransactionCommandHandler(
         IReconciliationItemRepository reconciliationItemRepository,
-        IReconciliationRepository reconciliationRepository)
+        IReconciliationRepository reconciliationRepository,
+        IAccountAccessService accountAccessService)
     {
         _reconciliationItemRepository = reconciliationItemRepository;
         _reconciliationRepository = reconciliationRepository;
+        _accountAccessService = accountAccessService;
     }
 
     public async Task<bool> Handle(UnlinkTransactionCommand request, CancellationToken cancellationToken)
@@ -34,6 +37,10 @@ public class UnlinkTransactionCommandHandler : IRequestHandler<UnlinkTransaction
         var reconciliation = await _reconciliationRepository.GetByIdAsync(existingItem.ReconciliationId, request.UserId);
         if (reconciliation == null)
             throw new ArgumentException($"Reconciliation does not belong to user");
+
+        // Verify the user has modify permission on the reconciliation's account (owner or Manager role)
+        if (!await _accountAccessService.CanModifyAccountAsync(request.UserId, reconciliation.AccountId))
+            throw new UnauthorizedAccessException("You do not have permission to unlink transactions on this account.");
 
         // Only allow unlinking of matched items
         if (existingItem.ItemType != ReconciliationItemType.Matched)

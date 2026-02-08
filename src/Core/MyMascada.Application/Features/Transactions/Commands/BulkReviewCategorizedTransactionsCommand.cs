@@ -23,13 +23,16 @@ public class BulkReviewCategorizedTransactionsResult
 public class BulkReviewCategorizedTransactionsCommandHandler : IRequestHandler<BulkReviewCategorizedTransactionsCommand, BulkReviewCategorizedTransactionsResult>
 {
     private readonly ITransactionRepository _transactionRepository;
+    private readonly IAccountAccessService _accountAccessService;
     private readonly IApplicationLogger<BulkReviewCategorizedTransactionsCommandHandler> _logger;
 
     public BulkReviewCategorizedTransactionsCommandHandler(
         ITransactionRepository transactionRepository,
+        IAccountAccessService accountAccessService,
         IApplicationLogger<BulkReviewCategorizedTransactionsCommandHandler> logger)
     {
         _transactionRepository = transactionRepository;
+        _accountAccessService = accountAccessService;
         _logger = logger;
     }
 
@@ -41,9 +44,18 @@ public class BulkReviewCategorizedTransactionsCommandHandler : IRequestHandler<B
         {
             _logger.LogInformation("Starting bulk review of categorized transactions for user {UserId}", request.UserId);
 
+            // If a specific account is targeted, verify modify permission upfront
+            if (request.AccountId.HasValue)
+            {
+                if (!await _accountAccessService.CanModifyAccountAsync(request.UserId, request.AccountId.Value))
+                {
+                    throw new UnauthorizedAccessException("You do not have permission to review transactions on this account.");
+                }
+            }
+
             // Get all unreviewed transactions for the user
             var unreviewedTransactions = await _transactionRepository.GetUnreviewedAsync(request.UserId);
-            
+
             // Filter for transactions that have a category assigned
             var transactionsToReview = unreviewedTransactions
                 .Where(t => t.CategoryId.HasValue) // Only transactions with categories
@@ -58,12 +70,21 @@ public class BulkReviewCategorizedTransactionsCommandHandler : IRequestHandler<B
             if (!string.IsNullOrWhiteSpace(request.SearchText))
             {
                 var searchLower = request.SearchText.ToLower();
-                transactionsToReview = transactionsToReview.Where(t => 
+                transactionsToReview = transactionsToReview.Where(t =>
                     t.Description.ToLower().Contains(searchLower) ||
                     (t.UserDescription != null && t.UserDescription.ToLower().Contains(searchLower)));
             }
 
-            var transactionsList = transactionsToReview.ToList();
+            // Only include transactions on accounts the user can modify (owner or Manager role)
+            var allTransactions = transactionsToReview.ToList();
+            var transactionsList = new List<Domain.Entities.Transaction>();
+            foreach (var transaction in allTransactions)
+            {
+                if (await _accountAccessService.CanModifyAccountAsync(request.UserId, transaction.AccountId))
+                {
+                    transactionsList.Add(transaction);
+                }
+            }
             var totalProcessed = transactionsList.Count;
 
             if (totalProcessed == 0)

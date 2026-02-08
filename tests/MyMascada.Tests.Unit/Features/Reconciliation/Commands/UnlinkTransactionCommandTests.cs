@@ -13,6 +13,7 @@ public class UnlinkTransactionCommandTests
 {
     private readonly IReconciliationItemRepository _reconciliationItemRepository;
     private readonly IReconciliationRepository _reconciliationRepository;
+    private readonly IAccountAccessService _accountAccessService;
     private readonly UnlinkTransactionCommandHandler _handler;
 
     private readonly Guid _userId = Guid.NewGuid();
@@ -24,10 +25,15 @@ public class UnlinkTransactionCommandTests
     {
         _reconciliationItemRepository = Substitute.For<IReconciliationItemRepository>();
         _reconciliationRepository = Substitute.For<IReconciliationRepository>();
-        
+        _accountAccessService = Substitute.For<IAccountAccessService>();
+
+        // Default: allow modify access on all accounts
+        _accountAccessService.CanModifyAccountAsync(Arg.Any<Guid>(), Arg.Any<int>()).Returns(true);
+
         _handler = new UnlinkTransactionCommandHandler(
             _reconciliationItemRepository,
-            _reconciliationRepository);
+            _reconciliationRepository,
+            _accountAccessService);
     }
 
     [Fact]

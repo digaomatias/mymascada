@@ -27,19 +27,22 @@ public class MatchTransactionsCommandHandler : IRequestHandler<MatchTransactions
     private readonly IReconciliationAuditLogRepository _auditLogRepository;
     private readonly ITransactionRepository _transactionRepository;
     private readonly ITransactionMatchingService _matchingService;
+    private readonly IAccountAccessService _accountAccessService;
 
     public MatchTransactionsCommandHandler(
         IReconciliationRepository reconciliationRepository,
         IReconciliationItemRepository reconciliationItemRepository,
         IReconciliationAuditLogRepository auditLogRepository,
         ITransactionRepository transactionRepository,
-        ITransactionMatchingService matchingService)
+        ITransactionMatchingService matchingService,
+        IAccountAccessService accountAccessService)
     {
         _reconciliationRepository = reconciliationRepository;
         _reconciliationItemRepository = reconciliationItemRepository;
         _auditLogRepository = auditLogRepository;
         _transactionRepository = transactionRepository;
         _matchingService = matchingService;
+        _accountAccessService = accountAccessService;
     }
 
     public async Task<MatchingResultDto> Handle(MatchTransactionsCommand request, CancellationToken cancellationToken)
@@ -48,6 +51,10 @@ public class MatchTransactionsCommandHandler : IRequestHandler<MatchTransactions
         var reconciliation = await _reconciliationRepository.GetByIdAsync(request.ReconciliationId, request.UserId);
         if (reconciliation == null)
             throw new ArgumentException($"Reconciliation with ID {request.ReconciliationId} not found or does not belong to user");
+
+        // Verify the user has modify permission on the reconciliation's account (owner or Manager role)
+        if (!await _accountAccessService.CanModifyAccountAsync(request.UserId, reconciliation.AccountId))
+            throw new UnauthorizedAccessException("You do not have permission to match transactions on this account.");
 
         // Get app transactions for the account within the date range
         // Note: This includes both reviewed and unreviewed transactions for comprehensive reconciliation

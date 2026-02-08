@@ -21,15 +21,18 @@ public class CategorizeTransactionCommandHandler : IRequestHandler<CategorizeTra
 {
     private readonly ICategorizationPipeline _categorizationPipeline;
     private readonly ITransactionRepository _transactionRepository;
+    private readonly IAccountAccessService _accountAccessService;
     private readonly ILogger<CategorizeTransactionCommandHandler> _logger;
 
     public CategorizeTransactionCommandHandler(
         ICategorizationPipeline categorizationPipeline,
         ITransactionRepository transactionRepository,
+        IAccountAccessService accountAccessService,
         ILogger<CategorizeTransactionCommandHandler> logger)
     {
         _categorizationPipeline = categorizationPipeline;
         _transactionRepository = transactionRepository;
+        _accountAccessService = accountAccessService;
         _logger = logger;
     }
 
@@ -45,6 +48,12 @@ public class CategorizeTransactionCommandHandler : IRequestHandler<CategorizeTra
             {
                 _logger.LogWarning("Transaction {TransactionId} not found for categorization", request.TransactionId);
                 return;
+            }
+
+            // Verify the user has modify permission on the transaction's account (owner or Manager role)
+            if (!await _accountAccessService.CanModifyAccountAsync(request.UserId, transaction.AccountId))
+            {
+                throw new UnauthorizedAccessException("You do not have permission to categorize transactions on this account.");
             }
 
             // Process through the full categorization pipeline: Rules → ML → LLM

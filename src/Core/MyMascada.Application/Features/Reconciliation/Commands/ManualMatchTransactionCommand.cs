@@ -22,17 +22,20 @@ public class ManualMatchTransactionCommandHandler : IRequestHandler<ManualMatchT
     private readonly IReconciliationItemRepository _reconciliationItemRepository;
     private readonly ITransactionRepository _transactionRepository;
     private readonly IMatchConfidenceCalculator _matchConfidenceCalculator;
+    private readonly IAccountAccessService _accountAccessService;
 
     public ManualMatchTransactionCommandHandler(
         IReconciliationRepository reconciliationRepository,
         IReconciliationItemRepository reconciliationItemRepository,
         ITransactionRepository transactionRepository,
-        IMatchConfidenceCalculator matchConfidenceCalculator)
+        IMatchConfidenceCalculator matchConfidenceCalculator,
+        IAccountAccessService accountAccessService)
     {
         _reconciliationRepository = reconciliationRepository;
         _reconciliationItemRepository = reconciliationItemRepository;
         _transactionRepository = transactionRepository;
         _matchConfidenceCalculator = matchConfidenceCalculator;
+        _accountAccessService = accountAccessService;
     }
 
     public async Task<ReconciliationItemDetailDto> Handle(ManualMatchTransactionCommand request, CancellationToken cancellationToken)
@@ -41,6 +44,10 @@ public class ManualMatchTransactionCommandHandler : IRequestHandler<ManualMatchT
         var reconciliation = await _reconciliationRepository.GetByIdAsync(request.ReconciliationId, request.UserId);
         if (reconciliation == null)
             throw new ArgumentException($"Reconciliation with ID {request.ReconciliationId} not found or does not belong to user");
+
+        // Verify the user has modify permission on the reconciliation's account (owner or Manager role)
+        if (!await _accountAccessService.CanModifyAccountAsync(request.UserId, reconciliation.AccountId))
+            throw new UnauthorizedAccessException("You do not have permission to match transactions on this account.");
 
         // Verify transaction exists if provided
         Transaction? systemTransaction = null;

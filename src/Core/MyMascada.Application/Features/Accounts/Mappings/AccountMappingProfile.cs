@@ -11,8 +11,12 @@ public class AccountMappingProfile : Profile
     {
         // Account -> AccountDto
         CreateMap<Account, AccountDto>()
-            .ForMember(dest => dest.TypeDisplayName, opt => opt.MapFrom(src => 
-                GetAccountTypeDisplayName(src.Type)));
+            .ForMember(dest => dest.TypeDisplayName, opt => opt.MapFrom(src =>
+                GetAccountTypeDisplayName(src.Type)))
+            .ForMember(dest => dest.IsOwner, opt => opt.Ignore())
+            .ForMember(dest => dest.IsSharedWithMe, opt => opt.Ignore())
+            .ForMember(dest => dest.ShareRole, opt => opt.Ignore())
+            .ForMember(dest => dest.SharedByUserName, opt => opt.Ignore());
 
         // CreateAccountDto -> Account
         CreateMap<CreateAccountDto, Account>()
@@ -30,7 +34,11 @@ public class AccountMappingProfile : Profile
         // Account -> AccountWithBalanceDto
         CreateMap<Account, AccountWithBalanceDto>()
             .ForMember(dest => dest.Type, opt => opt.MapFrom(src => (int)src.Type))
-            .ForMember(dest => dest.CalculatedBalance, opt => opt.Ignore()); // Will be set manually in controller
+            .ForMember(dest => dest.CalculatedBalance, opt => opt.Ignore()) // Will be set manually in controller
+            .ForMember(dest => dest.IsOwner, opt => opt.Ignore())
+            .ForMember(dest => dest.IsSharedWithMe, opt => opt.Ignore())
+            .ForMember(dest => dest.ShareRole, opt => opt.Ignore())
+            .ForMember(dest => dest.SharedByUserName, opt => opt.Ignore());
 
         // Account -> AccountDetailsDto
         CreateMap<Account, AccountDetailsDto>()

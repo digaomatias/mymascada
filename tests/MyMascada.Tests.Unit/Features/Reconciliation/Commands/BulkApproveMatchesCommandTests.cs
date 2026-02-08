@@ -13,6 +13,7 @@ public class BulkApproveMatchesCommandTests
     private readonly IReconciliationRepository _reconciliationRepository;
     private readonly IReconciliationItemRepository _reconciliationItemRepository;
     private readonly ITransactionRepository _transactionRepository;
+    private readonly IAccountAccessService _accountAccessService;
     private readonly IApplicationLogger<BulkApproveMatchesCommandHandler> _logger;
     private readonly BulkApproveMatchesCommandHandler _handler;
 
@@ -24,12 +25,17 @@ public class BulkApproveMatchesCommandTests
         _reconciliationRepository = Substitute.For<IReconciliationRepository>();
         _reconciliationItemRepository = Substitute.For<IReconciliationItemRepository>();
         _transactionRepository = Substitute.For<ITransactionRepository>();
+        _accountAccessService = Substitute.For<IAccountAccessService>();
         _logger = Substitute.For<IApplicationLogger<BulkApproveMatchesCommandHandler>>();
+
+        // Default: allow modify access on all accounts
+        _accountAccessService.CanModifyAccountAsync(Arg.Any<Guid>(), Arg.Any<int>()).Returns(true);
 
         _handler = new BulkApproveMatchesCommandHandler(
             _reconciliationRepository,
             _reconciliationItemRepository,
             _transactionRepository,
+            _accountAccessService,
             _logger);
     }
 

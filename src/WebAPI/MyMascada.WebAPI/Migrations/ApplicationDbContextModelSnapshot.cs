@@ -95,6 +95,70 @@ namespace MyMascada.WebAPI.Migrations
                     b.ToTable("Accounts");
                 });
 
+            modelBuilder.Entity("MyMascada.Domain.Entities.AccountShare", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AccountId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("InvitationExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("InvitationToken")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("SharedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("SharedWithUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InvitationToken")
+                        .HasFilter("\"InvitationToken\" IS NOT NULL");
+
+                    b.HasIndex("SharedByUserId");
+
+                    b.HasIndex("SharedWithUserId");
+
+                    b.HasIndex("AccountId", "SharedWithUserId")
+                        .IsUnique()
+                        .HasFilter("\"Status\" IN (1, 2) AND \"IsDeleted\" = false");
+
+                    b.ToTable("AccountShares");
+                });
+
             modelBuilder.Entity("MyMascada.Domain.Entities.AkahuUserCredential", b =>
                 {
                     b.Property<int>("Id")
@@ -2138,6 +2202,33 @@ namespace MyMascada.WebAPI.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("MyMascada.Domain.Entities.AccountShare", b =>
+                {
+                    b.HasOne("MyMascada.Domain.Entities.Account", "Account")
+                        .WithMany("Shares")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MyMascada.Domain.Entities.User", "SharedByUser")
+                        .WithMany("AccountSharesGiven")
+                        .HasForeignKey("SharedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MyMascada.Domain.Entities.User", "SharedWithUser")
+                        .WithMany("AccountSharesReceived")
+                        .HasForeignKey("SharedWithUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Account");
+
+                    b.Navigation("SharedByUser");
+
+                    b.Navigation("SharedWithUser");
+                });
+
             modelBuilder.Entity("MyMascada.Domain.Entities.BankCategoryMapping", b =>
                 {
                     b.HasOne("MyMascada.Domain.Entities.Category", "Category")
@@ -2533,6 +2624,8 @@ namespace MyMascada.WebAPI.Migrations
                 {
                     b.Navigation("BankConnection");
 
+                    b.Navigation("Shares");
+
                     b.Navigation("Transactions");
                 });
 
@@ -2591,6 +2684,10 @@ namespace MyMascada.WebAPI.Migrations
 
             modelBuilder.Entity("MyMascada.Domain.Entities.User", b =>
                 {
+                    b.Navigation("AccountSharesGiven");
+
+                    b.Navigation("AccountSharesReceived");
+
                     b.Navigation("Accounts");
 
                     b.Navigation("Categories");

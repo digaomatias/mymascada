@@ -14,15 +14,18 @@ public class CreateTransferCommandHandler : IRequestHandler<CreateTransferComman
     private readonly ITransferRepository _transferRepository;
     private readonly ITransactionRepository _transactionRepository;
     private readonly IAccountRepository _accountRepository;
+    private readonly IAccountAccessService _accountAccessService;
 
     public CreateTransferCommandHandler(
         ITransferRepository transferRepository,
         ITransactionRepository transactionRepository,
-        IAccountRepository accountRepository)
+        IAccountRepository accountRepository,
+        IAccountAccessService accountAccessService)
     {
         _transferRepository = transferRepository;
         _transactionRepository = transactionRepository;
         _accountRepository = accountRepository;
+        _accountAccessService = accountAccessService;
     }
 
     public async Task<TransferDto> Handle(CreateTransferCommand request, CancellationToken cancellationToken)
@@ -35,6 +38,12 @@ public class CreateTransferCommandHandler : IRequestHandler<CreateTransferComman
         var destinationAccount = await _accountRepository.GetByIdAsync(request.DestinationAccountId, request.UserId);
         if (destinationAccount == null)
             throw new ArgumentException($"Destination account {request.DestinationAccountId} not found");
+
+        // Verify the user has modify permission on both accounts (owner or Manager role)
+        if (!await _accountAccessService.CanModifyAccountAsync(request.UserId, request.SourceAccountId))
+            throw new UnauthorizedAccessException("You do not have permission to create transfers from the source account.");
+        if (!await _accountAccessService.CanModifyAccountAsync(request.UserId, request.DestinationAccountId))
+            throw new UnauthorizedAccessException("You do not have permission to create transfers to the destination account.");
 
         // Validate not transferring to same account
         if (request.SourceAccountId == request.DestinationAccountId)

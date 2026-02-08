@@ -21,15 +21,18 @@ public class UpdateReconciliationCommandHandler : IRequestHandler<UpdateReconcil
     private readonly IReconciliationRepository _reconciliationRepository;
     private readonly IReconciliationAuditLogRepository _auditLogRepository;
     private readonly IAccountRepository _accountRepository;
+    private readonly IAccountAccessService _accountAccessService;
 
     public UpdateReconciliationCommandHandler(
         IReconciliationRepository reconciliationRepository,
         IReconciliationAuditLogRepository auditLogRepository,
-        IAccountRepository accountRepository)
+        IAccountRepository accountRepository,
+        IAccountAccessService accountAccessService)
     {
         _reconciliationRepository = reconciliationRepository;
         _auditLogRepository = auditLogRepository;
         _accountRepository = accountRepository;
+        _accountAccessService = accountAccessService;
     }
 
     public async Task<ReconciliationDto> Handle(UpdateReconciliationCommand request, CancellationToken cancellationToken)
@@ -37,6 +40,10 @@ public class UpdateReconciliationCommandHandler : IRequestHandler<UpdateReconcil
         var reconciliation = await _reconciliationRepository.GetByIdAsync(request.ReconciliationId, request.UserId);
         if (reconciliation == null)
             throw new ArgumentException($"Reconciliation with ID {request.ReconciliationId} not found or does not belong to user");
+
+        // Verify the user has modify permission on the reconciliation's account (owner or Manager role)
+        if (!await _accountAccessService.CanModifyAccountAsync(request.UserId, reconciliation.AccountId))
+            throw new UnauthorizedAccessException("You do not have permission to update reconciliations on this account.");
 
         var account = await _accountRepository.GetByIdAsync(reconciliation.AccountId, request.UserId);
         if (account == null)

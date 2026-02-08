@@ -21,17 +21,20 @@ public class CreateReconciliationCommandHandler : IRequestHandler<CreateReconcil
     private readonly IReconciliationAuditLogRepository _auditLogRepository;
     private readonly IAccountRepository _accountRepository;
     private readonly ITransactionRepository _transactionRepository;
+    private readonly IAccountAccessService _accountAccessService;
 
     public CreateReconciliationCommandHandler(
         IReconciliationRepository reconciliationRepository,
         IReconciliationAuditLogRepository auditLogRepository,
         IAccountRepository accountRepository,
-        ITransactionRepository transactionRepository)
+        ITransactionRepository transactionRepository,
+        IAccountAccessService accountAccessService)
     {
         _reconciliationRepository = reconciliationRepository;
         _auditLogRepository = auditLogRepository;
         _accountRepository = accountRepository;
         _transactionRepository = transactionRepository;
+        _accountAccessService = accountAccessService;
     }
 
     public async Task<ReconciliationDto> Handle(CreateReconciliationCommand request, CancellationToken cancellationToken)
@@ -40,6 +43,10 @@ public class CreateReconciliationCommandHandler : IRequestHandler<CreateReconcil
         var account = await _accountRepository.GetByIdAsync(request.AccountId, request.UserId);
         if (account == null)
             throw new ArgumentException($"Account with ID {request.AccountId} not found or does not belong to user");
+
+        // Verify the user has modify permission on this account (owner or Manager role)
+        if (!await _accountAccessService.CanModifyAccountAsync(request.UserId, request.AccountId))
+            throw new UnauthorizedAccessException("You do not have permission to create reconciliations on this account.");
 
         // Calculate the current balance from transactions
         var calculatedBalance = await _transactionRepository.GetAccountBalanceAsync(request.AccountId, request.UserId);

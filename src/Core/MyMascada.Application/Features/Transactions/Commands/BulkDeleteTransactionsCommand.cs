@@ -14,10 +14,14 @@ public class BulkDeleteTransactionsCommand : IRequest<BulkDeleteTransactionsResp
 public class BulkDeleteTransactionsCommandHandler : IRequestHandler<BulkDeleteTransactionsCommand, BulkDeleteTransactionsResponse>
 {
     private readonly ITransactionRepository _transactionRepository;
+    private readonly IAccountAccessService _accountAccessService;
 
-    public BulkDeleteTransactionsCommandHandler(ITransactionRepository transactionRepository)
+    public BulkDeleteTransactionsCommandHandler(
+        ITransactionRepository transactionRepository,
+        IAccountAccessService accountAccessService)
     {
         _transactionRepository = transactionRepository;
+        _accountAccessService = accountAccessService;
     }
 
     public async Task<BulkDeleteTransactionsResponse> Handle(BulkDeleteTransactionsCommand request, CancellationToken cancellationToken)
@@ -48,6 +52,16 @@ public class BulkDeleteTransactionsCommandHandler : IRequestHandler<BulkDeleteTr
             if (missingIds.Any())
             {
                 errors.Add($"Transactions not found or access denied: {string.Join(", ", missingIds)}");
+            }
+
+            // Verify the user has modify permission on all affected accounts
+            var accountIds = transactions.Select(t => t.AccountId).Distinct();
+            foreach (var accountId in accountIds)
+            {
+                if (!await _accountAccessService.CanModifyAccountAsync(request.UserId, accountId))
+                {
+                    throw new UnauthorizedAccessException("You do not have permission to delete transactions on one or more of these accounts.");
+                }
             }
 
             // Delete the found transactions

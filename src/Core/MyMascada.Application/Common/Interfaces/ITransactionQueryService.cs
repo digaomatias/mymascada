@@ -13,7 +13,7 @@ public interface ITransactionQueryService
     /// </summary>
     /// <param name="parameters">Query parameters</param>
     /// <returns>IQueryable with filters applied but no pagination or ordering</returns>
-    IQueryable<Transaction> BuildTransactionQuery(TransactionQueryParameters parameters);
+    Task<IQueryable<Transaction>> BuildTransactionQueryAsync(TransactionQueryParameters parameters);
 
     /// <summary>
     /// Applies sorting to a transaction query

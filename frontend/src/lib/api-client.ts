@@ -1562,6 +1562,38 @@ class ApiClient {
     });
   }
 
+  // Account Sharing methods
+  async getAccountShares(accountId: number): Promise<AccountShareDto[]> {
+    return this.get(`/api/accounts/${accountId}/shares`);
+  }
+
+  async createAccountShare(accountId: number, email: string, role: number): Promise<CreateShareResult> {
+    return this.post(`/api/accounts/${accountId}/shares`, { email, role });
+  }
+
+  async revokeAccountShare(accountId: number, shareId: number): Promise<void> {
+    return this.delete(`/api/accounts/${accountId}/shares/${shareId}`);
+  }
+
+  async updateAccountShareRole(accountId: number, shareId: number, role: number): Promise<void> {
+    return this.request(`/api/accounts/${accountId}/shares/${shareId}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role }),
+    });
+  }
+
+  async getReceivedShares(): Promise<ReceivedShareDto[]> {
+    return this.get('/api/account-shares/received');
+  }
+
+  async acceptShare(token: string): Promise<void> {
+    return this.post('/api/account-shares/accept', { token });
+  }
+
+  async declineShare(token: string): Promise<void> {
+    return this.post('/api/account-shares/decline', { token });
+  }
+
   // Feature flags (anonymous endpoint)
   async getFeatures(): Promise<FeatureFlags> {
     return this.request('/api/Features');
@@ -1579,6 +1611,35 @@ export interface FeatureFlags {
   googleOAuth: boolean;
   bankSync: boolean;
   emailNotifications: boolean;
+  accountSharing: boolean;
+}
+
+// Account Sharing Types
+export interface AccountShareDto {
+  id: number;
+  accountId: number;
+  accountName: string;
+  sharedWithUserId: string;
+  sharedWithUserEmail: string;
+  sharedWithUserName: string;
+  role: number;
+  status: number;
+  createdAt: string;
+}
+
+export interface ReceivedShareDto {
+  id: number;
+  accountId: number;
+  accountName: string;
+  sharedByUserName: string;
+  role: number;
+  status: number;
+  createdAt: string;
+}
+
+export interface CreateShareResult {
+  id: number;
+  token: string;
 }
 
 // LLM Types

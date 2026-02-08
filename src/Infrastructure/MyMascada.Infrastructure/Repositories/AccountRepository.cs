@@ -8,22 +8,29 @@ namespace MyMascada.Infrastructure.Repositories;
 public class AccountRepository : IAccountRepository
 {
     private readonly ApplicationDbContext _context;
+    private readonly IAccountAccessService _accountAccess;
 
-    public AccountRepository(ApplicationDbContext context)
+    public AccountRepository(ApplicationDbContext context, IAccountAccessService accountAccess)
     {
         _context = context;
+        _accountAccess = accountAccess;
     }
 
     public async Task<Account?> GetByIdAsync(int id, Guid userId)
     {
+        if (!await _accountAccess.CanAccessAccountAsync(userId, id))
+            return null;
+
         return await _context.Accounts
-            .FirstOrDefaultAsync(a => a.Id == id && a.UserId == userId && !a.IsDeleted);
+            .FirstOrDefaultAsync(a => a.Id == id && !a.IsDeleted);
     }
 
     public async Task<IEnumerable<Account>> GetByUserIdAsync(Guid userId)
     {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
+
         return await _context.Accounts
-            .Where(a => a.UserId == userId && !a.IsDeleted)
+            .Where(a => accessibleIds.Contains(a.Id) && !a.IsDeleted)
             .OrderBy(a => a.Name)
             .ToListAsync();
     }
@@ -51,11 +58,10 @@ public class AccountRepository : IAccountRepository
 
     public async Task<bool> ExistsAsync(int id, Guid userId)
     {
-        return await _context.Accounts
-            .AnyAsync(a => a.Id == id && a.UserId == userId && !a.IsDeleted);
+        return await _accountAccess.CanAccessAccountAsync(userId, id);
     }
 
-    // Data integrity methods
+    // Data integrity methods - owner-only operations
     public async Task<IEnumerable<Account>> GetSoftDeletedAccountsAsync(Guid userId)
     {
         return await _context.Accounts
@@ -69,8 +75,8 @@ public class AccountRepository : IAccountRepository
     {
         return await _context.Accounts
             .IgnoreQueryFilters()
-            .Where(a => a.UserId == userId && 
-                       a.IsDeleted && 
+            .Where(a => a.UserId == userId &&
+                       a.IsDeleted &&
                        a.Transactions.Any(t => !t.IsDeleted))
             .OrderBy(a => a.Name)
             .ToListAsync();
@@ -87,7 +93,7 @@ public class AccountRepository : IAccountRepository
             account.IsDeleted = false;
             account.DeletedAt = null;
             account.UpdatedAt = DateTime.UtcNow;
-            
+
             _context.Accounts.Update(account);
             await _context.SaveChangesAsync();
         }

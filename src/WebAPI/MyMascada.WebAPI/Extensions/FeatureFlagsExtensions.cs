@@ -17,13 +17,15 @@ public static class FeatureFlagsExtensions
         var emailNotifications = IsEmailConfigured(configuration);
         var googleOAuth = IsNonPlaceholder(configuration["Authentication:Google:ClientId"], "YOUR_GOOGLE_CLIENT_ID");
         var bankSync = configuration.GetValue<bool>("Akahu:Enabled");
+        var accountSharing = configuration.GetValue<bool>("Features:AccountSharing");
 
         // Singleton — values never change after startup
         services.AddSingleton<IFeatureFlags>(new StartupFeatureFlags(
             aiCategorization,
             emailNotifications,
             googleOAuth,
-            bankSync));
+            bankSync,
+            accountSharing));
 
         // Registration strategy depends on email availability
         if (emailNotifications)

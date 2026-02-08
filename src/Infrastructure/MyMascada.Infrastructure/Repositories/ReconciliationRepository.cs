@@ -9,28 +9,33 @@ namespace MyMascada.Infrastructure.Repositories;
 public class ReconciliationRepository : IReconciliationRepository
 {
     private readonly ApplicationDbContext _context;
+    private readonly IAccountAccessService _accountAccess;
 
-    public ReconciliationRepository(ApplicationDbContext context)
+    public ReconciliationRepository(ApplicationDbContext context, IAccountAccessService accountAccess)
     {
         _context = context;
+        _accountAccess = accountAccess;
     }
 
     public async Task<Reconciliation?> GetByIdAsync(int id, Guid userId)
     {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
         return await _context.Reconciliations
             .Include(r => r.Account)
             .Include(r => r.ReconciliationItems)
-            .FirstOrDefaultAsync(r => r.Id == id && 
-                                     r.Account.UserId == userId &&
+            .FirstOrDefaultAsync(r => r.Id == id &&
+                                     accessibleIds.Contains(r.AccountId) &&
                                      !r.IsDeleted);
     }
 
     public async Task<IEnumerable<Reconciliation>> GetByAccountIdAsync(int accountId, Guid userId)
     {
+        if (!await _accountAccess.CanAccessAccountAsync(userId, accountId))
+            return Enumerable.Empty<Reconciliation>();
+
         return await _context.Reconciliations
             .Include(r => r.Account)
-            .Where(r => r.AccountId == accountId && 
-                       r.Account.UserId == userId &&
+            .Where(r => r.AccountId == accountId &&
                        !r.IsDeleted)
             .OrderByDescending(r => r.ReconciliationDate)
             .ToListAsync();
@@ -47,9 +52,10 @@ public class ReconciliationRepository : IReconciliationRepository
         string sortBy = "ReconciliationDate",
         string sortDirection = "desc")
     {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
         var query = _context.Reconciliations
             .Include(r => r.Account)
-            .Where(r => r.Account.UserId == userId && !r.IsDeleted);
+            .Where(r => accessibleIds.Contains(r.AccountId) && !r.IsDeleted);
 
         // Apply filters
         if (accountId.HasValue)
@@ -67,7 +73,7 @@ public class ReconciliationRepository : IReconciliationRepository
         // Apply sorting
         query = sortBy.ToLower() switch
         {
-            "statementenddate" => sortDirection.ToLower() == "asc" 
+            "statementenddate" => sortDirection.ToLower() == "asc"
                 ? query.OrderBy(r => r.StatementEndDate)
                 : query.OrderByDescending(r => r.StatementEndDate),
             "status" => sortDirection.ToLower() == "asc"
@@ -95,7 +101,7 @@ public class ReconciliationRepository : IReconciliationRepository
     {
         reconciliation.CreatedAt = DateTime.UtcNow;
         reconciliation.UpdatedAt = DateTime.UtcNow;
-        
+
         _context.Reconciliations.Add(reconciliation);
         await _context.SaveChangesAsync();
         return reconciliation;
@@ -113,25 +119,28 @@ public class ReconciliationRepository : IReconciliationRepository
         reconciliation.IsDeleted = true;
         reconciliation.DeletedAt = DateTime.UtcNow;
         reconciliation.UpdatedAt = DateTime.UtcNow;
-        
+
         _context.Reconciliations.Update(reconciliation);
         await _context.SaveChangesAsync();
     }
 
     public async Task<bool> ExistsAsync(int id, Guid userId)
     {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
         return await _context.Reconciliations
-            .AnyAsync(r => r.Id == id && 
-                          r.Account.UserId == userId &&
+            .AnyAsync(r => r.Id == id &&
+                          accessibleIds.Contains(r.AccountId) &&
                           !r.IsDeleted);
     }
 
     public async Task<Reconciliation?> GetLatestByAccountAsync(int accountId, Guid userId)
     {
+        if (!await _accountAccess.CanAccessAccountAsync(userId, accountId))
+            return null;
+
         return await _context.Reconciliations
             .Include(r => r.Account)
-            .Where(r => r.AccountId == accountId && 
-                       r.Account.UserId == userId &&
+            .Where(r => r.AccountId == accountId &&
                        !r.IsDeleted)
             .OrderByDescending(r => r.ReconciliationDate)
             .FirstOrDefaultAsync();
@@ -139,9 +148,10 @@ public class ReconciliationRepository : IReconciliationRepository
 
     public async Task<IEnumerable<Reconciliation>> GetRecentAsync(Guid userId, int count = 10)
     {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
         return await _context.Reconciliations
             .Include(r => r.Account)
-            .Where(r => r.Account.UserId == userId && !r.IsDeleted)
+            .Where(r => accessibleIds.Contains(r.AccountId) && !r.IsDeleted)
             .OrderByDescending(r => r.ReconciliationDate)
             .Take(count)
             .ToListAsync();
@@ -149,17 +159,21 @@ public class ReconciliationRepository : IReconciliationRepository
 
     public async Task<int> GetCountByAccountAsync(int accountId, Guid userId)
     {
+        if (!await _accountAccess.CanAccessAccountAsync(userId, accountId))
+            return 0;
+
         return await _context.Reconciliations
-            .CountAsync(r => r.AccountId == accountId && 
-                            r.Account.UserId == userId &&
+            .CountAsync(r => r.AccountId == accountId &&
                             !r.IsDeleted);
     }
 
     public async Task<decimal?> GetLastReconciledBalanceAsync(int accountId, Guid userId)
     {
+        if (!await _accountAccess.CanAccessAccountAsync(userId, accountId))
+            return null;
+
         var lastReconciliation = await _context.Reconciliations
-            .Where(r => r.AccountId == accountId && 
-                       r.Account.UserId == userId &&
+            .Where(r => r.AccountId == accountId &&
                        r.Status == ReconciliationStatus.Completed &&
                        !r.IsDeleted)
             .OrderByDescending(r => r.ReconciliationDate)

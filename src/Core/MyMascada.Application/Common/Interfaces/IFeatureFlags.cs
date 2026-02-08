@@ -10,4 +10,5 @@ public interface IFeatureFlags
     bool EmailNotifications { get; }
     bool GoogleOAuth { get; }
     bool BankSync { get; }
+    bool AccountSharing { get; }
 }

@@ -13,6 +13,7 @@ const defaultFeatures: FeatureFlags = {
   googleOAuth: false,
   bankSync: false,
   emailNotifications: false,
+  accountSharing: false,
 };
 
 const FeaturesContext = createContext<FeaturesContextType>({

@@ -10,13 +10,16 @@ public class ReverseTransferCommandHandler : IRequestHandler<ReverseTransferComm
 {
     private readonly ITransferRepository _transferRepository;
     private readonly ITransactionRepository _transactionRepository;
+    private readonly IAccountAccessService _accountAccessService;
 
     public ReverseTransferCommandHandler(
         ITransferRepository transferRepository,
-        ITransactionRepository transactionRepository)
+        ITransactionRepository transactionRepository,
+        IAccountAccessService accountAccessService)
     {
         _transferRepository = transferRepository;
         _transactionRepository = transactionRepository;
+        _accountAccessService = accountAccessService;
     }
 
     public async Task<ReverseTransferResponse> Handle(ReverseTransferCommand request, CancellationToken cancellationToken)
@@ -32,6 +35,16 @@ public class ReverseTransferCommandHandler : IRequestHandler<ReverseTransferComm
                     Success = false,
                     Message = "Transfer not found"
                 };
+            }
+
+            // Verify the user has modify permission on both accounts (owner or Manager role)
+            if (!await _accountAccessService.CanModifyAccountAsync(request.UserId, transfer.SourceAccountId))
+            {
+                throw new UnauthorizedAccessException("You do not have permission to modify transfers on the source account.");
+            }
+            if (!await _accountAccessService.CanModifyAccountAsync(request.UserId, transfer.DestinationAccountId))
+            {
+                throw new UnauthorizedAccessException("You do not have permission to modify transfers on the destination account.");
             }
 
             // Get the related transactions

@@ -27,17 +27,20 @@ public class BulkApproveMatchesCommandHandler : IRequestHandler<BulkApproveMatch
     private readonly IReconciliationRepository _reconciliationRepository;
     private readonly IReconciliationItemRepository _reconciliationItemRepository;
     private readonly ITransactionRepository _transactionRepository;
+    private readonly IAccountAccessService _accountAccessService;
     private readonly IApplicationLogger<BulkApproveMatchesCommandHandler> _logger;
 
     public BulkApproveMatchesCommandHandler(
         IReconciliationRepository reconciliationRepository,
         IReconciliationItemRepository reconciliationItemRepository,
         ITransactionRepository transactionRepository,
+        IAccountAccessService accountAccessService,
         IApplicationLogger<BulkApproveMatchesCommandHandler> logger)
     {
         _reconciliationRepository = reconciliationRepository;
         _reconciliationItemRepository = reconciliationItemRepository;
         _transactionRepository = transactionRepository;
+        _accountAccessService = accountAccessService;
         _logger = logger;
     }
 
@@ -49,6 +52,10 @@ public class BulkApproveMatchesCommandHandler : IRequestHandler<BulkApproveMatch
         var reconciliation = await _reconciliationRepository.GetByIdAsync(request.ReconciliationId, request.UserId);
         if (reconciliation == null)
             throw new ArgumentException($"Reconciliation with ID {request.ReconciliationId} not found or does not belong to user");
+
+        // Verify the user has modify permission on the reconciliation's account (owner or Manager role)
+        if (!await _accountAccessService.CanModifyAccountAsync(request.UserId, reconciliation.AccountId))
+            throw new UnauthorizedAccessException("You do not have permission to approve matches on this account.");
 
         _logger.LogInformation(
             "Starting bulk approval for reconciliation {ReconciliationId}, min confidence {MinConfidence}",
