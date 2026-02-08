@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { CurrencyDollarIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/auth-context';
+import { AppIcon } from '@/components/app-icon';
 import { useTranslations } from 'next-intl';
 
 export default function HomePage() {
@@ -26,8 +26,8 @@ export default function HomePage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl shadow-2xl flex items-center justify-center mb-4 mx-auto animate-pulse">
-            <CurrencyDollarIcon className="w-8 h-8 text-white" />
+          <div className="w-16 h-16 mb-4 mx-auto animate-pulse">
+            <AppIcon size={64} />
           </div>
           <p className="text-gray-600">{tCommon('loading')}</p>
         </div>
@@ -46,8 +46,8 @@ export default function HomePage() {
         <div className="container-responsive">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg shadow-lg flex items-center justify-center">
-                <CurrencyDollarIcon className="w-5 h-5 text-white" />
+              <div className="w-8 h-8">
+                <AppIcon size={32} />
               </div>
               <span className="text-xl font-bold text-primary">{t('appName')}</span>
             </div>
@@ -67,8 +67,8 @@ export default function HomePage() {
       <div className="container-responsive py-20">
         <div className="text-center">
           <div className="flex justify-center mb-8">
-            <div className="w-24 h-24 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-110 transition-all duration-300 animate-pulse">
-              <CurrencyDollarIcon className="w-14 h-14 text-white" />
+            <div className="w-24 h-24 transform hover:scale-110 transition-all duration-300">
+              <AppIcon size={96} />
             </div>
           </div>
           <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-8 leading-tight">

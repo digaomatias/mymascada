@@ -6,7 +6,6 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import {
-  CurrencyDollarIcon,
   ChartBarIcon,
   ArrowsRightLeftIcon,
   BuildingOffice2Icon,
@@ -17,6 +16,7 @@ import {
   AdjustmentsHorizontalIcon,
   WalletIcon
 } from '@heroicons/react/24/outline';
+import { AppIcon } from '@/components/app-icon';
 
 export default function Navigation() {
   const { user, logout, isAuthenticated } = useAuth();
@@ -94,8 +94,8 @@ export default function Navigation() {
             {/* Logo and Desktop Navigation */}
             <div className="flex items-center">
               <Link href="/dashboard" className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-primary-600 rounded-lg shadow-lg flex items-center justify-center">
-                  <CurrencyDollarIcon className="w-5 h-5 text-white" />
+                <div className="w-8 h-8">
+                  <AppIcon size={32} />
                 </div>
                 <span className="text-xl font-bold text-white">MyMascada</span>
               </Link>
@@ -180,8 +180,8 @@ export default function Navigation() {
           <div className="container-responsive">
             <div className="flex justify-between h-16">
               <Link href="/dashboard" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-primary-600 rounded-lg shadow-lg flex items-center justify-center">
-                  <CurrencyDollarIcon className="w-5 h-5 text-white" />
+                <div className="w-8 h-8">
+                  <AppIcon size={32} />
                 </div>
                 <span className="text-lg font-bold text-white">MyMascada</span>
               </Link>

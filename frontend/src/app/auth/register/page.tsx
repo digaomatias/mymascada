@@ -8,7 +8,8 @@ import { RegisterRequest } from '@/types/auth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { CurrencyDollarIcon, EnvelopeIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { EnvelopeIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { AppIcon } from '@/components/app-icon';
 import { GoogleSignInButton } from '@/components/auth/google-signin-button';
 import { useFeatures } from '@/contexts/features-context';
 import { useTranslations } from 'next-intl';
@@ -190,8 +191,8 @@ export default function RegisterPage() {
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
             <div className="flex justify-center mb-6">
-              <div className="w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl shadow-2xl flex items-center justify-center">
-                <CurrencyDollarIcon className="w-12 h-12 text-white" />
+              <div className="w-20 h-20">
+                <AppIcon size={80} />
               </div>
             </div>
           </div>
@@ -236,8 +237,8 @@ export default function RegisterPage() {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="flex justify-center mb-6">
-            <div className="w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl shadow-2xl flex items-center justify-center">
-              <CurrencyDollarIcon className="w-12 h-12 text-white" />
+            <div className="w-20 h-20">
+              <AppIcon size={80} />
             </div>
           </div>
           <h2 className="text-h1 text-gray-900">
