@@ -859,10 +859,11 @@ function TransactionsPageContent() {
                       actions={[
                         {
                           id: 'sync',
-                          label: isSyncing ? tCommon('loading') : tCommon('refresh'),
+                          label: isSyncing ? t('akahuSync.syncing') : t('akahuSync.refresh'),
                           icon: <ArrowPathIcon className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />,
                           onClick: handleMobileSync,
                           show: hasAkahuConnection,
+                          disabled: isSyncing,
                         },
                         {
                           id: 'select',

@@ -478,6 +478,10 @@
     "manageTransfers": "Manage Transfers",
     "reviewAll": "Review All",
     "select": "Select",
+    "akahuSync": {
+      "refresh": "Refresh Bank Data",
+      "syncing": "Syncing..."
+    },
     "more": "More",
     "page": "Page {current} of {total}",
     "deleteSelected": "Delete Selected Transactions",

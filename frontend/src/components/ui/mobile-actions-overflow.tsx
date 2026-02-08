@@ -19,6 +19,7 @@ interface MobileAction {
   href?: string;
   variant?: "default" | "danger";
   show?: boolean;
+  disabled?: boolean;
 }
 
 interface MobileActionsOverflowProps {
@@ -54,15 +55,17 @@ function MobileActionsOverflow({
         className={cn(
           // Minimum 44px touch target for accessibility
           "min-w-[44px] min-h-[44px]",
-          // Appearance
+          // Match secondary button styling (btn-secondary)
           "inline-flex items-center justify-center",
-          "rounded-md",
-          "bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800",
-          "text-gray-700 dark:text-gray-300",
+          "rounded-md border border-primary",
+          "bg-transparent text-primary",
+          "hover:bg-primary-50",
           // Focus and accessibility
-          "focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2",
+          "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
           // Transition
           "transition-colors duration-200",
+          // Size matching sm button
+          "px-3 py-2 text-sm",
           triggerClassName
         )}
         aria-label="More actions"
@@ -85,6 +88,8 @@ function MobileActionsOverflow({
                 key={action.id}
                 asChild
                 variant={action.variant === "danger" ? "destructive" : "default"}
+                disabled={action.disabled}
+                className="min-h-[44px] py-3 px-3"
               >
                 <Link href={action.href} className="flex items-center gap-2">
                   {itemContent}
@@ -97,9 +102,10 @@ function MobileActionsOverflow({
           return (
             <DropdownMenuItem
               key={action.id}
-              onClick={action.onClick}
+              onClick={action.disabled ? undefined : action.onClick}
               variant={action.variant === "danger" ? "destructive" : "default"}
-              className="flex items-center gap-2"
+              disabled={action.disabled}
+              className="flex items-center gap-2 min-h-[44px] py-3 px-3"
             >
               {itemContent}
             </DropdownMenuItem>

@@ -479,6 +479,7 @@ function DashboardContent() {
                         icon: <ArrowPathIcon className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />,
                         onClick: handleMobileSync,
                         show: hasAkahuConnection,
+                        disabled: isSyncing,
                       },
                       {
                         id: 'import',

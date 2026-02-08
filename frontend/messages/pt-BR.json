@@ -477,6 +477,10 @@
     "manageTransfers": "Gerenciar Transferências",
     "reviewAll": "Revisar Todas",
     "select": "Selecionar",
+    "akahuSync": {
+      "refresh": "Atualizar Dados Bancários",
+      "syncing": "Sincronizando..."
+    },
     "more": "Mais",
     "page": "Página {current} de {total}",
     "deleteSelected": "Excluir Transações Selecionadas",
