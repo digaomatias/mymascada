@@ -95,10 +95,6 @@ export function ShareAccountModal({
     }
   };
 
-  const getRoleName = (roleValue: number) => {
-    return roleValue === 2 ? t('roleManager') : t('roleViewer');
-  };
-
   const getStatusLabel = (status: number) => {
     switch (status) {
       case 1: return t('pendingInvitation');
@@ -127,7 +123,7 @@ export function ShareAccountModal({
       <BaseModal
         isOpen={isOpen}
         onClose={onClose}
-        title={t('shareAccount')}
+        title={`${t('shareAccount')} - ${accountName}`}
         size="md"
       >
         <div className="space-y-6">
