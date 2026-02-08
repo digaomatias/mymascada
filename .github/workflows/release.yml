@@ -18,7 +18,7 @@ env:
   IMAGE_PREFIX: ghcr.io/digaomatias/mymascada
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 jobs:
@@ -89,3 +89,27 @@ jobs:
             ${{ env.IMAGE_PREFIX }}/frontend:latest
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
+
+      # --- GitHub Release ---
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          append_body: true
+          body: |
+
+            ## Docker Images
+
+            ```
+            docker pull ${{ env.IMAGE_PREFIX }}/api:${{ steps.version.outputs.version }}
+            docker pull ${{ env.IMAGE_PREFIX }}/migration:${{ steps.version.outputs.version }}
+            docker pull ${{ env.IMAGE_PREFIX }}/frontend:${{ steps.version.outputs.version }}
+            ```
+
+            All images are multi-platform: `linux/amd64` and `linux/arm64`.
+
+            ## Upgrade
+
+            ```bash
+            docker compose pull && docker compose up -d
+            ```
