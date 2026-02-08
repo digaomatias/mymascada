@@ -31,6 +31,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Authentic
     private readonly IAuthenticationService _authenticationService;
     private readonly IValidator<RegisterCommand> _validator;
     private readonly IRegistrationStrategy _registrationStrategy;
+    private readonly IInviteCodeValidationService _inviteCodeValidationService;
     private readonly ILogger<RegisterCommandHandler> _logger;
     private readonly BetaAccessOptions _betaAccessOptions;
 
@@ -39,6 +40,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Authentic
         IAuthenticationService authenticationService,
         IValidator<RegisterCommand> validator,
         IRegistrationStrategy registrationStrategy,
+        IInviteCodeValidationService inviteCodeValidationService,
         ILogger<RegisterCommandHandler> logger,
         IOptions<BetaAccessOptions> betaAccessOptions)
     {
@@ -46,6 +48,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Authentic
         _authenticationService = authenticationService;
         _validator = validator;
         _registrationStrategy = registrationStrategy;
+        _inviteCodeValidationService = inviteCodeValidationService;
         _logger = logger;
         _betaAccessOptions = betaAccessOptions.Value;
     }
@@ -65,12 +68,11 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Authentic
         // Validate invite code if required
         if (_betaAccessOptions.RequireInviteCode)
         {
-            var validCodes = _betaAccessOptions.GetValidCodes();
-            if (string.IsNullOrWhiteSpace(request.InviteCode) ||
-                !validCodes.Any(c => string.Equals(c, request.InviteCode.Trim(), StringComparison.OrdinalIgnoreCase)))
+            var (isValid, errorMessage) = await _inviteCodeValidationService.ValidateAsync(request.InviteCode);
+            if (!isValid)
             {
                 _logger.LogWarning("Registration attempted with invalid invite code: {InviteCode}", request.InviteCode ?? "(empty)");
-                response.Errors.Add("A valid invite code is required to register during the beta period.");
+                response.Errors.Add(errorMessage ?? "A valid invite code is required to register during the beta period.");
                 return response;
             }
         }
@@ -113,6 +115,12 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Authentic
 
         // Save user
         await _userRepository.AddAsync(user);
+
+        // Claim the invite code if one was provided
+        if (!string.IsNullOrWhiteSpace(request.InviteCode))
+        {
+            await _inviteCodeValidationService.ClaimAsync(request.InviteCode, user.Id);
+        }
 
         // Note: Categories are no longer auto-seeded at registration.
         // Users seed default categories from Settings with their preferred locale.

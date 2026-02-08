@@ -19,6 +19,7 @@ public static class CorsServiceExtensions
                     {
                         "http://localhost:3000",
                         "http://localhost:3001",
+                        "http://localhost:3003",
                         "https://localhost:5126"
                     });
                 }

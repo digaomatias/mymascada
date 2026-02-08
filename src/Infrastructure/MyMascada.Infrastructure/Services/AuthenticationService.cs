@@ -19,6 +19,7 @@ public class AuthenticationService : IAuthenticationService
     private readonly IUserRepository _userRepository;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly ICategorySeedingService _categorySeedingService;
+    private readonly IInviteCodeValidationService _inviteCodeValidationService;
     private readonly BetaAccessOptions _betaAccessOptions;
 
     public AuthenticationService(
@@ -26,12 +27,14 @@ public class AuthenticationService : IAuthenticationService
         IUserRepository userRepository,
         IRefreshTokenRepository refreshTokenRepository,
         ICategorySeedingService categorySeedingService,
+        IInviteCodeValidationService inviteCodeValidationService,
         IOptions<BetaAccessOptions> betaAccessOptions)
     {
         _configuration = configuration;
         _userRepository = userRepository;
         _refreshTokenRepository = refreshTokenRepository;
         _categorySeedingService = categorySeedingService;
+        _inviteCodeValidationService = inviteCodeValidationService;
         _betaAccessOptions = betaAccessOptions.Value;
     }
 
@@ -175,14 +178,13 @@ public class AuthenticationService : IAuthenticationService
             // Validate invite code for new registrations if required
             if (_betaAccessOptions.RequireInviteCode)
             {
-                var validCodes = _betaAccessOptions.GetValidCodes();
-                if (string.IsNullOrWhiteSpace(inviteCode) ||
-                    !validCodes.Any(c => string.Equals(c, inviteCode.Trim(), StringComparison.OrdinalIgnoreCase)))
+                var (isValid, errorMessage) = await _inviteCodeValidationService.ValidateAsync(inviteCode);
+                if (!isValid)
                 {
                     return new AuthenticationResponse
                     {
                         IsSuccess = false,
-                        Errors = new List<string> { "A valid invite code is required to register during the beta period." }
+                        Errors = new List<string> { errorMessage ?? "A valid invite code is required to register during the beta period." }
                     };
                 }
             }
@@ -210,7 +212,13 @@ public class AuthenticationService : IAuthenticationService
             try
             {
                 await _userRepository.AddAsync(newUser);
-                
+
+                // Claim the invite code if one was provided
+                if (!string.IsNullOrWhiteSpace(inviteCode))
+                {
+                    await _inviteCodeValidationService.ClaimAsync(inviteCode, newUser.Id);
+                }
+
                 // Seed default categories for new OAuth user
                 await _categorySeedingService.CreateDefaultCategoriesAsync(newUser.Id);
                 

@@ -34,6 +34,9 @@ public static class ApplicationServiceExtensions
         // Authentication services
         services.AddScoped<IAuthenticationService, AuthenticationService>();
 
+        // Invite code validation service
+        services.AddScoped<IInviteCodeValidationService, InviteCodeValidationService>();
+
         // Category services
         services.AddScoped<ICategorySeedingService, CategorySeedingService>();
 

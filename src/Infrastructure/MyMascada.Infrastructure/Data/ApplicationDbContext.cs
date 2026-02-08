@@ -38,6 +38,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<BudgetCategory> BudgetCategories => Set<BudgetCategory>();
     public DbSet<RecurringPattern> RecurringPatterns => Set<RecurringPattern>();
     public DbSet<RecurringOccurrence> RecurringOccurrences => Set<RecurringOccurrence>();
+    public DbSet<WaitlistEntry> WaitlistEntries => Set<WaitlistEntry>();
+    public DbSet<InvitationCode> InvitationCodes => Set<InvitationCode>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -639,6 +641,41 @@ public class ApplicationDbContext : DbContext
                 .HasForeignKey(e => e.TransactionId)
                 .OnDelete(DeleteBehavior.SetNull); // Allow transaction deletion
 
+            entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
+        // WaitlistEntry configuration
+        modelBuilder.Entity<WaitlistEntry>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Email).IsRequired().HasMaxLength(256);
+            entity.Property(e => e.NormalizedEmail).IsRequired().HasMaxLength(256);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Locale).HasMaxLength(10);
+            entity.Property(e => e.Source).HasMaxLength(50);
+            entity.Property(e => e.IpAddress).HasMaxLength(50);
+            entity.HasIndex(e => e.NormalizedEmail).IsUnique();
+            entity.HasIndex(e => e.Status);
+            entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
+        // InvitationCode configuration
+        modelBuilder.Entity<InvitationCode>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Code).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.NormalizedCode).IsRequired().HasMaxLength(20);
+            entity.HasIndex(e => e.NormalizedCode).IsUnique();
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.ExpiresAt);
+            entity.HasOne(e => e.WaitlistEntry)
+                .WithMany()
+                .HasForeignKey(e => e.WaitlistEntryId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(e => e.ClaimedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.ClaimedByUserId)
+                .OnDelete(DeleteBehavior.SetNull);
             entity.HasQueryFilter(e => !e.IsDeleted);
         });
     }

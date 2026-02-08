@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Você Foi Convidado!</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .email-wrapper {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            color: #ffffff;
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .logo {
+            width: 60px;
+            height: 60px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .logo svg {
+            width: 36px;
+            height: 36px;
+            fill: #ffffff;
+        }
+        .content {
+            padding: 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .message {
+            margin-bottom: 25px;
+            color: #555555;
+        }
+        .invite-code-box {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f3f4f6;
+            border: 2px dashed #6366f1;
+            border-radius: 8px;
+        }
+        .invite-code-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+        .invite-code {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 28px;
+            font-weight: 700;
+            color: #6366f1;
+            letter-spacing: 2px;
+        }
+        .button-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .verify-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 14px 32px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 4px 6px rgba(99, 102, 241, 0.3);
+        }
+        .verify-button:hover {
+            background: linear-gradient(135deg, #5558e3 0%, #7c4fe6 100%);
+        }
+        .expiration-notice {
+            background-color: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 14px;
+            color: #92400e;
+        }
+        .expiration-notice strong {
+            color: #78350f;
+        }
+        .footer {
+            background-color: #f9fafb;
+            padding: 20px 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #9ca3af;
+            border-top: 1px solid #e5e7eb;
+        }
+        .footer a {
+            color: #6366f1;
+            text-decoration: none;
+        }
+        .link-fallback {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f3f4f6;
+            border-radius: 6px;
+            font-size: 12px;
+            word-break: break-all;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="email-wrapper">
+            <div class="header">
+                <div class="logo">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/>
+                    </svg>
+                </div>
+                <h1>Você Foi Convidado!</h1>
+            </div>
+
+            <div class="content">
+                <p class="greeting">Olá {{ Name }}!</p>
+
+                <p class="message">
+                    Ótimas notícias! Sua vaga no MyMascada está pronta. Use o código de convite abaixo para criar sua conta.
+                </p>
+
+                <div class="invite-code-box">
+                    <div class="invite-code-label">Seu Código de Convite</div>
+                    <div class="invite-code">{{ InviteCode }}</div>
+                </div>
+
+                <div class="button-container">
+                    <a href="{{ RegisterUrl }}" class="verify-button">Criar Sua Conta</a>
+                </div>
+
+                <div class="expiration-notice">
+                    <strong>Importante:</strong> Este código expira em <strong>{{ ExpirationDays }} dias</strong>.
+                </div>
+
+                <div class="link-fallback">
+                    <strong>Botão não funciona?</strong> Copie e cole este link no seu navegador:<br>
+                    {{ RegisterUrl }}
+                </div>
+            </div>
+
+            <div class="footer">
+                <p>&copy; {{ CurrentYear }} MyMascada. Todos os direitos reservados.</p>
+                <p>
+                    Esta é uma mensagem automática do MyMascada.<br>
+                    Por favor, não responda a este email.
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
