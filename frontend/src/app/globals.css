@@ -66,6 +66,9 @@ layer(base);
   --color-info-900: #1e3a8a;
   --color-info: #3b82f6;
 
+  --color-popover: #ffffff;
+  --color-popover-foreground: #1e293b;
+
   --font-sans:
     Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif;
 }
