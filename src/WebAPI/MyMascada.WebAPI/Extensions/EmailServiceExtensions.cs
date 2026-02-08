@@ -33,6 +33,7 @@ public static class EmailServiceExtensions
         {
             // NoOp — all email send calls return Success = false gracefully
             services.AddSingleton<NoOpEmailService>();
+            services.AddSingleton<IEmailService>(sp => sp.GetRequiredService<NoOpEmailService>());
             services.AddSingleton<IEmailServiceFactory, NoOpEmailServiceFactory>();
         }
 
