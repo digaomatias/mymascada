@@ -182,7 +182,7 @@ jobs:
           -e Email__DefaultFromEmail=noreply@mymascada.com \
           -e Email__DefaultFromName=MyMascada \
           -e Email__Smtp__Host=localhost \
-          -e Email__Smtp__Port=2525 \
+          -e Email__Smtp__Port=587 \
           -e Email__Smtp__Username=mymascada/mymascada \
           -e Email__Smtp__Password="${{ secrets.SMTP_PASSWORD }}" \
           -e Email__Smtp__UseStartTls=false \
