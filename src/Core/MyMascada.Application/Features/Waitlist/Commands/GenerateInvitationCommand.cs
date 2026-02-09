@@ -129,7 +129,7 @@ public class GenerateInvitationCommandHandler : IRequestHandler<GenerateInvitati
                 {
                     { "Name", name },
                     { "InviteCode", generatedCode },
-                    { "RegisterUrl", "https://app.mymascada.com/register" },
+                    { "RegisterUrl", "https://app.mymascada.com/auth/register" },
                     { "ExpirationDays", request.ExpiresInDays },
                     { "CurrentYear", DateTime.UtcNow.Year }
                 };
