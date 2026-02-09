@@ -21,6 +21,13 @@ import {
   DocumentArrowUpIcon,
   UserGroupIcon
 } from '@heroicons/react/24/outline';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { AddAccountButton } from '@/components/buttons/add-account-button';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { ShareAccountModal } from '@/components/modals/share-account-modal';
@@ -257,13 +264,13 @@ export default function AccountsPage() {
                 {accounts.map((account) => (
                   <div
                     key={account.id}
-                    className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                    className="relative p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
                     onClick={() => router.push(`/accounts/${account.id}`)}
                   >
                     {/* Mobile Layout: Stack vertically */}
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-                      {/* Top row on mobile: Icon + Name + Menu */}
-                      <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                      {/* Top row on mobile: Icon + Name */}
+                      <div className="flex items-center gap-3 sm:gap-4 min-w-0 pr-10">
                         {/* Account Icon */}
                         <div className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center">
                           <BuildingOffice2Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
@@ -287,61 +294,9 @@ export default function AccountsPage() {
                             )}
                           </div>
                         </div>
-
-                        {/* Action Menu - visible on mobile, hover on desktop */}
-                        <div className="relative group flex-shrink-0 sm:hidden" onClick={(e) => e.stopPropagation()}>
-                          <Button variant="ghost" size="sm" className="w-8 h-8 p-0">
-                            <EllipsisVerticalIcon className="w-4 h-4" />
-                          </Button>
-
-                          <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto">
-                            {(!account.isSharedWithMe || account.shareRole === 2) && (
-                              <Link
-                                href={`/transactions/new?accountId=${account.id}`}
-                                className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                              >
-                                <DocumentArrowUpIcon className="w-4 h-4" />
-                                {t('addTransaction')}
-                              </Link>
-                            )}
-                            {account.isOwner && (
-                              <>
-                                <button
-                                    onClick={() => setShareModal({ show: true, account })}
-                                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full text-left cursor-pointer"
-                                  >
-                                    <UserGroupIcon className="w-4 h-4" />
-                                    {t('sharing.shareAccount')}
-                                  </button>
-                                <Link
-                                  href={`/accounts/${account.id}/edit`}
-                                  className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                                >
-                                  <PencilIcon className="w-4 h-4" />
-                                  {t('editAccount')}
-                                </Link>
-                                <button
-                                  onClick={() => setArchiveConfirm({ show: true, account })}
-                                  className="flex items-center gap-2 px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 w-full text-left cursor-pointer"
-                                >
-                                  <TrashIcon className="w-4 h-4" />
-                                  {t('archiveAccount')}
-                                </button>
-                                <div className="border-t border-gray-200 my-1"></div>
-                                <button
-                                  onClick={() => setDeleteConfirm({ show: true, account })}
-                                  className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left cursor-pointer"
-                                >
-                                  <TrashIcon className="w-4 h-4" />
-                                  {t('deletePermanently')}
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </div>
                       </div>
 
-                      {/* Bottom row on mobile: Balance + Desktop Action Menu */}
+                      {/* Bottom row on mobile: Balance */}
                       <div className="flex items-center justify-between sm:justify-end gap-3 sm:ml-auto pl-13 sm:pl-0">
                         <div className="text-left sm:text-right">
                           <p className="text-base sm:text-lg font-bold text-gray-900">
@@ -351,59 +306,73 @@ export default function AccountsPage() {
                             {account.currency}
                           </p>
                         </div>
+                      </div>
+                    </div>
 
-                        {/* Desktop Action Menu */}
-                        <div className="relative group hidden sm:block" onClick={(e) => e.stopPropagation()}>
-                          <Button variant="ghost" size="sm" className="w-8 h-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {/* Actions dropdown - positioned absolutely to avoid interfering with row click */}
+                    <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-8 h-8 p-0"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <EllipsisVerticalIcon className="w-4 h-4" />
                           </Button>
-
-                          <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto">
-                            {(!account.isSharedWithMe || account.shareRole === 2) && (
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48 bg-white border border-gray-200 shadow-lg z-50">
+                          {(!account.isSharedWithMe || account.shareRole === 2) && (
+                            <DropdownMenuItem asChild>
                               <Link
                                 href={`/transactions/new?accountId=${account.id}`}
-                                className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-sm"
                               >
                                 <DocumentArrowUpIcon className="w-4 h-4" />
                                 {t('addTransaction')}
                               </Link>
-                            )}
-                            {account.isOwner && (
-                              <>
-                                <button
-                                    onClick={() => setShareModal({ show: true, account })}
-                                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full text-left cursor-pointer"
-                                  >
-                                    <UserGroupIcon className="w-4 h-4" />
-                                    {t('sharing.shareAccount')}
-                                  </button>
+                            </DropdownMenuItem>
+                          )}
+                          {account.isOwner && (
+                            <>
+                              <DropdownMenuItem
+                                onClick={() => setShareModal({ show: true, account })}
+                                className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer"
+                              >
+                                <UserGroupIcon className="w-4 h-4" />
+                                {t('sharing.shareAccount')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
                                 <Link
                                   href={`/accounts/${account.id}/edit`}
-                                  className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                  className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-sm"
                                 >
                                   <PencilIcon className="w-4 h-4" />
                                   {t('editAccount')}
                                 </Link>
-                                <button
-                                  onClick={() => setArchiveConfirm({ show: true, account })}
-                                  className="flex items-center gap-2 px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 w-full text-left cursor-pointer"
-                                >
-                                  <TrashIcon className="w-4 h-4" />
-                                  {t('archiveAccount')}
-                                </button>
-                                <div className="border-t border-gray-200 my-1"></div>
-                                <button
-                                  onClick={() => setDeleteConfirm({ show: true, account })}
-                                  className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left cursor-pointer"
-                                >
-                                  <TrashIcon className="w-4 h-4" />
-                                  {t('deletePermanently')}
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                variant="destructive"
+                                onClick={() => setArchiveConfirm({ show: true, account })}
+                                className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer"
+                              >
+                                <TrashIcon className="w-4 h-4" />
+                                {t('archiveAccount')}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator className="my-1 bg-gray-200" />
+                              <DropdownMenuItem
+                                variant="destructive"
+                                onClick={() => setDeleteConfirm({ show: true, account })}
+                                className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer"
+                              >
+                                <TrashIcon className="w-4 h-4" />
+                                {t('deletePermanently')}
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                 ))}
