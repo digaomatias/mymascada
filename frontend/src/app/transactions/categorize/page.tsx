@@ -9,6 +9,7 @@ import Navigation from '@/components/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { apiClient } from '@/lib/api-client';
 import Link from 'next/link';
@@ -365,8 +366,8 @@ export default function CategorizePage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       {tCommon('account')}
                     </label>
-                    <select 
-                      className="select text-sm"
+                    <Select
+                      className="w-full text-sm"
                       value={selectedAccountId}
                       onChange={(e) => setSelectedAccountId(e.target.value)}
                     >
@@ -376,21 +377,21 @@ export default function CategorizePage() {
                           {account.name}
                         </option>
                       ))}
-                    </select>
+                    </Select>
                   </div>
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       {tCommon('status')}
                     </label>
-                    <select 
-                      className="select text-sm"
+                    <Select
+                      className="w-full text-sm"
                       value={showReviewed ? 'reviewed' : 'unreviewed'}
                       onChange={(e) => setShowReviewed(e.target.value === 'reviewed')}
                     >
                       <option value="unreviewed">{t('reviewStatus.unreviewedNeedsAttention')}</option>
                       <option value="reviewed">{t('reviewStatus.reviewed')}</option>
-                    </select>
+                    </Select>
                   </div>
                 </div>
                 

@@ -100,14 +100,7 @@ export default function ReconcileAccountPage() {
   const [checkingAkahu, setCheckingAkahu] = useState(false);
   const [importSource, setImportSource] = useState<ImportSource>('file');
   const [akahuBalanceData, setAkahuBalanceData] = useState<AkahuBalanceData | null>(null);
-  const [matchingResults, setMatchingResults] = useState<{
-    exactMatches?: number;
-    fuzzyMatches?: number;
-    unmatchedBank?: number;
-    unmatchedApp?: number;
-    totalBankTransactions?: number;
-    overallMatchPercentage?: number;
-  } | null>(null);
+
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -309,16 +302,6 @@ export default function ReconcileAccountPage() {
       ...prev,
       id: result.reconciliationId
     }));
-
-    // Set matching results
-    setMatchingResults({
-      exactMatches: result.matchingResult.exactMatches,
-      fuzzyMatches: result.matchingResult.fuzzyMatches,
-      unmatchedBank: result.matchingResult.unmatchedBank,
-      unmatchedApp: result.matchingResult.unmatchedApp,
-      totalBankTransactions: result.matchingResult.totalBankTransactions,
-      overallMatchPercentage: result.matchingResult.overallMatchPercentage
-    });
 
     // Set balance comparison data if available
     if (result.balanceComparison) {
@@ -652,28 +635,6 @@ export default function ReconcileAccountPage() {
                     pendingTransactionsTotal={akahuBalanceData.pendingTransactionsTotal}
                     pendingTransactionsCount={akahuBalanceData.pendingTransactionsCount}
                   />
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Matching Results Summary (Akahu only) */}
-            {matchingResults && importSource === 'akahu' && (
-              <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-                <CardContent className="p-6">
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <div className="flex items-center gap-3">
-                      <CheckCircleIcon className="w-5 h-5 text-green-600" />
-                      <div>
-                        <h4 className="font-medium text-green-900">{t('matchingComplete')}</h4>
-                        <p className="text-sm text-green-700">
-                          {t('matchingResults', { matched: ((matchingResults.exactMatches || 0) + (matchingResults.fuzzyMatches || 0)), total: matchingResults.totalBankTransactions || 0 })}
-                          {matchingResults.overallMatchPercentage !== undefined && (
-                            <span className="ml-1">{t('matchRate', { percentage: matchingResults.overallMatchPercentage.toFixed(1) })}</span>
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
             )}

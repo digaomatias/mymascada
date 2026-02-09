@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { BaseModal } from './base-modal';
 import { Button } from '@/components/ui/button';
+import { Select } from '@/components/ui/select';
 import { apiClient, AccountShareDto } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
@@ -139,7 +140,7 @@ export function ShareAccountModal({
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={t('emailPlaceholder')}
                 required
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none"
+                className="input w-full"
               />
             </div>
 
@@ -147,14 +148,14 @@ export function ShareAccountModal({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {t('selectRole')}
               </label>
-              <select
+              <Select
                 value={role}
                 onChange={(e) => setRole(Number(e.target.value))}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none"
+                className="w-full"
               >
                 <option value={1}>{t('roleViewer')}</option>
                 <option value={2}>{t('roleManager')}</option>
-              </select>
+              </Select>
             </div>
 
             <Button
@@ -206,14 +207,14 @@ export function ShareAccountModal({
                     </div>
 
                     <div className="flex items-center gap-2 flex-shrink-0 ml-3">
-                      <select
+                      <Select
                         value={share.role}
                         onChange={(e) => handleRoleChange(share, Number(e.target.value))}
-                        className="rounded-md border border-gray-300 px-2 py-1 text-xs focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none"
+                        className="text-xs py-1"
                       >
                         <option value={1}>{t('roleViewer')}</option>
                         <option value={2}>{t('roleManager')}</option>
-                      </select>
+                      </Select>
 
                       <button
                         onClick={() => setRevokeConfirm({ show: true, share })}
