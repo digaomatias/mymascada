@@ -34,20 +34,20 @@ public class GenerateInvitationCommandHandler : IRequestHandler<GenerateInvitati
 
     private readonly IInvitationCodeRepository _invitationCodeRepository;
     private readonly IWaitlistRepository _waitlistRepository;
-    private readonly IEmailService _emailService;
+    private readonly IEmailServiceFactory _emailServiceFactory;
     private readonly IEmailTemplateService _emailTemplateService;
     private readonly ILogger<GenerateInvitationCommandHandler> _logger;
 
     public GenerateInvitationCommandHandler(
         IInvitationCodeRepository invitationCodeRepository,
         IWaitlistRepository waitlistRepository,
-        IEmailService emailService,
+        IEmailServiceFactory emailServiceFactory,
         IEmailTemplateService emailTemplateService,
         ILogger<GenerateInvitationCommandHandler> logger)
     {
         _invitationCodeRepository = invitationCodeRepository;
         _waitlistRepository = waitlistRepository;
-        _emailService = emailService;
+        _emailServiceFactory = emailServiceFactory;
         _emailTemplateService = emailTemplateService;
         _logger = logger;
     }
@@ -137,7 +137,8 @@ public class GenerateInvitationCommandHandler : IRequestHandler<GenerateInvitati
                 var (subject, body) = await _emailTemplateService.RenderAsync(
                     "invitation", templateData, locale, cancellationToken);
 
-                await _emailService.SendAsync(new EmailMessage
+                var emailService = _emailServiceFactory.GetDefaultProvider();
+                await emailService.SendAsync(new EmailMessage
                 {
                     To = email,
                     ToName = name,
