@@ -32,6 +32,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="EmailTemplates\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Core\MyMascada.Application\MyMascada.Application.csproj" />
     <ProjectReference Include="..\..\Infrastructure\MyMascada.Infrastructure\MyMascada.Infrastructure.csproj" />
   </ItemGroup>
