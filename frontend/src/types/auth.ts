@@ -28,6 +28,7 @@ export interface UserDto {
   timeZone: string;
   locale: string;
   profilePictureUrl?: string;
+  aiDescriptionCleaning?: boolean;
 }
 
 export interface AuthenticationResponse {

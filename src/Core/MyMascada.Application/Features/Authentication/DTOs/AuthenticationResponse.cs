@@ -33,4 +33,5 @@ public class UserDto
     public string TimeZone { get; set; } = string.Empty;
     public string Locale { get; set; } = "en";
     public string? ProfilePictureUrl { get; set; }
+    public bool AiDescriptionCleaning { get; set; }
 }

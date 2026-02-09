@@ -1,5 +1,6 @@
 using MediatR;
 using MyMascada.Application.Common.Interfaces;
+using MyMascada.Application.Events;
 using MyMascada.Application.Features.BankConnections.DTOs;
 using MyMascada.Domain.Enums;
 
@@ -20,15 +21,18 @@ public class SyncBankConnectionCommandHandler : IRequestHandler<SyncBankConnecti
 {
     private readonly IBankConnectionRepository _bankConnectionRepository;
     private readonly IBankSyncService _bankSyncService;
+    private readonly IMediator _mediator;
     private readonly IApplicationLogger<SyncBankConnectionCommandHandler> _logger;
 
     public SyncBankConnectionCommandHandler(
         IBankConnectionRepository bankConnectionRepository,
         IBankSyncService bankSyncService,
+        IMediator mediator,
         IApplicationLogger<SyncBankConnectionCommandHandler> logger)
     {
         _bankConnectionRepository = bankConnectionRepository ?? throw new ArgumentNullException(nameof(bankConnectionRepository));
         _bankSyncService = bankSyncService ?? throw new ArgumentNullException(nameof(bankSyncService));
+        _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -81,6 +85,18 @@ public class SyncBankConnectionCommandHandler : IRequestHandler<SyncBankConnecti
         _logger.LogInformation(
             "Completed sync for bank connection {ConnectionId}: Success={IsSuccess}, Imported={Imported}, Skipped={Skipped}",
             request.BankConnectionId, result.IsSuccess, result.TransactionsImported, result.TransactionsSkipped);
+
+        // Publish TransactionsCreatedEvent to trigger description cleaning and categorization
+        if (result.IsSuccess && result.ImportedTransactionIds.Any())
+        {
+            await _mediator.Publish(
+                new TransactionsCreatedEvent(result.ImportedTransactionIds, request.UserId),
+                cancellationToken);
+
+            _logger.LogInformation(
+                "Published TransactionsCreatedEvent for {TransactionCount} imported transactions from bank sync",
+                result.ImportedTransactionIds.Count);
+        }
 
         return new BankSyncResultDto
         {

@@ -31,6 +31,8 @@ public class User : BaseEntity<Guid>
     public string Locale { get; set; } = "en-US";
     public string TimeZone { get; set; } = "UTC";
     
+    public bool AiDescriptionCleaning { get; set; }
+
     public string? ProfilePictureUrl { get; set; }
     public DateTime? LastLoginAt { get; set; }
     public DateTime RegisteredAt { get; set; } = DateTime.UtcNow;

@@ -1008,6 +1008,8 @@
     "createFromBankImport": "Create a new transaction from this bank import",
     "deleteThisTransaction": "Delete this transaction",
     "importAsNewTransaction": "Import as new transaction",
+    "previewAiDescription": "Preview AI-cleaned description",
+    "aiCleanedDescription": "AI: {description}",
     "reconcileWithAkahu": "Reconcile with Akahu",
     "akahuDescription": "Fetch your bank transactions directly from Akahu and compare them with your MyMascada records.",
     "howItWorks": "How it works",
@@ -1682,6 +1684,12 @@
     "deleteAccountConfirm": "Are you sure you want to delete your account? This action cannot be undone.",
     "saveChanges": "Save Changes",
     "changesSaved": "Changes saved successfully",
+    "transactionImport": {
+      "title": "Transaction Import",
+      "description": "Configure how imported transactions are processed",
+      "aiCleaning": "AI Description Cleaning",
+      "aiCleaningDescription": "Automatically clean up raw bank transaction descriptions using AI. Extracts merchant names and produces human-readable descriptions."
+    },
     "categorySeeding": {
       "title": "Default Categories",
       "description": "Seed your account with a default set of categories to get started quickly. You can always customize them later.",
@@ -2460,7 +2468,8 @@
     "ruleCategorizationSelectAtLeastOne": "Please select at least one rule suggestion to apply",
     "ruleCategorizationApplied": "Applied {count} rule categorizations",
     "ruleCategorizationApplyFailedWithMessage": "Failed to apply rules: {message}",
-    "ruleCategorizationApplyFailed": "Failed to apply selected rules. Please try again."
+    "ruleCategorizationApplyFailed": "Failed to apply selected rules. Please try again.",
+    "reconciliationPreviewFailed": "Failed to preview AI-cleaned description"
   },
   "pagination": {
     "rangeOfTotal": "{start}–{end} of {total}",

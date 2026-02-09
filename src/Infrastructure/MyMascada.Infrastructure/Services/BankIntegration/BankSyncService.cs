@@ -178,6 +178,7 @@ public class BankSyncService : IBankSyncService
             // 11. Auto-import clean transactions, skip duplicates
             var imported = 0;
             var skipped = 0;
+            var importedTransactionIds = new List<int>();
 
             foreach (var item in analysisResult.ReviewItems)
             {
@@ -207,6 +208,8 @@ public class BankSyncService : IBankSyncService
                         categoryMappings,
                         ct);
 
+                    importedTransactionIds.Add(transaction.Id);
+
                     _logger.LogDebug(
                         "Imported transaction {TransactionId}: {Description} ({Amount:C})",
                         transaction.Id,
@@ -229,7 +232,7 @@ public class BankSyncService : IBankSyncService
                 "Bank sync completed for connection {ConnectionId}: {Imported} imported, {Skipped} skipped (duplicates)",
                 bankConnectionId, imported, skipped);
 
-            return await CompleteSyncSuccessAsync(syncLog, connection, imported, skipped, ct);
+            return await CompleteSyncSuccessAsync(syncLog, connection, imported, skipped, ct, importedTransactionIds);
         }
         catch (Exception ex)
         {
@@ -448,7 +451,8 @@ public class BankSyncService : IBankSyncService
         BankConnection connection,
         int imported,
         int skipped,
-        CancellationToken ct)
+        CancellationToken ct,
+        List<int>? importedTransactionIds = null)
     {
         syncLog.Status = BankSyncStatus.Completed;
         syncLog.CompletedAt = DateTime.UtcNow;
@@ -466,7 +470,8 @@ public class BankSyncService : IBankSyncService
             syncLog.TransactionsProcessed,
             imported,
             skipped,
-            syncLog.StartedAt);
+            syncLog.StartedAt,
+            importedTransactionIds);
     }
 
     /// <summary>

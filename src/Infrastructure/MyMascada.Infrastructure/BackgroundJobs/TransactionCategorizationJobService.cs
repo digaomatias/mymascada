@@ -30,10 +30,22 @@ public class TransactionCategorizationJobService : ITransactionCategorizationJob
     public string EnqueueCategorization(List<int> transactionIds, string userId)
     {
         var jobId = _backgroundJobClient.Enqueue("categorization", () => ProcessCategorizationAsync(transactionIds, userId, null));
-        
-        _logger.LogInformation("Enqueued transaction categorization job {JobId} for {TransactionCount} transactions for user {UserId}", 
+
+        _logger.LogInformation("Enqueued transaction categorization job {JobId} for {TransactionCount} transactions for user {UserId}",
             jobId, transactionIds.Count, userId);
-        
+
+        return jobId;
+    }
+
+    public string EnqueueCategorizationAfter(string parentJobId, List<int> transactionIds, string userId)
+    {
+        var jobId = _backgroundJobClient.ContinueJobWith(parentJobId,
+            () => ProcessCategorizationAsync(transactionIds, userId, null));
+
+        _logger.LogInformation(
+            "Enqueued categorization continuation job {JobId} after parent job {ParentJobId} for {TransactionCount} transactions for user {UserId}",
+            jobId, parentJobId, transactionIds.Count, userId);
+
         return jobId;
     }
 

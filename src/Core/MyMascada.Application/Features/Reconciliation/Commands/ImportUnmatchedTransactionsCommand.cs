@@ -1,5 +1,6 @@
 using System.Text.Json;
 using MediatR;
+using MyMascada.Application.BackgroundJobs;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Reconciliation.DTOs;
 using MyMascada.Domain.Common;
@@ -29,6 +30,9 @@ public class ImportUnmatchedTransactionsCommandHandler
     private readonly IBankCategoryMappingService _categoryMappingService;
     private readonly IBankConnectionRepository _bankConnectionRepository;
     private readonly IApplicationLogger<ImportUnmatchedTransactionsCommandHandler> _logger;
+    private readonly IDescriptionCleaningJobService? _descriptionCleaningJobService;
+    private readonly ITransactionCategorizationJobService _categorizationJobService;
+    private readonly IUserRepository _userRepository;
 
     /// <summary>
     /// Minimum confidence score for auto-categorization (transaction marked as reviewed).
@@ -45,7 +49,10 @@ public class ImportUnmatchedTransactionsCommandHandler
         IBankCategoryMappingService categoryMappingService,
         IBankConnectionRepository bankConnectionRepository,
         IAccountAccessService accountAccessService,
-        IApplicationLogger<ImportUnmatchedTransactionsCommandHandler> logger)
+        IApplicationLogger<ImportUnmatchedTransactionsCommandHandler> logger,
+        IUserRepository userRepository,
+        ITransactionCategorizationJobService categorizationJobService,
+        IDescriptionCleaningJobService? descriptionCleaningJobService = null)
     {
         _reconciliationRepository = reconciliationRepository;
         _reconciliationItemRepository = reconciliationItemRepository;
@@ -55,6 +62,9 @@ public class ImportUnmatchedTransactionsCommandHandler
         _bankConnectionRepository = bankConnectionRepository;
         _accountAccessService = accountAccessService;
         _logger = logger;
+        _userRepository = userRepository;
+        _categorizationJobService = categorizationJobService;
+        _descriptionCleaningJobService = descriptionCleaningJobService;
     }
 
     public async Task<ImportUnmatchedResult> Handle(
@@ -249,7 +259,7 @@ public class ImportUnmatchedTransactionsCommandHandler
                 {
                     Amount = NormalizeAmount(bankData.Amount),
                     TransactionDate = DateTimeProvider.ToUtc(bankData.Date),
-                    Description = bankData.MerchantName ?? bankData.Description ?? "Unknown",
+                    Description = bankData.Description ?? bankData.MerchantName ?? "Unknown",
                     UserDescription = null,
                     Status = TransactionStatus.Cleared,
                     Source = TransactionSource.BankApi,
@@ -284,6 +294,42 @@ public class ImportUnmatchedTransactionsCommandHandler
                 _logger.LogError(ex, "Failed to import reconciliation item {ItemId}", item.Id);
                 errors.Add($"Failed to import item {item.Id}: {ex.Message}");
                 skippedCount++;
+            }
+        }
+
+        // Enqueue AI description cleaning and/or categorization for imported transactions
+        if (createdTransactionIds.Any())
+        {
+            try
+            {
+                var user = await _userRepository.GetByIdAsync(request.UserId);
+                var useDescriptionCleaning = user?.AiDescriptionCleaning == true
+                    && _descriptionCleaningJobService != null;
+
+                if (useDescriptionCleaning)
+                {
+                    // Chain: cleaning first, then categorization after cleaning completes
+                    var cleaningJobId = _descriptionCleaningJobService!.EnqueueDescriptionCleaning(
+                        createdTransactionIds, request.UserId.ToString());
+                    var categorizationJobId = _categorizationJobService.EnqueueCategorizationAfter(
+                        cleaningJobId, createdTransactionIds, request.UserId.ToString());
+                    _logger.LogInformation(
+                        "Enqueued description cleaning job {CleaningJobId} → categorization job {CategorizationJobId} for {TransactionCount} imported transactions",
+                        cleaningJobId, categorizationJobId, createdTransactionIds.Count);
+                }
+                else
+                {
+                    // Categorization only (no cleaning)
+                    var jobId = _categorizationJobService.EnqueueCategorization(
+                        createdTransactionIds, request.UserId.ToString());
+                    _logger.LogInformation(
+                        "Enqueued categorization job {JobId} for {TransactionCount} imported transactions",
+                        jobId, createdTransactionIds.Count);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to enqueue post-import jobs for imported transactions");
             }
         }
 
@@ -410,6 +456,11 @@ public class ImportUnmatchedTransactionsCommandHandler
     private static string? BuildNotes(BankTransactionData data)
     {
         var notes = new List<string>();
+
+        if (!string.IsNullOrEmpty(data.MerchantName))
+        {
+            notes.Add($"Merchant: {data.MerchantName}");
+        }
 
         if (!string.IsNullOrEmpty(data.Category))
         {

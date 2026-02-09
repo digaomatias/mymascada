@@ -11,6 +11,7 @@ import {
   TrashIcon,
   ArrowDownTrayIcon
 } from '@heroicons/react/24/outline';
+import { SparklesIcon } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { DragDropItem } from '@/hooks/use-drag-drop';
 
@@ -55,6 +56,7 @@ interface DraggableTransactionCardProps {
   onCreateTransaction?: () => void;
   onDelete?: () => void;
   onImport?: () => void;
+  onPreview?: () => void;
 
   // Display options
   showMatchButton?: boolean;
@@ -62,9 +64,12 @@ interface DraggableTransactionCardProps {
   showCreateButton?: boolean;
   showDeleteButton?: boolean;
   showImportButton?: boolean;
+  showPreviewButton?: boolean;
+  previewedDescription?: string;
+  isPreviewing?: boolean;
   isSelected?: boolean;
   onSelectionChange?: (selected: boolean) => void;
-  
+
   className?: string;
 }
 
@@ -84,11 +89,15 @@ export function DraggableTransactionCard({
   onCreateTransaction,
   onDelete,
   onImport,
+  onPreview,
   showMatchButton = false,
   showUnlinkButton = false,
   showCreateButton = false,
   showDeleteButton = false,
   showImportButton = false,
+  showPreviewButton = false,
+  previewedDescription,
+  isPreviewing = false,
   isSelected = false,
   onSelectionChange,
   className = ''
@@ -263,6 +272,21 @@ export function DraggableTransactionCard({
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <span className="font-medium text-gray-900">{transaction.description}</span>
+              {showPreviewButton && !previewedDescription && !isPreviewing && onPreview && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onPreview();
+                  }}
+                  className="p-1 text-purple-500 hover:text-purple-700 hover:bg-purple-50 rounded transition-colors"
+                  title={t('previewAiDescription')}
+                >
+                  <SparklesIcon className="w-4 h-4" />
+                </button>
+              )}
+              {isPreviewing && (
+                <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+              )}
               {bankTransaction?.bankCategory && (
                 <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">
                   {bankTransaction.bankCategory}
@@ -274,6 +298,12 @@ export function DraggableTransactionCard({
                 </span>
               )}
             </div>
+            {previewedDescription && (
+              <div className="flex items-center gap-1.5 mb-2 text-sm text-indigo-700">
+                <SparklesIcon className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                <span>{t('aiCleanedDescription', { description: previewedDescription })}</span>
+              </div>
+            )}
             
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>

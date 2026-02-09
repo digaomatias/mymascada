@@ -22,6 +22,8 @@ import {
   ArrowDownTrayIcon
 } from '@heroicons/react/24/outline';
 import { apiClient } from '@/lib/api-client';
+import { useFeatures } from '@/contexts/features-context';
+import { useAuth } from '@/contexts/auth-context';
 import { toast } from 'sonner';
 
 interface BankTransaction {
@@ -143,6 +145,8 @@ export function ReconciliationDetailsView({
   const tCommon = useTranslations('common');
   const tTransactions = useTranslations('transactions');
   const tToasts = useTranslations('toasts');
+  const { features } = useFeatures();
+  const { user } = useAuth();
 
   const TAB_CONFIG = Object.fromEntries(
     Object.entries(TAB_CONFIG_BASE).map(([key, val]) => [
@@ -175,6 +179,11 @@ export function ReconciliationDetailsView({
   const [importingItems, setImportingItems] = useState<Set<number>>(new Set());
   const [importedItems, setImportedItems] = useState<Set<number>>(new Set());
   
+  // AI description preview state
+  const [previewedDescriptions, setPreviewedDescriptions] = useState<Map<string, string>>(new Map());
+  const [previewingItems, setPreviewingItems] = useState<Set<string>>(new Set());
+  const showPreviewButton = features.aiCategorization && !!user?.aiDescriptionCleaning;
+
   // Drag and drop state
   const dragDrop = useDragDrop();
 
@@ -209,6 +218,26 @@ export function ReconciliationDetailsView({
   useEffect(() => {
     loadReconciliationDetails();
   }, [loadReconciliationDetails]);
+
+  const handlePreviewDescription = async (bankTransactionId: string, rawDescription: string) => {
+    setPreviewingItems(prev => new Set(prev).add(bankTransactionId));
+    try {
+      const result = await apiClient.previewDescriptionCleaning([{ rawDescription }]);
+      if (result.results && result.results.length > 0) {
+        const cleaned = result.results[0].cleanedDescription;
+        setPreviewedDescriptions(prev => new Map(prev).set(bankTransactionId, cleaned));
+      }
+    } catch (error) {
+      console.error('Failed to preview description cleaning:', error);
+      toast.error(tToasts('reconciliationPreviewFailed'));
+    } finally {
+      setPreviewingItems(prev => {
+        const next = new Set(prev);
+        next.delete(bankTransactionId);
+        return next;
+      });
+    }
+  };
 
   const toggleExpanded = (itemId: number) => {
     setExpandedItems(prev => {
@@ -821,6 +850,10 @@ export function ReconciliationDetailsView({
             onSelectionChange={(selected) => (activeTab === 'unmatched-system' || activeTab === 'unmatched-bank') && handleItemSelection(item.id, selected)}
             showImportButton={isUnmatchedBank && !isImporting && !isImported}
             onImport={() => handleSingleImport(item.id)}
+            showPreviewButton={isUnmatchedBank && showPreviewButton}
+            previewedDescription={isUnmatchedBank && item.bankTransaction ? previewedDescriptions.get(item.bankTransaction.bankTransactionId) : undefined}
+            isPreviewing={isUnmatchedBank && item.bankTransaction ? previewingItems.has(item.bankTransaction.bankTransactionId) : false}
+            onPreview={() => isUnmatchedBank && item.bankTransaction && handlePreviewDescription(item.bankTransaction.bankTransactionId, item.bankTransaction.description)}
             className="mb-3"
           />
         </div>

@@ -109,6 +109,7 @@ builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddRepositories();
 builder.Services.AddApplicationServices();
 builder.Services.AddCategorizationServices(builder.Configuration);
+builder.Services.AddDescriptionCleaningServices(builder.Configuration);
 builder.Services.AddBankProviderServices(builder.Configuration);
 builder.Services.AddEmailServices(builder.Configuration);
 builder.Services.AddHealthCheckServices();

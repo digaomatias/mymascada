@@ -170,7 +170,8 @@ public class AuthenticationService : IAuthenticationService
                         LastName = existingUser.LastName,
                         FullName = $"{existingUser.FirstName} {existingUser.LastName}".Trim(),
                         Currency = existingUser.Currency,
-                        TimeZone = existingUser.TimeZone
+                        TimeZone = existingUser.TimeZone,
+                        AiDescriptionCleaning = existingUser.AiDescriptionCleaning
                     }
                 };
             }
@@ -241,7 +242,8 @@ public class AuthenticationService : IAuthenticationService
                         LastName = newUser.LastName,
                         FullName = $"{newUser.FirstName} {newUser.LastName}".Trim(),
                         Currency = newUser.Currency,
-                        TimeZone = newUser.TimeZone
+                        TimeZone = newUser.TimeZone,
+                        AiDescriptionCleaning = newUser.AiDescriptionCleaning
                     }
                 };
             }
@@ -394,7 +396,8 @@ public class AuthenticationService : IAuthenticationService
                     LastName = user.LastName,
                     FullName = $"{user.FirstName} {user.LastName}".Trim(),
                     Currency = user.Currency,
-                    TimeZone = user.TimeZone
+                    TimeZone = user.TimeZone,
+                    AiDescriptionCleaning = user.AiDescriptionCleaning
                 }
             };
         }

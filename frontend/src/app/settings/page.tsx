@@ -16,11 +16,13 @@ import {
   ShieldCheckIcon,
   ChevronRightIcon,
   LanguageIcon,
-  TagIcon
+  TagIcon,
+  ArrowDownTrayIcon
 } from '@heroicons/react/24/outline';
 import { useLocale } from '@/contexts/locale-context';
 import { useTranslations } from 'next-intl';
 import { apiClient } from '@/lib/api-client';
+import { useFeatures } from '@/contexts/features-context';
 
 interface SettingsItem {
   href: string;
@@ -44,12 +46,15 @@ const settingsItems: SettingsItem[] = [
 ];
 
 export default function SettingsPage() {
-  const { isAuthenticated, isLoading, refreshUser } = useAuth();
+  const { isAuthenticated, isLoading, refreshUser, user } = useAuth();
   const router = useRouter();
   const { locale, setLocale, locales, localeNames, isLoading: localeLoading } = useLocale();
+  const { features } = useFeatures();
   const t = useTranslations('settings');
   const tCommon = useTranslations('common');
   const [isSavingLocale, setIsSavingLocale] = useState(false);
+  const [aiCleaningEnabled, setAiCleaningEnabled] = useState(false);
+  const [isSavingAiCleaning, setIsSavingAiCleaning] = useState(false);
 
   // Category seeding state
   const [seedLocales, setSeedLocales] = useState<string[]>([]);
@@ -64,6 +69,27 @@ export default function SettingsPage() {
       router.push('/auth/login');
     }
   }, [isAuthenticated, isLoading, router]);
+
+  useEffect(() => {
+    if (user?.aiDescriptionCleaning !== undefined) {
+      setAiCleaningEnabled(user.aiDescriptionCleaning);
+    }
+  }, [user?.aiDescriptionCleaning]);
+
+  const handleAiCleaningToggle = async () => {
+    const newValue = !aiCleaningEnabled;
+    setAiCleaningEnabled(newValue);
+    setIsSavingAiCleaning(true);
+    try {
+      await apiClient.updateAiDescriptionCleaning(newValue);
+      await refreshUser();
+    } catch (error) {
+      console.error('Failed to update AI description cleaning:', error);
+      setAiCleaningEnabled(!newValue);
+    } finally {
+      setIsSavingAiCleaning(false);
+    }
+  };
 
   const fetchCategorySeedingData = useCallback(async () => {
     setIsLoadingCategories(true);
@@ -263,6 +289,53 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Transaction Import Card - only visible when AI Categorization is enabled */}
+          {features.aiCategorization && (
+            <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg h-full">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center shrink-0">
+                    <ArrowDownTrayIcon className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {t('transactionImport.title')}
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1 mb-3">
+                      {t('transactionImport.description')}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {t('transactionImport.aiCleaning')}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          {t('transactionImport.aiCleaningDescription')}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={aiCleaningEnabled}
+                        onClick={handleAiCleaningToggle}
+                        disabled={isSavingAiCleaning}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+                          aiCleaningEnabled ? 'bg-primary-600' : 'bg-gray-200'
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                            aiCleaningEnabled ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Other Settings Items */}
           {settingsItems.map((item) => {

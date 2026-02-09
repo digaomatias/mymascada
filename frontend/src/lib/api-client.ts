@@ -1596,6 +1596,24 @@ class ApiClient {
     return this.post('/api/account-shares/decline', { token });
   }
 
+  // AI Description Cleaning methods
+  async previewDescriptionCleaning(descriptions: { rawDescription: string; merchantNameHint?: string }[]): Promise<{
+    results: Array<{
+      rawDescription: string;
+      cleanedDescription: string;
+      confidence: number;
+    }>;
+  }> {
+    return this.post('/api/description-cleaning/preview', { descriptions });
+  }
+
+  async updateAiDescriptionCleaning(enabled: boolean): Promise<unknown> {
+    return this.request('/api/auth/ai-description-cleaning', {
+      method: 'PATCH',
+      body: JSON.stringify({ enabled }),
+    });
+  }
+
   // Feature flags (anonymous endpoint)
   async getFeatures(): Promise<FeatureFlags> {
     return this.request('/api/Features');

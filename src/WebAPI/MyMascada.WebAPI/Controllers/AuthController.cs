@@ -187,7 +187,8 @@ public class AuthController : ControllerBase
             FullName = $"{user.FirstName} {user.LastName}".Trim(),
             Currency = user.Currency ?? "NZD",
             TimeZone = user.TimeZone ?? "UTC",
-            Locale = user.Locale ?? "en"
+            Locale = user.Locale ?? "en",
+            AiDescriptionCleaning = user.AiDescriptionCleaning
         };
 
         return Ok(userDto);
@@ -229,7 +230,44 @@ public class AuthController : ControllerBase
             FullName = $"{user.FirstName} {user.LastName}".Trim(),
             Currency = user.Currency ?? "NZD",
             TimeZone = user.TimeZone ?? "UTC",
-            Locale = user.Locale ?? "en"
+            Locale = user.Locale ?? "en",
+            AiDescriptionCleaning = user.AiDescriptionCleaning
+        };
+
+        return Ok(userDto);
+    }
+
+    [HttpPatch("ai-description-cleaning")]
+    [Authorize]
+    public async Task<ActionResult<UserDto>> UpdateAiDescriptionCleaning([FromBody] UpdateAiDescriptionCleaningRequest request)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        user.AiDescriptionCleaning = request.Enabled;
+        await _userRepository.UpdateAsync(user);
+
+        var userDto = new UserDto
+        {
+            Id = user.Id,
+            Email = user.Email ?? "",
+            UserName = user.UserName ?? "",
+            FirstName = user.FirstName ?? "",
+            LastName = user.LastName ?? "",
+            FullName = $"{user.FirstName} {user.LastName}".Trim(),
+            Currency = user.Currency ?? "NZD",
+            TimeZone = user.TimeZone ?? "UTC",
+            Locale = user.Locale ?? "en",
+            AiDescriptionCleaning = user.AiDescriptionCleaning
         };
 
         return Ok(userDto);
@@ -798,4 +836,9 @@ public class ResendVerificationRequest
 public class ExchangeCodeRequest
 {
     public string Code { get; set; } = string.Empty;
+}
+
+public class UpdateAiDescriptionCleaningRequest
+{
+    public bool Enabled { get; set; }
 }

@@ -7,8 +7,8 @@ using MyMascada.Application.Features.RecurringPatterns.Services;
 namespace MyMascada.Application.Events.Handlers;
 
 /// <summary>
-/// Handles TransactionsCreatedEvent by enqueuing Hangfire background jobs for categorization
-/// and matching transactions to recurring patterns.
+/// Handles TransactionsCreatedEvent by enqueuing Hangfire background jobs for description cleaning
+/// (if enabled) and categorization, and matching transactions to recurring patterns.
 /// Uses proper queuing with retry logic, monitoring, and persistence.
 /// </summary>
 public class TransactionsCreatedEventHandler : INotificationHandler<TransactionsCreatedEvent>
@@ -16,17 +16,23 @@ public class TransactionsCreatedEventHandler : INotificationHandler<Transactions
     private readonly ITransactionCategorizationJobService _jobService;
     private readonly ITransactionRepository _transactionRepository;
     private readonly IRecurringPatternPersistenceService? _patternPersistenceService;
+    private readonly IDescriptionCleaningJobService? _descriptionCleaningJobService;
+    private readonly IUserRepository _userRepository;
     private readonly ILogger<TransactionsCreatedEventHandler> _logger;
 
     public TransactionsCreatedEventHandler(
         ITransactionCategorizationJobService jobService,
         ITransactionRepository transactionRepository,
         ILogger<TransactionsCreatedEventHandler> logger,
-        IRecurringPatternPersistenceService? patternPersistenceService = null)
+        IUserRepository userRepository,
+        IRecurringPatternPersistenceService? patternPersistenceService = null,
+        IDescriptionCleaningJobService? descriptionCleaningJobService = null)
     {
         _jobService = jobService;
         _transactionRepository = transactionRepository;
         _patternPersistenceService = patternPersistenceService;
+        _descriptionCleaningJobService = descriptionCleaningJobService;
+        _userRepository = userRepository;
         _logger = logger;
     }
 
@@ -39,11 +45,49 @@ public class TransactionsCreatedEventHandler : INotificationHandler<Transactions
             return;
         }
 
-        // Enqueue Hangfire background job for transaction categorization
-        var jobId = _jobService.EnqueueCategorization(notification.TransactionIds, notification.UserId.ToString());
+        // Check if the user has AI description cleaning enabled
+        var useDescriptionCleaning = false;
+        if (_descriptionCleaningJobService != null)
+        {
+            try
+            {
+                var user = await _userRepository.GetByIdAsync(notification.UserId);
+                useDescriptionCleaning = user?.AiDescriptionCleaning == true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to check user description cleaning preference for user {UserId}",
+                    notification.UserId);
+            }
+        }
 
-        _logger.LogInformation("Enqueued Hangfire categorization job {JobId} for {TransactionCount} transactions for user {UserId}",
-            jobId, notification.TransactionIds.Count, notification.UserId);
+        if (useDescriptionCleaning)
+        {
+            // Enqueue description cleaning first, then chain categorization after it completes
+            var cleaningJobId = _descriptionCleaningJobService!.EnqueueDescriptionCleaning(
+                notification.TransactionIds, notification.UserId.ToString());
+
+            _logger.LogInformation(
+                "Enqueued description cleaning job {JobId} for {TransactionCount} transactions for user {UserId}",
+                cleaningJobId, notification.TransactionIds.Count, notification.UserId);
+
+            // Chain categorization to run after description cleaning completes
+            var categorizationJobId = _jobService.EnqueueCategorizationAfter(
+                cleaningJobId, notification.TransactionIds, notification.UserId.ToString());
+
+            _logger.LogInformation(
+                "Chained categorization job {JobId} after cleaning job {CleaningJobId} for user {UserId}",
+                categorizationJobId, cleaningJobId, notification.UserId);
+        }
+        else
+        {
+            // Enqueue categorization directly (current behavior)
+            var jobId = _jobService.EnqueueCategorization(notification.TransactionIds, notification.UserId.ToString());
+
+            _logger.LogInformation(
+                "Enqueued Hangfire categorization job {JobId} for {TransactionCount} transactions for user {UserId}",
+                jobId, notification.TransactionIds.Count, notification.UserId);
+        }
 
         // Try to match transactions to recurring patterns (if persistence service is available)
         if (_patternPersistenceService != null)

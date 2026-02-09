@@ -1007,6 +1007,8 @@
     "createFromBankImport": "Criar uma nova transação a partir desta importação bancária",
     "deleteThisTransaction": "Excluir esta transação",
     "importAsNewTransaction": "Importar como nova transação",
+    "previewAiDescription": "Visualizar descrição limpa pela IA",
+    "aiCleanedDescription": "IA: {description}",
     "reconcileWithAkahu": "Conciliar com Akahu",
     "akahuDescription": "Busque suas transações bancárias diretamente do Akahu e compare com seus registros no MyMascada.",
     "howItWorks": "Como funciona",
@@ -1681,6 +1683,12 @@
     "deleteAccountConfirm": "Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.",
     "saveChanges": "Salvar Alterações",
     "changesSaved": "Alterações salvas com sucesso",
+    "transactionImport": {
+      "title": "Importação de Transações",
+      "description": "Configure como as transações importadas são processadas",
+      "aiCleaning": "Limpeza de Descrição com IA",
+      "aiCleaningDescription": "Limpa automaticamente as descrições brutas de transações bancárias usando IA. Extrai nomes de comerciantes e produz descrições legíveis."
+    },
     "categorySeeding": {
       "title": "Categorias Padrão",
       "description": "Crie categorias padrão na sua conta para começar rapidamente. Você pode personalizar depois.",
@@ -2459,7 +2467,8 @@
     "ruleCategorizationSelectAtLeastOne": "Selecione pelo menos uma sugestão de regra para aplicar",
     "ruleCategorizationApplied": "Aplicadas {count} categorizações por regras",
     "ruleCategorizationApplyFailedWithMessage": "Falha ao aplicar regras: {message}",
-    "ruleCategorizationApplyFailed": "Falha ao aplicar regras selecionadas. Tente novamente."
+    "ruleCategorizationApplyFailed": "Falha ao aplicar regras selecionadas. Tente novamente.",
+    "reconciliationPreviewFailed": "Falha ao visualizar descrição limpa por IA"
   },
   "pagination": {
     "rangeOfTotal": "{start}–{end} de {total}",

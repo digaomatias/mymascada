@@ -328,6 +328,11 @@ public record BankSyncResult
     public DateTime? CompletedAt { get; init; }
 
     /// <summary>
+    /// IDs of transactions that were imported during this sync
+    /// </summary>
+    public List<int> ImportedTransactionIds { get; init; } = new();
+
+    /// <summary>
     /// Creates a successful sync result
     /// </summary>
     public static BankSyncResult Success(
@@ -336,7 +341,8 @@ public record BankSyncResult
         int processed,
         int imported,
         int skipped,
-        DateTime startedAt)
+        DateTime startedAt,
+        List<int>? importedTransactionIds = null)
         => new()
         {
             BankConnectionId = bankConnectionId,
@@ -346,7 +352,8 @@ public record BankSyncResult
             TransactionsImported = imported,
             TransactionsSkipped = skipped,
             StartedAt = startedAt,
-            CompletedAt = DateTime.UtcNow
+            CompletedAt = DateTime.UtcNow,
+            ImportedTransactionIds = importedTransactionIds ?? new()
         };
 
     /// <summary>
