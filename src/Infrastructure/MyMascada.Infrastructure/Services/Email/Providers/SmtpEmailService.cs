@@ -66,7 +66,7 @@ public class SmtpEmailService : IEmailService
 
             await client.ConnectAsync(smtp.Host, smtp.Port, socketOptions, ct);
 
-            if (!string.IsNullOrEmpty(smtp.Username))
+            if (!string.IsNullOrEmpty(smtp.Username) && client.Capabilities.HasFlag(SmtpCapabilities.Authentication))
             {
                 await client.AuthenticateAsync(smtp.Username, smtp.Password, ct);
             }
