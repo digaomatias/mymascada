@@ -176,6 +176,18 @@ jobs:
           -e App__FrontendUrl="${{ vars.FRONTEND_URL }}" \
           -e BetaAccess__RequireInviteCode="${{ vars.BETA_REQUIRE_INVITE_CODE }}" \
           -e BetaAccess__ValidInviteCodes="${{ secrets.BETA_VALID_INVITE_CODES }}" \
+          -e Email__Enabled=true \
+          -e Email__Provider=smtp \
+          -e Email__DefaultFromEmail=noreply@mymascada.com \
+          -e Email__DefaultFromName=MyMascada \
+          -e Email__Smtp__Host=localhost \
+          -e Email__Smtp__Port=25 \
+          -e Email__Smtp__Username=mymascada/mymascada \
+          -e Email__Smtp__Password="${{ secrets.SMTP_PASSWORD }}" \
+          -e Email__Smtp__UseStartTls=false \
+          -e Email__Smtp__UseSsl=false \
+          -e PasswordReset__FrontendResetUrl=https://app.mymascada.com/auth/reset-password \
+          -e EmailVerification__FrontendVerifyUrl=https://app.mymascada.com/auth/verify-email \
           -v mymascada_dataprotection_keys:/app/data/keys \
           --network host \
           mymascada-api:latest
