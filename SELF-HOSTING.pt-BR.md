@@ -30,12 +30,23 @@ Guia para implantar o MyMascada no seu proprio servidor usando Docker.
    ./setup.sh
    ```
 
-   O script gera senhas seguras, guia voce pela configuracao e inicia a aplicacao.
-   Alternativamente, copie `.env.example` para `.env` e edite manualmente.
+   O script gera senhas seguras, guia voce pela configuracao e inicia a aplicacao
+   usando imagens Docker pre-compiladas do GitHub Container Registry.
+   Alternativamente, copie `.env.example` para `.env` e edite manualmente, depois
+   execute:
+
+   ```bash
+   docker compose pull && docker compose up -d
+   ```
 
 3. **Abra a aplicacao**
 
    Acesse `http://localhost:3000` no navegador e crie sua primeira conta.
+
+> **Nota:** Imagens pre-compiladas sao publicadas para cada release (`linux/amd64`
+> e `linux/arm64`). Compilar a partir do codigo-fonte so e necessario se voce
+> quiser personalizar a build (ex: alterar `NEXT_PUBLIC_API_URL` no build). Para
+> compilar a partir do codigo-fonte, execute `docker compose up -d --build`.
 
 ---
 
@@ -190,7 +201,7 @@ provisiona e renova certificados SSL automaticamente via Let's Encrypt.
 3. Inicie com o perfil proxy:
 
    ```bash
-   docker compose --profile proxy up -d --build
+   docker compose --profile proxy up -d
    ```
 
 O Caddy cuida do provisionamento de certificados SSL, renovacao e redirecionamento
@@ -228,7 +239,7 @@ Um exemplo de configuracao Nginx e fornecido em `deploy/nginx.conf.example`.
 5. Inicie a aplicacao sem o perfil Caddy:
 
    ```bash
-   docker compose up -d --build
+   docker compose up -d
    ```
 
    O Nginx faz proxy para as portas 5126 (API) e 3000 (frontend) no host.
@@ -243,19 +254,27 @@ Um exemplo de configuracao Nginx e fornecido em `deploy/nginx.conf.example`.
 
 ## Atualizacao
 
-Baixe as ultimas alteracoes e reconstrua os containers. As migracoes do banco de
+Baixe as imagens mais recentes e reinicie os containers. As migracoes do banco de
 dados sao executadas automaticamente na inicializacao.
 
 ```bash
-git pull
-docker compose up -d --build
+docker compose pull && docker compose up -d
 ```
 
 Se estiver usando o proxy Caddy:
 
 ```bash
-git pull
-docker compose --profile proxy up -d --build
+docker compose pull && docker compose --profile proxy up -d
+```
+
+Para fixar uma versao especifica ao inves de `latest`:
+
+```bash
+# Exemplo: fixar na v1.0.1
+docker compose pull ghcr.io/digaomatias/mymascada/api:1.0.1
+docker compose pull ghcr.io/digaomatias/mymascada/migration:1.0.1
+docker compose pull ghcr.io/digaomatias/mymascada/frontend:1.0.1
+docker compose up -d
 ```
 
 ---
@@ -268,10 +287,31 @@ docker compose --profile proxy up -d --build
 docker compose exec postgres pg_dump -U mymascada mymascada > backup_$(date +%Y%m%d).sql
 ```
 
+### Agendamento Automatico de Backup
+
+Configure um cron job para backups regulares automatizados:
+
+```bash
+# Editar crontab
+crontab -e
+
+# Adicionar backup diario as 2:00 AM (ajuste o caminho conforme necessario)
+0 2 * * * cd /caminho/para/mymascada && docker compose exec -T postgres pg_dump -U mymascada mymascada | gzip > /caminho/para/backups/mymascada_$(date +\%Y\%m\%d).sql.gz
+
+# Opcional: remover backups com mais de 30 dias
+0 3 * * * find /caminho/para/backups -name "mymascada_*.sql.gz" -mtime +30 -delete
+```
+
 ### Restauracao do Banco de Dados
 
 ```bash
 docker compose exec -T postgres psql -U mymascada mymascada < backup.sql
+```
+
+Para backups comprimidos:
+
+```bash
+gunzip -c mymascada_20250201.sql.gz | docker compose exec -T postgres psql -U mymascada mymascada
 ```
 
 ### Volumes Docker
@@ -292,6 +332,20 @@ Para fazer backup de um volume manualmente:
 ```bash
 docker run --rm -v mymascada_postgres-data:/data -v $(pwd):/backup \
   alpine tar czf /backup/postgres-data.tar.gz -C /data .
+```
+
+### Chaves de Protecao de Dados
+
+O ASP.NET Core usa chaves de Data Protection para criptografar cookies, tokens e
+outros dados sensiveis. Essas chaves sao armazenadas no volume `api-data`. **Se
+voce perder este volume, todos os tokens de autenticacao existentes serao
+invalidados** e os usuarios precisarao fazer login novamente.
+
+Sempre inclua o volume `api-data` nos seus backups:
+
+```bash
+docker run --rm -v mymascada_api-data:/data -v $(pwd):/backup \
+  alpine tar czf /backup/api-data.tar.gz -C /data .
 ```
 
 ---

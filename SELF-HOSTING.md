@@ -31,12 +31,22 @@ A guide to deploying MyMascada on your own server using Docker.
    ```
 
    The script generates secure passwords, walks you through configuration, and
-   starts the application. Alternatively, copy `.env.example` to `.env` and edit
-   it manually.
+   starts the application using pre-built Docker images from GitHub Container
+   Registry. Alternatively, copy `.env.example` to `.env` and edit it manually,
+   then run:
+
+   ```bash
+   docker compose pull && docker compose up -d
+   ```
 
 3. **Open the application**
 
    Visit `http://localhost:3000` in your browser and create your first account.
+
+> **Note:** Pre-built images are published for every release (`linux/amd64` and
+> `linux/arm64`). Building from source is only needed if you want to customize
+> the build (e.g., change `NEXT_PUBLIC_API_URL` at build time). To build from
+> source, run `docker compose up -d --build` instead.
 
 ---
 
@@ -231,7 +241,7 @@ automatically provisions and renews SSL certificates via Let's Encrypt.
 3. Start with the proxy profile:
 
    ```bash
-   docker compose --profile proxy up -d --build
+   docker compose --profile proxy up -d
    ```
 
 Caddy handles SSL certificate provisioning, renewal, and HTTP-to-HTTPS redirection
@@ -269,7 +279,7 @@ An example Nginx configuration is provided at `deploy/nginx.conf.example`.
 5. Start the application without the Caddy profile:
 
    ```bash
-   docker compose up -d --build
+   docker compose up -d
    ```
 
    Nginx proxies to ports 5126 (API) and 3000 (frontend) on the host.
@@ -284,19 +294,27 @@ An example Nginx configuration is provided at `deploy/nginx.conf.example`.
 
 ## Updating
 
-Pull the latest changes and rebuild the containers. Database migrations run
+Pull the latest images and restart the containers. Database migrations run
 automatically on startup.
 
 ```bash
-git pull
-docker compose up -d --build
+docker compose pull && docker compose up -d
 ```
 
 If using the Caddy proxy:
 
 ```bash
-git pull
-docker compose --profile proxy up -d --build
+docker compose pull && docker compose --profile proxy up -d
+```
+
+To pin a specific version instead of `latest`:
+
+```bash
+# Example: pin to v1.0.1
+docker compose pull ghcr.io/digaomatias/mymascada/api:1.0.1
+docker compose pull ghcr.io/digaomatias/mymascada/migration:1.0.1
+docker compose pull ghcr.io/digaomatias/mymascada/frontend:1.0.1
+docker compose up -d
 ```
 
 ---
