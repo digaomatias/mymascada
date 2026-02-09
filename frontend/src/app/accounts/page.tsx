@@ -264,13 +264,13 @@ export default function AccountsPage() {
                 {accounts.map((account) => (
                   <div
                     key={account.id}
-                    className="relative p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                    className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
                     onClick={() => router.push(`/accounts/${account.id}`)}
                   >
                     {/* Mobile Layout: Stack vertically */}
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                       {/* Top row on mobile: Icon + Name */}
-                      <div className="flex items-center gap-3 sm:gap-4 min-w-0 pr-10">
+                      <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                         {/* Account Icon */}
                         <div className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center">
                           <BuildingOffice2Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
@@ -296,7 +296,7 @@ export default function AccountsPage() {
                         </div>
                       </div>
 
-                      {/* Bottom row on mobile: Balance */}
+                      {/* Bottom row on mobile: Balance + Action Menu */}
                       <div className="flex items-center justify-between sm:justify-end gap-3 sm:ml-auto pl-13 sm:pl-0">
                         <div className="text-left sm:text-right">
                           <p className="text-base sm:text-lg font-bold text-gray-900">
@@ -306,73 +306,72 @@ export default function AccountsPage() {
                             {account.currency}
                           </p>
                         </div>
-                      </div>
-                    </div>
 
-                    {/* Actions dropdown - positioned absolutely to avoid interfering with row click */}
-                    <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-8 h-8 p-0"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <EllipsisVerticalIcon className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48 bg-white border border-gray-200 shadow-lg z-50">
-                          {(!account.isSharedWithMe || account.shareRole === 2) && (
-                            <DropdownMenuItem asChild>
-                              <Link
-                                href={`/transactions/new?accountId=${account.id}`}
-                                className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-sm"
+                        {/* Action Menu */}
+                        <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="w-8 h-8 p-0"
                               >
-                                <DocumentArrowUpIcon className="w-4 h-4" />
-                                {t('addTransaction')}
-                              </Link>
-                            </DropdownMenuItem>
-                          )}
-                          {account.isOwner && (
-                            <>
-                              <DropdownMenuItem
-                                onClick={() => setShareModal({ show: true, account })}
-                                className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer"
-                              >
-                                <UserGroupIcon className="w-4 h-4" />
-                                {t('sharing.shareAccount')}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem asChild>
-                                <Link
-                                  href={`/accounts/${account.id}/edit`}
-                                  className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-sm"
-                                >
-                                  <PencilIcon className="w-4 h-4" />
-                                  {t('editAccount')}
-                                </Link>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                variant="destructive"
-                                onClick={() => setArchiveConfirm({ show: true, account })}
-                                className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer"
-                              >
-                                <TrashIcon className="w-4 h-4" />
-                                {t('archiveAccount')}
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator className="my-1 bg-gray-200" />
-                              <DropdownMenuItem
-                                variant="destructive"
-                                onClick={() => setDeleteConfirm({ show: true, account })}
-                                className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer"
-                              >
-                                <TrashIcon className="w-4 h-4" />
-                                {t('deletePermanently')}
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                                <EllipsisVerticalIcon className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48 bg-white border border-gray-200 shadow-lg z-50">
+                              {(!account.isSharedWithMe || account.shareRole === 2) && (
+                                <DropdownMenuItem asChild>
+                                  <Link
+                                    href={`/transactions/new?accountId=${account.id}`}
+                                    className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-sm"
+                                  >
+                                    <DocumentArrowUpIcon className="w-4 h-4" />
+                                    {t('addTransaction')}
+                                  </Link>
+                                </DropdownMenuItem>
+                              )}
+                              {account.isOwner && (
+                                <>
+                                  <DropdownMenuItem
+                                    onClick={() => setShareModal({ show: true, account })}
+                                    className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer"
+                                  >
+                                    <UserGroupIcon className="w-4 h-4" />
+                                    {t('sharing.shareAccount')}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem asChild>
+                                    <Link
+                                      href={`/accounts/${account.id}/edit`}
+                                      className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-sm"
+                                    >
+                                      <PencilIcon className="w-4 h-4" />
+                                      {t('editAccount')}
+                                    </Link>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    variant="destructive"
+                                    onClick={() => setArchiveConfirm({ show: true, account })}
+                                    className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer"
+                                  >
+                                    <TrashIcon className="w-4 h-4" />
+                                    {t('archiveAccount')}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator className="my-1 bg-gray-200" />
+                                  <DropdownMenuItem
+                                    variant="destructive"
+                                    onClick={() => setDeleteConfirm({ show: true, account })}
+                                    className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer"
+                                  >
+                                    <TrashIcon className="w-4 h-4" />
+                                    {t('deletePermanently')}
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
