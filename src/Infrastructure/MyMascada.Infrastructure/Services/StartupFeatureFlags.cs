@@ -12,19 +12,16 @@ public class StartupFeatureFlags : IFeatureFlags
     public bool EmailNotifications { get; }
     public bool GoogleOAuth { get; }
     public bool BankSync { get; }
-    public bool AccountSharing { get; }
 
     public StartupFeatureFlags(
         bool aiCategorization,
         bool emailNotifications,
         bool googleOAuth,
-        bool bankSync,
-        bool accountSharing = false)
+        bool bankSync)
     {
         AiCategorization = aiCategorization;
         EmailNotifications = emailNotifications;
         GoogleOAuth = googleOAuth;
         BankSync = bankSync;
-        AccountSharing = accountSharing;
     }
 }

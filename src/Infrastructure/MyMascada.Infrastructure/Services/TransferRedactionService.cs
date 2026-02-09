@@ -11,21 +11,16 @@ namespace MyMascada.Infrastructure.Services;
 public class TransferRedactionService : ITransferRedactionService
 {
     private readonly IAccountAccessService _accountAccess;
-    private readonly IFeatureFlags _featureFlags;
 
     private const string RedactedAccountName = "Private Account";
 
-    public TransferRedactionService(IAccountAccessService accountAccess, IFeatureFlags featureFlags)
+    public TransferRedactionService(IAccountAccessService accountAccess)
     {
         _accountAccess = accountAccess;
-        _featureFlags = featureFlags;
     }
 
     public async Task<TransferDto> RedactForViewerAsync(TransferDto transfer, Guid viewerUserId)
     {
-        if (!_featureFlags.AccountSharing)
-            return transfer;
-
         var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(viewerUserId);
 
         var sourceAccessible = accessibleIds.Contains(transfer.SourceAccount.Id);
@@ -68,9 +63,6 @@ public class TransferRedactionService : ITransferRedactionService
 
     public async Task<IEnumerable<TransferDto>> RedactForViewerAsync(IEnumerable<TransferDto> transfers, Guid viewerUserId)
     {
-        if (!_featureFlags.AccountSharing)
-            return transfers;
-
         var result = new List<TransferDto>();
         foreach (var transfer in transfers)
         {

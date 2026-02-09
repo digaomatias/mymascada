@@ -174,7 +174,6 @@ jobs:
           -e LLM__OpenAI__Model="${{ secrets.OPENAI_MODEL }}" \
           -e Cors__AllowedOrigins="${{ vars.CORS_ALLOWED_ORIGINS }}" \
           -e App__FrontendUrl="${{ vars.FRONTEND_URL }}" \
-          -e Features__AccountSharing="${{ vars.ACCOUNT_SHARING_ENABLED }}" \
           -e BetaAccess__RequireInviteCode="${{ vars.BETA_REQUIRE_INVITE_CODE }}" \
           -e BetaAccess__ValidInviteCodes="${{ secrets.BETA_VALID_INVITE_CODES }}" \
           -v mymascada_dataprotection_keys:/app/data/keys \

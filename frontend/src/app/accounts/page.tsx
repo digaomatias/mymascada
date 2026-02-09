@@ -1,7 +1,6 @@
 'use client';
 
 import { useAuth } from '@/contexts/auth-context';
-import { useFeatures } from '@/contexts/features-context';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Navigation from '@/components/navigation';
@@ -49,7 +48,6 @@ interface Account {
 
 export default function AccountsPage() {
   const { isAuthenticated, isLoading } = useAuth();
-  const { features } = useFeatures();
   const router = useRouter();
   const t = useTranslations('accounts');
   const tCommon = useTranslations('common');
@@ -308,15 +306,13 @@ export default function AccountsPage() {
                             )}
                             {account.isOwner && (
                               <>
-                                {features.accountSharing && (
-                                  <button
+                                <button
                                     onClick={() => setShareModal({ show: true, account })}
                                     className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full text-left cursor-pointer"
                                   >
                                     <UserGroupIcon className="w-4 h-4" />
                                     {t('sharing.shareAccount')}
                                   </button>
-                                )}
                                 <Link
                                   href={`/accounts/${account.id}/edit`}
                                   className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
@@ -374,15 +370,13 @@ export default function AccountsPage() {
                             )}
                             {account.isOwner && (
                               <>
-                                {features.accountSharing && (
-                                  <button
+                                <button
                                     onClick={() => setShareModal({ show: true, account })}
                                     className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full text-left cursor-pointer"
                                   >
                                     <UserGroupIcon className="w-4 h-4" />
                                     {t('sharing.shareAccount')}
                                   </button>
-                                )}
                                 <Link
                                   href={`/accounts/${account.id}/edit`}
                                   className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"

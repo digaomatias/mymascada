@@ -10,7 +10,6 @@ namespace MyMascada.Tests.Unit.Services;
 public class AccountAccessServiceTests : IDisposable
 {
     private readonly ApplicationDbContext _context;
-    private readonly IFeatureFlags _featureFlags;
     private readonly AccountAccessService _service;
 
     private readonly Guid _ownerId = Guid.NewGuid();
@@ -28,9 +27,8 @@ public class AccountAccessServiceTests : IDisposable
             .Options;
 
         _context = new ApplicationDbContext(options);
-        _featureFlags = Substitute.For<IFeatureFlags>();
 
-        _service = new AccountAccessService(_context, _featureFlags);
+        _service = new AccountAccessService(_context);
 
         SeedTestData().Wait();
     }
@@ -97,26 +95,9 @@ public class AccountAccessServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task GetAccessibleAccountIdsAsync_WithoutSharing_ReturnsOnlyOwnedAccounts()
+    public async Task GetAccessibleAccountIdsAsync_ReturnsOwnedAndSharedAccounts()
     {
-        // Arrange
-        _featureFlags.AccountSharing.Returns(false);
-
-        // Act
-        var result = await _service.GetAccessibleAccountIdsAsync(_ownerId);
-
-        // Assert
-        result.Should().ContainSingle()
-            .Which.Should().Be(OwnedAccountId);
-    }
-
-    [Fact]
-    public async Task GetAccessibleAccountIdsAsync_WithSharing_ReturnsOwnedAndSharedAccounts()
-    {
-        // Arrange
-        _featureFlags.AccountSharing.Returns(true);
-
-        // Add a share: owner's account shared with sharee (so sharee can see both owned + shared)
+        // Arrange - add a share: owner's account shared with sharee
         _context.AccountShares.Add(new AccountShare
         {
             Id = 10,
@@ -138,11 +119,19 @@ public class AccountAccessServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task GetAccessibleAccountIdsAsync_OwnerGetsOwnedAccounts()
+    {
+        // Act
+        var result = await _service.GetAccessibleAccountIdsAsync(_ownerId);
+
+        // Assert
+        result.Should().ContainSingle()
+            .Which.Should().Be(OwnedAccountId);
+    }
+
+    [Fact]
     public async Task CanAccessAccountAsync_OwnedAccount_ReturnsTrue()
     {
-        // Arrange
-        _featureFlags.AccountSharing.Returns(false);
-
         // Act
         var result = await _service.CanAccessAccountAsync(_ownerId, OwnedAccountId);
 
@@ -153,9 +142,6 @@ public class AccountAccessServiceTests : IDisposable
     [Fact]
     public async Task CanAccessAccountAsync_SharedAccount_ReturnsTrue()
     {
-        // Arrange
-        _featureFlags.AccountSharing.Returns(true);
-
         // Act - sharee has an accepted share on SharedAccountId
         var result = await _service.CanAccessAccountAsync(_shareeId, SharedAccountId);
 
@@ -166,9 +152,6 @@ public class AccountAccessServiceTests : IDisposable
     [Fact]
     public async Task CanAccessAccountAsync_UnknownAccount_ReturnsFalse()
     {
-        // Arrange
-        _featureFlags.AccountSharing.Returns(true);
-
         // Act
         var result = await _service.CanAccessAccountAsync(_ownerId, UnknownAccountId);
 
@@ -179,9 +162,6 @@ public class AccountAccessServiceTests : IDisposable
     [Fact]
     public async Task CanModifyAccountAsync_OwnedAccount_ReturnsTrue()
     {
-        // Arrange
-        _featureFlags.AccountSharing.Returns(false);
-
         // Act
         var result = await _service.CanModifyAccountAsync(_ownerId, OwnedAccountId);
 
@@ -192,10 +172,7 @@ public class AccountAccessServiceTests : IDisposable
     [Fact]
     public async Task CanModifyAccountAsync_ManagerRole_ReturnsTrue()
     {
-        // Arrange
-        _featureFlags.AccountSharing.Returns(true);
-
-        // Add a Manager share
+        // Arrange - add a Manager share
         _context.AccountShares.Add(new AccountShare
         {
             Id = 20,
@@ -217,9 +194,6 @@ public class AccountAccessServiceTests : IDisposable
     [Fact]
     public async Task CanModifyAccountAsync_ViewerRole_ReturnsFalse()
     {
-        // Arrange
-        _featureFlags.AccountSharing.Returns(true);
-
         // sharee has a Viewer share on SharedAccountId (seeded in setup)
 
         // Act
@@ -232,9 +206,6 @@ public class AccountAccessServiceTests : IDisposable
     [Fact]
     public async Task CanModifyAccountAsync_UnknownAccount_ReturnsFalse()
     {
-        // Arrange
-        _featureFlags.AccountSharing.Returns(true);
-
         // Act
         var result = await _service.CanModifyAccountAsync(_ownerId, UnknownAccountId);
 
@@ -265,9 +236,6 @@ public class AccountAccessServiceTests : IDisposable
     [Fact]
     public async Task GetAccessibleAccountIdsAsync_CalledTwice_UsesCacheOnSecondCall()
     {
-        // Arrange
-        _featureFlags.AccountSharing.Returns(true);
-
         // Act - call twice for the same user
         var result1 = await _service.GetAccessibleAccountIdsAsync(_ownerId);
         var result2 = await _service.GetAccessibleAccountIdsAsync(_ownerId);
@@ -281,12 +249,9 @@ public class AccountAccessServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task GetAccessibleAccountIdsAsync_WithSharing_ExcludesPendingShares()
+    public async Task GetAccessibleAccountIdsAsync_ExcludesPendingShares()
     {
-        // Arrange
-        _featureFlags.AccountSharing.Returns(true);
-
-        // Add a pending share (should not grant access)
+        // Arrange - add a pending share (should not grant access)
         var pendingAccount = new Account
         {
             Id = 50,

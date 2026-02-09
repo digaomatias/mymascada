@@ -15,7 +15,6 @@ public class AccountSharingControllerTests
 {
     private readonly ISender _mediator;
     private readonly ICurrentUserService _currentUserService;
-    private readonly IFeatureFlags _featureFlags;
     private readonly AccountSharingController _controller;
     private readonly Guid _userId = Guid.NewGuid();
 
@@ -24,9 +23,8 @@ public class AccountSharingControllerTests
         _mediator = Substitute.For<ISender>();
         _currentUserService = Substitute.For<ICurrentUserService>();
         _currentUserService.GetUserId().Returns(_userId);
-        _featureFlags = Substitute.For<IFeatureFlags>();
 
-        _controller = new AccountSharingController(_mediator, _currentUserService, _featureFlags);
+        _controller = new AccountSharingController(_mediator, _currentUserService);
 
         SetupUserClaims();
     }
@@ -53,24 +51,9 @@ public class AccountSharingControllerTests
     // --- GetAccountShares ---
 
     [Fact]
-    public async Task GetAccountShares_FeatureFlagOff_ReturnsNotFound()
+    public async Task GetAccountShares_ReturnsShares()
     {
         // Arrange
-        _featureFlags.AccountSharing.Returns(false);
-
-        // Act
-        var result = await _controller.GetAccountShares(accountId: 1);
-
-        // Assert
-        result.Result.Should().BeOfType<NotFoundResult>();
-    }
-
-    [Fact]
-    public async Task GetAccountShares_FeatureFlagOn_ReturnsShares()
-    {
-        // Arrange
-        _featureFlags.AccountSharing.Returns(true);
-
         var expectedShares = new List<AccountShareDto>
         {
             new()
@@ -106,30 +89,9 @@ public class AccountSharingControllerTests
     // --- CreateShare ---
 
     [Fact]
-    public async Task CreateShare_FeatureFlagOff_ReturnsNotFound()
-    {
-        // Arrange
-        _featureFlags.AccountSharing.Returns(false);
-
-        var request = new CreateAccountShareRequest
-        {
-            Email = "user@example.com",
-            Role = AccountShareRole.Viewer
-        };
-
-        // Act
-        var result = await _controller.CreateShare(accountId: 1, request);
-
-        // Assert
-        result.Result.Should().BeOfType<NotFoundResult>();
-    }
-
-    [Fact]
     public async Task CreateShare_ValidRequest_ReturnsCreated()
     {
         // Arrange
-        _featureFlags.AccountSharing.Returns(true);
-
         var request = new CreateAccountShareRequest
         {
             Email = "friend@example.com",
@@ -167,24 +129,9 @@ public class AccountSharingControllerTests
     // --- RevokeShare ---
 
     [Fact]
-    public async Task RevokeShare_FeatureFlagOff_ReturnsNotFound()
-    {
-        // Arrange
-        _featureFlags.AccountSharing.Returns(false);
-
-        // Act
-        var result = await _controller.RevokeShare(accountId: 1, shareId: 1);
-
-        // Assert
-        result.Should().BeOfType<NotFoundResult>();
-    }
-
-    [Fact]
     public async Task RevokeShare_ValidRequest_ReturnsNoContent()
     {
         // Arrange
-        _featureFlags.AccountSharing.Returns(true);
-
         _mediator.Send(Arg.Any<RevokeAccountShareCommand>())
             .Returns(MediatR.Unit.Value);
 
@@ -203,26 +150,9 @@ public class AccountSharingControllerTests
     // --- AcceptShare ---
 
     [Fact]
-    public async Task AcceptShare_FeatureFlagOff_ReturnsNotFound()
-    {
-        // Arrange
-        _featureFlags.AccountSharing.Returns(false);
-
-        var request = new AcceptDeclineShareRequest { Token = "some-token" };
-
-        // Act
-        var result = await _controller.AcceptShare(request);
-
-        // Assert
-        result.Result.Should().BeOfType<NotFoundResult>();
-    }
-
-    [Fact]
     public async Task AcceptShare_ValidToken_ReturnsOk()
     {
         // Arrange
-        _featureFlags.AccountSharing.Returns(true);
-
         var request = new AcceptDeclineShareRequest { Token = "valid-token" };
 
         var expectedDto = new AccountShareDto
@@ -259,26 +189,9 @@ public class AccountSharingControllerTests
     // --- DeclineShare ---
 
     [Fact]
-    public async Task DeclineShare_FeatureFlagOff_ReturnsNotFound()
-    {
-        // Arrange
-        _featureFlags.AccountSharing.Returns(false);
-
-        var request = new AcceptDeclineShareRequest { Token = "some-token" };
-
-        // Act
-        var result = await _controller.DeclineShare(request);
-
-        // Assert
-        result.Should().BeOfType<NotFoundResult>();
-    }
-
-    [Fact]
     public async Task DeclineShare_ValidToken_ReturnsNoContent()
     {
         // Arrange
-        _featureFlags.AccountSharing.Returns(true);
-
         var request = new AcceptDeclineShareRequest { Token = "decline-token" };
 
         _mediator.Send(Arg.Any<DeclineAccountShareCommand>())
@@ -298,26 +211,9 @@ public class AccountSharingControllerTests
     // --- UpdateShareRole ---
 
     [Fact]
-    public async Task UpdateShareRole_FeatureFlagOff_ReturnsNotFound()
-    {
-        // Arrange
-        _featureFlags.AccountSharing.Returns(false);
-
-        var request = new UpdateShareRoleRequest { Role = AccountShareRole.Manager };
-
-        // Act
-        var result = await _controller.UpdateShareRole(accountId: 1, shareId: 1, request);
-
-        // Assert
-        result.Should().BeOfType<NotFoundResult>();
-    }
-
-    [Fact]
     public async Task UpdateShareRole_ValidRequest_ReturnsNoContent()
     {
         // Arrange
-        _featureFlags.AccountSharing.Returns(true);
-
         var request = new UpdateShareRoleRequest { Role = AccountShareRole.Manager };
 
         _mediator.Send(Arg.Any<UpdateAccountShareRoleCommand>())
@@ -339,24 +235,9 @@ public class AccountSharingControllerTests
     // --- GetReceivedShares ---
 
     [Fact]
-    public async Task GetReceivedShares_FeatureFlagOff_ReturnsNotFound()
+    public async Task GetReceivedShares_ReturnsReceivedShares()
     {
         // Arrange
-        _featureFlags.AccountSharing.Returns(false);
-
-        // Act
-        var result = await _controller.GetReceivedShares();
-
-        // Assert
-        result.Result.Should().BeOfType<NotFoundResult>();
-    }
-
-    [Fact]
-    public async Task GetReceivedShares_FeatureFlagOn_ReturnsReceivedShares()
-    {
-        // Arrange
-        _featureFlags.AccountSharing.Returns(true);
-
         var expectedShares = new List<ReceivedShareDto>
         {
             new()

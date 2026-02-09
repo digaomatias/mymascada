@@ -22,7 +22,6 @@ public class AccountsController : ControllerBase
     private readonly IMediator _mediator;
     private readonly ICurrentUserService _currentUserService;
     private readonly IAccountAccessService _accountAccess;
-    private readonly IFeatureFlags _featureFlags;
     private readonly IAccountShareRepository _accountShareRepository;
 
     public AccountsController(
@@ -32,7 +31,6 @@ public class AccountsController : ControllerBase
         IMediator mediator,
         ICurrentUserService currentUserService,
         IAccountAccessService accountAccess,
-        IFeatureFlags featureFlags,
         IAccountShareRepository accountShareRepository)
     {
         _accountRepository = accountRepository;
@@ -41,7 +39,6 @@ public class AccountsController : ControllerBase
         _mediator = mediator;
         _currentUserService = currentUserService;
         _accountAccess = accountAccess;
-        _featureFlags = featureFlags;
         _accountShareRepository = accountShareRepository;
     }
 
@@ -51,9 +48,7 @@ public class AccountsController : ControllerBase
         var userId = _currentUserService.GetUserId();
         var accounts = await _accountRepository.GetByUserIdAsync(userId);
         var accountDtos = _mapper.Map<List<AccountDto>>(accounts);
-
-        if (_featureFlags.AccountSharing)
-            await PopulateSharingMetadataAsync(accountDtos, userId);
+        await PopulateSharingMetadataAsync(accountDtos, userId);
 
         return Ok(accountDtos);
     }
@@ -69,9 +64,7 @@ public class AccountsController : ControllerBase
         }
 
         var accountDto = _mapper.Map<AccountDto>(account);
-
-        if (_featureFlags.AccountSharing)
-            await PopulateSharingMetadataAsync(new List<AccountDto> { accountDto }, userId);
+        await PopulateSharingMetadataAsync(new List<AccountDto> { accountDto }, userId);
 
         return Ok(accountDto);
     }
@@ -175,8 +168,7 @@ public class AccountsController : ControllerBase
         }
 
         // Revoke all active shares for this account
-        if (_featureFlags.AccountSharing)
-            await _accountShareRepository.RevokeSharesByAccountIdAsync(id);
+        await _accountShareRepository.RevokeSharesByAccountIdAsync(id);
 
         // Perform soft delete using the standard deletion method
         await _accountRepository.DeleteAsync(account);
@@ -211,8 +203,7 @@ public class AccountsController : ControllerBase
             return dto;
         }).ToList();
 
-        if (_featureFlags.AccountSharing)
-            await PopulateSharingMetadataAsync(accountsWithBalances, userId);
+        await PopulateSharingMetadataAsync(accountsWithBalances, userId);
 
         return Ok(accountsWithBalances);
     }
@@ -234,8 +225,7 @@ public class AccountsController : ControllerBase
         var accountWithBalance = _mapper.Map<AccountWithBalanceDto>(account);
         accountWithBalance.CalculatedBalance = calculatedBalance;
 
-        if (_featureFlags.AccountSharing)
-            await PopulateSharingMetadataAsync(new List<AccountWithBalanceDto> { accountWithBalance }, userId);
+        await PopulateSharingMetadataAsync(new List<AccountWithBalanceDto> { accountWithBalance }, userId);
 
         return Ok(accountWithBalance);
     }
@@ -257,8 +247,7 @@ public class AccountsController : ControllerBase
         }
 
         // Revoke all active shares for this account
-        if (_featureFlags.AccountSharing)
-            await _accountShareRepository.RevokeSharesByAccountIdAsync(id);
+        await _accountShareRepository.RevokeSharesByAccountIdAsync(id);
 
         // Delete all transactions associated with this account first
         await _transactionRepository.DeleteByAccountIdAsync(id, userId);

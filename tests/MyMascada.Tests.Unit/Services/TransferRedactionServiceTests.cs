@@ -8,7 +8,6 @@ namespace MyMascada.Tests.Unit.Services;
 public class TransferRedactionServiceTests
 {
     private readonly IAccountAccessService _accountAccess;
-    private readonly IFeatureFlags _featureFlags;
     private readonly TransferRedactionService _service;
 
     private readonly Guid _viewerUserId = Guid.NewGuid();
@@ -20,12 +19,8 @@ public class TransferRedactionServiceTests
     public TransferRedactionServiceTests()
     {
         _accountAccess = Substitute.For<IAccountAccessService>();
-        _featureFlags = Substitute.For<IFeatureFlags>();
 
-        _service = new TransferRedactionService(_accountAccess, _featureFlags);
-
-        // Default: feature flag is ON
-        _featureFlags.AccountSharing.Returns(true);
+        _service = new TransferRedactionService(_accountAccess);
 
         // Default: viewer can access accounts 1 and 2
         var accessibleIds = new HashSet<int> { AccessibleAccountId1, AccessibleAccountId2 } as IReadOnlySet<int>;
@@ -93,23 +88,6 @@ public class TransferRedactionServiceTests
         // Transactions for the inaccessible account should be filtered out
         result.Transactions.Should().ContainSingle()
             .Which.AccountId.Should().Be(AccessibleAccountId1);
-    }
-
-    [Fact]
-    public async Task RedactForViewerAsync_FeatureFlagOff_ReturnsUnmodified()
-    {
-        // Arrange
-        _featureFlags.AccountSharing.Returns(false);
-        var transfer = CreateTransferDto(InaccessibleAccountId, AccessibleAccountId1);
-
-        // Act
-        var result = await _service.RedactForViewerAsync(transfer, _viewerUserId);
-
-        // Assert - no redaction when feature flag is off
-        result.SourceAccount.Id.Should().Be(InaccessibleAccountId);
-        result.SourceAccount.Name.Should().Be("Source Account");
-        result.DestinationAccount.Id.Should().Be(AccessibleAccountId1);
-        result.Transactions.Should().HaveCount(2);
     }
 
     [Fact]
