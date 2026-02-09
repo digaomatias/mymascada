@@ -64,6 +64,7 @@ jobs:
         GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET_PROD }}
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
+        ADMIN_API_KEY: ${{ secrets.ADMIN_API_KEY }}
       run: |
         echo "=== Starting Deploy to Mordor step ==="
 
@@ -188,6 +189,7 @@ jobs:
           -e Email__Smtp__UseSsl=false \
           -e PasswordReset__FrontendResetUrl=https://app.mymascada.com/auth/reset-password \
           -e EmailVerification__FrontendVerifyUrl=https://app.mymascada.com/auth/verify-email \
+          -e Admin__ApiKey="${{ secrets.ADMIN_API_KEY }}" \
           -v mymascada_dataprotection_keys:/app/data/keys \
           --network host \
           mymascada-api:latest
