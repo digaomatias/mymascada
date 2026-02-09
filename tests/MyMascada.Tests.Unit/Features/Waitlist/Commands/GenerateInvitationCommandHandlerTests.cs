@@ -11,6 +11,7 @@ public class GenerateInvitationCommandHandlerTests
 {
     private readonly IInvitationCodeRepository _invitationCodeRepository;
     private readonly IWaitlistRepository _waitlistRepository;
+    private readonly IEmailServiceFactory _emailServiceFactory;
     private readonly IEmailService _emailService;
     private readonly IEmailTemplateService _emailTemplateService;
     private readonly ILogger<GenerateInvitationCommandHandler> _logger;
@@ -24,14 +25,16 @@ public class GenerateInvitationCommandHandlerTests
     {
         _invitationCodeRepository = Substitute.For<IInvitationCodeRepository>();
         _waitlistRepository = Substitute.For<IWaitlistRepository>();
+        _emailServiceFactory = Substitute.For<IEmailServiceFactory>();
         _emailService = Substitute.For<IEmailService>();
+        _emailServiceFactory.GetDefaultProvider().Returns(_emailService);
         _emailTemplateService = Substitute.For<IEmailTemplateService>();
         _logger = Substitute.For<ILogger<GenerateInvitationCommandHandler>>();
 
         _handler = new GenerateInvitationCommandHandler(
             _invitationCodeRepository,
             _waitlistRepository,
-            _emailService,
+            _emailServiceFactory,
             _emailTemplateService,
             _logger);
     }
