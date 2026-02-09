@@ -7,6 +7,14 @@
 
 A personal finance management application with AI-powered transaction categorization, bank account syncing, and multi-language support. Built for self-hosting with Docker, MyMascada gives you full control over your financial data.
 
+> **Try the demo** -- No install needed. Explore MyMascada with sample data at [demo.mymascada.com](https://demo.mymascada.com) (login: `demo@mymascada.com` / `DemoPass123!`).
+
+## Screenshots
+
+| Dashboard | Transactions | Settings |
+|:-:|:-:|:-:|
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Transactions](docs/screenshots/transactions.png) | ![Settings](docs/screenshots/settings.png) |
+
 ## Features
 
 - **Transaction Management** -- Import transactions via CSV, OFX, or manual entry
@@ -21,6 +29,15 @@ A personal finance management application with AI-powered transaction categoriza
 - **Account Reconciliation** -- Compare and reconcile account balances
 - **Data Export** -- Export your data in CSV or JSON format
 - **Docker Self-Hosting** -- Guided setup with a single script
+
+## Your Data, Your Server
+
+MyMascada is designed with privacy as a core principle:
+
+- **No telemetry** -- The app sends zero analytics, tracking, or usage data anywhere
+- **No cloud dependency** -- Everything runs on your hardware. No external services are required (AI and bank sync are opt-in)
+- **Fully offline-capable** -- Once running, the app works without an internet connection
+- **Your database, your rules** -- All financial data stays in your PostgreSQL instance. Export it anytime in CSV or JSON
 
 ## Quick Start (Self-Hosting)
 

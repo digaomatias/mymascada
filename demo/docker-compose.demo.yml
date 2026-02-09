@@ -1,0 +1,78 @@
+# =============================================================================
+# MyMascada Demo - Docker Compose Override
+# =============================================================================
+# Usage (from repo root):
+#   cp demo/.env.demo demo/.env  (then edit secrets)
+#   docker compose -p mymascada-demo --env-file demo/.env -f docker-compose.yml -f demo/docker-compose.demo.yml up -d
+#
+# This override:
+#   - Runs the API in Development mode (enables /api/testing endpoints)
+#   - Blocks new registrations (invite code required, none configured)
+#   - Removes persistent volumes (data resets on restart)
+#   - Adds a seed container that creates a demo user with sample data
+# =============================================================================
+
+services:
+  postgres:
+    container_name: mymascada-demo-postgres
+    # No host port - only accessible within the network
+    ports: !reset []
+    volumes: !reset []
+    # Ephemeral storage - data resets on restart
+    tmpfs:
+      - /var/lib/postgresql/data
+
+  migration:
+    container_name: mymascada-demo-migration
+
+  api:
+    container_name: mymascada-demo-api
+    ports: !override
+      - "${DEMO_API_PORT:-5127}:5126"
+    volumes: !reset []
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      # Redirect data protection keys to a writable path (Development mode
+      # resolves LocalApplicationData via XDG_DATA_HOME on Linux)
+      XDG_DATA_HOME: /tmp
+
+      # Block new registrations - demo user is pre-seeded
+      BetaAccess__RequireInviteCode: "true"
+      BetaAccess__ValidInviteCodes: ""
+
+      # Disable optional integrations
+      LLM__OpenAI__ApiKey: ""
+      Authentication__Google__ClientId: ""
+      Authentication__Google__ClientSecret: ""
+      Akahu__Enabled: "false"
+      Email__Enabled: "false"
+
+  frontend:
+    container_name: mymascada-demo-frontend
+    ports: !override
+      - "${DEMO_FRONTEND_PORT:-3001}:3000"
+
+  redis:
+    container_name: mymascada-demo-redis
+    volumes: !reset []
+
+  # ---------------------------------------------------------------------------
+  # Seed Container - Creates demo user with sample data (runs once)
+  # ---------------------------------------------------------------------------
+  seed:
+    build:
+      context: ./demo
+      dockerfile: Dockerfile.seed
+    container_name: mymascada-demo-seed
+    restart: "no"
+    environment:
+      API_URL: "http://api:5126"
+      DEMO_EMAIL: ${DEMO_EMAIL:-demo@mymascada.com}
+      DEMO_PASSWORD: ${DEMO_PASSWORD:-DemoPass123!}
+      DEMO_FIRST_NAME: ${DEMO_FIRST_NAME:-Demo}
+      DEMO_LAST_NAME: ${DEMO_LAST_NAME:-User}
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - mymascada

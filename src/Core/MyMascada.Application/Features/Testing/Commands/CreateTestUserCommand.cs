@@ -168,7 +168,7 @@ public class CreateTestUserCommandHandler : IRequestHandler<CreateTestUserComman
             new Transaction
             {
                 Amount = 3500.00m,
-                TransactionDate = DateTime.Today.AddDays(-15),
+                TransactionDate = DateTime.UtcNow.Date.AddDays(-15),
                 Description = "Monthly Salary",
                 Type = TransactionType.Income,
                 Status = TransactionStatus.Cleared,
@@ -182,7 +182,7 @@ public class CreateTestUserCommandHandler : IRequestHandler<CreateTestUserComman
             new Transaction
             {
                 Amount = 150.00m,
-                TransactionDate = DateTime.Today.AddDays(-10),
+                TransactionDate = DateTime.UtcNow.Date.AddDays(-10),
                 Description = "Freelance Project Payment",
                 Type = TransactionType.Income,
                 Status = TransactionStatus.Cleared,
@@ -197,7 +197,7 @@ public class CreateTestUserCommandHandler : IRequestHandler<CreateTestUserComman
             new Transaction
             {
                 Amount = -1200.00m,
-                TransactionDate = DateTime.Today.AddDays(-14),
+                TransactionDate = DateTime.UtcNow.Date.AddDays(-14),
                 Description = "Monthly Rent Payment",
                 Type = TransactionType.Expense,
                 Status = TransactionStatus.Cleared,
@@ -211,7 +211,7 @@ public class CreateTestUserCommandHandler : IRequestHandler<CreateTestUserComman
             new Transaction
             {
                 Amount = -85.50m,
-                TransactionDate = DateTime.Today.AddDays(-12),
+                TransactionDate = DateTime.UtcNow.Date.AddDays(-12),
                 Description = "GROCERY STORE #123",
                 Type = TransactionType.Expense,
                 Status = TransactionStatus.Cleared,
@@ -225,7 +225,7 @@ public class CreateTestUserCommandHandler : IRequestHandler<CreateTestUserComman
             new Transaction
             {
                 Amount = -42.75m,
-                TransactionDate = DateTime.Today.AddDays(-8),
+                TransactionDate = DateTime.UtcNow.Date.AddDays(-8),
                 Description = "STARBUCKS COFFEE #456",
                 Type = TransactionType.Expense,
                 Status = TransactionStatus.Cleared,
@@ -239,7 +239,7 @@ public class CreateTestUserCommandHandler : IRequestHandler<CreateTestUserComman
             new Transaction
             {
                 Amount = -125.00m,
-                TransactionDate = DateTime.Today.AddDays(-7),
+                TransactionDate = DateTime.UtcNow.Date.AddDays(-7),
                 Description = "SHELL GAS STATION",
                 Type = TransactionType.Expense,
                 Status = TransactionStatus.Cleared,
@@ -253,7 +253,7 @@ public class CreateTestUserCommandHandler : IRequestHandler<CreateTestUserComman
             new Transaction
             {
                 Amount = -29.99m,
-                TransactionDate = DateTime.Today.AddDays(-5),
+                TransactionDate = DateTime.UtcNow.Date.AddDays(-5),
                 Description = "Netflix Subscription",
                 Type = TransactionType.Expense,
                 Status = TransactionStatus.Cleared,
@@ -267,7 +267,7 @@ public class CreateTestUserCommandHandler : IRequestHandler<CreateTestUserComman
             new Transaction
             {
                 Amount = -15.50m,
-                TransactionDate = DateTime.Today.AddDays(-3),
+                TransactionDate = DateTime.UtcNow.Date.AddDays(-3),
                 Description = "AMAZON MARKETPLACE",
                 Type = TransactionType.Expense,
                 Status = TransactionStatus.Pending,
@@ -281,7 +281,7 @@ public class CreateTestUserCommandHandler : IRequestHandler<CreateTestUserComman
             new Transaction
             {
                 Amount = -67.25m,
-                TransactionDate = DateTime.Today.AddDays(-2),
+                TransactionDate = DateTime.UtcNow.Date.AddDays(-2),
                 Description = "TARGET STORE #789",
                 Type = TransactionType.Expense,
                 Status = TransactionStatus.Cleared,
@@ -295,7 +295,7 @@ public class CreateTestUserCommandHandler : IRequestHandler<CreateTestUserComman
             new Transaction
             {
                 Amount = -95.00m,
-                TransactionDate = DateTime.Today.AddDays(-1),
+                TransactionDate = DateTime.UtcNow.Date.AddDays(-1),
                 Description = "ELECTRIC COMPANY BILL",
                 Type = TransactionType.Expense,
                 Status = TransactionStatus.Cleared,
