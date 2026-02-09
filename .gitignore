@@ -68,6 +68,7 @@ yarn-error.log*
 pids
 *.pid
 *.seed
+!Dockerfile.seed
 *.pid.lock
 
 # Coverage directory used by tools like istanbul

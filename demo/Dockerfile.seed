@@ -1,0 +1,5 @@
+FROM alpine:3.21
+RUN apk add --no-cache curl jq
+COPY seed.sh /seed.sh
+RUN chmod +x /seed.sh
+ENTRYPOINT ["/seed.sh"]
