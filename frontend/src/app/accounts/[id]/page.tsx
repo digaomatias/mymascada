@@ -25,7 +25,6 @@ import {
 import { AddTransactionButton } from '@/components/buttons/add-transaction-button';
 import { ReconcileAccountButton } from '@/components/buttons/reconcile-account-button';
 import { TransactionList } from '@/components/transaction-list';
-import { useTransactionFilters } from '@/hooks/use-transaction-filters';
 import { useTranslations } from 'next-intl';
 import { useLocale } from '@/contexts/locale-context';
 
@@ -71,13 +70,6 @@ function AccountDetailsPageContent() {
   const [account, setAccount] = useState<AccountDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [filteredBalance, setFilteredBalance] = useState<number | null>(null);
-  const { setSelectedAccountId } = useTransactionFilters();
-
-  useEffect(() => {
-    if (accountId) {
-      setSelectedAccountId(accountId);
-    }
-  }, [accountId, setSelectedAccountId]);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -89,8 +81,6 @@ function AccountDetailsPageContent() {
     try {
       setLoading(true);
       const accountData = await apiClient.getAccountDetails(parseInt(accountId)) as AccountDetails;
-      console.log('Account details received:', accountData); // Debug logging
-      console.log('Monthly spending data:', accountData.monthlySpending); // Debug monthly spending specifically
       setAccount(accountData);
     } catch (error) {
       console.error('Failed to load account:', error);
@@ -109,8 +99,6 @@ function AccountDetailsPageContent() {
   }, [isAuthenticated, accountId]);
 
   const handleTransactionUpdate = useCallback(() => {
-    // Reload account details to get updated balance
-    console.log('handleTransactionUpdate called - reloading account details');
     loadAccountDetails();
   }, [loadAccountDetails]);
 

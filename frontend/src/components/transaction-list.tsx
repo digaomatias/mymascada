@@ -122,6 +122,8 @@ export function TransactionList({
     setAllCategories,
   } = useTransactionFilters();
 
+  const effectiveAccountId = accountId?.toString() || selectedAccountId;
+
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
@@ -258,7 +260,7 @@ export function TransactionList({
     return grouped;
   }, [transactions]);
 
-  const fetchTransactions = useCallback(async (page = 1, search = '', filter = transferFilter, categoryId = selectedCategoryId, accountId_param = selectedAccountId, reviewStatus = reviewFilter, currentDateFilter = dateFilter, currentTypeFilter = typeFilter, currentReconciliationFilter = reconciliationFilter) => {
+  const fetchTransactions = useCallback(async (page = 1, search = '', filter = transferFilter, categoryId = selectedCategoryId, accountId_param = effectiveAccountId, reviewStatus = reviewFilter, currentDateFilter = dateFilter, currentTypeFilter = typeFilter, currentReconciliationFilter = reconciliationFilter) => {
     try {
       setLoading(true);
       const params: {
@@ -356,12 +358,12 @@ export function TransactionList({
     } finally {
       setLoading(false);
     }
-  }, [transferFilter, selectedCategoryId, selectedAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter, getDateRangeFromFilter, compact, accountId, onFilteredBalanceChange, setCurrentPage]);
+  }, [transferFilter, selectedCategoryId, effectiveAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter, getDateRangeFromFilter, compact, accountId, onFilteredBalanceChange, setCurrentPage]);
 
   useEffect(() => {
-    fetchTransactions(currentPage, searchTerm, transferFilter, selectedCategoryId, selectedAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter);
+    fetchTransactions(currentPage, searchTerm, transferFilter, selectedCategoryId, effectiveAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, searchTerm, transferFilter, selectedCategoryId, selectedAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter]);
+  }, [currentPage, searchTerm, transferFilter, selectedCategoryId, effectiveAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter]);
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
@@ -474,7 +476,7 @@ export function TransactionList({
       }
 
       // Refresh transactions and clear selection
-      await fetchTransactions(currentPage, searchTerm, transferFilter, selectedCategoryId, selectedAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter);
+      await fetchTransactions(currentPage, searchTerm, transferFilter, selectedCategoryId, effectiveAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter);
       setSelectedTransactionIds(new Set());
       setIsSelectionMode(false);
 
@@ -532,7 +534,7 @@ export function TransactionList({
       }
 
       // Refresh transactions and clear selection
-      await fetchTransactions(currentPage, searchTerm, transferFilter, selectedCategoryId, selectedAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter);
+      await fetchTransactions(currentPage, searchTerm, transferFilter, selectedCategoryId, effectiveAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter);
       setSelectedTransactionIds(new Set());
       setIsSelectionMode(false);
 
@@ -552,7 +554,7 @@ export function TransactionList({
     if (deleteConfirm.transactionId) {
       try {
         await apiClient.deleteTransaction(deleteConfirm.transactionId);
-        await fetchTransactions(currentPage, searchTerm, transferFilter, selectedCategoryId, selectedAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter);
+        await fetchTransactions(currentPage, searchTerm, transferFilter, selectedCategoryId, effectiveAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter);
         toast.success(tToasts('transactionDeleted'));
         
         if (onTransactionUpdate) {
@@ -1211,7 +1213,7 @@ export function TransactionList({
                                     transactionId={transaction.id}
                                     isReviewed={transaction.isReviewed}
                                     onReviewComplete={() => {
-                                      fetchTransactions(currentPage, searchTerm, transferFilter, selectedCategoryId, selectedAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter);
+                                      fetchTransactions(currentPage, searchTerm, transferFilter, selectedCategoryId, effectiveAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter);
                                       if (onTransactionUpdate) onTransactionUpdate();
                                     }}
                                   />
@@ -1294,7 +1296,7 @@ export function TransactionList({
                         onSuccess={() => {
                           setCreateTransferForTransaction(null);
                           // Refresh the transaction list
-                          fetchTransactions(currentPage, searchTerm, transferFilter, selectedCategoryId, selectedAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter);
+                          fetchTransactions(currentPage, searchTerm, transferFilter, selectedCategoryId, effectiveAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter);
                           onTransactionUpdate?.();
                           toast.success(tToasts('transferCreated'));
                         }}
