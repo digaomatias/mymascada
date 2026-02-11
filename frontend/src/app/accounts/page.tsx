@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/utils';
 import { AccountTypeBadge } from '@/components/ui/account-type-badge';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, ReceivedShareDto } from '@/lib/api-client';
+import { CheckIcon, XMarkIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import {
@@ -64,6 +65,8 @@ export default function AccountsPage() {
   const [archiveConfirm, setArchiveConfirm] = useState<{ show: boolean; account?: Account }>({ show: false });
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; account?: Account }>({ show: false });
   const [shareModal, setShareModal] = useState<{ show: boolean; account?: Account }>({ show: false });
+  const [pendingInvitations, setPendingInvitations] = useState<ReceivedShareDto[]>([]);
+  const [processingShareIds, setProcessingShareIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -75,6 +78,7 @@ export default function AccountsPage() {
   useEffect(() => {
     if (isAuthenticated && typeof window !== 'undefined') {
       loadAccounts();
+      loadPendingInvitations();
     }
   }, [isAuthenticated]);
 
@@ -94,6 +98,54 @@ export default function AccountsPage() {
       setAccounts([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadPendingInvitations = async () => {
+    try {
+      const shares = await apiClient.getReceivedShares();
+      setPendingInvitations((shares || []).filter(s => s.status === 1));
+    } catch (error) {
+      console.error('Failed to load pending invitations:', error);
+    }
+  };
+
+  const handleAcceptInvitation = async (shareId: number) => {
+    if (processingShareIds.has(shareId)) return;
+    setProcessingShareIds(prev => new Set(prev).add(shareId));
+    try {
+      await apiClient.acceptShareById(shareId);
+      toast.success(t('sharing.invitationAccepted'));
+      loadAccounts();
+      loadPendingInvitations();
+    } catch (error) {
+      console.error('Failed to accept invitation:', error);
+      toast.error(t('sharing.acceptFailed'));
+    } finally {
+      setProcessingShareIds(prev => {
+        const next = new Set(prev);
+        next.delete(shareId);
+        return next;
+      });
+    }
+  };
+
+  const handleDeclineInvitation = async (shareId: number) => {
+    if (processingShareIds.has(shareId)) return;
+    setProcessingShareIds(prev => new Set(prev).add(shareId));
+    try {
+      await apiClient.declineShareById(shareId);
+      toast.success(t('sharing.invitationDeclined'));
+      loadPendingInvitations();
+    } catch (error) {
+      console.error('Failed to decline invitation:', error);
+      toast.error(t('sharing.declineFailed'));
+    } finally {
+      setProcessingShareIds(prev => {
+        const next = new Set(prev);
+        next.delete(shareId);
+        return next;
+      });
     }
   };
 
@@ -217,6 +269,69 @@ export default function AccountsPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Pending Invitations */}
+        {pendingInvitations.length > 0 && (
+          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg border-l-4 border-l-amber-400 mb-8">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <EnvelopeIcon className="w-5 h-5 text-amber-600" />
+                {t('sharing.pendingInvitations')}
+                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">
+                  {pendingInvitations.length}
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-3">
+                {pendingInvitations.map((invitation) => (
+                  <div
+                    key={invitation.id}
+                    className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-lg bg-gray-50/50 opacity-75 border border-gray-200"
+                  >
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 bg-gradient-to-br from-gray-300 to-gray-500 rounded-xl flex items-center justify-center">
+                        <BuildingOffice2Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="text-base font-semibold text-gray-900 truncate">{invitation.accountName}</h4>
+                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                            {t('sharing.pendingInvitation')}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {t('sharing.sharedByName', { name: invitation.sharedByName })}
+                            {' - '}
+                            {getShareRoleName(invitation.role)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 pl-13 sm:pl-0">
+                      <Button
+                        size="sm"
+                        onClick={() => handleAcceptInvitation(invitation.id)}
+                        disabled={processingShareIds.has(invitation.id)}
+                      >
+                        <CheckIcon className="w-4 h-4 mr-1" />
+                        {t('sharing.accept')}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeclineInvitation(invitation.id)}
+                        disabled={processingShareIds.has(invitation.id)}
+                      >
+                        <XMarkIcon className="w-4 h-4 mr-1" />
+                        {t('sharing.decline')}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Accounts List */}
         <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">

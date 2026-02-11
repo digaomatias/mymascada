@@ -836,7 +836,14 @@
       "pendingInvitation": "Pendente",
       "accepted": "Ativo",
       "declined": "Recusado",
-      "revoked": "Revogado"
+      "revoked": "Revogado",
+      "pendingInvitations": "Convites Pendentes",
+      "accept": "Aceitar",
+      "decline": "Recusar",
+      "invitationAccepted": "Convite aceito! A conta agora está disponível.",
+      "invitationDeclined": "Convite recusado.",
+      "acceptFailed": "Falha ao aceitar convite. Tente novamente.",
+      "declineFailed": "Falha ao recusar convite. Tente novamente."
     },
     "createNewAccount": "Criar Nova Conta",
     "createNewAccountDesc": "Adicione uma nova conta financeira para acompanhar seu dinheiro",

@@ -1596,6 +1596,14 @@ class ApiClient {
     return this.post('/api/account-shares/decline', { token });
   }
 
+  async acceptShareById(shareId: number): Promise<AccountShareDto> {
+    return this.post(`/api/account-shares/${shareId}/accept`);
+  }
+
+  async declineShareById(shareId: number): Promise<void> {
+    return this.post(`/api/account-shares/${shareId}/decline`);
+  }
+
   // AI Description Cleaning methods
   async previewDescriptionCleaning(descriptions: { rawDescription: string; merchantNameHint?: string }[]): Promise<{
     results: Array<{
@@ -1651,7 +1659,7 @@ export interface ReceivedShareDto {
   id: number;
   accountId: number;
   accountName: string;
-  sharedByUserName: string;
+  sharedByName: string;
   role: number;
   status: number;
   createdAt: string;

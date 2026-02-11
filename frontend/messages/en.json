@@ -871,7 +871,14 @@
       "pendingInvitation": "Pending",
       "accepted": "Active",
       "declined": "Declined",
-      "revoked": "Revoked"
+      "revoked": "Revoked",
+      "pendingInvitations": "Pending Invitations",
+      "accept": "Accept",
+      "decline": "Decline",
+      "invitationAccepted": "Invitation accepted! The account is now available.",
+      "invitationDeclined": "Invitation declined.",
+      "acceptFailed": "Failed to accept invitation. Please try again.",
+      "declineFailed": "Failed to decline invitation. Please try again."
     }
   },
   "reconciliation": {

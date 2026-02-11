@@ -127,6 +127,38 @@ public class AccountSharingController : ControllerBase
     }
 
     /// <summary>
+    /// Accept an account share invitation by share ID (in-app).
+    /// </summary>
+    [HttpPost("account-shares/{shareId:int}/accept")]
+    public async Task<ActionResult<AccountShareDto>> AcceptShareById(int shareId)
+    {
+        var command = new AcceptAccountShareByIdCommand
+        {
+            ShareId = shareId,
+            UserId = _currentUserService.GetUserId()
+        };
+
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Decline an account share invitation by share ID (in-app).
+    /// </summary>
+    [HttpPost("account-shares/{shareId:int}/decline")]
+    public async Task<ActionResult> DeclineShareById(int shareId)
+    {
+        var command = new DeclineAccountShareByIdCommand
+        {
+            ShareId = shareId,
+            UserId = _currentUserService.GetUserId()
+        };
+
+        await _mediator.Send(command);
+        return NoContent();
+    }
+
+    /// <summary>
     /// List all shares received by the current user.
     /// </summary>
     [HttpGet("account-shares/received")]
