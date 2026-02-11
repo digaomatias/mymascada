@@ -164,6 +164,7 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:5126}
+        INTERNAL_API_URL: ${API_URL:-http://api:5126}
     container_name: mymascada-frontend
     restart: unless-stopped
     ports:
@@ -171,6 +172,7 @@ services:
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:5126}
+      INTERNAL_API_URL: ${API_URL:-http://api:5126}
     depends_on:
       api:
         condition: service_healthy

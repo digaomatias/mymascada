@@ -51,11 +51,14 @@ const nextConfig = {
   // Enable standalone output for Docker
   output: 'standalone',
   // API configuration for backend integration
+  // INTERNAL_API_URL is the Docker-internal address used for server-side rewrites.
+  // NEXT_PUBLIC_API_URL is the public URL used by the browser (baked at build time).
   async rewrites() {
+    const rewriteTarget = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5126';
     return [
       {
         source: '/api/:path*',
-        destination: process.env.NEXT_PUBLIC_API_URL ? `${process.env.NEXT_PUBLIC_API_URL}/api/:path*` : 'http://localhost:5126/api/:path*',
+        destination: `${rewriteTarget}/api/:path*`,
       },
     ];
   },

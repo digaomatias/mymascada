@@ -19,6 +19,10 @@ COPY . .
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
+# Internal API URL for server-side rewrites (Docker network address)
+ARG INTERNAL_API_URL
+ENV INTERNAL_API_URL=$INTERNAL_API_URL
+
 # Disable telemetry during build
 ENV NEXT_TELEMETRY_DISABLED 1
 
