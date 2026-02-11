@@ -39,7 +39,50 @@ MyMascada is designed with privacy as a core principle:
 - **Fully offline-capable** -- Once running, the app works without an internet connection
 - **Your database, your rules** -- All financial data stays in your PostgreSQL instance. Export it anytime in CSV or JSON
 
-## Quick Start (Self-Hosting)
+## Self-Hosting
+
+Pre-built Docker images are published for every release (`linux/amd64` and `linux/arm64`) to GitHub Container Registry.
+
+### Quick Start -- Docker Compose
+
+No need to clone the repository. Create a new directory, download two files, and you're ready:
+
+```bash
+mkdir mymascada && cd mymascada
+
+# Download the self-host docker-compose and example env file
+curl -fsSLO https://raw.githubusercontent.com/digaomatias/mymascada/main/selfhost/docker-compose.yml
+curl -fsSLO https://raw.githubusercontent.com/digaomatias/mymascada/main/selfhost/.env.example
+
+# Create your .env file and set the two required values
+cp .env.example .env
+sed -i "s|DB_PASSWORD=CHANGE_ME|DB_PASSWORD=$(openssl rand -base64 32 | tr -d '/+=')|" .env
+sed -i "s|JWT_KEY=CHANGE_ME_GENERATE_WITH_openssl_rand_base64_64|JWT_KEY=$(openssl rand -base64 64 | tr -d '\n')|" .env
+
+# Start everything
+docker compose up -d
+```
+
+Open `http://localhost:3000` in your browser and create your account.
+
+### Updating
+
+Pull the latest images and restart. Database migrations run automatically on startup:
+
+```bash
+docker compose pull && docker compose up -d
+```
+
+### Stopping and Starting
+
+```bash
+docker compose down     # Stop all containers
+docker compose up -d    # Start all containers
+```
+
+### Alternative: Guided Setup Script
+
+If you prefer an interactive setup that walks you through every option:
 
 ```bash
 git clone https://github.com/digaomatias/mymascada.git
@@ -47,7 +90,7 @@ cd mymascada
 ./setup.sh
 ```
 
-The setup script walks you through configuration, including database credentials, optional API keys, and email settings. For detailed instructions, environment variable reference, and production deployment guidance, see [SELF-HOSTING.md](SELF-HOSTING.md).
+For the full configuration reference, environment variables, HTTPS setup, backup/restore, and troubleshooting, see [SELF-HOSTING.md](SELF-HOSTING.md).
 
 ## Architecture
 

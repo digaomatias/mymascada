@@ -14,7 +14,29 @@ A guide to deploying MyMascada on your own server using Docker.
 - 1 GB RAM minimum (2 GB recommended)
 - `openssl` installed (for generating secrets)
 
-### Steps
+### Option A: Docker Compose (no clone needed)
+
+The fastest way to get started. Download two files and run:
+
+```bash
+mkdir mymascada && cd mymascada
+
+curl -fsSLO https://raw.githubusercontent.com/digaomatias/mymascada/main/selfhost/docker-compose.yml
+curl -fsSLO https://raw.githubusercontent.com/digaomatias/mymascada/main/selfhost/.env.example
+
+cp .env.example .env
+sed -i "s|DB_PASSWORD=CHANGE_ME|DB_PASSWORD=$(openssl rand -base64 32 | tr -d '/+=')|" .env
+sed -i "s|JWT_KEY=CHANGE_ME_GENERATE_WITH_openssl_rand_base64_64|JWT_KEY=$(openssl rand -base64 64 | tr -d '\n')|" .env
+
+docker compose up -d
+```
+
+Visit `http://localhost:3000` in your browser and create your first account.
+
+### Option B: Guided Setup Script
+
+Clone the repository and use the interactive setup script, which walks you
+through every configuration option:
 
 1. **Clone the repository**
 

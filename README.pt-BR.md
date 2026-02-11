@@ -19,7 +19,50 @@ Uma aplicacao de gestao financeira pessoal com categorizacao de transacoes por I
 - **Exportacao de Dados** -- Exporte seus dados em formato CSV ou JSON
 - **Self-Hosting via Docker** -- Configuracao guiada com um unico script
 
-## Inicio Rapido (Self-Hosting)
+## Self-Hosting
+
+Imagens Docker pre-compiladas sao publicadas para cada release (`linux/amd64` e `linux/arm64`) no GitHub Container Registry.
+
+### Inicio Rapido -- Docker Compose
+
+Nao precisa clonar o repositorio. Crie um diretorio, baixe dois arquivos e pronto:
+
+```bash
+mkdir mymascada && cd mymascada
+
+# Baixe o docker-compose e o arquivo de exemplo de configuracao
+curl -fsSLO https://raw.githubusercontent.com/digaomatias/mymascada/main/selfhost/docker-compose.yml
+curl -fsSLO https://raw.githubusercontent.com/digaomatias/mymascada/main/selfhost/.env.example
+
+# Crie seu arquivo .env e defina os dois valores obrigatorios
+cp .env.example .env
+sed -i "s|DB_PASSWORD=CHANGE_ME|DB_PASSWORD=$(openssl rand -base64 32 | tr -d '/+=')|" .env
+sed -i "s|JWT_KEY=CHANGE_ME_GENERATE_WITH_openssl_rand_base64_64|JWT_KEY=$(openssl rand -base64 64 | tr -d '\n')|" .env
+
+# Inicie tudo
+docker compose up -d
+```
+
+Abra `http://localhost:3000` no navegador e crie sua conta.
+
+### Atualizando
+
+Baixe as imagens mais recentes e reinicie. As migracoes do banco de dados rodam automaticamente:
+
+```bash
+docker compose pull && docker compose up -d
+```
+
+### Parando e Iniciando
+
+```bash
+docker compose down     # Parar todos os containers
+docker compose up -d    # Iniciar todos os containers
+```
+
+### Alternativa: Script de Configuracao Guiada
+
+Se preferir uma configuracao interativa que te guia por todas as opcoes:
 
 ```bash
 git clone https://github.com/digaomatias/mymascada.git
@@ -27,7 +70,7 @@ cd mymascada
 ./setup.sh
 ```
 
-O script de configuracao te guia pelo processo, incluindo credenciais do banco de dados, chaves de API opcionais e configuracoes de email. Para instrucoes detalhadas, referencia de variaveis de ambiente e orientacoes para deploy em producao, consulte o [SELF-HOSTING.pt-BR.md](SELF-HOSTING.pt-BR.md).
+Para a referencia completa de configuracao, variaveis de ambiente, configuracao HTTPS, backup/restauracao e solucao de problemas, consulte o [SELF-HOSTING.pt-BR.md](SELF-HOSTING.pt-BR.md).
 
 ## Arquitetura
 
