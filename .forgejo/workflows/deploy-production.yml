@@ -37,6 +37,7 @@ jobs:
         echo "Building Frontend image..."
         docker build --platform linux/amd64 \
           --build-arg NEXT_PUBLIC_API_URL=https://api.mymascada.com \
+          --build-arg INTERNAL_API_URL=http://host.docker.internal:5000 \
           -t mymascada-frontend:latest \
           -f frontend/Dockerfile \
           frontend/
@@ -198,8 +199,10 @@ jobs:
         echo "Starting Frontend..."
         docker run -d --name mymascada-frontend \
           -e NEXT_PUBLIC_API_URL=https://api.mymascada.com \
+          -e INTERNAL_API_URL=http://host.docker.internal:5000 \
           -e NODE_ENV=production \
           -p 3001:3000 \
+          --add-host=host.docker.internal:host-gateway \
           --restart unless-stopped \
           mymascada-frontend:latest
 
