@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using MyMascada.Application.Common.Interfaces;
@@ -8,22 +7,33 @@ namespace MyMascada.Infrastructure.Services;
 
 public class LlmDescriptionCleaningService : IDescriptionCleaningService
 {
-    private static readonly HttpClient SharedHttpClient = new()
-    {
-        Timeout = TimeSpan.FromMinutes(5)
-    };
-
+    private readonly IUserAiKernelFactory _kernelFactory;
+    private readonly ICurrentUserService _currentUserService;
     private readonly ILogger<LlmDescriptionCleaningService> _logger;
-    private readonly Kernel _kernel;
     private readonly string _systemPrompt;
 
+    private Kernel? _cachedKernel;
+    private bool _kernelResolved;
+
     public LlmDescriptionCleaningService(
-        IConfiguration configuration,
+        IUserAiKernelFactory kernelFactory,
+        ICurrentUserService currentUserService,
         ILogger<LlmDescriptionCleaningService> logger)
     {
+        _kernelFactory = kernelFactory;
+        _currentUserService = currentUserService;
         _logger = logger;
-        _kernel = CreateKernel(configuration);
         _systemPrompt = CreateSystemPrompt();
+    }
+
+    private async Task<Kernel?> GetKernelAsync()
+    {
+        if (!_kernelResolved)
+        {
+            _cachedKernel = await _kernelFactory.CreateKernelForUserAsync(_currentUserService.GetUserId());
+            _kernelResolved = true;
+        }
+        return _cachedKernel;
     }
 
     public async Task<DescriptionCleaningResponse> CleanDescriptionsAsync(
@@ -32,6 +42,16 @@ public class LlmDescriptionCleaningService : IDescriptionCleaningService
     {
         try
         {
+            var kernel = await GetKernelAsync();
+            if (kernel == null)
+            {
+                return new DescriptionCleaningResponse
+                {
+                    Success = false,
+                    Errors = new List<string> { "AI is not configured. Please configure your AI API key in Settings." }
+                };
+            }
+
             var startTime = DateTime.UtcNow;
 
             var descriptionsList = descriptions.ToList();
@@ -49,7 +69,7 @@ public class LlmDescriptionCleaningService : IDescriptionCleaningService
             using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             timeoutCts.CancelAfter(TimeSpan.FromMinutes(4));
 
-            var response = await _kernel.InvokePromptAsync(
+            var response = await kernel.InvokePromptAsync(
                 $"{_systemPrompt}\n\nUser Request:\n{userPrompt}",
                 cancellationToken: timeoutCts.Token);
 
@@ -88,27 +108,10 @@ public class LlmDescriptionCleaningService : IDescriptionCleaningService
         }
     }
 
-    public Task<bool> IsServiceAvailableAsync(CancellationToken cancellationToken = default)
+    public async Task<bool> IsServiceAvailableAsync(CancellationToken cancellationToken = default)
     {
-        // Return true since the service was constructed successfully (API key validated in constructor).
-        // Avoids making an expensive LLM call just for a health check.
-        return Task.FromResult(true);
-    }
-
-    private static Kernel CreateKernel(IConfiguration configuration)
-    {
-        var apiKey = configuration["LLM:OpenAI:ApiKey"];
-        var model = configuration["LLM:OpenAI:Model"] ?? "gpt-4o-mini";
-
-        if (string.IsNullOrEmpty(apiKey))
-        {
-            throw new InvalidOperationException("OpenAI API key is not configured");
-        }
-
-        var builder = Kernel.CreateBuilder();
-        builder.AddOpenAIChatCompletion(model, apiKey, httpClient: SharedHttpClient);
-
-        return builder.Build();
+        var kernel = await GetKernelAsync();
+        return kernel != null;
     }
 
     private static string CreateSystemPrompt()
@@ -243,9 +246,6 @@ Return ONLY valid JSON, no markdown:
         }
     }
 
-    /// <summary>
-    /// Internal DTO for deserializing the LLM JSON response
-    /// </summary>
     private class LlmCleaningResponseDto
     {
         public bool Success { get; set; }

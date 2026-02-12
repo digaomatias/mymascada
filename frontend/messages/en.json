@@ -1644,6 +1644,10 @@
       "security": {
         "title": "Security",
         "description": "Manage your password and security settings"
+      },
+      "aiSettings": {
+        "title": "AI Configuration",
+        "description": "Configure your AI provider and API key for categorization and description cleaning"
       }
     },
     "badges": {
@@ -1748,6 +1752,57 @@
           "securityFailed": "Security validation failed. Please try again.",
           "processingFailed": "Failed to process authorization. Please try again."
         }
+      }
+    },
+    "ai": {
+      "title": "AI Configuration",
+      "subtitle": "Configure your AI provider and model for transaction categorization and description cleaning",
+      "backToSettings": "Back to Settings",
+      "provider": {
+        "label": "AI Provider",
+        "placeholder": "Select a provider"
+      },
+      "apiKey": {
+        "label": "API Key",
+        "placeholder": "Enter your API key",
+        "hint": "Your API key is encrypted and stored securely. It is never shared.",
+        "change": "Change",
+        "current": "Current key"
+      },
+      "model": {
+        "label": "Model",
+        "placeholder": "Select or type a model name",
+        "custom": "Custom model"
+      },
+      "endpoint": {
+        "label": "API Endpoint",
+        "placeholder": "https://api.example.com/v1"
+      },
+      "testConnection": "Test Connection",
+      "testing": "Testing...",
+      "testSuccess": "Connection successful! Response time: {latency}ms",
+      "testError": "Connection failed: {error}",
+      "save": "Save Settings",
+      "saving": "Saving...",
+      "saved": "AI settings saved successfully",
+      "remove": "Remove Settings",
+      "removeConfirm": "Are you sure? This will remove your personal AI configuration and revert to the server default.",
+      "removed": "AI settings removed",
+      "serverDefault": "Your server has a default AI configuration. You can override it with your own.",
+      "noConfig": "No AI configuration found. Add your API key to enable AI features.",
+      "hasConfig": "You have a personal AI configuration.",
+      "customEndpoint": "Custom endpoint",
+      "validated": "Validated",
+      "notValidated": "Not validated",
+      "lastValidated": "Last validated: {date}",
+      "errors": {
+        "loadFailed": "Failed to load AI settings",
+        "loadProvidersFailed": "Failed to load AI providers",
+        "saveFailed": "Failed to save AI settings",
+        "removeFailed": "Failed to remove AI settings",
+        "providerRequired": "Please select a provider",
+        "apiKeyRequired": "API key is required",
+        "modelRequired": "Please select or enter a model"
       }
     },
     "privacy": {

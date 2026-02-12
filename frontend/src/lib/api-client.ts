@@ -24,6 +24,13 @@ import {
   UpdateBudgetCategoryRequest,
 } from '@/types/budget';
 import { UpcomingBillsResponse } from '@/types/upcoming-bills';
+import {
+  AiSettingsResponse,
+  AiSettingsRequest,
+  AiConnectionTestRequest,
+  AiConnectionTestResult,
+  AiProviderPreset,
+} from '@/types/ai-settings';
 
 class ApiClient {
   private baseURL: string;
@@ -1620,6 +1627,43 @@ class ApiClient {
       method: 'PATCH',
       body: JSON.stringify({ enabled }),
     });
+  }
+
+  // AI Settings methods
+  async getAiSettings(): Promise<AiSettingsResponse | null> {
+    try {
+      return await this.request<AiSettingsResponse>('/api/ai-settings');
+    } catch (error) {
+      const err = error as { status?: number };
+      if (err.status === 404) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  async updateAiSettings(settings: AiSettingsRequest): Promise<AiSettingsResponse> {
+    return this.request<AiSettingsResponse>('/api/ai-settings', {
+      method: 'PUT',
+      body: JSON.stringify(settings),
+    });
+  }
+
+  async deleteAiSettings(): Promise<void> {
+    return this.request('/api/ai-settings', {
+      method: 'DELETE',
+    });
+  }
+
+  async testAiConnection(request: AiConnectionTestRequest): Promise<AiConnectionTestResult> {
+    return this.request<AiConnectionTestResult>('/api/ai-settings/test', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  async getAiProviders(): Promise<AiProviderPreset[]> {
+    return this.request<AiProviderPreset[]>('/api/ai-settings/providers');
   }
 
   // Feature flags (anonymous endpoint)

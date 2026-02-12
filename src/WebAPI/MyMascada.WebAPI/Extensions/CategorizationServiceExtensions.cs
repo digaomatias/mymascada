@@ -1,6 +1,8 @@
 using MyMascada.Application.Common.Configuration;
 using MyMascada.Application.Common.Interfaces;
+using MyMascada.Infrastructure.Repositories;
 using MyMascada.Infrastructure.Services;
+using MyMascada.Infrastructure.Services.AI;
 
 namespace MyMascada.WebAPI.Extensions;
 
@@ -12,16 +14,12 @@ public static class CategorizationServiceExtensions
         services.Configure<CategorizationOptions>(
             configuration.GetSection(CategorizationOptions.SectionName));
 
-        // LLM Categorization Service
-        var openAiApiKey = configuration["LLM:OpenAI:ApiKey"];
-        if (!string.IsNullOrEmpty(openAiApiKey) && openAiApiKey != "YOUR_OPENAI_API_KEY")
-        {
-            services.AddScoped<ILlmCategorizationService, LlmCategorizationService>();
-        }
-        else
-        {
-            services.AddScoped<ILlmCategorizationService, NoOpLlmCategorizationService>();
-        }
+        // User AI Kernel Factory and Settings Repository
+        services.AddScoped<IUserAiKernelFactory, UserAiKernelFactory>();
+        services.AddScoped<IUserAiSettingsRepository, UserAiSettingsRepository>();
+
+        // LLM Categorization Service — always registered; returns graceful failure when no AI key is configured
+        services.AddScoped<ILlmCategorizationService, LlmCategorizationService>();
 
         // Categorization Pipeline Services (Phase 1: Core Pipeline)
         // Chain: Rules → BankCategory → ML → LLM

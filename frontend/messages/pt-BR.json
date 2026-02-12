@@ -1643,6 +1643,10 @@
       "security": {
         "title": "Segurança",
         "description": "Gerencie sua senha e configurações de segurança"
+      },
+      "aiSettings": {
+        "title": "Configuração de IA",
+        "description": "Configure seu provedor de IA e chave de API para categorização e limpeza de descrições"
       }
     },
     "badges": {
@@ -1747,6 +1751,57 @@
           "securityFailed": "Validação de segurança falhou. Por favor, tente novamente.",
           "processingFailed": "Falha ao processar autorização. Por favor, tente novamente."
         }
+      }
+    },
+    "ai": {
+      "title": "Configuração de IA",
+      "subtitle": "Configure seu provedor de IA e modelo para categorização de transações e limpeza de descrições",
+      "backToSettings": "Voltar para Configurações",
+      "provider": {
+        "label": "Provedor de IA",
+        "placeholder": "Selecione um provedor"
+      },
+      "apiKey": {
+        "label": "Chave de API",
+        "placeholder": "Digite sua chave de API",
+        "hint": "Sua chave de API é criptografada e armazenada com segurança. Ela nunca é compartilhada.",
+        "change": "Alterar",
+        "current": "Chave atual"
+      },
+      "model": {
+        "label": "Modelo",
+        "placeholder": "Selecione ou digite o nome do modelo",
+        "custom": "Modelo personalizado"
+      },
+      "endpoint": {
+        "label": "Endpoint da API",
+        "placeholder": "https://api.example.com/v1"
+      },
+      "testConnection": "Testar Conexão",
+      "testing": "Testando...",
+      "testSuccess": "Conexão bem-sucedida! Tempo de resposta: {latency}ms",
+      "testError": "Falha na conexão: {error}",
+      "save": "Salvar Configurações",
+      "saving": "Salvando...",
+      "saved": "Configurações de IA salvas com sucesso",
+      "remove": "Remover Configurações",
+      "removeConfirm": "Tem certeza? Isso removerá sua configuração pessoal de IA e voltará para o padrão do servidor.",
+      "removed": "Configurações de IA removidas",
+      "serverDefault": "Seu servidor possui uma configuração de IA padrão. Você pode substituí-la pela sua.",
+      "noConfig": "Nenhuma configuração de IA encontrada. Adicione sua chave de API para habilitar os recursos de IA.",
+      "hasConfig": "Você possui uma configuração de IA pessoal.",
+      "customEndpoint": "Endpoint personalizado",
+      "validated": "Validado",
+      "notValidated": "Não validado",
+      "lastValidated": "Última validação: {date}",
+      "errors": {
+        "loadFailed": "Falha ao carregar configurações de IA",
+        "loadProvidersFailed": "Falha ao carregar provedores de IA",
+        "saveFailed": "Falha ao salvar configurações de IA",
+        "removeFailed": "Falha ao remover configurações de IA",
+        "providerRequired": "Selecione um provedor",
+        "apiKeyRequired": "A chave de API é obrigatória",
+        "modelRequired": "Selecione ou digite um modelo"
       }
     },
     "privacy": {

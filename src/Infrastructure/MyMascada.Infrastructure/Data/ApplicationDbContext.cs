@@ -41,6 +41,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<WaitlistEntry> WaitlistEntries => Set<WaitlistEntry>();
     public DbSet<InvitationCode> InvitationCodes => Set<InvitationCode>();
     public DbSet<AccountShare> AccountShares => Set<AccountShare>();
+    public DbSet<UserAiSettings> UserAiSettings => Set<UserAiSettings>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -711,6 +712,22 @@ public class ApplicationDbContext : DbContext
             // For invitation token lookups
             entity.HasIndex(e => e.InvitationToken)
                 .HasFilter("\"InvitationToken\" IS NOT NULL");
+
+            entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
+        // UserAiSettings configuration
+        modelBuilder.Entity<UserAiSettings>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.ProviderType).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.ProviderName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.ModelId).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.ApiEndpoint).HasMaxLength(500);
+
+            // Unique constraint: one AI settings per user
+            entity.HasIndex(e => e.UserId).IsUnique();
 
             entity.HasQueryFilter(e => !e.IsDeleted);
         });

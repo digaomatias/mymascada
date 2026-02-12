@@ -1,5 +1,5 @@
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.SemanticKernel;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Infrastructure.Services;
 using NSubstitute;
@@ -10,58 +10,26 @@ namespace MyMascada.Tests.Unit.Services;
 
 public class LlmDescriptionCleaningServiceTests
 {
-    private readonly IConfiguration _configuration;
+    private readonly IUserAiKernelFactory _kernelFactory;
+    private readonly ICurrentUserService _currentUserService;
     private readonly ILogger<LlmDescriptionCleaningService> _logger;
+    private readonly Guid _testUserId = Guid.NewGuid();
 
     public LlmDescriptionCleaningServiceTests()
     {
-        _configuration = Substitute.For<IConfiguration>();
+        _kernelFactory = Substitute.For<IUserAiKernelFactory>();
+        _currentUserService = Substitute.For<ICurrentUserService>();
         _logger = Substitute.For<ILogger<LlmDescriptionCleaningService>>();
 
-        // Setup configuration with test API key
-        _configuration["LLM:OpenAI:ApiKey"].Returns("sk-test-not-a-real-key-for-unit-tests-only");
-        _configuration["LLM:OpenAI:Model"].Returns("gpt-4o-mini");
+        _currentUserService.GetUserId().Returns(_testUserId);
     }
 
     [Fact]
-    public void Constructor_WithMissingApiKey_ShouldThrowException()
+    public async Task CleanDescriptionsAsync_WhenNoKernel_ShouldReturnFailure()
     {
         // Arrange
-        var badConfig = Substitute.For<IConfiguration>();
-        badConfig["LLM:OpenAI:ApiKey"].Returns((string?)null);
-
-        // Act & Assert
-        Action act = () => new LlmDescriptionCleaningService(badConfig, _logger);
-        act.Should().Throw<InvalidOperationException>()
-           .WithMessage("OpenAI API key is not configured");
-    }
-
-    [Fact]
-    public void Constructor_WithValidApiKey_ShouldNotThrow()
-    {
-        // Act & Assert
-        Action act = () => new LlmDescriptionCleaningService(_configuration, _logger);
-        act.Should().NotThrow();
-    }
-
-    [Fact(Skip = "Requires real OpenAI API key - integration test, not unit test")]
-    public async Task IsServiceAvailableAsync_WithValidApiKey_ShouldReturnTrue()
-    {
-        // Arrange
-        var service = new LlmDescriptionCleaningService(_configuration, _logger);
-
-        // Act
-        var result = await service.IsServiceAvailableAsync();
-
-        // Assert
-        result.Should().BeTrue("LLM service should be available with valid API key");
-    }
-
-    [Fact(Skip = "Requires real OpenAI API key - integration test, not unit test")]
-    public async Task CleanDescriptionsAsync_WithSampleData_ShouldReturnValidResponse()
-    {
-        // Arrange
-        var service = new LlmDescriptionCleaningService(_configuration, _logger);
+        _kernelFactory.CreateKernelForUserAsync(_testUserId).Returns((Kernel?)null);
+        var service = new LlmDescriptionCleaningService(_kernelFactory, _currentUserService, _logger);
 
         var descriptions = new List<DescriptionCleaningInput>
         {
@@ -69,11 +37,6 @@ public class LlmDescriptionCleaningServiceTests
             {
                 TransactionId = 1,
                 OriginalDescription = "POS 4829 COUNTDOWN AUCKLAND NZ 23/01"
-            },
-            new DescriptionCleaningInput
-            {
-                TransactionId = 2,
-                OriginalDescription = "AMZN MKTP US*RT4K92JF0 AMZN.COM/BILLWA"
             }
         };
 
@@ -82,9 +45,37 @@ public class LlmDescriptionCleaningServiceTests
 
         // Assert
         result.Should().NotBeNull();
-        result.Success.Should().BeTrue();
-        result.Results.Should().HaveCount(2);
-        result.ProcessingTimeMs.Should().BeGreaterThan(0);
+        result.Success.Should().BeFalse();
+        result.Errors.Should().ContainSingle().Which.Should().Contain("not configured");
+    }
+
+    [Fact]
+    public async Task IsServiceAvailableAsync_WhenNoKernel_ShouldReturnFalse()
+    {
+        // Arrange
+        _kernelFactory.CreateKernelForUserAsync(_testUserId).Returns((Kernel?)null);
+        var service = new LlmDescriptionCleaningService(_kernelFactory, _currentUserService, _logger);
+
+        // Act
+        var result = await service.IsServiceAvailableAsync();
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task IsServiceAvailableAsync_WhenKernelExists_ShouldReturnTrue()
+    {
+        // Arrange
+        var kernel = Kernel.CreateBuilder().Build();
+        _kernelFactory.CreateKernelForUserAsync(_testUserId).Returns(kernel);
+        var service = new LlmDescriptionCleaningService(_kernelFactory, _currentUserService, _logger);
+
+        // Act
+        var result = await service.IsServiceAvailableAsync();
+
+        // Assert
+        result.Should().BeTrue();
     }
 }
 

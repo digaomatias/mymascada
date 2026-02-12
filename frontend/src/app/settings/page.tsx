@@ -17,7 +17,8 @@ import {
   ChevronRightIcon,
   LanguageIcon,
   TagIcon,
-  ArrowDownTrayIcon
+  ArrowDownTrayIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline';
 import { useLocale } from '@/contexts/locale-context';
 import { useTranslations } from 'next-intl';
@@ -37,6 +38,11 @@ const settingsItems: SettingsItem[] = [
     icon: BuildingLibraryIcon,
     labelKey: 'bankConnections',
     badge: true
+  },
+  {
+    href: '/settings/ai',
+    icon: SparklesIcon,
+    labelKey: 'aiSettings',
   },
   {
     href: '/settings/privacy',

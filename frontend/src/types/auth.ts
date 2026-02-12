@@ -29,6 +29,7 @@ export interface UserDto {
   locale: string;
   profilePictureUrl?: string;
   aiDescriptionCleaning?: boolean;
+  hasAiConfigured?: boolean;
 }
 
 export interface AuthenticationResponse {

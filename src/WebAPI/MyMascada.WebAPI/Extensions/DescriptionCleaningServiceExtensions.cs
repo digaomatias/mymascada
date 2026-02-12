@@ -11,16 +11,8 @@ public static class DescriptionCleaningServiceExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // Description Cleaning LLM Service
-        var openAiApiKey = configuration["LLM:OpenAI:ApiKey"];
-        if (!string.IsNullOrEmpty(openAiApiKey) && openAiApiKey != "YOUR_OPENAI_API_KEY")
-        {
-            services.AddSingleton<IDescriptionCleaningService, LlmDescriptionCleaningService>();
-        }
-        else
-        {
-            services.AddSingleton<IDescriptionCleaningService, NoOpDescriptionCleaningService>();
-        }
+        // Description Cleaning LLM Service — always registered as scoped; returns graceful failure when no AI key is configured
+        services.AddScoped<IDescriptionCleaningService, LlmDescriptionCleaningService>();
 
         // Background job service
         services.AddScoped<IDescriptionCleaningJobService, DescriptionCleaningJobService>();

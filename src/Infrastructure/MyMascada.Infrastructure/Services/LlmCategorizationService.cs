@@ -1,29 +1,40 @@
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Domain.Entities;
-using MyMascada.Domain.Enums;
-using System.Net.Http;
 using System.Text.Json;
 
 namespace MyMascada.Infrastructure.Services;
 
 public class LlmCategorizationService : ILlmCategorizationService
 {
-    private readonly IConfiguration _configuration;
+    private readonly IUserAiKernelFactory _kernelFactory;
+    private readonly ICurrentUserService _currentUserService;
     private readonly ILogger<LlmCategorizationService> _logger;
-    private readonly Kernel _kernel;
     private readonly string _systemPrompt;
 
+    private Kernel? _cachedKernel;
+    private bool _kernelResolved;
+
     public LlmCategorizationService(
-        IConfiguration configuration,
+        IUserAiKernelFactory kernelFactory,
+        ICurrentUserService currentUserService,
         ILogger<LlmCategorizationService> logger)
     {
-        _configuration = configuration;
+        _kernelFactory = kernelFactory;
+        _currentUserService = currentUserService;
         _logger = logger;
-        _kernel = CreateKernel();
         _systemPrompt = CreateSystemPrompt();
+    }
+
+    private async Task<Kernel?> GetKernelAsync()
+    {
+        if (!_kernelResolved)
+        {
+            _cachedKernel = await _kernelFactory.CreateKernelForUserAsync(_currentUserService.GetUserId());
+            _kernelResolved = true;
+        }
+        return _cachedKernel;
     }
 
     public async Task<LlmCategorizationResponse> CategorizeTransactionsAsync(
@@ -33,13 +44,23 @@ public class LlmCategorizationService : ILlmCategorizationService
     {
         try
         {
+            var kernel = await GetKernelAsync();
+            if (kernel == null)
+            {
+                return new LlmCategorizationResponse
+                {
+                    Success = false,
+                    Errors = new List<string> { "AI is not configured. Please configure your AI API key in Settings." }
+                };
+            }
+
             var startTime = DateTime.UtcNow;
-            
+
             var request = BuildCategorizationRequest(transactions, categories);
-            var userPrompt = JsonSerializer.Serialize(request, new JsonSerializerOptions 
-            { 
+            var userPrompt = JsonSerializer.Serialize(request, new JsonSerializerOptions
+            {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                WriteIndented = true 
+                WriteIndented = true
             });
 
             _logger.LogDebug("Sending categorization request to LLM with {TransactionCount} transactions: {TransactionIds}",
@@ -49,11 +70,11 @@ public class LlmCategorizationService : ILlmCategorizationService
             using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             timeoutCts.CancelAfter(TimeSpan.FromMinutes(4)); // Slightly less than HTTP timeout
 
-            var response = await _kernel.InvokePromptAsync($"{_systemPrompt}\n\nUser Request:\n{userPrompt}", 
+            var response = await kernel.InvokePromptAsync($"{_systemPrompt}\n\nUser Request:\n{userPrompt}",
                 cancellationToken: timeoutCts.Token);
 
             var responseText = response.ToString();
-            
+
             _logger.LogDebug("Received LLM response length: {Length} characters", responseText.Length);
             _logger.LogDebug("LLM response preview: {Preview}...", responseText.Length > 500 ? responseText.Substring(0, 500) : responseText);
 
@@ -64,9 +85,9 @@ public class LlmCategorizationService : ILlmCategorizationService
         }
         catch (OperationCanceledException ex) when (ex.CancellationToken.IsCancellationRequested)
         {
-            _logger.LogWarning("LLM categorization timed out for {TransactionCount} transactions after 4 minutes", 
+            _logger.LogWarning("LLM categorization timed out for {TransactionCount} transactions after 4 minutes",
                 transactions.Count());
-            
+
             return new LlmCategorizationResponse
             {
                 Success = false,
@@ -76,7 +97,7 @@ public class LlmCategorizationService : ILlmCategorizationService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to categorize transactions using LLM");
-            
+
             return new LlmCategorizationResponse
             {
                 Success = false,
@@ -89,10 +110,13 @@ public class LlmCategorizationService : ILlmCategorizationService
     {
         try
         {
-            // Simple health check
-            var response = await _kernel.InvokePromptAsync("Reply with 'OK' if you're available.", 
+            var kernel = await GetKernelAsync();
+            if (kernel == null)
+                return false;
+
+            var response = await kernel.InvokePromptAsync("Reply with 'OK' if you're available.",
                 cancellationToken: cancellationToken);
-            
+
             return response.ToString().Contains("OK", StringComparison.OrdinalIgnoreCase);
         }
         catch (Exception ex)
@@ -104,9 +128,15 @@ public class LlmCategorizationService : ILlmCategorizationService
 
     public async Task<string> SendPromptAsync(string prompt, CancellationToken cancellationToken = default)
     {
+        var kernel = await GetKernelAsync();
+        if (kernel == null)
+        {
+            throw new InvalidOperationException("AI is not configured. Please configure your AI API key in Settings.");
+        }
+
         try
         {
-            var response = await _kernel.InvokePromptAsync(prompt, cancellationToken: cancellationToken);
+            var response = await kernel.InvokePromptAsync(prompt, cancellationToken: cancellationToken);
             return response.ToString();
         }
         catch (Exception ex)
@@ -114,34 +144,6 @@ public class LlmCategorizationService : ILlmCategorizationService
             _logger.LogError(ex, "Failed to send prompt to LLM");
             throw;
         }
-    }
-
-    private Kernel CreateKernel()
-    {
-        var apiKey = _configuration["LLM:OpenAI:ApiKey"];
-        var model = _configuration["LLM:OpenAI:Model"] ?? "gpt-4o-mini";
-
-        if (string.IsNullOrEmpty(apiKey))
-        {
-            throw new InvalidOperationException("OpenAI API key is not configured");
-        }
-
-        var builder = Kernel.CreateBuilder();
-        
-        // Configure OpenAI with extended timeout for batch processing
-        builder.AddOpenAIChatCompletion(model, apiKey, httpClient: CreateHttpClientWithTimeout());
-        
-        return builder.Build();
-    }
-
-    private HttpClient CreateHttpClientWithTimeout()
-    {
-        var httpClient = new HttpClient();
-        
-        // Set timeout to 5 minutes for LLM batch processing
-        httpClient.Timeout = TimeSpan.FromMinutes(5);
-        
-        return httpClient;
     }
 
     private string CreateSystemPrompt()
@@ -276,8 +278,6 @@ Note: Rule generation and matching is handled by the Rules Handler in the catego
                 color = c.Color,
                 keywords = ExtractKeywords(c.Name)
             }),
-            // Note: Rules processing is now handled by the RulesHandler in the categorization pipeline
-            // The LLM service is only responsible for LLM-based categorization
             context = new
             {
                 batchSize = transactions.Count(),
@@ -297,7 +297,7 @@ Note: Rule generation and matching is handled by the Rules Handler in the catego
         {
             var parent = allCategories.FirstOrDefault(c => c.Id == current.ParentCategoryId);
             if (parent == null) break;
-            
+
             path.Insert(0, parent.Name);
             current = parent;
         }
@@ -335,7 +335,7 @@ Note: Rule generation and matching is handled by the Rules Handler in the catego
             };
 
             var response = JsonSerializer.Deserialize<LlmCategorizationResponse>(cleanResponse, options);
-            
+
             if (response == null)
             {
                 throw new InvalidOperationException("Failed to deserialize LLM response");
@@ -349,7 +349,7 @@ Note: Rule generation and matching is handled by the Rules Handler in the catego
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to parse LLM response: {Response}", responseText);
-            
+
             return new LlmCategorizationResponse
             {
                 Success = false,
@@ -377,14 +377,14 @@ Note: Rule generation and matching is handled by the Rules Handler in the catego
             response.Summary = new CategorizationSummary
             {
                 TotalProcessed = response.Categorizations.Count,
-                HighConfidence = response.Categorizations.Count(c => 
+                HighConfidence = response.Categorizations.Count(c =>
                     c.Suggestions.Any(s => s.Confidence >= 0.8m)),
-                MediumConfidence = response.Categorizations.Count(c => 
+                MediumConfidence = response.Categorizations.Count(c =>
                     c.Suggestions.Any(s => s.Confidence >= 0.6m && s.Confidence < 0.8m)),
-                LowConfidence = response.Categorizations.Count(c => 
+                LowConfidence = response.Categorizations.Count(c =>
                     c.Suggestions.All(s => s.Confidence < 0.6m)),
-                AverageConfidence = response.Categorizations.Any() 
-                    ? response.Categorizations.Average(c => 
+                AverageConfidence = response.Categorizations.Any()
+                    ? response.Categorizations.Average(c =>
                         c.Suggestions.Any() ? c.Suggestions.Max(s => s.Confidence) : 0)
                     : 0,
                 NewRulesGenerated = response.Categorizations.Count(c => c.SuggestedRule != null)

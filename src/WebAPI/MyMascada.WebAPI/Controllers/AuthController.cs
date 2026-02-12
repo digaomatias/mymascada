@@ -24,6 +24,8 @@ public class AuthController : ControllerBase
     private readonly IUserRepository _userRepository;
     private readonly MyMascada.Application.Common.Configuration.AppOptions _appOptions;
     private readonly IWebHostEnvironment _environment;
+    private readonly IUserAiSettingsRepository _aiSettingsRepository;
+    private readonly IConfiguration _configuration;
 
     public AuthController(
         IMediator mediator,
@@ -31,7 +33,9 @@ public class AuthController : ControllerBase
         IDataProtectionProvider dataProtectionProvider,
         IUserRepository userRepository,
         Microsoft.Extensions.Options.IOptions<MyMascada.Application.Common.Configuration.AppOptions> appOptions,
-        IWebHostEnvironment environment)
+        IWebHostEnvironment environment,
+        IUserAiSettingsRepository aiSettingsRepository,
+        IConfiguration configuration)
     {
         _mediator = mediator;
         _authService = authService;
@@ -39,6 +43,8 @@ public class AuthController : ControllerBase
         _userRepository = userRepository;
         _appOptions = appOptions.Value;
         _environment = environment;
+        _aiSettingsRepository = aiSettingsRepository;
+        _configuration = configuration;
     }
 
     [HttpPost("register")]
@@ -177,6 +183,12 @@ public class AuthController : ControllerBase
             return NotFound();
         }
 
+        // Check if user has AI configured (own key or global key)
+        var aiSettings = await _aiSettingsRepository.GetByUserIdAsync(userId);
+        var globalApiKey = _configuration["LLM:OpenAI:ApiKey"];
+        var hasAiConfigured = (aiSettings != null && !string.IsNullOrEmpty(aiSettings.EncryptedApiKey))
+            || (!string.IsNullOrEmpty(globalApiKey) && globalApiKey != "YOUR_OPENAI_API_KEY");
+
         var userDto = new UserDto
         {
             Id = user.Id,
@@ -188,7 +200,8 @@ public class AuthController : ControllerBase
             Currency = user.Currency ?? "NZD",
             TimeZone = user.TimeZone ?? "UTC",
             Locale = user.Locale ?? "en",
-            AiDescriptionCleaning = user.AiDescriptionCleaning
+            AiDescriptionCleaning = user.AiDescriptionCleaning,
+            HasAiConfigured = hasAiConfigured
         };
 
         return Ok(userDto);

@@ -13,7 +13,7 @@ public static class FeatureFlagsExtensions
 {
     public static IServiceCollection AddFeatureFlags(this IServiceCollection services, IConfiguration configuration)
     {
-        var aiCategorization = IsNonPlaceholder(configuration["LLM:OpenAI:ApiKey"], "YOUR_OPENAI_API_KEY");
+        var aiCategorization = true; // Always enabled — users can configure their own AI key
         var emailNotifications = IsEmailConfigured(configuration);
         var googleOAuth = IsNonPlaceholder(configuration["Authentication:Google:ClientId"], "YOUR_GOOGLE_CLIENT_ID");
         var bankSync = configuration.GetValue<bool>("Akahu:Enabled");

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using MyMascada.Application.Common.Configuration;
 using MyMascada.Application.Common.Interfaces;
@@ -24,6 +25,8 @@ public class AuthControllerTests
     private readonly IUserRepository _userRepository;
     private readonly IOptions<AppOptions> _appOptions;
     private readonly IWebHostEnvironment _environment;
+    private readonly IUserAiSettingsRepository _aiSettingsRepository;
+    private readonly IConfiguration _configuration;
     private readonly AuthController _controller;
 
     public AuthControllerTests()
@@ -35,7 +38,9 @@ public class AuthControllerTests
         _appOptions = Options.Create(new AppOptions { FrontendUrl = "http://localhost:3000" });
         _environment = Substitute.For<IWebHostEnvironment>();
         _environment.EnvironmentName.Returns("Development");
-        _controller = new AuthController(_mediator, _authService, _dataProtectionProvider, _userRepository, _appOptions, _environment);
+        _aiSettingsRepository = Substitute.For<IUserAiSettingsRepository>();
+        _configuration = Substitute.For<IConfiguration>();
+        _controller = new AuthController(_mediator, _authService, _dataProtectionProvider, _userRepository, _appOptions, _environment, _aiSettingsRepository, _configuration);
 
         // Provide a default HttpContext so methods that access Request.Headers don't throw
         _controller.ControllerContext = new ControllerContext

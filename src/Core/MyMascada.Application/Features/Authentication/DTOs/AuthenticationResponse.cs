@@ -34,4 +34,5 @@ public class UserDto
     public string Locale { get; set; } = "en";
     public string? ProfilePictureUrl { get; set; }
     public bool AiDescriptionCleaning { get; set; }
+    public bool HasAiConfigured { get; set; }
 }
