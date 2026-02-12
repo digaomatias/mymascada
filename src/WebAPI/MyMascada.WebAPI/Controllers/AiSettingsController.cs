@@ -221,7 +221,7 @@ public class AiSettingsController : ControllerBase
                 Id = "deepseek",
                 Name = "DeepSeek",
                 ProviderType = "openai-compatible",
-                DefaultEndpoint = "https://api.deepseek.com/v1",
+                DefaultEndpoint = "https://api.deepseek.com",
                 Models = new List<AiModelPreset>
                 {
                     new() { Id = "deepseek-chat", Name = "DeepSeek Chat" },
@@ -233,7 +233,7 @@ public class AiSettingsController : ControllerBase
                 Id = "groq",
                 Name = "Groq",
                 ProviderType = "openai-compatible",
-                DefaultEndpoint = "https://api.groq.com/openai/v1",
+                DefaultEndpoint = "https://api.groq.com/openai",
                 Models = new List<AiModelPreset>
                 {
                     new() { Id = "llama-3.3-70b-versatile", Name = "Llama 3.3 70B" },
@@ -245,7 +245,7 @@ public class AiSettingsController : ControllerBase
                 Id = "ollama",
                 Name = "Ollama (Local)",
                 ProviderType = "openai-compatible",
-                DefaultEndpoint = "http://localhost:11434/v1",
+                DefaultEndpoint = "http://localhost:11434",
                 Models = new List<AiModelPreset>
                 {
                     new() { Id = "llama3.2", Name = "Llama 3.2" },
