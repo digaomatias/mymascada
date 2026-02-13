@@ -32,31 +32,20 @@ public class FinancialContextBuilder : IFinancialContextBuilder
 
     public async Task<string> BuildContextAsync(Guid userId)
     {
-        // Run all data queries in parallel — each wrapped in try/catch so one failure
-        // does not crash the whole context build.
-        var accountsTask = SafeExecuteAsync(() => _accountRepository.GetByUserIdAsync(userId));
-        var balancesTask = SafeExecuteAsync(() => _transactionRepository.GetAccountBalancesAsync(userId));
-        var categoriesTask = SafeExecuteAsync(() => _categoryRepository.GetByUserIdAsync(userId));
-        var budgetTask = SafeExecuteAsync(() => _budgetRepository.GetCurrentBudgetAsync(userId));
-        var recurringTask = SafeExecuteAsync(() => _recurringPatternRepository.GetActiveAsync(userId));
-        var recentTransactionsTask = SafeExecuteAsync(() => _transactionRepository.GetRecentTransactionsAsync(userId, 15));
+        // EF Core DbContext is NOT thread-safe — all queries must run sequentially
+        // to avoid random failures from concurrent operations on the shared context.
+        var accounts = await SafeExecuteAsync(() => _accountRepository.GetByUserIdAsync(userId));
+        var balances = await SafeExecuteAsync(() => _transactionRepository.GetAccountBalancesAsync(userId));
+        var categories = await SafeExecuteAsync(() => _categoryRepository.GetByUserIdAsync(userId));
+        var budget = await SafeExecuteAsync(() => _budgetRepository.GetCurrentBudgetAsync(userId));
+        var recurringPatterns = await SafeExecuteAsync(() => _recurringPatternRepository.GetActiveAsync(userId));
+        var recentTransactions = await SafeExecuteAsync(() => _transactionRepository.GetRecentTransactionsAsync(userId, 15));
 
         // 12-month transaction data for monthly breakdown
         var now = DateTimeProvider.UtcNow;
         var twelveMonthsAgo = now.AddMonths(-12);
-        var monthlyTransactionsTask = SafeExecuteAsync(() =>
+        var monthlyTransactions = await SafeExecuteAsync(() =>
             _transactionRepository.GetByDateRangeAsync(userId, twelveMonthsAgo, now));
-
-        await Task.WhenAll(accountsTask, balancesTask, categoriesTask, budgetTask,
-            recurringTask, recentTransactionsTask, monthlyTransactionsTask);
-
-        var accounts = await accountsTask;
-        var balances = await balancesTask;
-        var categories = await categoriesTask;
-        var budget = await budgetTask;
-        var recurringPatterns = await recurringTask;
-        var recentTransactions = await recentTransactionsTask;
-        var monthlyTransactions = await monthlyTransactionsTask;
 
         var sb = new StringBuilder();
 
