@@ -197,13 +197,13 @@ public class CreateAkahuReconciliationCommandHandler
             .ToList();
 
         // Get app transactions for the account within the date range
-        // Exclude already-reconciled transactions to avoid redundant re-reconciliation
+        // Include already-reconciled transactions so they can match against bank transactions
+        // and avoid being incorrectly recommended as new imports
         var accountTransactions = await _transactionRepository.GetByDateRangeAsync(
             request.UserId,
             request.AccountId,
             startDateUtc,
-            endDateUtc,
-            excludeReconciled: true);
+            endDateUtc);
 
         // Perform matching
         var matchingRequest = new TransactionMatchRequest

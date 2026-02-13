@@ -58,7 +58,8 @@ public class MatchTransactionsCommandHandler : IRequestHandler<MatchTransactions
 
         // Get app transactions for the account within the date range
         // Note: This includes both reviewed and unreviewed transactions for comprehensive reconciliation
-        // Excludes already-reconciled transactions to avoid redundant re-reconciliation
+        // Includes already-reconciled transactions so they can match against bank transactions
+        // and avoid being incorrectly recommended as new imports
         var startDate = request.StartDate ?? reconciliation.StatementEndDate.AddDays(-30);
         var endDate = request.EndDate ?? reconciliation.StatementEndDate;
 
@@ -66,8 +67,7 @@ public class MatchTransactionsCommandHandler : IRequestHandler<MatchTransactions
             request.UserId,
             reconciliation.AccountId,
             startDate,
-            endDate,
-            excludeReconciled: true);
+            endDate);
 
         // Include unreviewed transactions in reconciliation to ensure comprehensive matching
         var unreviewedCount = accountTransactions.Count(t => !t.IsReviewed);
