@@ -71,12 +71,12 @@ export default function Navigation() {
     { href: '/dashboard', labelKey: 'dashboard' as const, icon: ChartBarIcon },
     { href: '/transactions', labelKey: 'transactions' as const, icon: ArrowsRightLeftIcon },
     { href: '/budgets', labelKey: 'budgets' as const, icon: WalletIcon },
-    { href: '/accounts', labelKey: 'accounts' as const, icon: BuildingOffice2Icon },
+    { href: '/chat', labelKey: 'aiChat' as const, icon: ChatBubbleLeftRightIcon },
   ];
 
   // Mobile "More" menu items
   const mobileMoreItems = [
-    { href: '/chat', labelKey: 'aiChat' as const, icon: ChatBubbleLeftRightIcon },
+    { href: '/accounts', labelKey: 'accounts' as const, icon: BuildingOffice2Icon },
     { href: '/analytics', labelKey: 'analytics' as const, icon: ChartBarIcon },
     { href: '/categories', labelKey: 'categories' as const, icon: TagIcon },
     { href: '/rules', labelKey: 'rules' as const, icon: AdjustmentsHorizontalIcon },

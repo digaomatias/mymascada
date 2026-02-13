@@ -42,16 +42,17 @@ const chatComponents: Partial<Components> = {
       {children}
     </div>
   ),
-  // Colorize financial amounts: green for positive, red for negative
+  // Colorize financial amounts: only explicitly signed amounts get color
+  // -$... → red, +$... → green, plain $... or ~$... → neutral accent
   strong: ({ children }) => {
     const text = String(children ?? '');
-    if (/^[~+-]?\$/.test(text)) {
-      const isNegative = text.startsWith('-');
-      return (
-        <strong className={`font-semibold ${isNegative ? 'text-red-600' : 'text-emerald-600'}`}>
-          {children}
-        </strong>
-      );
+    if (/^[~+-]?\$/.test(text) || /^[~+-]?\d/.test(text)) {
+      const color = text.startsWith('-')
+        ? 'text-red-600'
+        : text.startsWith('+')
+          ? 'text-emerald-600'
+          : 'text-primary-700';
+      return <strong className={`font-semibold ${color}`}>{children}</strong>;
     }
     return <strong className="font-semibold text-gray-900">{children}</strong>;
   },

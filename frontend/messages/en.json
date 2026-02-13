@@ -112,7 +112,7 @@
     "newAccount": "New Account",
     "categorize": "Categorize",
     "toggleMenu": "Toggle menu",
-    "aiChat": "Chat AI"
+    "aiChat": "Ask Alce"
   },
   "auth": {
     "signIn": "Sign In",
@@ -1798,9 +1798,9 @@
       "lastValidated": "Last validated: {date}",
       "tabs": {
         "general": "General AI",
-        "chat": "Chat AI"
+        "chat": "Alce"
       },
-      "chatDescription": "Configure the AI model for the financial advisor chat. This uses a separate configuration so you can choose a model optimized for conversation.",
+      "chatDescription": "Configure the AI model for Alce. This uses a separate configuration so you can choose a model optimized for conversation.",
       "errors": {
         "loadFailed": "Failed to load AI settings",
         "loadProvidersFailed": "Failed to load AI providers",
@@ -2797,9 +2797,9 @@
     }
   },
   "chat": {
-    "title": "Financial Advisor",
-    "subtitle": "Ask questions about your finances and get personalized insights",
-    "inputPlaceholder": "Ask about your finances...",
+    "title": "Alce",
+    "subtitle": "Your personal finance buddy — ask anything about your money",
+    "inputPlaceholder": "Ask Alce anything...",
     "send": "Send",
     "sending": "Sending...",
     "loadMore": "Load older messages",
@@ -2808,9 +2808,9 @@
     "clearConfirmTitle": "Clear conversation",
     "clearConfirmMessage": "Are you sure you want to clear your entire conversation history? This cannot be undone.",
     "cleared": "Conversation cleared",
-    "notConfigured": "Chat AI is not configured",
-    "notConfiguredDescription": "To use the financial advisor chat, configure your Chat AI settings first.",
-    "configureButton": "Configure Chat AI",
+    "notConfigured": "Alce is not configured",
+    "notConfiguredDescription": "To use Alce, configure your Alce settings first.",
+    "configureButton": "Configure Alce",
     "suggestedPrompts": {
       "spending": "How much did I spend this month?",
       "categories": "What are my biggest expense categories?",

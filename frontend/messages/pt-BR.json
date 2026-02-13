@@ -111,7 +111,7 @@
     "newAccount": "Nova Conta",
     "categorize": "Categorizar",
     "toggleMenu": "Alternar menu",
-    "aiChat": "Chat IA"
+    "aiChat": "Pergunte ao Alce"
   },
   "auth": {
     "signIn": "Entrar",
@@ -1797,9 +1797,9 @@
       "lastValidated": "Última validação: {date}",
       "tabs": {
         "general": "IA Geral",
-        "chat": "IA do Chat"
+        "chat": "Alce"
       },
-      "chatDescription": "Configure o modelo de IA para o chat do consultor financeiro. Usa uma configuração separada para que você possa escolher um modelo otimizado para conversação.",
+      "chatDescription": "Configure o modelo de IA para o Alce. Usa uma configuração separada para que você possa escolher um modelo otimizado para conversação.",
       "errors": {
         "loadFailed": "Falha ao carregar configurações de IA",
         "loadProvidersFailed": "Falha ao carregar provedores de IA",
@@ -2796,9 +2796,9 @@
     }
   },
   "chat": {
-    "title": "Consultor Financeiro",
-    "subtitle": "Faça perguntas sobre suas finanças e receba insights personalizados",
-    "inputPlaceholder": "Pergunte sobre suas finanças...",
+    "title": "Alce",
+    "subtitle": "Seu parceiro de finanças pessoais — pergunte qualquer coisa sobre seu dinheiro",
+    "inputPlaceholder": "Pergunte ao Alce...",
     "send": "Enviar",
     "sending": "Enviando...",
     "loadMore": "Carregar mensagens anteriores",
@@ -2807,9 +2807,9 @@
     "clearConfirmTitle": "Limpar conversa",
     "clearConfirmMessage": "Tem certeza que deseja limpar todo o histórico de conversa? Isso não pode ser desfeito.",
     "cleared": "Conversa limpa",
-    "notConfigured": "IA do Chat não configurada",
-    "notConfiguredDescription": "Para usar o chat do consultor financeiro, configure suas configurações de IA do Chat primeiro.",
-    "configureButton": "Configurar IA do Chat",
+    "notConfigured": "Alce não está configurado",
+    "notConfiguredDescription": "Para usar o Alce, configure suas configurações do Alce primeiro.",
+    "configureButton": "Configurar Alce",
     "suggestedPrompts": {
       "spending": "Quanto gastei este mês?",
       "categories": "Quais são minhas maiores categorias de despesa?",

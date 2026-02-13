@@ -79,12 +79,14 @@ public class FinancialDataPlugin
             var total = 0m;
             foreach (var t in transactionList)
             {
-                sb.AppendLine($"  {t.TransactionDate:yyyy-MM-dd} | {t.GetDisplayDescription()} | {t.Amount:N2}");
-                total += t.Amount;
+                var marker = t.IsTransfer() ? " [Transfer]" : t.IsExcluded ? " [Excluded]" : "";
+                sb.AppendLine($"  {t.TransactionDate:yyyy-MM-dd} | {t.GetDisplayDescription()} | {t.Amount:N2}{marker}");
+                if (!t.IsExcluded && !t.IsTransfer())
+                    total += t.Amount;
             }
 
             sb.AppendLine();
-            sb.AppendLine($"Total: {total:N2} ({transactionList.Count} transactions shown, {totalCount} total)");
+            sb.AppendLine($"Total (excluding transfers): {total:N2} ({transactionList.Count} transactions shown, {totalCount} total)");
 
             return sb.ToString();
         }
@@ -144,16 +146,21 @@ public class FinancialDataPlugin
             foreach (var t in transactionList)
             {
                 var categoryName = t.Category?.Name ?? "Uncategorized";
-                sb.AppendLine($"  {t.TransactionDate:yyyy-MM-dd} | {t.GetDisplayDescription()} | {t.Amount:N2} | {categoryName}");
+                var marker = t.IsTransfer() ? " [Transfer]" : t.IsExcluded ? " [Excluded]" : "";
+                sb.AppendLine($"  {t.TransactionDate:yyyy-MM-dd} | {t.GetDisplayDescription()} | {t.Amount:N2} | {categoryName}{marker}");
 
-                if (t.Amount > 0)
-                    income += t.Amount;
-                else
-                    expenses += Math.Abs(t.Amount);
+                // Only count non-transfer, non-excluded transactions in totals
+                if (!t.IsExcluded && !t.IsTransfer())
+                {
+                    if (t.Amount > 0)
+                        income += t.Amount;
+                    else
+                        expenses += Math.Abs(t.Amount);
+                }
             }
 
             sb.AppendLine();
-            sb.AppendLine($"Summary: Income {income:N2} | Expenses {expenses:N2} | Net {income - expenses:N2}");
+            sb.AppendLine($"Summary (excluding transfers): Income {income:N2} | Expenses {expenses:N2} | Net {income - expenses:N2}");
             sb.AppendLine($"Showing {transactionList.Count} of {totalCount} transactions.");
 
             return sb.ToString();
@@ -197,7 +204,8 @@ public class FinancialDataPlugin
             foreach (var t in transactionList)
             {
                 var categoryName = t.Category?.Name ?? "Uncategorized";
-                sb.AppendLine($"  {t.TransactionDate:yyyy-MM-dd} | {t.GetDisplayDescription()} | {t.Amount:N2} | {categoryName}");
+                var marker = t.IsTransfer() ? " [Transfer]" : t.IsExcluded ? " [Excluded]" : "";
+                sb.AppendLine($"  {t.TransactionDate:yyyy-MM-dd} | {t.GetDisplayDescription()} | {t.Amount:N2} | {categoryName}{marker}");
             }
 
             sb.AppendLine();
