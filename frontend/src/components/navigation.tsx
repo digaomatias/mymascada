@@ -76,6 +76,8 @@ export default function Navigation() {
 
   // Mobile "More" menu items
   const mobileMoreItems = [
+    { href: '/chat', labelKey: 'aiChat' as const, icon: ChatBubbleLeftRightIcon },
+    { href: '/analytics', labelKey: 'analytics' as const, icon: ChartBarIcon },
     { href: '/categories', labelKey: 'categories' as const, icon: TagIcon },
     { href: '/rules', labelKey: 'rules' as const, icon: AdjustmentsHorizontalIcon },
     { href: '/settings', labelKey: 'settings' as const, icon: CogIcon },

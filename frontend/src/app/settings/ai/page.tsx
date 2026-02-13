@@ -115,6 +115,20 @@ export default function AiSettingsPage() {
     }
   }, [isAuthenticated, isLoading, activePurpose, loadSettings, loadProviders]);
 
+  // When both settings and providers are loaded, detect custom model
+  useEffect(() => {
+    if (!providers.length || !selectedProviderId || !modelId) return;
+
+    const provider = providers.find((p) => p.id === selectedProviderId);
+    if (provider && provider.models.length > 0) {
+      const isPreset = provider.models.some((m) => m.id === modelId);
+      if (!isPreset) {
+        setCustomModel(modelId);
+        setModelId('');
+      }
+    }
+  }, [providers, selectedProviderId, modelId]);
+
   const handleTabChange = (purpose: AiPurpose) => {
     if (purpose !== activePurpose) {
       setActivePurpose(purpose);
