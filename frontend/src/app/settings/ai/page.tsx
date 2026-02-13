@@ -194,6 +194,9 @@ export default function AiSettingsPage() {
         apiEndpoint: apiEndpoint || undefined,
       }, activePurpose);
       setTestResult(result);
+      if (result.success && settings) {
+        setSettings({ ...settings, isValidated: true, lastValidatedAt: new Date().toISOString() });
+      }
     } catch (error) {
       console.error('Connection test failed:', error);
       setTestResult({
