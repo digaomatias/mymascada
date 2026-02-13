@@ -613,6 +613,7 @@ public class FinancialDataPlugin
                 }
 
                 transaction.CategoryId = item.CategoryId;
+                transaction.IsReviewed = true;
                 transaction.MarkAsAutoCategorized("Chat", 1.0m, $"AiChat-{_userId}");
                 await _transactionRepository.UpdateAsync(transaction);
                 successCount++;
