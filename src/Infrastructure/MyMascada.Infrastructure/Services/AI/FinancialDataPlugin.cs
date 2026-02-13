@@ -570,7 +570,8 @@ public class FinancialDataPlugin
     {
         try
         {
-            var items = JsonSerializer.Deserialize<List<CategorizationItem>>(categorizationJson);
+            var items = JsonSerializer.Deserialize<List<CategorizationItem>>(categorizationJson,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
             if (items == null || items.Count == 0)
             {
