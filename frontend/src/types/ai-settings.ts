@@ -1,4 +1,5 @@
 export interface AiSettingsResponse {
+  hasSettings: boolean;
   providerType: string;
   providerName: string;
   modelId: string;

@@ -116,6 +116,7 @@ builder.Services.AddHealthCheckServices();
 builder.Services.AddBackgroundJobs(builder.Configuration);
 builder.Services.AddCorsConfiguration(builder.Configuration);
 builder.Services.AddRateLimitingConfiguration();
+builder.Services.AddAiChatServices();
 
 // Add localization services for multi-language support
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");

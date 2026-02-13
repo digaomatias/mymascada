@@ -27,19 +27,10 @@ public class UserAiKernelFactory : IUserAiKernelFactory
 
     public async Task<Kernel?> CreateKernelForUserAsync(Guid userId)
     {
-        var settings = await _settingsRepository.GetByUserIdAsync(userId);
-
-        if (settings != null && !string.IsNullOrEmpty(settings.EncryptedApiKey))
+        var kernel = await ResolveSettingsAndBuildKernelAsync(userId, "general");
+        if (kernel != null)
         {
-            try
-            {
-                var apiKey = _encryptionService.Decrypt(settings.EncryptedApiKey);
-                return BuildKernel(settings.ProviderType, apiKey, settings.ModelId, settings.ApiEndpoint);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to create kernel from user AI settings for user {UserId}, falling back to global config", userId);
-            }
+            return kernel;
         }
 
         // Fallback to global configuration
@@ -54,6 +45,12 @@ public class UserAiKernelFactory : IUserAiKernelFactory
         return null;
     }
 
+    public async Task<Kernel?> CreateChatKernelForUserAsync(Guid userId)
+    {
+        // Chat kernel: NO fallback to global config — returns null if not configured
+        return await ResolveSettingsAndBuildKernelAsync(userId, "chat");
+    }
+
     public async Task<bool> IsAiAvailableForUserAsync(Guid userId)
     {
         var settings = await _settingsRepository.GetByUserIdAsync(userId);
@@ -64,6 +61,26 @@ public class UserAiKernelFactory : IUserAiKernelFactory
 
         var globalApiKey = _configuration["LLM:OpenAI:ApiKey"];
         return !string.IsNullOrEmpty(globalApiKey) && globalApiKey != "YOUR_OPENAI_API_KEY";
+    }
+
+    private async Task<Kernel?> ResolveSettingsAndBuildKernelAsync(Guid userId, string purpose)
+    {
+        var settings = await _settingsRepository.GetByUserIdAsync(userId, purpose);
+
+        if (settings != null && !string.IsNullOrEmpty(settings.EncryptedApiKey))
+        {
+            try
+            {
+                var apiKey = _encryptionService.Decrypt(settings.EncryptedApiKey);
+                return BuildKernel(settings.ProviderType, apiKey, settings.ModelId, settings.ApiEndpoint);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to create kernel from user AI settings for user {UserId} with purpose {Purpose}", userId, purpose);
+            }
+        }
+
+        return null;
     }
 
     public async Task<AiConnectionTestResult> TestConnectionAsync(

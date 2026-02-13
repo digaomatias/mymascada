@@ -42,6 +42,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<InvitationCode> InvitationCodes => Set<InvitationCode>();
     public DbSet<AccountShare> AccountShares => Set<AccountShare>();
     public DbSet<UserAiSettings> UserAiSettings => Set<UserAiSettings>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -721,14 +722,26 @@ public class ApplicationDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.Purpose).IsRequired().HasMaxLength(20).HasDefaultValue("general");
             entity.Property(e => e.ProviderType).IsRequired().HasMaxLength(50);
             entity.Property(e => e.ProviderName).IsRequired().HasMaxLength(100);
             entity.Property(e => e.ModelId).IsRequired().HasMaxLength(100);
             entity.Property(e => e.ApiEndpoint).HasMaxLength(500);
 
-            // Unique constraint: one AI settings per user
-            entity.HasIndex(e => e.UserId).IsUnique();
+            // Unique constraint: one AI settings per user per purpose
+            entity.HasIndex(e => new { e.UserId, e.Purpose }).IsUnique();
 
+            entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
+        // ChatMessage configuration
+        modelBuilder.Entity<ChatMessage>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.Role).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.Content).IsRequired().HasColumnType("text");
+            entity.HasIndex(e => new { e.UserId, e.CreatedAt });
             entity.HasQueryFilter(e => !e.IsDeleted);
         });
     }

@@ -110,7 +110,8 @@
     "newTransfer": "Nova Transferência",
     "newAccount": "Nova Conta",
     "categorize": "Categorizar",
-    "toggleMenu": "Alternar menu"
+    "toggleMenu": "Alternar menu",
+    "aiChat": "Chat IA"
   },
   "auth": {
     "signIn": "Entrar",
@@ -1794,6 +1795,11 @@
       "validated": "Validado",
       "notValidated": "Não validado",
       "lastValidated": "Última validação: {date}",
+      "tabs": {
+        "general": "IA Geral",
+        "chat": "IA do Chat"
+      },
+      "chatDescription": "Configure o modelo de IA para o chat do consultor financeiro. Usa uma configuração separada para que você possa escolher um modelo otimizado para conversação.",
       "errors": {
         "loadFailed": "Falha ao carregar configurações de IA",
         "loadProvidersFailed": "Falha ao carregar provedores de IA",
@@ -2787,6 +2793,34 @@
       "rolloverAmount": "Rollover",
       "surplus": "Superávit",
       "deficit": "Déficit"
+    }
+  },
+  "chat": {
+    "title": "Consultor Financeiro",
+    "subtitle": "Faça perguntas sobre suas finanças e receba insights personalizados",
+    "inputPlaceholder": "Pergunte sobre suas finanças...",
+    "send": "Enviar",
+    "sending": "Enviando...",
+    "loadMore": "Carregar mensagens anteriores",
+    "loading": "Carregando...",
+    "clearHistory": "Limpar conversa",
+    "clearConfirmTitle": "Limpar conversa",
+    "clearConfirmMessage": "Tem certeza que deseja limpar todo o histórico de conversa? Isso não pode ser desfeito.",
+    "cleared": "Conversa limpa",
+    "notConfigured": "IA do Chat não configurada",
+    "notConfiguredDescription": "Para usar o chat do consultor financeiro, configure suas configurações de IA do Chat primeiro.",
+    "configureButton": "Configurar IA do Chat",
+    "suggestedPrompts": {
+      "spending": "Quanto gastei este mês?",
+      "categories": "Quais são minhas maiores categorias de despesa?",
+      "budgets": "Estou dentro dos meus orçamentos?",
+      "saving": "Como posso economizar mais dinheiro?",
+      "summary": "Resuma minha situação financeira"
+    },
+    "errors": {
+      "sendFailed": "Falha ao enviar mensagem",
+      "loadFailed": "Falha ao carregar histórico do chat",
+      "clearFailed": "Falha ao limpar conversa"
     }
   },
   "landing": {

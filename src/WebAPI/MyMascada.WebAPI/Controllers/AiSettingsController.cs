@@ -29,10 +29,10 @@ public class AiSettingsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<AiSettingsResponse>> GetSettings()
+    public async Task<ActionResult<AiSettingsResponse>> GetSettings([FromQuery] string purpose = "general")
     {
         var userId = _currentUserService.GetUserId();
-        var settings = await _repository.GetByUserIdAsync(userId);
+        var settings = await _repository.GetByUserIdAsync(userId, purpose);
 
         if (settings == null)
         {
@@ -54,7 +54,9 @@ public class AiSettingsController : ControllerBase
     }
 
     [HttpPut]
-    public async Task<ActionResult<AiSettingsResponse>> SaveSettings([FromBody] SaveAiSettingsRequest request)
+    public async Task<ActionResult<AiSettingsResponse>> SaveSettings(
+        [FromBody] SaveAiSettingsRequest request,
+        [FromQuery] string purpose = "general")
     {
         if (string.IsNullOrWhiteSpace(request.ProviderType))
             return BadRequest(new { Error = "Provider type is required." });
@@ -76,7 +78,7 @@ public class AiSettingsController : ControllerBase
         }
 
         var userId = _currentUserService.GetUserId();
-        var existing = await _repository.GetByUserIdAsync(userId);
+        var existing = await _repository.GetByUserIdAsync(userId, purpose);
 
         string? encryptedApiKey = existing?.EncryptedApiKey;
         if (!string.IsNullOrEmpty(request.ApiKey))
@@ -89,6 +91,7 @@ public class AiSettingsController : ControllerBase
             var settings = new UserAiSettings
             {
                 UserId = userId,
+                Purpose = purpose,
                 ProviderType = request.ProviderType,
                 ProviderName = request.ProviderName,
                 EncryptedApiKey = encryptedApiKey,
@@ -128,10 +131,10 @@ public class AiSettingsController : ControllerBase
     }
 
     [HttpDelete]
-    public async Task<IActionResult> DeleteSettings()
+    public async Task<IActionResult> DeleteSettings([FromQuery] string purpose = "general")
     {
         var userId = _currentUserService.GetUserId();
-        var settings = await _repository.GetByUserIdAsync(userId);
+        var settings = await _repository.GetByUserIdAsync(userId, purpose);
 
         if (settings == null)
         {
@@ -144,7 +147,9 @@ public class AiSettingsController : ControllerBase
     }
 
     [HttpPost("test")]
-    public async Task<ActionResult<AiConnectionTestResult>> TestConnection([FromBody] TestConnectionRequest request)
+    public async Task<ActionResult<AiConnectionTestResult>> TestConnection(
+        [FromBody] TestConnectionRequest request,
+        [FromQuery] string purpose = "general")
     {
         if (string.IsNullOrWhiteSpace(request.ProviderType))
             return BadRequest(new { Error = "Provider type is required." });
@@ -156,7 +161,7 @@ public class AiSettingsController : ControllerBase
         if (string.IsNullOrEmpty(apiKey))
         {
             var userId = _currentUserService.GetUserId();
-            var existing = await _repository.GetByUserIdAsync(userId);
+            var existing = await _repository.GetByUserIdAsync(userId, purpose);
             if (existing != null && !string.IsNullOrEmpty(existing.EncryptedApiKey))
             {
                 apiKey = _encryptionService.Decrypt(existing.EncryptedApiKey);
@@ -186,7 +191,7 @@ public class AiSettingsController : ControllerBase
         if (result.Success)
         {
             var userId = _currentUserService.GetUserId();
-            var existing = await _repository.GetByUserIdAsync(userId);
+            var existing = await _repository.GetByUserIdAsync(userId, purpose);
             if (existing != null)
             {
                 existing.IsValidated = true;

@@ -26,11 +26,16 @@ import type {
   AiConnectionTestResult,
 } from '@/types/ai-settings';
 
+type AiPurpose = 'general' | 'chat';
+
 export default function AiSettingsPage() {
   const { isAuthenticated, isLoading, user, refreshUser } = useAuth();
   const router = useRouter();
   const t = useTranslations('settings.ai');
   const tCommon = useTranslations('common');
+
+  // Tab state
+  const [activePurpose, setActivePurpose] = useState<AiPurpose>('general');
 
   // Data state
   const [settings, setSettings] = useState<AiSettingsResponse | null>(null);
@@ -59,12 +64,23 @@ export default function AiSettingsPage() {
     }
   }, [isAuthenticated, isLoading, router]);
 
-  const loadSettings = useCallback(async () => {
+  const resetFormState = useCallback(() => {
+    setSelectedProviderId('');
+    setApiKey('');
+    setApiKeyChanged(false);
+    setModelId('');
+    setCustomModel('');
+    setApiEndpoint('');
+    setTestResult(null);
+  }, []);
+
+  const loadSettings = useCallback(async (purpose: AiPurpose) => {
     try {
       setLoadingSettings(true);
-      const data = await apiClient.getAiSettings();
-      setSettings(data);
-      if (data) {
+      resetFormState();
+      const data = await apiClient.getAiSettings(purpose);
+      setSettings(data?.hasSettings ? data : null);
+      if (data?.hasSettings) {
         setSelectedProviderId(data.providerName);
         setModelId(data.modelId);
         if (data.apiEndpoint) {
@@ -77,7 +93,7 @@ export default function AiSettingsPage() {
     } finally {
       setLoadingSettings(false);
     }
-  }, [t]);
+  }, [t, resetFormState]);
 
   const loadProviders = useCallback(async () => {
     try {
@@ -94,10 +110,16 @@ export default function AiSettingsPage() {
 
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
-      loadSettings();
+      loadSettings(activePurpose);
       loadProviders();
     }
-  }, [isAuthenticated, isLoading, loadSettings, loadProviders]);
+  }, [isAuthenticated, isLoading, activePurpose, loadSettings, loadProviders]);
+
+  const handleTabChange = (purpose: AiPurpose) => {
+    if (purpose !== activePurpose) {
+      setActivePurpose(purpose);
+    }
+  };
 
   const selectedProvider = providers.find((p) => p.id === selectedProviderId);
   const isStandardOpenAI = selectedProvider?.providerType === 'openai';
@@ -156,7 +178,7 @@ export default function AiSettingsPage() {
         apiKey: keyToTest,
         modelId: effectiveModel,
         apiEndpoint: apiEndpoint || undefined,
-      });
+      }, activePurpose);
       setTestResult(result);
     } catch (error) {
       console.error('Connection test failed:', error);
@@ -194,7 +216,7 @@ export default function AiSettingsPage() {
         apiKey: apiKeyChanged ? apiKey : undefined,
         modelId: effectiveModel,
         apiEndpoint: apiEndpoint || undefined,
-      });
+      }, activePurpose);
       setSettings(updated);
       setApiKey('');
       setApiKeyChanged(false);
@@ -211,15 +233,9 @@ export default function AiSettingsPage() {
   const handleRemove = async () => {
     setRemoving(true);
     try {
-      await apiClient.deleteAiSettings();
+      await apiClient.deleteAiSettings(activePurpose);
       setSettings(null);
-      setSelectedProviderId('');
-      setApiKey('');
-      setApiKeyChanged(false);
-      setModelId('');
-      setCustomModel('');
-      setApiEndpoint('');
-      setTestResult(null);
+      resetFormState();
       toast.success(t('removed'));
       await refreshUser();
     } catch (error) {
@@ -278,6 +294,46 @@ export default function AiSettingsPage() {
             </div>
           </div>
         </div>
+
+        {/* Tab Switcher */}
+        <div className="mb-4">
+          <div className="flex border-b border-gray-200">
+            <button
+              onClick={() => handleTabChange('general')}
+              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
+                activePurpose === 'general'
+                  ? 'border-primary-600 text-primary-700'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              {t('tabs.general')}
+            </button>
+            <button
+              onClick={() => handleTabChange('chat')}
+              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
+                activePurpose === 'chat'
+                  ? 'border-primary-600 text-primary-700'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              {t('tabs.chat')}
+            </button>
+          </div>
+        </div>
+
+        {/* Chat AI Description */}
+        {activePurpose === 'chat' && (
+          <div className="mb-4">
+            <Card className="bg-blue-50/80 backdrop-blur-xs border-0 shadow-sm">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <InformationCircleIcon className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+                  <p className="text-sm text-blue-800">{t('chatDescription')}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {isLoadingData ? (
           <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">

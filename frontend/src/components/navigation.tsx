@@ -14,7 +14,8 @@ import {
   ChevronDownIcon,
   EllipsisHorizontalIcon,
   AdjustmentsHorizontalIcon,
-  WalletIcon
+  WalletIcon,
+  ChatBubbleLeftRightIcon,
 } from '@heroicons/react/24/outline';
 import { AppIcon } from '@/components/app-icon';
 
@@ -54,6 +55,7 @@ export default function Navigation() {
     { href: '/transactions', labelKey: 'transactions' as const, icon: ArrowsRightLeftIcon },
     { href: '/budgets', labelKey: 'budgets' as const, icon: WalletIcon },
     { href: '/analytics', labelKey: 'analytics' as const, icon: ChartBarIcon },
+    { href: '/chat', labelKey: 'aiChat' as const, icon: ChatBubbleLeftRightIcon },
   ];
 
   // Items under "Manage" dropdown

@@ -111,7 +111,8 @@
     "newTransfer": "New Transfer",
     "newAccount": "New Account",
     "categorize": "Categorize",
-    "toggleMenu": "Toggle menu"
+    "toggleMenu": "Toggle menu",
+    "aiChat": "Chat AI"
   },
   "auth": {
     "signIn": "Sign In",
@@ -1795,6 +1796,11 @@
       "validated": "Validated",
       "notValidated": "Not validated",
       "lastValidated": "Last validated: {date}",
+      "tabs": {
+        "general": "General AI",
+        "chat": "Chat AI"
+      },
+      "chatDescription": "Configure the AI model for the financial advisor chat. This uses a separate configuration so you can choose a model optimized for conversation.",
       "errors": {
         "loadFailed": "Failed to load AI settings",
         "loadProvidersFailed": "Failed to load AI providers",
@@ -2788,6 +2794,34 @@
       "rolloverAmount": "Rollover",
       "surplus": "Surplus",
       "deficit": "Deficit"
+    }
+  },
+  "chat": {
+    "title": "Financial Advisor",
+    "subtitle": "Ask questions about your finances and get personalized insights",
+    "inputPlaceholder": "Ask about your finances...",
+    "send": "Send",
+    "sending": "Sending...",
+    "loadMore": "Load older messages",
+    "loading": "Loading...",
+    "clearHistory": "Clear conversation",
+    "clearConfirmTitle": "Clear conversation",
+    "clearConfirmMessage": "Are you sure you want to clear your entire conversation history? This cannot be undone.",
+    "cleared": "Conversation cleared",
+    "notConfigured": "Chat AI is not configured",
+    "notConfiguredDescription": "To use the financial advisor chat, configure your Chat AI settings first.",
+    "configureButton": "Configure Chat AI",
+    "suggestedPrompts": {
+      "spending": "How much did I spend this month?",
+      "categories": "What are my biggest expense categories?",
+      "budgets": "Am I on track with my budgets?",
+      "saving": "How can I save more money?",
+      "summary": "Summarize my financial situation"
+    },
+    "errors": {
+      "sendFailed": "Failed to send message",
+      "loadFailed": "Failed to load chat history",
+      "clearFailed": "Failed to clear conversation"
     }
   },
   "landing": {

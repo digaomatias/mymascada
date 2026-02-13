@@ -43,6 +43,9 @@ public static class RepositoryServiceExtensions
         // Account sharing repositories
         services.AddScoped<IAccountShareRepository, AccountShareRepository>();
 
+        // Chat repositories
+        services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
+
         return services;
     }
 }

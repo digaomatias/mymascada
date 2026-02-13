@@ -15,10 +15,10 @@ public class UserAiSettingsRepository : IUserAiSettingsRepository
         _context = context;
     }
 
-    public async Task<UserAiSettings?> GetByUserIdAsync(Guid userId)
+    public async Task<UserAiSettings?> GetByUserIdAsync(Guid userId, string purpose = "general")
     {
         return await _context.UserAiSettings
-            .FirstOrDefaultAsync(s => s.UserId == userId);
+            .FirstOrDefaultAsync(s => s.UserId == userId && s.Purpose == purpose);
     }
 
     public async Task<UserAiSettings> AddAsync(UserAiSettings settings)

@@ -31,6 +31,10 @@ import {
   AiConnectionTestResult,
   AiProviderPreset,
 } from '@/types/ai-settings';
+import type {
+  SendChatMessageResponse,
+  ChatHistoryResponse,
+} from '@/types/chat';
 
 class ApiClient {
   private baseURL: string;
@@ -1630,9 +1634,10 @@ class ApiClient {
   }
 
   // AI Settings methods
-  async getAiSettings(): Promise<AiSettingsResponse | null> {
+  async getAiSettings(purpose?: string): Promise<AiSettingsResponse | null> {
+    const params = purpose ? `?purpose=${purpose}` : '';
     try {
-      return await this.request<AiSettingsResponse>('/api/ai-settings');
+      return await this.request<AiSettingsResponse>(`/api/ai-settings${params}`);
     } catch (error) {
       const err = error as { status?: number };
       if (err.status === 404) {
@@ -1642,21 +1647,24 @@ class ApiClient {
     }
   }
 
-  async updateAiSettings(settings: AiSettingsRequest): Promise<AiSettingsResponse> {
-    return this.request<AiSettingsResponse>('/api/ai-settings', {
+  async updateAiSettings(settings: AiSettingsRequest, purpose?: string): Promise<AiSettingsResponse> {
+    const params = purpose ? `?purpose=${purpose}` : '';
+    return this.request<AiSettingsResponse>(`/api/ai-settings${params}`, {
       method: 'PUT',
       body: JSON.stringify(settings),
     });
   }
 
-  async deleteAiSettings(): Promise<void> {
-    return this.request('/api/ai-settings', {
+  async deleteAiSettings(purpose?: string): Promise<void> {
+    const params = purpose ? `?purpose=${purpose}` : '';
+    return this.request(`/api/ai-settings${params}`, {
       method: 'DELETE',
     });
   }
 
-  async testAiConnection(request: AiConnectionTestRequest): Promise<AiConnectionTestResult> {
-    return this.request<AiConnectionTestResult>('/api/ai-settings/test', {
+  async testAiConnection(request: AiConnectionTestRequest, purpose?: string): Promise<AiConnectionTestResult> {
+    const params = purpose ? `?purpose=${purpose}` : '';
+    return this.request<AiConnectionTestResult>(`/api/ai-settings/test${params}`, {
       method: 'POST',
       body: JSON.stringify(request),
     });
@@ -1664,6 +1672,26 @@ class ApiClient {
 
   async getAiProviders(): Promise<AiProviderPreset[]> {
     return this.request<AiProviderPreset[]>('/api/ai-settings/providers');
+  }
+
+  // Chat methods
+  async sendChatMessage(content: string): Promise<SendChatMessageResponse> {
+    return this.request<SendChatMessageResponse>('/api/ai-chat/messages', {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    });
+  }
+
+  async getChatHistory(limit?: number, before?: number): Promise<ChatHistoryResponse> {
+    const params = new URLSearchParams();
+    if (limit) params.set('limit', limit.toString());
+    if (before) params.set('before', before.toString());
+    const query = params.toString();
+    return this.request<ChatHistoryResponse>(`/api/ai-chat/messages${query ? `?${query}` : ''}`);
+  }
+
+  async clearChatHistory(): Promise<void> {
+    return this.request('/api/ai-chat/messages', { method: 'DELETE' });
   }
 
   // Feature flags (anonymous endpoint)

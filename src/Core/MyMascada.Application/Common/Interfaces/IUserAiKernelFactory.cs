@@ -5,6 +5,7 @@ namespace MyMascada.Application.Common.Interfaces;
 public interface IUserAiKernelFactory
 {
     Task<Kernel?> CreateKernelForUserAsync(Guid userId);
+    Task<Kernel?> CreateChatKernelForUserAsync(Guid userId);
     Task<bool> IsAiAvailableForUserAsync(Guid userId);
     Task<AiConnectionTestResult> TestConnectionAsync(string providerType, string apiKey, string modelId, string? apiEndpoint = null);
 }
