@@ -3,6 +3,7 @@ using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using MyMascada.Application.Common.Interfaces;
+using MyMascada.Application.Features.RuleSuggestions.Services;
 using MyMascada.Domain.Common;
 using MyMascada.Domain.Entities;
 
@@ -18,6 +19,9 @@ public class AiChatService : IAiChatService
     private readonly ICategoryRepository _categoryRepository;
     private readonly IBudgetRepository _budgetRepository;
     private readonly IRecurringPatternRepository _recurringPatternRepository;
+    private readonly ITransferRepository _transferRepository;
+    private readonly IRuleSuggestionService _ruleSuggestionService;
+    private readonly ICategorizationRuleRepository _categorizationRuleRepository;
     private readonly ILogger<AiChatService> _logger;
 
     public AiChatService(
@@ -29,6 +33,9 @@ public class AiChatService : IAiChatService
         ICategoryRepository categoryRepository,
         IBudgetRepository budgetRepository,
         IRecurringPatternRepository recurringPatternRepository,
+        ITransferRepository transferRepository,
+        IRuleSuggestionService ruleSuggestionService,
+        ICategorizationRuleRepository categorizationRuleRepository,
         ILogger<AiChatService> logger)
     {
         _chatMessageRepository = chatMessageRepository;
@@ -39,6 +46,9 @@ public class AiChatService : IAiChatService
         _categoryRepository = categoryRepository;
         _budgetRepository = budgetRepository;
         _recurringPatternRepository = recurringPatternRepository;
+        _transferRepository = transferRepository;
+        _ruleSuggestionService = ruleSuggestionService;
+        _categorizationRuleRepository = categorizationRuleRepository;
         _logger = logger;
     }
 
@@ -75,7 +85,8 @@ public class AiChatService : IAiChatService
             // 5. Create FinancialDataPlugin with userId + repositories, register on kernel
             var plugin = new FinancialDataPlugin(
                 userId, _transactionRepository, _accountRepository,
-                _categoryRepository, _budgetRepository, _recurringPatternRepository);
+                _categoryRepository, _budgetRepository, _recurringPatternRepository,
+                _transferRepository, _ruleSuggestionService, _categorizationRuleRepository);
             kernel.Plugins.AddFromObject(plugin, "FinancialData");
 
             // 6. Build ChatHistory
@@ -168,7 +179,28 @@ public class AiChatService : IAiChatService
             - Suggest actionable steps when relevant.
             - Respond in the same language the user writes in.
             - Always include currency symbols when mentioning amounts.
-            - You can only analyze and advise — you cannot modify data or perform actions in the app.
+            - You can analyze, advise, help categorize transactions, and manage categorization rules when the user asks.
+
+            CATEGORIZATION RULES:
+            - When the user asks you to categorize transactions, ALWAYS follow this workflow:
+              1. First, call GetUncategorizedTransactions to see what needs categorizing.
+              2. Call GetCategories to know which categories are available.
+              3. Propose your suggestions in a readable format showing each transaction and your suggested category.
+              4. Wait for the user to confirm, approve, or adjust the suggestions.
+              5. ONLY after the user explicitly agrees (e.g. "looks good", "go ahead", "yes"), call CategorizeTransactions.
+            - NEVER call CategorizeTransactions without first proposing and receiving user approval.
+            - If the user wants changes, adjust and re-propose before applying.
+            - After applying, confirm what was done and mention any errors.
+
+            RULE MANAGEMENT RULES:
+            - When the user asks about categorization rules or wants to automate categorization:
+              1. Call GetCategorizationRules to show existing rules.
+              2. Call GenerateRuleSuggestions to find new patterns.
+              3. Present suggestions clearly: pattern, target category, confidence, and sample matches.
+              4. Wait for user confirmation before accepting.
+              5. ONLY after explicit approval, call AcceptRuleSuggestions with the confirmed suggestion IDs.
+            - NEVER accept rule suggestions without user approval.
+            - If the user wants modifications, explain they can adjust rules in the Rules settings page.
 
             FORMATTING RULES (you are in a mobile-friendly chat bubble, NOT a document):
             - Keep responses short and conversational. Avoid walls of text.
