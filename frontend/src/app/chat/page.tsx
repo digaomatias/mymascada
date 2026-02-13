@@ -20,8 +20,42 @@ import {
   CogIcon,
 } from '@heroicons/react/24/outline';
 import type { ChatMessageDto } from '@/types/chat';
+import type { Components } from 'react-markdown';
 
 const MAX_CHARS = 5000;
+
+// Custom components for chat-friendly markdown rendering
+const chatComponents: Partial<Components> = {
+  // Headings render as compact section labels with a subtle separator
+  h1: ({ children }) => (
+    <div className="text-xs font-semibold text-primary-700 mt-3 first:mt-0 mb-1 pb-0.5 border-b border-gray-100">
+      {children}
+    </div>
+  ),
+  h2: ({ children }) => (
+    <div className="text-xs font-semibold text-primary-700 mt-3 first:mt-0 mb-1 pb-0.5 border-b border-gray-100">
+      {children}
+    </div>
+  ),
+  h3: ({ children }) => (
+    <div className="text-xs font-semibold text-primary-700 mt-3 first:mt-0 mb-1 pb-0.5 border-b border-gray-100">
+      {children}
+    </div>
+  ),
+  // Colorize financial amounts: green for positive, red for negative
+  strong: ({ children }) => {
+    const text = String(children ?? '');
+    if (/^[~+-]?\$/.test(text)) {
+      const isNegative = text.startsWith('-');
+      return (
+        <strong className={`font-semibold ${isNegative ? 'text-red-600' : 'text-emerald-600'}`}>
+          {children}
+        </strong>
+      );
+    }
+    return <strong className="font-semibold text-gray-900">{children}</strong>;
+  },
+};
 
 export default function ChatPage() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -348,8 +382,8 @@ export default function ChatPage() {
                     }`}
                   >
                     {message.role === 'assistant' ? (
-                      <div className="prose prose-sm max-w-none break-words overflow-hidden prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-headings:my-1.5 prose-headings:font-semibold prose-h1:text-sm prose-h2:text-sm prose-h3:text-xs prose-strong:font-semibold prose-pre:my-2 prose-pre:overflow-x-auto prose-pre:max-w-full prose-table:overflow-x-auto prose-table:block prose-table:text-xs prose-code:text-primary-700 prose-code:bg-primary-50 prose-code:px-1 prose-code:rounded prose-code:break-all">
-                        <ReactMarkdown>{message.content}</ReactMarkdown>
+                      <div className="prose prose-sm max-w-none break-words overflow-hidden prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-pre:my-2 prose-pre:overflow-x-auto prose-pre:max-w-full prose-table:overflow-x-auto prose-table:block prose-table:text-xs prose-code:text-primary-700 prose-code:bg-primary-50 prose-code:px-1 prose-code:rounded prose-code:break-all">
+                        <ReactMarkdown components={chatComponents}>{message.content}</ReactMarkdown>
                       </div>
                     ) : (
                       <p className="whitespace-pre-wrap break-words">{message.content}</p>
