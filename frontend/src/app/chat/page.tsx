@@ -348,7 +348,7 @@ export default function ChatPage() {
                     }`}
                   >
                     {message.role === 'assistant' ? (
-                      <div className="prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-headings:my-2 prose-pre:my-2 prose-code:text-primary-700 prose-code:bg-primary-50 prose-code:px-1 prose-code:rounded">
+                      <div className="prose prose-sm max-w-none break-words overflow-hidden prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-headings:my-2 prose-headings:text-base prose-pre:my-2 prose-pre:overflow-x-auto prose-pre:max-w-full prose-table:overflow-x-auto prose-table:block prose-table:text-xs prose-code:text-primary-700 prose-code:bg-primary-50 prose-code:px-1 prose-code:rounded prose-code:break-all">
                         <ReactMarkdown>{message.content}</ReactMarkdown>
                       </div>
                     ) : (

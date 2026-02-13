@@ -35,6 +35,7 @@ public class FinancialContextBuilder : IFinancialContextBuilder
         // Run all data queries in parallel — each wrapped in try/catch so one failure
         // does not crash the whole context build.
         var accountsTask = SafeExecuteAsync(() => _accountRepository.GetByUserIdAsync(userId));
+        var balancesTask = SafeExecuteAsync(() => _transactionRepository.GetAccountBalancesAsync(userId));
         var categoriesTask = SafeExecuteAsync(() => _categoryRepository.GetByUserIdAsync(userId));
         var budgetTask = SafeExecuteAsync(() => _budgetRepository.GetCurrentBudgetAsync(userId));
         var recurringTask = SafeExecuteAsync(() => _recurringPatternRepository.GetActiveAsync(userId));
@@ -46,10 +47,11 @@ public class FinancialContextBuilder : IFinancialContextBuilder
         var monthlyTransactionsTask = SafeExecuteAsync(() =>
             _transactionRepository.GetByDateRangeAsync(userId, twelveMonthsAgo, now));
 
-        await Task.WhenAll(accountsTask, categoriesTask, budgetTask,
+        await Task.WhenAll(accountsTask, balancesTask, categoriesTask, budgetTask,
             recurringTask, recentTransactionsTask, monthlyTransactionsTask);
 
         var accounts = await accountsTask;
+        var balances = await balancesTask;
         var categories = await categoriesTask;
         var budget = await budgetTask;
         var recurringPatterns = await recurringTask;
@@ -58,7 +60,7 @@ public class FinancialContextBuilder : IFinancialContextBuilder
 
         var sb = new StringBuilder();
 
-        BuildAccountsSection(sb, accounts);
+        BuildAccountsSection(sb, accounts, balances);
         BuildMonthlySummarySection(sb, monthlyTransactions);
         BuildTopSpendingCategoriesSection(sb, monthlyTransactions, categories);
         BuildBudgetSection(sb, budget);
@@ -70,7 +72,8 @@ public class FinancialContextBuilder : IFinancialContextBuilder
 
     private static void BuildAccountsSection(
         StringBuilder sb,
-        IEnumerable<Domain.Entities.Account>? accounts)
+        IEnumerable<Domain.Entities.Account>? accounts,
+        Dictionary<int, decimal>? balances)
     {
         sb.AppendLine("=== ACCOUNTS ===");
 
@@ -86,8 +89,10 @@ public class FinancialContextBuilder : IFinancialContextBuilder
 
         foreach (var account in accounts.Where(a => a.IsActive))
         {
-            sb.AppendLine($"  - {account.Name} ({account.Type}): {account.CurrentBalance:N2} {account.Currency}");
-            total += account.CurrentBalance;
+            // Use calculated balance (initial + transactions) if available, otherwise fall back to CurrentBalance
+            var balance = balances?.GetValueOrDefault(account.Id, account.CurrentBalance) ?? account.CurrentBalance;
+            sb.AppendLine($"  - {account.Name} ({account.Type}): {balance:N2} {account.Currency}");
+            total += balance;
             currency ??= account.Currency;
         }
 

@@ -340,10 +340,14 @@ public class FinancialDataPlugin
                 return $"No account found matching '{accountName}'. Available accounts: {string.Join(", ", accounts.Select(a => a.Name))}";
             }
 
+            // Calculate actual balance (initial balance + sum of transactions)
+            var balances = await _transactionRepository.GetAccountBalancesAsync(_userId);
+            var actualBalance = balances.GetValueOrDefault(matchedAccount.Id, matchedAccount.CurrentBalance);
+
             var sb = new StringBuilder();
             sb.AppendLine($"Account: {matchedAccount.Name}");
             sb.AppendLine($"  Type: {matchedAccount.Type}");
-            sb.AppendLine($"  Balance: {matchedAccount.CurrentBalance:N2} {matchedAccount.Currency}");
+            sb.AppendLine($"  Balance: {actualBalance:N2} {matchedAccount.Currency}");
             sb.AppendLine($"  Institution: {matchedAccount.Institution ?? "Not specified"}");
             sb.AppendLine($"  Active: {matchedAccount.IsActive}");
 
