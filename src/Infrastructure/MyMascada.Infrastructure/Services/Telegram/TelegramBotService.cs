@@ -121,17 +121,11 @@ public class TelegramBotService : ITelegramBotService
             foreach (var chunk in chunks)
             {
                 var success = await SendSingleMessageAsync(botToken, chatId, chunk, parseMode);
-                if (!success && parseMode == "MarkdownV2")
+                if (!success && parseMode != null)
                 {
-                    // Fall back to plain text if MarkdownV2 fails
-                    var plainText = TelegramMarkdownConverter.EscapeMarkdownV2(chunk);
-                    success = await SendSingleMessageAsync(botToken, chatId, plainText, null);
-                }
-
-                if (!success)
-                {
-                    // Last resort: send without any formatting
-                    await SendSingleMessageAsync(botToken, chatId, chunk, null);
+                    // Fall back to plain text if formatted send fails
+                    var plainText = StripHtmlTags(chunk);
+                    await SendSingleMessageAsync(botToken, chatId, plainText, null);
                 }
             }
 
@@ -221,5 +215,13 @@ public class TelegramBotService : ITelegramBotService
         }
 
         return chunks;
+    }
+
+    private static string StripHtmlTags(string html)
+    {
+        return System.Text.RegularExpressions.Regex.Replace(html, "<[^>]+>", "")
+            .Replace("&amp;", "&")
+            .Replace("&lt;", "<")
+            .Replace("&gt;", ">");
     }
 }

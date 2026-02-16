@@ -3,12 +3,14 @@ using System.Text.RegularExpressions;
 
 namespace MyMascada.Infrastructure.Services.Telegram;
 
-public static class TelegramMarkdownConverter
+/// <summary>
+/// Converts GitHub-flavored markdown (from AI responses) to Telegram-compatible HTML.
+/// Telegram HTML supports: b, i, code, pre, a, s, u, blockquote.
+/// Only &lt; &gt; &amp; need entity-encoding — far more reliable than MarkdownV2.
+/// </summary>
+public static partial class TelegramMarkdownConverter
 {
-    // Characters that must be escaped in MarkdownV2 (outside of code blocks)
-    private static readonly char[] SpecialChars = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!'];
-
-    public static string ConvertToTelegramMarkdown(string markdown)
+    public static string ConvertToTelegramHtml(string markdown)
     {
         try
         {
@@ -16,8 +18,8 @@ public static class TelegramMarkdownConverter
         }
         catch
         {
-            // Fall back to escaped plain text on any parse error
-            return EscapeMarkdownV2(markdown);
+            // Fall back to HTML-escaped plain text on any parse error
+            return EscapeHtml(markdown);
         }
     }
 
@@ -25,32 +27,86 @@ public static class TelegramMarkdownConverter
     {
         var lines = markdown.Split('\n');
         var result = new StringBuilder();
+        var inCodeBlock = false;
+        var inBlockquote = false;
+        var blockquoteLines = new List<string>();
 
         for (var i = 0; i < lines.Length; i++)
         {
             var line = lines[i];
+            var trimmed = line.TrimStart();
 
-            // Preserve code blocks as-is (they don't need escaping inside)
-            if (line.TrimStart().StartsWith("```"))
+            // Handle fenced code blocks
+            if (trimmed.StartsWith("```"))
             {
-                result.AppendLine(line);
+                if (inCodeBlock)
+                {
+                    // Closing code block
+                    result.AppendLine("</pre>");
+                    inCodeBlock = false;
+                }
+                else
+                {
+                    // Flush any pending blockquote
+                    FlushBlockquote(result, blockquoteLines, ref inBlockquote);
+
+                    // Opening code block — extract optional language tag (ignored by Telegram)
+                    result.AppendLine("<pre>");
+                    inCodeBlock = true;
+                }
                 continue;
             }
 
-            // Convert headers to bold
-            var headerMatch = Regex.Match(line, @"^(#{1,6})\s+(.+)$");
+            if (inCodeBlock)
+            {
+                // Inside code block: only HTML-escape, no other processing
+                result.AppendLine(EscapeHtml(line));
+                continue;
+            }
+
+            // Handle blockquotes (> prefix)
+            if (trimmed.StartsWith('>'))
+            {
+                var quoteContent = trimmed.Length > 1 ? trimmed[1..].TrimStart() : "";
+                if (!inBlockquote)
+                {
+                    inBlockquote = true;
+                }
+                blockquoteLines.Add(quoteContent);
+                continue;
+            }
+
+            // If we were in a blockquote and hit a non-quote line, flush it
+            FlushBlockquote(result, blockquoteLines, ref inBlockquote);
+
+            // Headers → bold text
+            var headerMatch = HeaderRegex().Match(line);
             if (headerMatch.Success)
             {
                 var headerText = headerMatch.Groups[2].Value;
-                result.AppendLine($"*{EscapeMarkdownV2(headerText)}*");
+                result.AppendLine($"<b>{ConvertInlineFormatting(headerText)}</b>");
                 result.AppendLine();
                 continue;
             }
 
-            // Process inline formatting
-            line = ConvertInlineFormatting(line);
+            // Horizontal rules
+            if (HorizontalRuleRegex().IsMatch(trimmed))
+            {
+                result.AppendLine("———");
+                continue;
+            }
 
-            result.AppendLine(line);
+            // Regular line — process inline formatting
+            result.AppendLine(ConvertInlineFormatting(line));
+        }
+
+        // Flush any trailing blockquote
+        FlushBlockquote(result, blockquoteLines, ref inBlockquote);
+
+        // Close unclosed code block
+        if (inCodeBlock)
+        {
+            result.AppendLine("</pre>");
         }
 
         return result.ToString().TrimEnd();
@@ -58,60 +114,75 @@ public static class TelegramMarkdownConverter
 
     private static string ConvertInlineFormatting(string line)
     {
-        // Protect inline code first (backtick-wrapped content stays as-is)
+        // Split by inline code spans first — code content is only HTML-escaped
         var segments = SplitByInlineCode(line);
-        var result = new StringBuilder();
+        var sb = new StringBuilder();
 
         foreach (var (text, isCode) in segments)
         {
             if (isCode)
             {
-                result.Append('`');
-                result.Append(text);
-                result.Append('`');
+                sb.Append($"<code>{EscapeHtml(text)}</code>");
             }
             else
             {
-                var processed = text;
+                var processed = EscapeHtml(text);
 
-                // Extract bold/italic patterns before escaping
-                // Bold: **text** → *text*
-                processed = Regex.Replace(processed, @"\*\*(.+?)\*\*", m => $"*{EscapeMarkdownV2(m.Groups[1].Value)}*");
-                // Italic: *text* or _text_ → _text_
-                processed = Regex.Replace(processed, @"(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)", m => $"_{EscapeMarkdownV2(m.Groups[1].Value)}_");
-                // Links: [text](url) → [text](url) (already MarkdownV2 format, just escape the text)
-                processed = Regex.Replace(processed, @"\[(.+?)\]\((.+?)\)", m => $"[{EscapeMarkdownV2(m.Groups[1].Value)}]({m.Groups[2].Value})");
+                // Bold: **text** → <b>text</b>  (must come before italic)
+                processed = BoldRegex().Replace(processed, "<b>$1</b>");
 
-                // Escape remaining special chars in non-formatted text
-                // We need to be careful not to double-escape already processed parts
-                if (!processed.Contains('*') && !processed.Contains('_') && !processed.Contains('['))
+                // Italic: *text* → <i>text</i>
+                processed = ItalicRegex().Replace(processed, "<i>$1</i>");
+
+                // Strikethrough: ~~text~~ → <s>text</s>
+                processed = StrikethroughRegex().Replace(processed, "<s>$1</s>");
+
+                // Links: [text](url) — these were HTML-escaped, so fix the entities back
+                processed = LinkRegex().Replace(processed, m =>
                 {
-                    processed = EscapeMarkdownV2(processed);
-                }
-                else
-                {
-                    // Escape only chars that aren't part of formatting
-                    processed = EscapeNonFormattingChars(processed);
-                }
+                    var linkText = m.Groups[1].Value;
+                    var url = m.Groups[2].Value
+                        .Replace("&amp;", "&")
+                        .Replace("&lt;", "<")
+                        .Replace("&gt;", ">");
+                    return $"<a href=\"{url}\">{linkText}</a>";
+                });
 
-                result.Append(processed);
+                sb.Append(processed);
             }
         }
 
-        return result.ToString();
+        return sb.ToString();
     }
 
     private static List<(string text, bool isCode)> SplitByInlineCode(string line)
     {
         var segments = new List<(string text, bool isCode)>();
-        var parts = line.Split('`');
+        var inCode = false;
+        var current = new StringBuilder();
 
-        for (var i = 0; i < parts.Length; i++)
+        for (var i = 0; i < line.Length; i++)
         {
-            if (parts[i].Length > 0 || i % 2 == 1)
+            if (line[i] == '`')
             {
-                segments.Add((parts[i], i % 2 == 1));
+                // Save current segment
+                if (current.Length > 0)
+                {
+                    segments.Add((current.ToString(), inCode));
+                    current.Clear();
+                }
+                inCode = !inCode;
             }
+            else
+            {
+                current.Append(line[i]);
+            }
+        }
+
+        // Add remaining text
+        if (current.Length > 0)
+        {
+            segments.Add((current.ToString(), inCode));
         }
 
         if (segments.Count == 0)
@@ -122,33 +193,45 @@ public static class TelegramMarkdownConverter
         return segments;
     }
 
-    public static string EscapeMarkdownV2(string text)
+    private static void FlushBlockquote(StringBuilder result, List<string> lines, ref bool inBlockquote)
     {
-        var sb = new StringBuilder(text.Length * 2);
-        foreach (var c in text)
-        {
-            if (Array.IndexOf(SpecialChars, c) >= 0)
-            {
-                sb.Append('\\');
-            }
-            sb.Append(c);
-        }
-        return sb.ToString();
+        if (!inBlockquote) return;
+
+        var content = string.Join("\n", lines.Select(l => ConvertInlineFormatting(l)));
+        result.AppendLine($"<blockquote>{content}</blockquote>");
+        lines.Clear();
+        inBlockquote = false;
     }
 
-    private static string EscapeNonFormattingChars(string text)
+    public static string EscapeHtml(string text)
     {
-        // Escape special chars but preserve *, _, [, ], (, ) used for formatting
-        var formattingChars = new HashSet<char> { '*', '_', '[', ']', '(', ')' };
-        var sb = new StringBuilder(text.Length * 2);
-        foreach (var c in text)
-        {
-            if (Array.IndexOf(SpecialChars, c) >= 0 && !formattingChars.Contains(c))
-            {
-                sb.Append('\\');
-            }
-            sb.Append(c);
-        }
-        return sb.ToString();
+        return text
+            .Replace("&", "&amp;")
+            .Replace("<", "&lt;")
+            .Replace(">", "&gt;");
     }
+
+    // Regexes — source-generated for performance
+
+    [GeneratedRegex(@"^(#{1,6})\s+(.+)$")]
+    private static partial Regex HeaderRegex();
+
+    [GeneratedRegex(@"^[-*_]{3,}\s*$")]
+    private static partial Regex HorizontalRuleRegex();
+
+    // Match **bold** but not escaped \*\*
+    [GeneratedRegex(@"\*\*(.+?)\*\*")]
+    private static partial Regex BoldRegex();
+
+    // Match *italic* but not **bold** (negative lookbehind/ahead for *)
+    [GeneratedRegex(@"(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)")]
+    private static partial Regex ItalicRegex();
+
+    // Match ~~strikethrough~~
+    [GeneratedRegex(@"~~(.+?)~~")]
+    private static partial Regex StrikethroughRegex();
+
+    // Match [text](url) — works on HTML-escaped text (parentheses aren't escaped)
+    [GeneratedRegex(@"\[(.+?)\]\((.+?)\)")]
+    private static partial Regex LinkRegex();
 }

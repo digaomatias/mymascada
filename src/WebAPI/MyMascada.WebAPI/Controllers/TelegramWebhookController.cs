@@ -110,9 +110,9 @@ public class TelegramWebhookController : ControllerBase
 
             if (response.Success && !string.IsNullOrEmpty(response.Content))
             {
-                // Convert markdown to Telegram MarkdownV2
-                var telegramText = TelegramMarkdownConverter.ConvertToTelegramMarkdown(response.Content);
-                await _telegramBotService.SendMessageAsync(botToken, chatId, telegramText, "MarkdownV2");
+                // Convert markdown to Telegram HTML
+                var telegramText = TelegramMarkdownConverter.ConvertToTelegramHtml(response.Content);
+                await _telegramBotService.SendMessageAsync(botToken, chatId, telegramText, "HTML");
             }
             else
             {
