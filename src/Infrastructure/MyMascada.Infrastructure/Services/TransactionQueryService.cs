@@ -67,7 +67,7 @@ public class TransactionQueryService : ITransactionQueryService
             query = query.Where(t => t.IsExcluded == parameters.IsExcluded.Value);
 
         if (parameters.NeedsCategorization.HasValue && parameters.NeedsCategorization.Value)
-            query = query.Where(t => !t.IsReviewed && !t.TransferId.HasValue);
+            query = query.Where(t => !t.CategoryId.HasValue && !t.TransferId.HasValue);
 
         // Transfer filtering
         if (parameters.TransferId.HasValue)

@@ -106,7 +106,7 @@ public class CreateTransactionCommandHandler : IRequestHandler<CreateTransaction
             Tags = request.Tags,
             AccountId = request.AccountId,
             CategoryId = request.CategoryId,
-            IsReviewed = false, // Let all transactions flow through review process for consistent workflow
+            IsReviewed = request.CategoryId.HasValue, // User explicitly chose a category — no need to review
             IsExcluded = false,
             CreatedAt = DateTimeProvider.UtcNow,
             UpdatedAt = DateTimeProvider.UtcNow

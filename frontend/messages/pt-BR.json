@@ -635,6 +635,11 @@
       "unreviewedNeedsAttention": "Não revisadas (precisam de atenção)",
       "reviewed": "Revisadas"
     },
+    "categorizeFilter": {
+      "label": "Mostrar",
+      "uncategorized": "Sem categoria",
+      "allTransactions": "Todas as transações"
+    },
     "reviewAllCategorized": "Revisar todas categorizadas",
     "categorizeAllDoneTitle": "Tudo pronto!",
     "categorizeAllDoneWithCount": "Ótimo trabalho! Você categorizou {count} transações.",

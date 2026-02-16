@@ -73,7 +73,7 @@ export default function CategorizePage() {
   const [showFilters, setShowFilters] = useState(false);
   const [accounts, setAccounts] = useState<Array<{ id: number; name: string }>>([]);
   const [selectedAccountId, setSelectedAccountId] = useState<string>('');
-  const [showReviewed, setShowReviewed] = useState(false);
+  const [showAll, setShowAll] = useState(false);
   const [allCategories, setAllCategories] = useState<Array<{ id: number; name: string; fullPath?: string; type: number; parentId: number | null }>>([]);
   const [categorizedCount, setCategorizedCount] = useState(0);
   const [batchCategorizationKey, setBatchCategorizationKey] = useState(0);
@@ -84,19 +84,18 @@ export default function CategorizePage() {
     pageSize: pageSize,
     searchTerm: searchTerm || undefined,
     accountId: selectedAccountId ? parseInt(selectedAccountId) : undefined,
-    needsCategorization: !showReviewed,
-    isReviewed: showReviewed ? true : undefined,
+    needsCategorization: !showAll ? true : undefined,
     includeTransfers: false,
     onlyWithCandidates: false // Get all transactions, even those without candidates
-  }), [currentPage, pageSize, searchTerm, selectedAccountId, showReviewed]);
+  }), [currentPage, pageSize, searchTerm, selectedAccountId, showAll]);
 
   // Memoize filter criteria for rule auto-categorization
   const ruleFilterCriteria = useMemo(() => ({
     accountIds: selectedAccountId ? [parseInt(selectedAccountId)] : undefined,
     searchText: searchTerm || undefined,
-    onlyUnreviewed: !showReviewed,
+    onlyUnreviewed: !showAll,
     excludeTransfers: true
-  }), [selectedAccountId, searchTerm, showReviewed]);
+  }), [selectedAccountId, searchTerm, showAll]);
 
   // Batch fetch AI suggestions for all visible transactions
   const transactionCandidates = useTransactionCandidates({
@@ -119,7 +118,6 @@ export default function CategorizePage() {
         searchTerm?: string;
         accountId?: number;
         needsCategorization?: boolean;
-        isReviewed?: boolean;
         includeTransfers?: boolean;
       } = {
         page,
@@ -128,14 +126,12 @@ export default function CategorizePage() {
         includeTransfers: false, // Exclude transfers from categorization
       };
 
-      // Handle reviewed/unreviewed filtering
-      if (showReviewed) {
-        // Show reviewed transactions (don't use needsCategorization filter)
-        params.isReviewed = true;
-      } else {
-        // Show unreviewed transactions (default behavior)
+      // Handle uncategorized/all filtering
+      if (!showAll) {
+        // Default: show only uncategorized transactions
         params.needsCategorization = true;
       }
+      // When showAll is true, send no filter — show all transactions
 
       // Add account filter
       if (accountId) {
@@ -163,13 +159,13 @@ export default function CategorizePage() {
     } finally {
       setLoading(false);
     }
-  }, [selectedAccountId, pageSize, showReviewed, updatePagination]);
+  }, [selectedAccountId, pageSize, showAll, updatePagination]);
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchUncategorizedTransactions(currentPage, searchTerm, selectedAccountId);
     }
-  }, [isAuthenticated, currentPage, pageSize, searchTerm, selectedAccountId, showReviewed, fetchUncategorizedTransactions]);
+  }, [isAuthenticated, currentPage, pageSize, searchTerm, selectedAccountId, showAll, fetchUncategorizedTransactions]);
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
@@ -315,9 +311,9 @@ export default function CategorizePage() {
             <div className="flex flex-col items-center gap-2">
               <div className="flex items-center justify-center gap-4 text-sm text-gray-600">
                 <span>
-                  {t('categorizeCountLabel', { 
-                    count: paginationInfo.totalCount, 
-                    status: showReviewed ? t('reviewed') : t('unreviewed') 
+                  {t('categorizeCountLabel', {
+                    count: paginationInfo.totalCount,
+                    status: showAll ? t('categorizeFilter.allTransactions') : t('categorizeFilter.uncategorized')
                   })}
                 </span>
                 {categorizedCount > 0 && (
@@ -382,15 +378,15 @@ export default function CategorizePage() {
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {tCommon('status')}
+                      {t('categorizeFilter.label')}
                     </label>
                     <Select
                       className="w-full text-sm"
-                      value={showReviewed ? 'reviewed' : 'unreviewed'}
-                      onChange={(e) => setShowReviewed(e.target.value === 'reviewed')}
+                      value={showAll ? 'all' : 'uncategorized'}
+                      onChange={(e) => setShowAll(e.target.value === 'all')}
                     >
-                      <option value="unreviewed">{t('reviewStatus.unreviewedNeedsAttention')}</option>
-                      <option value="reviewed">{t('reviewStatus.reviewed')}</option>
+                      <option value="uncategorized">{t('categorizeFilter.uncategorized')}</option>
+                      <option value="all">{t('categorizeFilter.allTransactions')}</option>
                     </Select>
                   </div>
                 </div>
@@ -398,7 +394,7 @@ export default function CategorizePage() {
                 <div className="flex justify-end mt-4 gap-2">
                   <Button variant="secondary" size="sm" onClick={() => {
                     setSelectedAccountId('');
-                    setShowReviewed(false);
+                    setShowAll(false);
                     handlePageChange(1);
                     fetchUncategorizedTransactions(1, searchTerm, '');
                   }}>
@@ -411,53 +407,15 @@ export default function CategorizePage() {
           )}
         </div>
 
-        {/* Bulk Review Button - Show when there are categorized but unreviewed transactions */}
-        {transactions.length > 0 && !showReviewed && (
-          <>
-            {/* Check if any transactions already have categories */}
-            {transactions.some(t => t.categoryId) && (
-              <div className="mb-4 flex justify-end">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={async () => {
-                    try {
-                      const result = await apiClient.bulkReviewCategorized(
-                        selectedAccountId ? parseInt(selectedAccountId) : undefined,
-                        searchTerm
-                      );
-                      
-                      if (result.success && result.reviewedCount > 0) {
-                        toast.success(t('transactionsReviewed', { count: result.reviewedCount }));
-                        // Refresh the transaction list
-                        fetchUncategorizedTransactions(currentPage, searchTerm, selectedAccountId);
-                      } else if (result.reviewedCount === 0) {
-                        toast.info(tToasts('noCategorizedToReview'));
-                      } else {
-                        toast.error(tToasts('reviewTransactionsFailed'));
-                      }
-                    } catch (error) {
-                      console.error('Failed to bulk review categorized transactions:', error);
-                      toast.error(tToasts('reviewTransactionsFailed'));
-                    }
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  <CheckIcon className="w-4 h-4" />
-                  <span>{t('reviewAllCategorized')}</span>
-                </Button>
-              </div>
-            )}
-            
-            {/* Smart Categorization Ribbon */}
-            <CategorizationRibbon
-              transactions={transactions}
-              onTransactionCategorized={handleCategorizeTransaction}
-              onRefresh={() => fetchUncategorizedTransactions(currentPage, searchTerm, selectedAccountId)}
-              onBatchCategorizationComplete={handleBatchCategorizationComplete}
-              filterCriteria={ruleFilterCriteria}
-            />
-          </>
+        {/* Smart Categorization Ribbon */}
+        {transactions.length > 0 && !showAll && (
+          <CategorizationRibbon
+            transactions={transactions}
+            onTransactionCategorized={handleCategorizeTransaction}
+            onRefresh={() => fetchUncategorizedTransactions(currentPage, searchTerm, selectedAccountId)}
+            onBatchCategorizationComplete={handleBatchCategorizationComplete}
+            filterCriteria={ruleFilterCriteria}
+          />
         )}
 
         {/* Transaction List */}
@@ -510,8 +468,8 @@ export default function CategorizePage() {
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('categorizeNoMatchesTitle')}</h3>
                   <p className="text-gray-600 mb-6">
-                    {t('categorizeNoMatchesDescription', { 
-                      status: showReviewed ? t('reviewed') : t('unreviewed') 
+                    {t('categorizeNoMatchesDescription', {
+                      status: showAll ? t('categorizeFilter.allTransactions') : t('categorizeFilter.uncategorized')
                     })}
                   </p>
                   <div className="flex justify-center gap-2">
@@ -520,7 +478,7 @@ export default function CategorizePage() {
                       onClick={() => {
                         setSelectedAccountId('');
                         setSearchTerm('');
-                        setShowReviewed(false);
+                        setShowAll(false);
                         handlePageChange(1);
                         fetchUncategorizedTransactions(1, '', '');
                       }}

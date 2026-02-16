@@ -636,6 +636,11 @@
       "unreviewedNeedsAttention": "Unreviewed (Needs Attention)",
       "reviewed": "Reviewed"
     },
+    "categorizeFilter": {
+      "label": "Show",
+      "uncategorized": "Uncategorized",
+      "allTransactions": "All Transactions"
+    },
     "reviewAllCategorized": "Review All Categorized",
     "categorizeAllDoneTitle": "All done!",
     "categorizeAllDoneWithCount": "Great work! You've categorized {count} transactions.",
