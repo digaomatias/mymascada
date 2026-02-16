@@ -35,6 +35,11 @@ import type {
   SendChatMessageResponse,
   ChatHistoryResponse,
 } from '@/types/chat';
+import type {
+  TelegramSettingsResponse,
+  SaveTelegramSettingsRequest,
+  TelegramTestResult,
+} from '@/types/telegram-settings';
 
 class ApiClient {
   private baseURL: string;
@@ -1672,6 +1677,29 @@ class ApiClient {
 
   async getAiProviders(): Promise<AiProviderPreset[]> {
     return this.request<AiProviderPreset[]>('/api/ai-settings/providers');
+  }
+
+  // Telegram Settings methods
+  async getTelegramSettings(): Promise<TelegramSettingsResponse> {
+    return this.request<TelegramSettingsResponse>('/api/telegram/settings');
+  }
+
+  async saveTelegramSettings(request: SaveTelegramSettingsRequest): Promise<TelegramSettingsResponse> {
+    return this.request<TelegramSettingsResponse>('/api/telegram/settings', {
+      method: 'PUT',
+      body: JSON.stringify(request),
+    });
+  }
+
+  async deleteTelegramSettings(): Promise<void> {
+    return this.request('/api/telegram/settings', { method: 'DELETE' });
+  }
+
+  async testTelegramConnection(request: SaveTelegramSettingsRequest): Promise<TelegramTestResult> {
+    return this.request<TelegramTestResult>('/api/telegram/settings/test', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
   }
 
   // Chat methods

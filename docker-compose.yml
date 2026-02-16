@@ -120,6 +120,9 @@ services:
       Akahu__AppSecret: ${AKAHU_APP_SECRET:-}
       Akahu__RedirectUri: ${FRONTEND_URL:-http://localhost:3000}/settings/bank-connections/callback
 
+      # Telegram Bot (optional - per-user bot token setup)
+      Telegram__WebhookBaseUrl: ${TELEGRAM_WEBHOOK_BASE_URL:-}
+
       # Email (optional)
       Email__Enabled: ${EMAIL_ENABLED:-false}
       Email__Provider: ${EMAIL_PROVIDER:-smtp}

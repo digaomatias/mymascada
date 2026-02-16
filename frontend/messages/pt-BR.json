@@ -1653,6 +1653,10 @@
       "aiSettings": {
         "title": "Configuração de IA",
         "description": "Configure seu provedor de IA e chave de API para categorização e limpeza de descrições"
+      },
+      "telegram": {
+        "title": "Bot do Telegram",
+        "description": "Converse com o Alce pelo Telegram usando seu próprio bot"
       }
     },
     "badges": {
@@ -1813,6 +1817,44 @@
         "providerRequired": "Selecione um provedor",
         "apiKeyRequired": "A chave de API é obrigatória",
         "modelRequired": "Selecione ou digite um modelo"
+      }
+    },
+    "telegram": {
+      "title": "Bot do Telegram",
+      "subtitle": "Converse com o Alce pelo Telegram usando seu próprio bot",
+      "backToSettings": "Voltar para Configurações",
+      "setup": {
+        "title": "Como Configurar",
+        "step1": "Abra o Telegram e procure por @BotFather",
+        "step2": "Envie /newbot e siga as instruções para criar seu bot",
+        "step3": "Copie o token do bot que o BotFather fornecerá",
+        "step4": "Cole o token abaixo e clique em Conectar",
+        "openBotFather": "Abrir @BotFather no Telegram"
+      },
+      "token": {
+        "label": "Token do Bot",
+        "placeholder": "Cole o token do seu bot aqui",
+        "hint": "Seu token é criptografado e armazenado com segurança. Ele nunca é compartilhado."
+      },
+      "testToken": "Testar Token",
+      "testing": "Testando...",
+      "testSuccess": "Token válido! Bot: @{username}",
+      "testError": "Token inválido: {error}",
+      "connect": "Conectar",
+      "connecting": "Conectando...",
+      "connected": "Bot do Telegram conectado com sucesso!",
+      "connectedAs": "Conectado como @{username}",
+      "connectedDescription": "Seu bot do Telegram está ativo. Mensagens enviadas ao bot serão respondidas pelo Alce e também aparecerão no seu histórico de chat na web.",
+      "verified": "Verificado",
+      "lastVerified": "Última verificação: {date}",
+      "disconnect": "Desconectar Bot",
+      "disconnectConfirm": "Tem certeza? O bot deixará de responder e você precisará configurá-lo novamente para reconectar.",
+      "disconnected": "Bot do Telegram desconectado",
+      "errors": {
+        "loadFailed": "Falha ao carregar configurações do Telegram",
+        "tokenRequired": "O token do bot é obrigatório",
+        "connectFailed": "Falha ao conectar o bot do Telegram. Verifique o token e tente novamente.",
+        "disconnectFailed": "Falha ao desconectar o bot do Telegram"
       }
     },
     "privacy": {

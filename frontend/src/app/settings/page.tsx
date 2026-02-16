@@ -18,7 +18,8 @@ import {
   LanguageIcon,
   TagIcon,
   ArrowDownTrayIcon,
-  SparklesIcon
+  SparklesIcon,
+  ChatBubbleBottomCenterTextIcon
 } from '@heroicons/react/24/outline';
 import { useLocale } from '@/contexts/locale-context';
 import { useTranslations } from 'next-intl';
@@ -43,6 +44,11 @@ const settingsItems: SettingsItem[] = [
     href: '/settings/ai',
     icon: SparklesIcon,
     labelKey: 'aiSettings',
+  },
+  {
+    href: '/settings/telegram',
+    icon: ChatBubbleBottomCenterTextIcon,
+    labelKey: 'telegram',
   },
   {
     href: '/settings/privacy',

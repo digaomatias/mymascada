@@ -43,6 +43,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<AccountShare> AccountShares => Set<AccountShare>();
     public DbSet<UserAiSettings> UserAiSettings => Set<UserAiSettings>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+    public DbSet<UserTelegramSettings> UserTelegramSettings => Set<UserTelegramSettings>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -742,6 +743,24 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Role).IsRequired().HasMaxLength(20);
             entity.Property(e => e.Content).IsRequired().HasColumnType("text");
             entity.HasIndex(e => new { e.UserId, e.CreatedAt });
+            entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
+        // UserTelegramSettings configuration
+        modelBuilder.Entity<UserTelegramSettings>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.EncryptedBotToken).IsRequired();
+            entity.Property(e => e.WebhookSecret).IsRequired().HasMaxLength(64);
+            entity.Property(e => e.BotUsername).HasMaxLength(100);
+
+            // One bot per user
+            entity.HasIndex(e => e.UserId).IsUnique();
+
+            // O(1) webhook lookup
+            entity.HasIndex(e => e.WebhookSecret).IsUnique();
+
             entity.HasQueryFilter(e => !e.IsDeleted);
         });
     }

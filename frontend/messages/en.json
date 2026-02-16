@@ -1654,6 +1654,10 @@
       "aiSettings": {
         "title": "AI Configuration",
         "description": "Configure your AI provider and API key for categorization and description cleaning"
+      },
+      "telegram": {
+        "title": "Telegram Bot",
+        "description": "Chat with Alce from Telegram using your own bot"
       }
     },
     "badges": {
@@ -1814,6 +1818,44 @@
         "providerRequired": "Please select a provider",
         "apiKeyRequired": "API key is required",
         "modelRequired": "Please select or enter a model"
+      }
+    },
+    "telegram": {
+      "title": "Telegram Bot",
+      "subtitle": "Chat with Alce from Telegram using your own bot",
+      "backToSettings": "Back to Settings",
+      "setup": {
+        "title": "How to Set Up",
+        "step1": "Open Telegram and search for @BotFather",
+        "step2": "Send /newbot and follow the instructions to create your bot",
+        "step3": "Copy the bot token that BotFather gives you",
+        "step4": "Paste the token below and click Connect",
+        "openBotFather": "Open @BotFather in Telegram"
+      },
+      "token": {
+        "label": "Bot Token",
+        "placeholder": "Paste your bot token here",
+        "hint": "Your token is encrypted and stored securely. It is never shared."
+      },
+      "testToken": "Test Token",
+      "testing": "Testing...",
+      "testSuccess": "Token valid! Bot: @{username}",
+      "testError": "Token invalid: {error}",
+      "connect": "Connect",
+      "connecting": "Connecting...",
+      "connected": "Telegram bot connected successfully!",
+      "connectedAs": "Connected as @{username}",
+      "connectedDescription": "Your Telegram bot is active. Messages sent to the bot will be answered by Alce, and will appear in your web chat history too.",
+      "verified": "Verified",
+      "lastVerified": "Last verified: {date}",
+      "disconnect": "Disconnect Bot",
+      "disconnectConfirm": "Are you sure? The bot will stop responding and you'll need to set it up again to reconnect.",
+      "disconnected": "Telegram bot disconnected",
+      "errors": {
+        "loadFailed": "Failed to load Telegram settings",
+        "tokenRequired": "Bot token is required",
+        "connectFailed": "Failed to connect Telegram bot. Please check the token and try again.",
+        "disconnectFailed": "Failed to disconnect Telegram bot"
       }
     },
     "privacy": {
