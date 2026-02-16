@@ -191,6 +191,7 @@ jobs:
           -e PasswordReset__FrontendResetUrl=https://app.mymascada.com/auth/reset-password \
           -e EmailVerification__FrontendVerifyUrl=https://app.mymascada.com/auth/verify-email \
           -e Admin__ApiKey="${{ secrets.ADMIN_API_KEY }}" \
+          -e Telegram__WebhookBaseUrl=https://api.mymascada.com \
           -v mymascada_dataprotection_keys:/app/data/keys \
           --network host \
           mymascada-api:latest
