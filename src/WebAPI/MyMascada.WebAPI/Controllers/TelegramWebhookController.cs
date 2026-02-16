@@ -17,6 +17,7 @@ public class TelegramWebhookController : ControllerBase
     private readonly IAiChatService _aiChatService;
     private readonly ITelegramBotService _telegramBotService;
     private readonly IUserAiSettingsRepository _aiSettingsRepository;
+    private readonly IChatMessageRepository _chatMessageRepository;
     private readonly ILogger<TelegramWebhookController> _logger;
 
     public TelegramWebhookController(
@@ -25,6 +26,7 @@ public class TelegramWebhookController : ControllerBase
         IAiChatService aiChatService,
         ITelegramBotService telegramBotService,
         IUserAiSettingsRepository aiSettingsRepository,
+        IChatMessageRepository chatMessageRepository,
         ILogger<TelegramWebhookController> logger)
     {
         _telegramSettingsRepository = telegramSettingsRepository;
@@ -32,6 +34,7 @@ public class TelegramWebhookController : ControllerBase
         _aiChatService = aiChatService;
         _telegramBotService = telegramBotService;
         _aiSettingsRepository = aiSettingsRepository;
+        _chatMessageRepository = chatMessageRepository;
         _logger = logger;
     }
 
@@ -155,10 +158,10 @@ public class TelegramWebhookController : ControllerBase
                 break;
 
             case "/clear":
-                // Note: chat history clearing is handled through the web app
+                await _chatMessageRepository.DeleteAllForUserAsync(userId);
                 await _telegramBotService.SendMessageAsync(
                     botToken, chatId,
-                    "To clear your chat history, please use the MyMascada web app.");
+                    "Chat history cleared. You can start a fresh conversation!");
                 break;
 
             default:
