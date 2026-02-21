@@ -334,6 +334,12 @@
       "onTrack": "Great pace! You'll reach {goalName} on time.",
       "behindSchedule": "An extra {amount} this month would help with {goalName}.",
       "overSpending": "Your spending is exceeding your income this month.",
+      "emergencyMotivation1": "An emergency fund covers 3 months of expenses — your safety net for unexpected job loss.",
+      "emergencyMotivation2": "40% of adults can't cover a $400 emergency. Your fund puts you ahead.",
+      "emergencyMotivation3": "Medical bills, car repairs, appliance breakdowns — your emergency fund handles them all.",
+      "emergencyMotivation4": "Financial peace of mind starts with knowing you have a cushion. Start adding to your goal today.",
+      "emergencyMotivation5": "An emergency fund means you'll never have to rely on credit cards in a crisis.",
+      "progressEncouragement": "You've saved {amount} toward {goalName}. Every bit counts!",
       "default": "Keep going! Every step counts toward your goals.",
       "title": "Financial Insight"
     }
@@ -3036,12 +3042,19 @@
     "income": {
       "title": "What's your monthly income?",
       "subtitle": "Enter your total monthly income after taxes.",
-      "label": "Monthly Income"
+      "label": "Monthly Income",
+      "helper": "You can estimate — this isn't permanent."
     },
     "expenses": {
       "title": "What are your monthly expenses?",
       "subtitle": "Enter your total average monthly spending.",
-      "label": "Monthly Expenses"
+      "label": "Monthly Expenses",
+      "helper": "Include rent, food, transport, and subscriptions.",
+      "breakdown": "Typical breakdown",
+      "housing": "Housing",
+      "food": "Food & Dining",
+      "transport": "Transport",
+      "entertainment": "Entertainment"
     },
     "goalSuggestion": {
       "title": "Your First Goal",
@@ -3050,7 +3063,9 @@
       "suggestedGoal": "Build a 3-month emergency fund",
       "targetLabel": "Target Amount",
       "goalNameLabel": "Goal Name",
-      "editGoal": "Customize"
+      "editGoal": "Customize",
+      "why": "3 months of expenses protects you from unexpected job loss, medical emergencies, or car repairs.",
+      "recommended": "Recommended"
     },
     "dataEntry": {
       "title": "How would you like to add transactions?",
@@ -3061,7 +3076,8 @@
       "csvDesc": "Upload a file from your bank",
       "bank": "Connect Bank",
       "bankDesc": "Automatic sync (coming soon)",
-      "bankDisabled": "Coming soon"
+      "bankDisabled": "Coming soon",
+      "recommended": "Recommended"
     },
     "complete": {
       "title": "You're all set!",

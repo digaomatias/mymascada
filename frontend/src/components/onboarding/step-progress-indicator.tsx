@@ -13,7 +13,7 @@ export function StepProgressIndicator({ currentStep, totalSteps }: StepProgressI
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm text-gray-500">
+        <span className="text-sm font-medium text-slate-500">
           {t('progress.step', { current: currentStep, total: totalSteps })}
         </span>
       </div>
@@ -22,7 +22,9 @@ export function StepProgressIndicator({ currentStep, totalSteps }: StepProgressI
           <div
             key={i}
             className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${
-              i < currentStep ? 'bg-primary-600' : 'bg-gray-200'
+              i < currentStep
+                ? 'bg-gradient-to-r from-primary-500 to-primary-600'
+                : 'bg-white/60'
             }`}
           />
         ))}

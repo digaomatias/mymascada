@@ -37,6 +37,16 @@ function getInsight(
     g.progressPercentage > best.progressPercentage ? g : best,
   );
 
+  // Fresh user with goal at 0% - show emergency fund motivation
+  if (primary.progressPercentage === 0 && primary.currentAmount === 0) {
+    const motivationMessages = 5;
+    const motivationIndex = primary.id % motivationMessages;
+    return {
+      key: `emergencyMotivation${motivationIndex + 1}`,
+      icon: 'lightbulb',
+    };
+  }
+
   // Check if on track based on deadline
   if (primary.deadline && primary.daysRemaining !== undefined && primary.daysRemaining > 0) {
     const createdDate = new Date();
@@ -74,6 +84,18 @@ function getInsight(
         icon: 'lightbulb',
       };
     }
+  }
+
+  // Goal with some progress but no deadline or on-track info
+  if (primary.progressPercentage > 0) {
+    return {
+      key: 'progressEncouragement',
+      params: {
+        amount: formatCurrency(primary.currentAmount),
+        goalName: primary.name,
+      },
+      icon: 'sparkles',
+    };
   }
 
   return { key: 'default', icon: 'sparkles' };

@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { ShieldCheckIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 
 interface StepGoalSuggestionProps {
   monthlyIncome: number;
@@ -48,64 +48,84 @@ export function StepGoalSuggestion({
 
   return (
     <div className="space-y-6 py-4">
-      <div className="text-center space-y-2">
-        <h2 className="text-xl font-bold text-gray-900">
+      {/* Gradient accent strip */}
+      <div className="h-1 w-full rounded-full bg-gradient-to-r from-primary-600 via-fuchsia-500 to-primary-600" />
+
+      {/* Icon badge */}
+      <div className="w-12 h-12 rounded-xl bg-primary-50 ring-1 ring-primary-100 flex items-center justify-center">
+        <ShieldCheckIcon className="w-6 h-6 text-primary-700" />
+      </div>
+
+      <div className="space-y-1">
+        <h2 className="text-xl font-bold text-slate-900">
           {t('goalSuggestion.title')}
         </h2>
-        <p className="text-gray-600">
+        <p className="text-slate-600">
           {t('goalSuggestion.subtitle')}
         </p>
       </div>
 
-      <Card>
-        <CardContent className="pt-6 space-y-4">
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-500">{t('goalSuggestion.available')}</span>
-            <span className="text-lg font-semibold text-green-600">
-              {formatCurrency(monthlyAvailable)}
-            </span>
-          </div>
+      {/* Recommendation card */}
+      <div className="rounded-xl bg-slate-50 ring-1 ring-slate-100 p-5 space-y-4">
+        {/* Monthly available */}
+        <div className="flex items-baseline justify-between">
+          <span className="text-sm text-slate-500">{t('goalSuggestion.available')}</span>
+          <span className="text-3xl font-bold tabular-nums text-emerald-600">
+            {formatCurrency(monthlyAvailable)}
+          </span>
+        </div>
 
-          {!isEditing ? (
-            <div className="space-y-3">
-              <div className="p-4 bg-primary-50 rounded-lg">
-                <p className="font-medium text-gray-900">{goalName}</p>
-                <p className="text-2xl font-bold text-primary-600 mt-1">
-                  {formatCurrency(goalTargetAmount)}
-                </p>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsEditing(true)}
-                className="text-primary-600"
-              >
-                {t('goalSuggestion.editGoal')}
-              </Button>
+        <div className="h-px w-full bg-slate-200" />
+
+        {!isEditing ? (
+          <div className="space-y-3">
+            <div className="relative p-4 bg-primary-50 rounded-lg ring-1 ring-primary-100">
+              <span className="absolute top-3 right-3 rounded-full bg-primary-600 px-2 py-0.5 text-xs font-semibold text-white">
+                {t('goalSuggestion.recommended')}
+              </span>
+              <p className="font-medium text-slate-900 pr-24">{goalName}</p>
+              <p className="text-2xl font-bold text-primary-600 mt-1">
+                {formatCurrency(goalTargetAmount)}
+              </p>
             </div>
-          ) : (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('goalSuggestion.goalNameLabel')}
-                </label>
-                <Input
-                  value={goalName}
-                  onChange={(e) => onGoalNameChange(e.target.value)}
-                  maxLength={100}
-                />
-              </div>
-              <CurrencyInput
-                value={goalTargetAmount}
-                onChange={onGoalTargetAmountChange}
-                currency={currency}
-                label={t('goalSuggestion.targetLabel')}
-                allowNegative={false}
+
+            {/* WHY explanation */}
+            <p className="text-xs text-slate-500 leading-relaxed">
+              {t('goalSuggestion.why')}
+            </p>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsEditing(true)}
+              className="text-primary-600 gap-1.5"
+            >
+              <AdjustmentsHorizontalIcon className="w-4 h-4" />
+              {t('goalSuggestion.editGoal')}
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                {t('goalSuggestion.goalNameLabel')}
+              </label>
+              <Input
+                value={goalName}
+                onChange={(e) => onGoalNameChange(e.target.value)}
+                maxLength={100}
               />
             </div>
-          )}
-        </CardContent>
-      </Card>
+            <CurrencyInput
+              value={goalTargetAmount}
+              onChange={onGoalTargetAmountChange}
+              currency={currency}
+              label={t('goalSuggestion.targetLabel')}
+              allowNegative={false}
+            />
+          </div>
+        )}
+      </div>
 
       <div className="flex justify-between pt-4">
         <Button variant="ghost" onClick={onBack}>

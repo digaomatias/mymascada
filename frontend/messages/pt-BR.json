@@ -333,6 +333,12 @@
       "onTrack": "Ótimo ritmo! Você vai alcançar {goalName} no prazo.",
       "behindSchedule": "Um extra de {amount} este mês ajudaria com {goalName}.",
       "overSpending": "Seus gastos estão superando sua receita este mês.",
+      "emergencyMotivation1": "Uma reserva de emergência cobre 3 meses de despesas — sua rede de segurança contra perda de emprego.",
+      "emergencyMotivation2": "40% dos adultos não conseguem cobrir uma emergência de R$2.000. Sua reserva te coloca à frente.",
+      "emergencyMotivation3": "Contas médicas, reparos no carro, eletrodomésticos quebrados — sua reserva cobre tudo isso.",
+      "emergencyMotivation4": "A paz financeira começa sabendo que você tem uma reserva. Comece a investir na sua meta hoje.",
+      "emergencyMotivation5": "Uma reserva de emergência significa nunca ter que depender do cartão de crédito numa crise.",
+      "progressEncouragement": "Você já guardou {amount} para {goalName}. Cada centavo conta!",
       "default": "Continue assim! Cada passo conta para suas metas.",
       "title": "Insight Financeiro"
     }
@@ -3035,12 +3041,19 @@
     "income": {
       "title": "Qual é sua renda mensal?",
       "subtitle": "Informe sua renda mensal total após impostos.",
-      "label": "Renda Mensal"
+      "label": "Renda Mensal",
+      "helper": "Pode ser uma estimativa — você muda depois."
     },
     "expenses": {
       "title": "Quais são suas despesas mensais?",
       "subtitle": "Informe o total médio dos seus gastos mensais.",
-      "label": "Despesas Mensais"
+      "label": "Despesas Mensais",
+      "helper": "Inclua aluguel, alimentação, transporte e assinaturas.",
+      "breakdown": "Divisão típica",
+      "housing": "Moradia",
+      "food": "Alimentação",
+      "transport": "Transporte",
+      "entertainment": "Lazer"
     },
     "goalSuggestion": {
       "title": "Sua Primeira Meta",
@@ -3049,7 +3062,9 @@
       "suggestedGoal": "Criar uma reserva de emergência de 3 meses",
       "targetLabel": "Valor Alvo",
       "goalNameLabel": "Nome da Meta",
-      "editGoal": "Personalizar"
+      "editGoal": "Personalizar",
+      "why": "3 meses de despesas te protegem contra perda de emprego, emergências médicas ou reparos inesperados.",
+      "recommended": "Recomendado"
     },
     "dataEntry": {
       "title": "Como você quer adicionar transações?",
@@ -3060,7 +3075,8 @@
       "csvDesc": "Envie um arquivo do seu banco",
       "bank": "Conectar Banco",
       "bankDesc": "Sincronização automática (em breve)",
-      "bankDisabled": "Em breve"
+      "bankDisabled": "Em breve",
+      "recommended": "Recomendado"
     },
     "complete": {
       "title": "Tudo pronto!",
