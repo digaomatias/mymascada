@@ -24,9 +24,9 @@ public class GetPotentialTransfersQuery : IRequest<PotentialTransfersResponse>
     public int DateToleranceDays { get; set; } = 3;
 
     /// <summary>
-    /// Include transactions that are already reviewed (default: false)
+    /// Include transactions that are already reviewed (default: true)
     /// </summary>
-    public bool IncludeReviewed { get; set; } = false;
+    public bool IncludeReviewed { get; set; } = true;
 
     /// <summary>
     /// Minimum confidence score for potential matches (default: 0.5)
