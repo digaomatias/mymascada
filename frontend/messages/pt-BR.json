@@ -3036,13 +3036,21 @@
     "welcome": {
       "title": "Bem-vindo ao MyMascada!",
       "subtitle": "Vamos configurar seu perfil financeiro em alguns passos.",
-      "cta": "Começar"
+      "cta": "Começar",
+      "badge": "Configuração financeira",
+      "duration": "Leva cerca de 2 minutos",
+      "trustPrivate": "Privado por padrão",
+      "trustEncrypted": "Criptografado",
+      "trustEditable": "Editável a qualquer momento"
     },
     "income": {
       "title": "Qual é sua renda mensal?",
       "subtitle": "Informe sua renda mensal total após impostos.",
       "label": "Renda Mensal",
-      "helper": "Pode ser uma estimativa — você muda depois."
+      "helper": "Pode ser uma estimativa — você muda depois.",
+      "visualLabel": "Fluxo de entrada",
+      "detailTitle": "Todo plano começa pela entrada",
+      "detailText": "Defina uma base realista. Você pode ajustar depois quando tiver dados reais."
     },
     "expenses": {
       "title": "Quais são suas despesas mensais?",
@@ -3050,6 +3058,9 @@
       "label": "Despesas Mensais",
       "helper": "Inclua aluguel, alimentação, transporte e assinaturas.",
       "breakdown": "Divisão típica",
+      "visualLabel": "Visão de gastos",
+      "snapshot": "Resumo de despesas",
+      "detailText": "Não precisa ser perfeito agora. Uma boa estimativa já te dá mais controle.",
       "housing": "Moradia",
       "food": "Alimentação",
       "transport": "Transporte",
@@ -3064,7 +3075,15 @@
       "goalNameLabel": "Nome da Meta",
       "editGoal": "Personalizar",
       "why": "3 meses de despesas te protegem contra perda de emprego, emergências médicas ou reparos inesperados.",
-      "recommended": "Recomendado"
+      "recommended": "Recomendado",
+      "equationTitle": "Disponibilidade mensal",
+      "equationIncome": "Receita",
+      "equationExpenses": "Despesas",
+      "doneEditing": "Concluir edição",
+      "timelineTitle": "Projeção de 3 meses",
+      "monthLabel": "Mês {month}",
+      "timelineHintPositive": "Com seu saldo atual, essa meta pode avançar rapidamente.",
+      "timelineHintNegative": "Ainda sem sobra mensal. Você pode definir a meta agora e ajustar depois."
     },
     "dataEntry": {
       "title": "Como você quer adicionar transações?",
@@ -3081,7 +3100,10 @@
     "complete": {
       "title": "Tudo pronto!",
       "subtitle": "Seu perfil financeiro está configurado. Vamos começar!",
-      "redirecting": "Redirecionando para o painel..."
+      "redirecting": "Redirecionando para o painel...",
+      "badge": "Configuração concluída",
+      "countdown": "Redirecionando em {seconds}...",
+      "goNow": "Ir agora"
     },
     "progress": {
       "step": "Passo {current} de {total}"

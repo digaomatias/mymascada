@@ -1,20 +1,33 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { CheckCircleIcon } from '@heroicons/react/24/solid';
+import { DM_Mono, Manrope } from 'next/font/google';
 import { useAuth } from '@/contexts/auth-context';
 import { apiClient } from '@/lib/api-client';
-import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { StepProgressIndicator } from './step-progress-indicator';
 import { StepWelcome } from './step-welcome';
 import { StepIncome } from './step-income';
 import { StepExpenses } from './step-expenses';
 import { StepGoalSuggestion } from './step-goal-suggestion';
 import { StepDataEntry } from './step-data-entry';
+import { StepComplete } from './step-complete';
 
 const TOTAL_STEPS = 6;
+const REDIRECT_SECONDS = 3;
+
+const manrope = Manrope({
+  subsets: ['latin'],
+  variable: '--font-onboarding-sans',
+});
+
+const dmMono = DM_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  variable: '--font-onboarding-mono',
+});
 
 export function OnboardingWizard() {
   const t = useTranslations('onboarding');
@@ -28,6 +41,7 @@ export function OnboardingWizard() {
   const [goalTargetAmount, setGoalTargetAmount] = useState(0);
   const [dataEntryMethod, setDataEntryMethod] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [redirectCountdown, setRedirectCountdown] = useState(REDIRECT_SECONDS);
   const [error, setError] = useState<string | null>(null);
 
   const currency = user?.currency || 'NZD';
@@ -58,115 +72,161 @@ export function OnboardingWizard() {
       });
 
       setCurrentStep(6);
-
-      // Refresh user data so isOnboardingComplete updates
-      await refreshUser();
-
-      // Redirect after a brief pause
-      setTimeout(() => {
-        router.replace('/dashboard');
-      }, 2000);
+      setRedirectCountdown(REDIRECT_SECONDS);
+      setIsSubmitting(false);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An error occurred';
       setError(message);
       setIsSubmitting(false);
     }
-  }, [monthlyIncome, monthlyExpenses, goalName, goalTargetAmount, dataEntryMethod, refreshUser, router]);
+  }, [monthlyIncome, monthlyExpenses, goalName, goalTargetAmount, dataEntryMethod]);
+
+  const navigateToDashboard = useCallback(async () => {
+    try {
+      await refreshUser();
+    } catch {
+      // The user state can be refreshed on the dashboard route if this fails.
+    }
+    router.replace('/dashboard');
+  }, [refreshUser, router]);
+
+  useEffect(() => {
+    if (currentStep !== 6) {
+      return;
+    }
+
+    const countdownInterval = setInterval(() => {
+      setRedirectCountdown((previous) => (previous > 1 ? previous - 1 : 1));
+    }, 1000);
+
+    const redirectTimer = setTimeout(() => {
+      void navigateToDashboard();
+    }, REDIRECT_SECONDS * 1000);
+
+    return () => {
+      clearInterval(countdownInterval);
+      clearTimeout(redirectTimer);
+    };
+  }, [currentStep, navigateToDashboard]);
+
+  const showProgress = currentStep > 1 && currentStep < 6;
 
   return (
-    <div className="relative min-h-dvh bg-gradient-to-br from-violet-50 via-white to-violet-100 flex items-center justify-center p-4 overflow-hidden">
-      {/* Decorative background blobs */}
+    <div
+      className={cn(
+        'relative min-h-dvh overflow-hidden bg-[#f6f3ff] px-4 py-6 sm:px-6 lg:px-10',
+        manrope.variable,
+        dmMono.variable
+      )}
+    >
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-40 -left-40 h-[500px] w-[500px] rounded-full bg-violet-200 opacity-30 blur-3xl" />
-        <div className="absolute -bottom-40 -right-40 h-[400px] w-[400px] rounded-full bg-fuchsia-200 opacity-30 blur-3xl" />
+        <div className="absolute -left-44 -top-44 h-[580px] w-[580px] rounded-full bg-violet-200/55 blur-[110px]" />
+        <div className="absolute -bottom-56 -right-40 h-[560px] w-[560px] rounded-full bg-fuchsia-200/50 blur-[120px]" />
+        <div
+          className="absolute inset-0 opacity-[0.08]"
+          style={{
+            backgroundImage:
+              'linear-gradient(to right, rgba(124, 58, 237, 0.2) 1px, transparent 1px), linear-gradient(to bottom, rgba(124, 58, 237, 0.2) 1px, transparent 1px)',
+            backgroundSize: '30px 30px',
+          }}
+        />
       </div>
 
-      <div className="relative z-10 w-full max-w-lg">
-        {currentStep > 1 && currentStep < 6 && (
-          <div className="mb-6">
+      <div className="relative z-10 mx-auto flex w-full max-w-[980px] flex-col justify-center gap-5 py-2 sm:py-8">
+        {showProgress && (
+          <div className="mx-auto w-full max-w-[860px] lg:max-w-full">
             <StepProgressIndicator currentStep={currentStep} totalSteps={TOTAL_STEPS} />
           </div>
         )}
 
-        <div className="rounded-2xl bg-white/80 backdrop-blur-sm shadow-xl shadow-violet-900/10 ring-1 ring-black/5 p-6">
-          {currentStep === 1 && (
-            <StepWelcome onNext={() => setCurrentStep(2)} />
+        <div
+          className={cn(
+            'w-full overflow-hidden rounded-[30px] border border-violet-100/85 bg-white/85 shadow-[0_20px_70px_-32px_rgba(76,29,149,0.42)] backdrop-blur-xl',
+            (currentStep === 1 || currentStep === 6) && 'mx-auto max-w-[860px]'
           )}
+        >
+          <div className="px-4 py-5 sm:px-7 sm:py-8 lg:px-10 lg:py-9">
+            <div
+              key={currentStep}
+              className="animate-[onboarding-step-in_360ms_cubic-bezier(0.22,1,0.36,1)]"
+            >
+              {currentStep === 1 && (
+                <StepWelcome onNext={() => setCurrentStep(2)} />
+              )}
 
-          {currentStep === 2 && (
-            <StepIncome
-              value={monthlyIncome}
-              onChange={setMonthlyIncome}
-              currency={currency}
-              onNext={() => setCurrentStep(3)}
-              onBack={() => setCurrentStep(1)}
-            />
-          )}
+              {currentStep === 2 && (
+                <StepIncome
+                  value={monthlyIncome}
+                  onChange={setMonthlyIncome}
+                  currency={currency}
+                  onNext={() => setCurrentStep(3)}
+                  onBack={() => setCurrentStep(1)}
+                />
+              )}
 
-          {currentStep === 3 && (
-            <StepExpenses
-              value={monthlyExpenses}
-              onChange={setMonthlyExpenses}
-              currency={currency}
-              onNext={handleExpensesNext}
-              onBack={() => setCurrentStep(2)}
-            />
-          )}
+              {currentStep === 3 && (
+                <StepExpenses
+                  value={monthlyExpenses}
+                  onChange={setMonthlyExpenses}
+                  currency={currency}
+                  onNext={handleExpensesNext}
+                  onBack={() => setCurrentStep(2)}
+                />
+              )}
 
-          {currentStep === 4 && (
-            <StepGoalSuggestion
-              monthlyIncome={monthlyIncome}
-              monthlyExpenses={monthlyExpenses}
-              goalName={goalName}
-              goalTargetAmount={goalTargetAmount}
-              onGoalNameChange={setGoalName}
-              onGoalTargetAmountChange={setGoalTargetAmount}
-              currency={currency}
-              onNext={() => setCurrentStep(5)}
-              onBack={() => setCurrentStep(3)}
-            />
-          )}
+              {currentStep === 4 && (
+                <StepGoalSuggestion
+                  monthlyIncome={monthlyIncome}
+                  monthlyExpenses={monthlyExpenses}
+                  goalName={goalName}
+                  goalTargetAmount={goalTargetAmount}
+                  onGoalNameChange={setGoalName}
+                  onGoalTargetAmountChange={setGoalTargetAmount}
+                  currency={currency}
+                  onNext={() => setCurrentStep(5)}
+                  onBack={() => setCurrentStep(3)}
+                />
+              )}
 
-          {currentStep === 5 && (
-            <StepDataEntry
-              value={dataEntryMethod}
-              onChange={setDataEntryMethod}
-              onNext={handleComplete}
-              onBack={() => setCurrentStep(4)}
-            />
-          )}
+              {currentStep === 5 && (
+                <StepDataEntry
+                  value={dataEntryMethod}
+                  onChange={setDataEntryMethod}
+                  onNext={handleComplete}
+                  onBack={() => setCurrentStep(4)}
+                  isSubmitting={isSubmitting}
+                />
+              )}
 
-          {currentStep === 6 && (
-            <div className="flex flex-col items-center text-center space-y-4 py-8">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-500/25 flex items-center justify-center">
-                <CheckCircleIcon className="w-9 h-9 text-white" />
-              </div>
-              <h2 className="text-xl font-bold text-slate-900">
-                {t('complete.title')}
-              </h2>
-              <p className="text-slate-600">
-                {t('complete.subtitle')}
-              </p>
-              <p className="text-sm text-slate-400">
-                {t('complete.redirecting')}
-              </p>
+              {currentStep === 6 && (
+                <StepComplete
+                  countdown={redirectCountdown}
+                  onGoNow={() => {
+                    void navigateToDashboard();
+                  }}
+                />
+              )}
             </div>
-          )}
-
-          {error && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-sm text-red-600">{error}</p>
-            </div>
-          )}
-
-          {isSubmitting && currentStep === 5 && (
-            <div className="mt-4 flex justify-center">
-              <Button loading disabled>
-                {t('finish')}
-              </Button>
-            </div>
-          )}
+          </div>
         </div>
+
+        {error && (
+          <div className="mx-auto w-full max-w-[860px] rounded-2xl border border-red-200 bg-red-50/90 px-4 py-3">
+            <p className="text-sm text-red-700">{error}</p>
+          </div>
+        )}
+
+        {!showProgress && currentStep !== 6 && (
+          <p className="mx-auto text-center text-xs font-medium tracking-[0.12em] text-violet-500/70">
+            {t('welcome.duration')}
+          </p>
+        )}
+
+        {currentStep === 6 && (
+          <p className="mx-auto text-center text-xs font-medium tracking-[0.12em] text-violet-500/70">
+            {t('complete.redirecting')}
+          </p>
+        )}
       </div>
     </div>
   );

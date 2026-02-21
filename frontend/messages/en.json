@@ -3037,13 +3037,21 @@
     "welcome": {
       "title": "Welcome to MyMascada!",
       "subtitle": "Let's set up your financial profile in a few quick steps.",
-      "cta": "Get Started"
+      "cta": "Get Started",
+      "badge": "Financial setup",
+      "duration": "Takes around 2 minutes",
+      "trustPrivate": "Private by default",
+      "trustEncrypted": "Encrypted",
+      "trustEditable": "Editable anytime"
     },
     "income": {
       "title": "What's your monthly income?",
       "subtitle": "Enter your total monthly income after taxes.",
       "label": "Monthly Income",
-      "helper": "You can estimate — this isn't permanent."
+      "helper": "You can estimate — this isn't permanent.",
+      "visualLabel": "Income flow",
+      "detailTitle": "Every plan starts with inflow",
+      "detailText": "Set a realistic baseline. You can refine this later once your actuals are tracked."
     },
     "expenses": {
       "title": "What are your monthly expenses?",
@@ -3051,6 +3059,9 @@
       "label": "Monthly Expenses",
       "helper": "Include rent, food, transport, and subscriptions.",
       "breakdown": "Typical breakdown",
+      "visualLabel": "Spending lens",
+      "snapshot": "Spending snapshot",
+      "detailText": "This does not need perfect precision. A strong estimate gives you immediate control.",
       "housing": "Housing",
       "food": "Food & Dining",
       "transport": "Transport",
@@ -3065,7 +3076,15 @@
       "goalNameLabel": "Goal Name",
       "editGoal": "Customize",
       "why": "3 months of expenses protects you from unexpected job loss, medical emergencies, or car repairs.",
-      "recommended": "Recommended"
+      "recommended": "Recommended",
+      "equationTitle": "Monthly availability",
+      "equationIncome": "Income",
+      "equationExpenses": "Expenses",
+      "doneEditing": "Done editing",
+      "timelineTitle": "3-month projection",
+      "monthLabel": "Month {month}",
+      "timelineHintPositive": "At your current surplus, this goal can build quickly.",
+      "timelineHintNegative": "No monthly surplus yet. You can still define the target and adjust as you go."
     },
     "dataEntry": {
       "title": "How would you like to add transactions?",
@@ -3082,7 +3101,10 @@
     "complete": {
       "title": "You're all set!",
       "subtitle": "Your financial profile is ready. Let's start tracking!",
-      "redirecting": "Redirecting to dashboard..."
+      "redirecting": "Redirecting to dashboard...",
+      "badge": "Setup complete",
+      "countdown": "Redirecting in {seconds}...",
+      "goNow": "Go now"
     },
     "progress": {
       "step": "Step {current} of {total}"

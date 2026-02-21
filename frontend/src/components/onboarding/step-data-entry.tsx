@@ -15,6 +15,7 @@ interface StepDataEntryProps {
   onChange: (method: string) => void;
   onNext: () => void;
   onBack: () => void;
+  isSubmitting?: boolean;
 }
 
 interface DataEntryOption {
@@ -30,24 +31,21 @@ const DATA_ENTRY_OPTIONS: DataEntryOption[] = [
   { key: 'bank', icon: BuildingLibraryIcon, disabled: true, recommended: false },
 ];
 
-export function StepDataEntry({ value, onChange, onNext, onBack }: StepDataEntryProps) {
+export function StepDataEntry({ value, onChange, onNext, onBack, isSubmitting = false }: StepDataEntryProps) {
   const t = useTranslations('onboarding');
 
   return (
-    <div className="space-y-6 py-4">
-      {/* Gradient accent strip */}
-      <div className="h-1 w-full rounded-full bg-gradient-to-r from-primary-600 via-fuchsia-500 to-primary-600" />
-
-      <div className="space-y-1">
-        <h2 className="text-xl font-bold text-slate-900">
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <h2 className="font-[var(--font-onboarding-sans)] text-3xl font-semibold tracking-[-0.02em] text-slate-900">
           {t('dataEntry.title')}
         </h2>
-        <p className="text-slate-600">
+        <p className="max-w-xl text-sm leading-relaxed text-slate-600 sm:text-base">
           {t('dataEntry.subtitle')}
         </p>
       </div>
 
-      <div className="space-y-3">
+      <div className="grid gap-3 lg:grid-cols-3">
         {DATA_ENTRY_OPTIONS.map((option) => {
           const Icon = option.icon;
           const isSelected = value === option.key;
@@ -56,12 +54,12 @@ export function StepDataEntry({ value, onChange, onNext, onBack }: StepDataEntry
             <button
               type="button"
               key={option.key}
-              className={`relative w-full rounded-xl border p-4 text-left transition-all ${
+              className={`group relative min-h-[168px] overflow-hidden rounded-2xl border p-4 text-left transition-all duration-200 ${
                 option.disabled
-                  ? 'cursor-not-allowed border-slate-200 bg-slate-50 opacity-60'
+                  ? 'cursor-not-allowed border-slate-200 bg-slate-50/90'
                   : isSelected
-                    ? 'border-primary-500 ring-4 ring-primary-200/60 bg-primary-50/30 hover:shadow-md'
-                    : 'border-slate-200 bg-white hover:-translate-y-0.5 hover:shadow-md'
+                    ? 'border-violet-500 bg-violet-50 shadow-[0_20px_35px_-28px_rgba(124,58,237,0.95)] ring-4 ring-violet-200/60'
+                    : 'border-slate-200 bg-white hover:-translate-y-0.5 hover:border-violet-300 hover:shadow-[0_20px_35px_-28px_rgba(124,58,237,0.7)]'
               }`}
               onClick={() => {
                 if (!option.disabled) {
@@ -70,50 +68,53 @@ export function StepDataEntry({ value, onChange, onNext, onBack }: StepDataEntry
               }}
               disabled={option.disabled}
             >
-              {/* Recommended pill */}
+              {option.disabled && (
+                <div
+                  className="pointer-events-none absolute inset-0 rounded-2xl opacity-30"
+                  style={{
+                    backgroundImage: 'repeating-linear-gradient(-45deg, rgba(148,163,184,0.3) 0px, rgba(148,163,184,0.3) 8px, rgba(255,255,255,0) 8px, rgba(255,255,255,0) 16px)',
+                  }}
+                />
+              )}
+
               {option.recommended && !option.disabled && (
-                <span className="absolute top-3 right-3 rounded-full bg-primary-600 px-2 py-0.5 text-xs font-semibold text-white">
+                <span className="absolute right-3 top-3 rounded-full bg-violet-600 px-2 py-0.5 text-xs font-semibold text-white">
                   {t('dataEntry.recommended')}
                 </span>
               )}
 
-              {/* Coming soon badge for disabled */}
               {option.disabled && (
-                <span className="absolute top-3 right-3 rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-500">
+                <span className="absolute right-3 top-3 rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-600">
                   {t('dataEntry.bankDisabled')}
                 </span>
               )}
 
-              <div className="flex items-center gap-4">
-                {/* Icon badge */}
-                <div className={`w-11 h-11 rounded-xl grid place-items-center shrink-0 ${
+              <div className="relative flex h-full flex-col">
+                <div className={`grid h-11 w-11 place-items-center rounded-xl ${
                   option.disabled
                     ? 'bg-slate-100 ring-1 ring-slate-200'
-                    : 'bg-primary-50 ring-1 ring-primary-100'
+                    : isSelected
+                      ? 'bg-violet-100 ring-1 ring-violet-200'
+                      : 'bg-violet-50 ring-1 ring-violet-100'
                 }`}>
                   <Icon className={`w-6 h-6 ${
-                    option.disabled ? 'text-slate-400' : 'text-primary-700'
+                    option.disabled ? 'text-slate-400' : isSelected ? 'text-violet-700' : 'text-violet-600'
                   }`} />
                 </div>
-
-                <div className="flex-1 min-w-0">
-                  <p className={`font-medium ${
-                    option.disabled ? 'text-slate-400' : 'text-slate-900'
+                <div className="mt-4 flex-1">
+                  <p className={`text-base font-semibold ${
+                    option.disabled ? 'text-slate-500' : 'text-slate-900'
                   }`}>
                     {t(`dataEntry.${option.key}`)}
                   </p>
-                  <p className={`text-sm ${
-                    option.disabled ? 'text-slate-300' : 'text-slate-500'
+                  <p className={`mt-1 text-sm leading-relaxed ${
+                    option.disabled ? 'text-slate-400' : 'text-slate-600'
                   }`}>
                     {t(`dataEntry.${option.key}Desc`)}
                   </p>
                 </div>
-
-                {/* Checkmark for selected */}
                 {!option.disabled && isSelected && (
-                  <div className="w-6 h-6 shrink-0">
-                    <CheckCircleIcon className="w-6 h-6 text-primary-600" />
-                  </div>
+                  <CheckCircleIcon className="absolute bottom-1 right-1 h-7 w-7 text-violet-600" />
                 )}
               </div>
             </button>
@@ -121,12 +122,21 @@ export function StepDataEntry({ value, onChange, onNext, onBack }: StepDataEntry
         })}
       </div>
 
-      <div className="flex justify-between pt-4">
-        <Button variant="ghost" onClick={onBack}>
+      <div className="flex items-center justify-between pt-2">
+        <Button
+          variant="ghost"
+          onClick={onBack}
+          className="rounded-xl border border-slate-200 bg-white px-5 text-slate-700 hover:border-violet-200 hover:bg-violet-50"
+        >
           {t('back')}
         </Button>
-        <Button onClick={onNext} disabled={!value}>
-          {t('next')}
+        <Button
+          onClick={onNext}
+          disabled={!value || isSubmitting}
+          loading={isSubmitting}
+          className="rounded-xl bg-violet-600 px-6 text-white shadow-[0_12px_25px_-15px_rgba(124,58,237,1)] hover:bg-violet-700"
+        >
+          {t('finish')}
         </Button>
       </div>
     </div>

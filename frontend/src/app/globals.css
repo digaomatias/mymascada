@@ -466,6 +466,72 @@ layer(base);
     }
   }
 
+  @keyframes onboarding-step-in {
+    0% {
+      opacity: 0;
+      transform: translateX(24px) scale(0.985);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+  }
+
+  @keyframes onboarding-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-6px);
+    }
+  }
+
+  @keyframes onboarding-coin-rise {
+    0%,
+    100% {
+      transform: translateY(0);
+      opacity: 0.85;
+    }
+    50% {
+      transform: translateY(-10px);
+      opacity: 1;
+    }
+  }
+
+  @keyframes onboarding-drift {
+    0%,
+    100% {
+      transform: translateX(0);
+      opacity: 0.75;
+    }
+    50% {
+      transform: translateX(6px);
+      opacity: 1;
+    }
+  }
+
+  @keyframes onboarding-shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(220%);
+    }
+  }
+
+  @keyframes onboarding-ring-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes onboarding-check-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
   /* Prevent animation conflicts on mobile */
   @media (max-width: 768px) {
     .animate-dropdown {
