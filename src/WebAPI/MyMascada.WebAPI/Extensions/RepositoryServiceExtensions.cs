@@ -46,6 +46,12 @@ public static class RepositoryServiceExtensions
         // Chat repositories
         services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
 
+        // Goal repositories
+        services.AddScoped<IGoalRepository, GoalRepository>();
+
+        // Onboarding repositories
+        services.AddScoped<IUserFinancialProfileRepository, UserFinancialProfileRepository>();
+
         return services;
     }
 }

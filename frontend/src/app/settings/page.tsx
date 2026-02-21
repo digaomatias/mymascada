@@ -19,7 +19,8 @@ import {
   TagIcon,
   ArrowDownTrayIcon,
   SparklesIcon,
-  ChatBubbleBottomCenterTextIcon
+  ChatBubbleBottomCenterTextIcon,
+  PresentationChartBarIcon
 } from '@heroicons/react/24/outline';
 import { useLocale } from '@/contexts/locale-context';
 import { useTranslations } from 'next-intl';
@@ -67,6 +68,28 @@ export default function SettingsPage() {
   const [isSavingLocale, setIsSavingLocale] = useState(false);
   const [aiCleaningEnabled, setAiCleaningEnabled] = useState(false);
   const [isSavingAiCleaning, setIsSavingAiCleaning] = useState(false);
+  const [dashboardLayout, setDashboardLayout] = useState<'goals' | 'classic'>('goals');
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('mymascada_dashboard_layout');
+      if (stored === 'classic') {
+        setDashboardLayout('classic');
+      }
+    } catch {
+      // Ignore localStorage errors
+    }
+  }, []);
+
+  const handleDashboardLayoutToggle = () => {
+    const newLayout = dashboardLayout === 'goals' ? 'classic' : 'goals';
+    setDashboardLayout(newLayout);
+    try {
+      localStorage.setItem('mymascada_dashboard_layout', newLayout);
+    } catch {
+      // Ignore localStorage errors
+    }
+  };
 
   // Category seeding state
   const [seedLocales, setSeedLocales] = useState<string[]>([]);
@@ -348,6 +371,49 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* Dashboard Layout Card */}
+          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg h-full">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center shrink-0">
+                  <PresentationChartBarIcon className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {t('dashboardLayout.title')}
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1 mb-3">
+                    {t('dashboardLayout.description')}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {dashboardLayout === 'goals'
+                          ? t('dashboardLayout.goalsFirst')
+                          : t('dashboardLayout.classic')}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={dashboardLayout === 'goals'}
+                      onClick={handleDashboardLayoutToggle}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
+                        dashboardLayout === 'goals' ? 'bg-primary-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          dashboardLayout === 'goals' ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Other Settings Items */}
           {settingsItems.map((item) => {

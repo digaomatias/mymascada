@@ -111,7 +111,8 @@
     "newAccount": "Nova Conta",
     "categorize": "Categorizar",
     "toggleMenu": "Alternar menu",
-    "aiChat": "Pergunte ao Alce"
+    "aiChat": "Pergunte ao Alce",
+    "goals": "Metas"
   },
   "auth": {
     "signIn": "Entrar",
@@ -312,6 +313,28 @@
         "manual": "Adicionar Transação",
         "import": "Importar CSV"
       }
+    },
+    "hero": {
+      "primaryGoal": "Meta Principal",
+      "otherGoals": "Outras Metas",
+      "noGoals": "Nenhuma meta ainda",
+      "createGoal": "Crie Sua Primeira Meta",
+      "createGoalDesc": "Definir uma meta financeira dá propósito e direção ao seu dinheiro.",
+      "viewAllGoals": "Ver Todas as Metas"
+    },
+    "milestones": {
+      "quarter": "Um quarto do caminho para {goalName}!",
+      "half": "Metade do caminho para {goalName}!",
+      "threeQuarters": "Quase lá com {goalName}!",
+      "complete": "{goalName} concluída!"
+    },
+    "coaching": {
+      "noGoals": "Definir uma meta dá direção às suas finanças.",
+      "onTrack": "Ótimo ritmo! Você vai alcançar {goalName} no prazo.",
+      "behindSchedule": "Um extra de {amount} este mês ajudaria com {goalName}.",
+      "overSpending": "Seus gastos estão superando sua receita este mês.",
+      "default": "Continue assim! Cada passo conta para suas metas.",
+      "title": "Insight Financeiro"
     }
   },
   "upcomingBills": {
@@ -1710,6 +1733,12 @@
       "aiCleaning": "Limpeza de Descrição com IA",
       "aiCleaningDescription": "Limpa automaticamente as descrições brutas de transações bancárias usando IA. Extrai nomes de comerciantes e produz descrições legíveis."
     },
+    "dashboardLayout": {
+      "title": "Layout do Painel",
+      "description": "Escolha entre o layout focado em metas ou a visão clássica de transações.",
+      "goalsFirst": "Metas Primeiro",
+      "classic": "Clássico"
+    },
     "categorySeeding": {
       "title": "Categorias Padrão",
       "description": "Crie categorias padrão na sua conta para começar rapidamente. Você pode personalizar depois.",
@@ -2882,5 +2911,167 @@
       "securityTitle": "Seguro e Privado",
       "securityDescription": "Seus dados financeiros ficam protegidos com criptografia de nível empresarial e design voltado à privacidade."
     }
+  },
+  "goals": {
+    "title": "Metas",
+    "subtitle": "Acompanhe suas metas financeiras e marcos",
+    "createGoal": "Nova Meta",
+    "createFirstGoal": "Crie Sua Primeira Meta",
+    "noGoals": "Nenhuma meta ainda",
+    "noGoalsDescription": "Defina sua primeira meta financeira e comece a acompanhar seu progresso.",
+    "loadError": "Falha ao carregar metas",
+    "createError": "Falha ao criar meta",
+    "updateError": "Falha ao atualizar meta",
+    "deleteError": "Falha ao excluir meta",
+    "goalCreated": "Meta criada com sucesso",
+    "goalUpdated": "Meta atualizada com sucesso",
+    "goalDeleted": "Meta excluída com sucesso",
+    "progressUpdated": "Progresso atualizado com sucesso",
+    "deleteGoal": "Excluir Meta",
+    "deleteConfirm": "Tem certeza que deseja excluir \"{name}\"? Esta ação não pode ser desfeita.",
+    "updateProgress": "Atualizar Progresso",
+    "remaining": "restante",
+    "daysRemaining": "{count} dias restantes",
+    "daysRemainingOne": "1 dia restante",
+    "deadlinePassed": "Prazo expirado",
+    "linkedTo": "Vinculada a {account}",
+    "moreGoals": "mais metas",
+    "progress": "Progresso",
+    "currentOfTarget": "Atual / Meta",
+    "targetAmount": "Valor Alvo",
+    "currentAmount": "Valor Atual",
+    "remainingAmount": "Restante",
+    "details": "Detalhes",
+    "createdAt": "Criada em",
+    "updatedAt": "Última Atualização",
+    "backToGoals": "Voltar às Metas",
+    "filters": {
+      "showCompleted": "Mostrar concluídas"
+    },
+    "status": {
+      "active": "Ativa",
+      "completed": "Concluída",
+      "paused": "Pausada",
+      "abandoned": "Abandonada"
+    },
+    "types": {
+      "EmergencyFund": "Reserva de Emergência",
+      "Savings": "Poupança",
+      "DebtPayoff": "Quitar Dívida",
+      "Investment": "Investimento",
+      "Custom": "Personalizada"
+    },
+    "goalTypes": {
+      "EmergencyFund": "Reserva de Emergência",
+      "Savings": "Poupança",
+      "DebtPayoff": "Quitar Dívida",
+      "Investment": "Investimento",
+      "Custom": "Personalizada"
+    },
+    "statuses": {
+      "Active": "Ativa",
+      "Completed": "Concluída",
+      "Paused": "Pausada",
+      "Abandoned": "Abandonada"
+    },
+    "detail": {
+      "progress": "Progresso",
+      "targetAmount": "Valor Alvo",
+      "currentAmount": "Valor Atual",
+      "remaining": "Restante",
+      "deadline": "Data Alvo",
+      "daysRemaining": "{count} dias restantes",
+      "daysRemainingOne": "1 dia restante",
+      "overdue": "Atrasada",
+      "noDeadline": "Sem data alvo",
+      "linkedAccount": "Conta Vinculada",
+      "updateProgress": "Atualizar Progresso",
+      "updateProgressTitle": "Atualizar Progresso da Meta",
+      "updateProgressDescription": "Insira o valor atual economizado para esta meta",
+      "newAmount": "Valor Atual",
+      "goalType": "Tipo de Meta",
+      "status": "Status",
+      "createdAt": "Criada em",
+      "updatedAt": "Ultima Atualizacao"
+    },
+    "delete": {
+      "title": "Excluir Meta",
+      "description": "Tem certeza que deseja excluir esta meta? Esta acao nao pode ser desfeita.",
+      "confirm": "Excluir Meta"
+    },
+    "form": {
+      "createTitle": "Criar Nova Meta",
+      "createSubtitle": "Defina seu objetivo financeiro e acompanhe seu progresso",
+      "details": "Detalhes da Meta",
+      "name": "Nome da Meta",
+      "namePlaceholder": "ex.: Reserva de Emergência, Férias, Carro Novo",
+      "description": "Descrição",
+      "descriptionPlaceholder": "Para que é esta meta?",
+      "goalType": "Tipo de Meta",
+      "targetAmount": "Valor Alvo",
+      "currentAmount": "Valor Atual",
+      "deadline": "Prazo",
+      "deadlineHelp": "Opcional. Defina uma data limite para manter o foco.",
+      "linkedAccount": "Conta Vinculada",
+      "noLinkedAccount": "Sem conta vinculada",
+      "linkedAccountHelp": "Opcionalmente vincule uma conta para acompanhar seu saldo junto com esta meta.",
+      "status": "Status",
+      "validation": "Preencha todos os campos obrigatórios corretamente.",
+      "creating": "Criando...",
+      "progressHelp": "Digite o valor atual economizado para sua meta de {target}."
+    },
+    "edit": {
+      "title": "Editar Meta",
+      "saving": "Salvando...",
+      "saveChanges": "Salvar Alterações"
+    }
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Bem-vindo ao MyMascada!",
+      "subtitle": "Vamos configurar seu perfil financeiro em alguns passos.",
+      "cta": "Começar"
+    },
+    "income": {
+      "title": "Qual é sua renda mensal?",
+      "subtitle": "Informe sua renda mensal total após impostos.",
+      "label": "Renda Mensal"
+    },
+    "expenses": {
+      "title": "Quais são suas despesas mensais?",
+      "subtitle": "Informe o total médio dos seus gastos mensais.",
+      "label": "Despesas Mensais"
+    },
+    "goalSuggestion": {
+      "title": "Sua Primeira Meta",
+      "subtitle": "Com base nas suas finanças, sugerimos:",
+      "available": "Disponível por mês",
+      "suggestedGoal": "Criar uma reserva de emergência de 3 meses",
+      "targetLabel": "Valor Alvo",
+      "goalNameLabel": "Nome da Meta",
+      "editGoal": "Personalizar"
+    },
+    "dataEntry": {
+      "title": "Como você quer adicionar transações?",
+      "subtitle": "Escolha como vai acompanhar suas finanças.",
+      "manual": "Entrada Manual",
+      "manualDesc": "Adicione transações uma a uma",
+      "csv": "Importar CSV",
+      "csvDesc": "Envie um arquivo do seu banco",
+      "bank": "Conectar Banco",
+      "bankDesc": "Sincronização automática (em breve)",
+      "bankDisabled": "Em breve"
+    },
+    "complete": {
+      "title": "Tudo pronto!",
+      "subtitle": "Seu perfil financeiro está configurado. Vamos começar!",
+      "redirecting": "Redirecionando para o painel..."
+    },
+    "progress": {
+      "step": "Passo {current} de {total}"
+    },
+    "next": "Próximo",
+    "back": "Voltar",
+    "finish": "Concluir Configuração"
   }
 }

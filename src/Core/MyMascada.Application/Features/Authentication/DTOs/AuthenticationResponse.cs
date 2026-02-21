@@ -35,4 +35,5 @@ public class UserDto
     public string? ProfilePictureUrl { get; set; }
     public bool AiDescriptionCleaning { get; set; }
     public bool HasAiConfigured { get; set; }
+    public bool IsOnboardingComplete { get; set; }
 }

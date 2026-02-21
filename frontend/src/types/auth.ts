@@ -30,6 +30,7 @@ export interface UserDto {
   profilePictureUrl?: string;
   aiDescriptionCleaning?: boolean;
   hasAiConfigured?: boolean;
+  isOnboardingComplete?: boolean;
 }
 
 export interface AuthenticationResponse {

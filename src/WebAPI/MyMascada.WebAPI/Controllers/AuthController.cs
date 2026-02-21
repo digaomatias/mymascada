@@ -26,6 +26,7 @@ public class AuthController : ControllerBase
     private readonly IWebHostEnvironment _environment;
     private readonly IUserAiSettingsRepository _aiSettingsRepository;
     private readonly IConfiguration _configuration;
+    private readonly IUserFinancialProfileRepository _financialProfileRepository;
 
     public AuthController(
         IMediator mediator,
@@ -35,7 +36,8 @@ public class AuthController : ControllerBase
         Microsoft.Extensions.Options.IOptions<MyMascada.Application.Common.Configuration.AppOptions> appOptions,
         IWebHostEnvironment environment,
         IUserAiSettingsRepository aiSettingsRepository,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IUserFinancialProfileRepository financialProfileRepository)
     {
         _mediator = mediator;
         _authService = authService;
@@ -45,6 +47,7 @@ public class AuthController : ControllerBase
         _environment = environment;
         _aiSettingsRepository = aiSettingsRepository;
         _configuration = configuration;
+        _financialProfileRepository = financialProfileRepository;
     }
 
     [HttpPost("register")]
@@ -189,6 +192,10 @@ public class AuthController : ControllerBase
         var hasAiConfigured = (aiSettings != null && !string.IsNullOrEmpty(aiSettings.EncryptedApiKey))
             || (!string.IsNullOrEmpty(globalApiKey) && globalApiKey != "YOUR_OPENAI_API_KEY");
 
+        // Check onboarding status
+        var financialProfile = await _financialProfileRepository.GetByUserIdAsync(userId);
+        var isOnboardingComplete = financialProfile != null && financialProfile.OnboardingCompleted;
+
         var userDto = new UserDto
         {
             Id = user.Id,
@@ -201,7 +208,8 @@ public class AuthController : ControllerBase
             TimeZone = user.TimeZone ?? "UTC",
             Locale = user.Locale ?? "en",
             AiDescriptionCleaning = user.AiDescriptionCleaning,
-            HasAiConfigured = hasAiConfigured
+            HasAiConfigured = hasAiConfigured,
+            IsOnboardingComplete = isOnboardingComplete
         };
 
         return Ok(userDto);

@@ -14,8 +14,9 @@ import { apiClient } from '@/lib/api-client';
 import Link from 'next/link';
 import { MonthlySummary } from '@/components/dashboard/monthly-summary';
 import { BudgetSummaryWidget } from '@/components/dashboard/budget-summary-widget';
+import { GoalProgressWidget } from '@/components/dashboard/goal-progress-widget';
 import { UpcomingBillsWidget } from '@/components/dashboard/upcoming-bills-widget';
-import { WelcomeScreen } from '@/components/dashboard/welcome-screen';
+import { CoachingInsightCard } from '@/components/dashboard/coaching-insight-card';
 import { useTranslations } from 'next-intl';
 import {
   CreditCardIcon,
@@ -67,6 +68,18 @@ function DashboardContent() {
   const [dataLoading, setDataLoading] = useState(true);
   const [hasAkahuConnection, setHasAkahuConnection] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [dashboardLayout, setDashboardLayout] = useState<'goals' | 'classic'>('goals');
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('mymascada_dashboard_layout');
+      if (stored === 'classic') {
+        setDashboardLayout('classic');
+      }
+    } catch {
+      // Ignore localStorage errors
+    }
+  }, []);
   const [dashboardData, setDashboardData] = useState<{
     totalBalance: number;
     monthlyIncome: number;
@@ -118,6 +131,15 @@ function DashboardContent() {
       router.push('/auth/login');
     }
   }, [isAuthenticated, isLoading, router, searchParams]);
+
+  // Temporary fallback until Stream A merges
+  const isOnboardingComplete = (user as Record<string, unknown> | null)?.isOnboardingComplete ?? true;
+
+  useEffect(() => {
+    if (!dataLoading && !isOnboardingComplete) {
+      router.push('/onboarding');
+    }
+  }, [dataLoading, isOnboardingComplete, router]);
 
   // Check Akahu connection for mobile overflow menu
   useEffect(() => {
@@ -359,28 +381,33 @@ function DashboardContent() {
       <Navigation />
       
       <main className="container-responsive py-8">
-        {/* Welcome Section - hidden during onboarding since WelcomeScreen has its own header */}
-        {(dataLoading || dashboardData.transactionCount > 0) && (
-          <div className="mb-8 lg:mb-10 animate-fade-in-up">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-2 lg:mb-3">
-              {t('welcomeBack', { name: user?.firstName || user?.userName || '' })}
-            </h1>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-700">
-              {t('overview')}
-            </p>
+        {/* Welcome Section */}
+        <div className="mb-8 lg:mb-10 animate-fade-in-up">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-2 lg:mb-3">
+            {t('welcomeBack', { name: user?.firstName || user?.userName || '' })}
+          </h1>
+          <p className="text-base sm:text-lg lg:text-xl text-gray-700">
+            {t('overview')}
+          </p>
+        </div>
+
+        {/* Hero: Goal Progress (goals-first layout only) */}
+        {dashboardLayout === 'goals' && !dataLoading && (
+          <div className="mb-6 animate-fade-in-up">
+            <GoalProgressWidget heroMode />
           </div>
         )}
 
-        {/* Onboarding: show welcome screen when no transactions */}
-        {!dataLoading && dashboardData.transactionCount === 0 ? (
-          <WelcomeScreen
-            accountCount={dashboardData.accountCount}
-            hasCategories={dashboardData.hasCategories}
-            onAccountAdded={loadDashboardData}
-            onCategoriesInitialized={loadDashboardData}
-          />
-        ) : (
-        <>
+        {/* Coaching Insight (goals-first layout only) */}
+        {dashboardLayout === 'goals' && !dataLoading && (
+          <div className="mb-6 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+            <CoachingInsightCard
+              monthlyIncome={dashboardData.monthlyIncome}
+              monthlyExpenses={dashboardData.monthlyExpenses}
+            />
+          </div>
+        )}
+
         {/* Stats Grid - Row 1: All 4 stat cards at compact height */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6">
           {dataLoading ? (
@@ -592,7 +619,12 @@ function DashboardContent() {
         <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
           <BudgetSummaryWidget />
         </div>
-        </>
+
+        {/* Goal Progress (classic layout: non-hero at bottom) */}
+        {dashboardLayout === 'classic' && !dataLoading && (
+          <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
+            <GoalProgressWidget heroMode={false} />
+          </div>
         )}
       </main>
     </div>

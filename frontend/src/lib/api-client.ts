@@ -1550,6 +1550,34 @@ class ApiClient {
     });
   }
 
+  // Goal methods
+  async getGoals(params?: { includeCompleted?: boolean }): Promise<GoalSummary[]> {
+    const queryParams = new URLSearchParams();
+    if (params?.includeCompleted !== undefined) queryParams.append('includeCompleted', params.includeCompleted.toString());
+    const queryString = queryParams.toString();
+    return this.request(`/api/goals${queryString ? `?${queryString}` : ''}`);
+  }
+
+  async getGoal(id: number): Promise<GoalDetail> {
+    return this.request(`/api/goals/${id}`);
+  }
+
+  async createGoal(goal: CreateGoalRequest): Promise<GoalDetail> {
+    return this.request('/api/goals', { method: 'POST', body: JSON.stringify(goal) });
+  }
+
+  async updateGoal(id: number, goal: UpdateGoalRequest): Promise<GoalDetail> {
+    return this.request(`/api/goals/${id}`, { method: 'PUT', body: JSON.stringify(goal) });
+  }
+
+  async deleteGoal(id: number): Promise<void> {
+    return this.request(`/api/goals/${id}`, { method: 'DELETE' });
+  }
+
+  async updateGoalProgress(id: number, currentAmount: number): Promise<GoalDetail> {
+    return this.request(`/api/goals/${id}/progress`, { method: 'PUT', body: JSON.stringify({ currentAmount }) });
+  }
+
   // User Data methods (LGPD/GDPR compliance)
   async getUserDataSummary(): Promise<UserDataSummary> {
     return this.request('/api/UserData/summary');
@@ -1725,6 +1753,15 @@ class ApiClient {
   // Feature flags (anonymous endpoint)
   async getFeatures(): Promise<FeatureFlags> {
     return this.request('/api/Features');
+  }
+
+  // Onboarding methods
+  async completeOnboarding(data: CompleteOnboardingRequest): Promise<CompleteOnboardingResponse> {
+    return this.request('/api/onboarding/complete', { method: 'POST', body: JSON.stringify(data) });
+  }
+
+  async getOnboardingStatus(): Promise<OnboardingStatusResponse> {
+    return this.request('/api/onboarding/status');
   }
 
   private getAuthHeaders(): Record<string, string> {
@@ -1948,6 +1985,73 @@ export interface UserDeletionResult {
   rulesDeleted: number;
   reconciliationsDeleted: number;
   bankConnectionsDeleted: number;
+}
+
+// Goal Types
+export interface GoalSummary {
+  id: number;
+  name: string;
+  description?: string;
+  targetAmount: number;
+  currentAmount: number;
+  progressPercentage: number;
+  remainingAmount: number;
+  goalType: string;
+  status: string;
+  deadline?: string;
+  daysRemaining?: number;
+  linkedAccountName?: string;
+}
+
+export interface GoalDetail extends GoalSummary {
+  linkedAccountId?: number;
+  displayOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateGoalRequest {
+  name: string;
+  description?: string;
+  targetAmount: number;
+  deadline?: string;
+  goalType: string;
+  linkedAccountId?: number;
+}
+
+export interface UpdateGoalRequest {
+  name?: string;
+  description?: string;
+  targetAmount?: number;
+  currentAmount?: number;
+  status?: string;
+  deadline?: string;
+  linkedAccountId?: number;
+}
+
+// Onboarding Types
+export interface CompleteOnboardingRequest {
+  monthlyIncome: number;
+  monthlyExpenses: number;
+  goalName: string;
+  goalTargetAmount: number;
+  goalType: string;
+  dataEntryMethod: string;
+}
+
+export interface CompleteOnboardingResponse {
+  profileId: number;
+  goalId: number;
+  monthlyIncome: number;
+  monthlyExpenses: number;
+  monthlyAvailable: number;
+}
+
+export interface OnboardingStatusResponse {
+  isComplete: boolean;
+  monthlyIncome?: number;
+  monthlyExpenses?: number;
+  monthlyAvailable?: number;
 }
 
 // Create a singleton instance that's safe for SSR

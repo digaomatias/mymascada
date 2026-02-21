@@ -44,6 +44,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<UserAiSettings> UserAiSettings => Set<UserAiSettings>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
     public DbSet<UserTelegramSettings> UserTelegramSettings => Set<UserTelegramSettings>();
+    public DbSet<Goal> Goals => Set<Goal>();
+    public DbSet<UserFinancialProfile> UserFinancialProfiles => Set<UserFinancialProfile>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -760,6 +762,45 @@ public class ApplicationDbContext : DbContext
 
             // O(1) webhook lookup
             entity.HasIndex(e => e.WebhookSecret).IsUnique();
+
+            entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
+        // Goal configuration
+        modelBuilder.Entity<Goal>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.TargetAmount).HasPrecision(18, 2);
+            entity.Property(e => e.CurrentAmount).HasPrecision(18, 2);
+            entity.Property(e => e.UserId).IsRequired();
+
+            // Indexes for efficient querying
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => new { e.UserId, e.Status });
+
+            // Optional FK to Account (nullable, SetNull on delete)
+            entity.HasOne(e => e.Account)
+                .WithMany()
+                .HasForeignKey(e => e.LinkedAccountId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
+        // UserFinancialProfile configuration
+        modelBuilder.Entity<UserFinancialProfile>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.MonthlyIncome).HasPrecision(18, 2);
+            entity.Property(e => e.MonthlyExpenses).HasPrecision(18, 2);
+            entity.Property(e => e.DataEntryMethod).HasMaxLength(50);
+            entity.Ignore(e => e.MonthlyAvailable);
+
+            // One profile per user
+            entity.HasIndex(e => e.UserId).IsUnique();
 
             entity.HasQueryFilter(e => !e.IsDeleted);
         });

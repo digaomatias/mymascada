@@ -112,7 +112,8 @@
     "newAccount": "New Account",
     "categorize": "Categorize",
     "toggleMenu": "Toggle menu",
-    "aiChat": "Ask Alce"
+    "aiChat": "Ask Alce",
+    "goals": "Goals"
   },
   "auth": {
     "signIn": "Sign In",
@@ -313,6 +314,28 @@
         "manual": "Add Transaction",
         "import": "Import CSV"
       }
+    },
+    "hero": {
+      "primaryGoal": "Primary Goal",
+      "otherGoals": "Other Goals",
+      "noGoals": "No goals yet",
+      "createGoal": "Create Your First Goal",
+      "createGoalDesc": "Setting a financial goal gives your money purpose and direction.",
+      "viewAllGoals": "View All Goals"
+    },
+    "milestones": {
+      "quarter": "Quarter way to {goalName}!",
+      "half": "Halfway to {goalName}!",
+      "threeQuarters": "Almost there with {goalName}!",
+      "complete": "{goalName} complete!"
+    },
+    "coaching": {
+      "noGoals": "Setting a goal gives your finances direction.",
+      "onTrack": "Great pace! You'll reach {goalName} on time.",
+      "behindSchedule": "An extra {amount} this month would help with {goalName}.",
+      "overSpending": "Your spending is exceeding your income this month.",
+      "default": "Keep going! Every step counts toward your goals.",
+      "title": "Financial Insight"
     }
   },
   "upcomingBills": {
@@ -1711,6 +1734,12 @@
       "aiCleaning": "AI Description Cleaning",
       "aiCleaningDescription": "Automatically clean up raw bank transaction descriptions using AI. Extracts merchant names and produces human-readable descriptions."
     },
+    "dashboardLayout": {
+      "title": "Dashboard Layout",
+      "description": "Choose between the goal-focused layout or the classic transaction overview.",
+      "goalsFirst": "Goals First",
+      "classic": "Classic"
+    },
     "categorySeeding": {
       "title": "Default Categories",
       "description": "Seed your account with a default set of categories to get started quickly. You can always customize them later.",
@@ -2883,5 +2912,167 @@
       "securityTitle": "Secure & Private",
       "securityDescription": "Your financial data is secure with enterprise-grade encryption and privacy-first design."
     }
+  },
+  "goals": {
+    "title": "Goals",
+    "subtitle": "Track your financial goals and milestones",
+    "createGoal": "New Goal",
+    "createFirstGoal": "Create Your First Goal",
+    "noGoals": "No goals yet",
+    "noGoalsDescription": "Set your first financial goal and start tracking your progress.",
+    "loadError": "Failed to load goals",
+    "createError": "Failed to create goal",
+    "updateError": "Failed to update goal",
+    "deleteError": "Failed to delete goal",
+    "goalCreated": "Goal created successfully",
+    "goalUpdated": "Goal updated successfully",
+    "goalDeleted": "Goal deleted successfully",
+    "progressUpdated": "Progress updated successfully",
+    "deleteGoal": "Delete Goal",
+    "deleteConfirm": "Are you sure you want to delete \"{name}\"? This action cannot be undone.",
+    "updateProgress": "Update Progress",
+    "remaining": "remaining",
+    "daysRemaining": "{count} days left",
+    "daysRemainingOne": "1 day left",
+    "deadlinePassed": "Deadline passed",
+    "linkedTo": "Linked to {account}",
+    "moreGoals": "more goals",
+    "progress": "Progress",
+    "currentOfTarget": "Current / Target",
+    "targetAmount": "Target Amount",
+    "currentAmount": "Current Amount",
+    "remainingAmount": "Remaining",
+    "details": "Details",
+    "createdAt": "Created",
+    "updatedAt": "Last Updated",
+    "backToGoals": "Back to Goals",
+    "filters": {
+      "showCompleted": "Show completed"
+    },
+    "status": {
+      "active": "Active",
+      "completed": "Completed",
+      "paused": "Paused",
+      "abandoned": "Abandoned"
+    },
+    "types": {
+      "EmergencyFund": "Emergency Fund",
+      "Savings": "Savings",
+      "DebtPayoff": "Debt Payoff",
+      "Investment": "Investment",
+      "Custom": "Custom"
+    },
+    "goalTypes": {
+      "EmergencyFund": "Emergency Fund",
+      "Savings": "Savings",
+      "DebtPayoff": "Debt Payoff",
+      "Investment": "Investment",
+      "Custom": "Custom"
+    },
+    "statuses": {
+      "Active": "Active",
+      "Completed": "Completed",
+      "Paused": "Paused",
+      "Abandoned": "Abandoned"
+    },
+    "detail": {
+      "progress": "Progress",
+      "targetAmount": "Target Amount",
+      "currentAmount": "Current Amount",
+      "remaining": "Remaining",
+      "deadline": "Target Date",
+      "daysRemaining": "{count} days remaining",
+      "daysRemainingOne": "1 day remaining",
+      "overdue": "Overdue",
+      "noDeadline": "No target date",
+      "linkedAccount": "Linked Account",
+      "updateProgress": "Update Progress",
+      "updateProgressTitle": "Update Goal Progress",
+      "updateProgressDescription": "Enter the current amount saved towards this goal",
+      "newAmount": "Current Amount",
+      "goalType": "Goal Type",
+      "status": "Status",
+      "createdAt": "Created",
+      "updatedAt": "Last Updated"
+    },
+    "delete": {
+      "title": "Delete Goal",
+      "description": "Are you sure you want to delete this goal? This action cannot be undone.",
+      "confirm": "Delete Goal"
+    },
+    "form": {
+      "createTitle": "Create a New Goal",
+      "createSubtitle": "Define your financial target and track your progress",
+      "details": "Goal Details",
+      "name": "Goal Name",
+      "namePlaceholder": "e.g., Emergency Fund, Vacation, New Car",
+      "description": "Description",
+      "descriptionPlaceholder": "What is this goal for?",
+      "goalType": "Goal Type",
+      "targetAmount": "Target Amount",
+      "currentAmount": "Current Amount",
+      "deadline": "Deadline",
+      "deadlineHelp": "Optional. Set a target date to stay on track.",
+      "linkedAccount": "Linked Account",
+      "noLinkedAccount": "No linked account",
+      "linkedAccountHelp": "Optionally link an account to track its balance alongside this goal.",
+      "status": "Status",
+      "validation": "Please fill in all required fields correctly.",
+      "creating": "Creating...",
+      "progressHelp": "Enter the current saved amount toward your goal of {target}."
+    },
+    "edit": {
+      "title": "Edit Goal",
+      "saving": "Saving...",
+      "saveChanges": "Save Changes"
+    }
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Welcome to MyMascada!",
+      "subtitle": "Let's set up your financial profile in a few quick steps.",
+      "cta": "Get Started"
+    },
+    "income": {
+      "title": "What's your monthly income?",
+      "subtitle": "Enter your total monthly income after taxes.",
+      "label": "Monthly Income"
+    },
+    "expenses": {
+      "title": "What are your monthly expenses?",
+      "subtitle": "Enter your total average monthly spending.",
+      "label": "Monthly Expenses"
+    },
+    "goalSuggestion": {
+      "title": "Your First Goal",
+      "subtitle": "Based on your finances, we suggest:",
+      "available": "Monthly available",
+      "suggestedGoal": "Build a 3-month emergency fund",
+      "targetLabel": "Target Amount",
+      "goalNameLabel": "Goal Name",
+      "editGoal": "Customize"
+    },
+    "dataEntry": {
+      "title": "How would you like to add transactions?",
+      "subtitle": "Choose how you'll track your finances.",
+      "manual": "Manual Entry",
+      "manualDesc": "Add transactions one by one",
+      "csv": "Import CSV",
+      "csvDesc": "Upload a file from your bank",
+      "bank": "Connect Bank",
+      "bankDesc": "Automatic sync (coming soon)",
+      "bankDisabled": "Coming soon"
+    },
+    "complete": {
+      "title": "You're all set!",
+      "subtitle": "Your financial profile is ready. Let's start tracking!",
+      "redirecting": "Redirecting to dashboard..."
+    },
+    "progress": {
+      "step": "Step {current} of {total}"
+    },
+    "next": "Next",
+    "back": "Back",
+    "finish": "Complete Setup"
   }
 }
