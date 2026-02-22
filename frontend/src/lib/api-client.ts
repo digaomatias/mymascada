@@ -2037,6 +2037,7 @@ export interface CompleteOnboardingRequest {
   goalTargetAmount: number;
   goalType: string;
   dataEntryMethod: string;
+  linkedAccountId?: number;
 }
 
 export interface CompleteOnboardingResponse {

@@ -511,6 +511,18 @@ layer(base);
     }
   }
 
+  @keyframes onboarding-coin-fall {
+    0%,
+    100% {
+      transform: translateY(0);
+      opacity: 0.8;
+    }
+    50% {
+      transform: translateY(8px);
+      opacity: 1;
+    }
+  }
+
   @keyframes onboarding-shimmer {
     0% {
       transform: translateX(-100%);

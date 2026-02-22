@@ -15,19 +15,23 @@ public class CompleteOnboardingCommand : IRequest<OnboardingCompleteResponse>
     public decimal GoalTargetAmount { get; set; }
     public string GoalType { get; set; } = "EmergencyFund";
     public string DataEntryMethod { get; set; } = "manual";
+    public int? LinkedAccountId { get; set; }
 }
 
 public class CompleteOnboardingCommandHandler : IRequestHandler<CompleteOnboardingCommand, OnboardingCompleteResponse>
 {
     private readonly IUserFinancialProfileRepository _profileRepository;
     private readonly IGoalRepository _goalRepository;
+    private readonly IAccountRepository _accountRepository;
 
     public CompleteOnboardingCommandHandler(
         IUserFinancialProfileRepository profileRepository,
-        IGoalRepository goalRepository)
+        IGoalRepository goalRepository,
+        IAccountRepository accountRepository)
     {
         _profileRepository = profileRepository;
         _goalRepository = goalRepository;
+        _accountRepository = accountRepository;
     }
 
     public async Task<OnboardingCompleteResponse> Handle(CompleteOnboardingCommand request, CancellationToken cancellationToken)
@@ -102,6 +106,18 @@ public class CompleteOnboardingCommandHandler : IRequestHandler<CompleteOnboardi
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
+
+        if (request.LinkedAccountId.HasValue)
+        {
+            var linkedAccount = await _accountRepository.GetByIdAsync(request.LinkedAccountId.Value, request.UserId);
+            if (linkedAccount == null)
+            {
+                throw new ArgumentException("Linked account not found or doesn't belong to this user.");
+            }
+
+            goal.LinkedAccountId = linkedAccount.Id;
+            goal.CurrentAmount = linkedAccount.CurrentBalance;
+        }
 
         var createdGoal = await _goalRepository.CreateGoalAsync(goal, cancellationToken);
 

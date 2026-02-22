@@ -3070,7 +3070,8 @@
     "goalSuggestion": {
       "title": "Your First Goal",
       "subtitle": "Based on your finances, we suggest:",
-      "available": "Monthly available",
+      "available": "Available",
+      "perMonth": "/month",
       "suggestedGoal": "Build a 3-month emergency fund",
       "targetLabel": "Target Amount",
       "goalNameLabel": "Goal Name",
@@ -3084,7 +3085,15 @@
       "timelineTitle": "3-month projection",
       "monthLabel": "Month {month}",
       "timelineHintPositive": "At your current surplus, this goal can build quickly.",
-      "timelineHintNegative": "No monthly surplus yet. You can still define the target and adjust as you go."
+      "timelineHintNegative": "No monthly surplus yet. You can still define the target and adjust as you go.",
+      "noLinkedAccount": "No linked account",
+      "linkedAccountLabel": "Link existing account (optional)",
+      "linkedAccountHelp": "Link a savings account to count its balance toward this goal.",
+      "startingBalance": "Starting balance",
+      "linkedTo": "Linked to {accountName}",
+      "existingBalance": "existing balance",
+      "belowMinimum": "Target must be at least 1 month of expenses ({amount}).",
+      "belowRecommended": "We recommend at least 3 months of expenses. You can proceed with this amount."
     },
     "dataEntry": {
       "title": "How would you like to add transactions?",
@@ -3111,6 +3120,7 @@
     },
     "next": "Next",
     "back": "Back",
-    "finish": "Complete Setup"
+    "finish": "Complete Setup",
+    "submitting": "Saving..."
   }
 }

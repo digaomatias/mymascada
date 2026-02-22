@@ -6,6 +6,7 @@ import { ShieldCheckIcon, AdjustmentsHorizontalIcon, ArrowRightIcon } from '@her
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Select } from '@/components/ui/select';
 
 interface StepGoalSuggestionProps {
   monthlyIncome: number;
@@ -17,6 +18,10 @@ interface StepGoalSuggestionProps {
   currency: string;
   onNext: () => void;
   onBack: () => void;
+  isSubmitting?: boolean;
+  accounts?: Array<{ id: number; name: string; currentBalance: number }>;
+  linkedAccountId?: number;
+  onLinkedAccountChange?: (id: number | undefined) => void;
 }
 
 export function StepGoalSuggestion({
@@ -29,6 +34,10 @@ export function StepGoalSuggestion({
   currency,
   onNext,
   onBack,
+  isSubmitting,
+  accounts,
+  linkedAccountId,
+  onLinkedAccountChange,
 }: StepGoalSuggestionProps) {
   const t = useTranslations('onboarding');
   const [isEditing, setIsEditing] = useState(false);
@@ -53,6 +62,12 @@ export function StepGoalSuggestion({
     }
   };
 
+  // Validation: target vs monthly expenses
+  const isBelowMinimum = monthlyExpenses > 0 && goalTargetAmount > 0 && goalTargetAmount < monthlyExpenses;
+  const isBelowRecommended = monthlyExpenses > 0 && goalTargetAmount >= monthlyExpenses && goalTargetAmount < monthlyExpenses * 3;
+
+  const linkedAccount = accounts?.find(a => a.id === linkedAccountId);
+
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)] lg:gap-8">
       <section className="flex flex-col rounded-[24px] border border-violet-100 bg-white/80 p-5 sm:p-6">
@@ -70,27 +85,6 @@ export function StepGoalSuggestion({
           </p>
         </div>
 
-        <div className="mt-5 rounded-2xl border border-violet-100 bg-violet-50/70 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.17em] text-violet-500">
-            {t('goalSuggestion.equationTitle')}
-          </p>
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-700">
-            <span className="rounded-lg bg-white px-3 py-1.5 shadow-sm">
-              {t('goalSuggestion.equationIncome')}: <span className="font-[var(--font-onboarding-mono)]">{formatCurrency(monthlyIncome)}</span>
-            </span>
-            <span className="text-violet-500">-</span>
-            <span className="rounded-lg bg-white px-3 py-1.5 shadow-sm">
-              {t('goalSuggestion.equationExpenses')}: <span className="font-[var(--font-onboarding-mono)]">{formatCurrency(monthlyExpenses)}</span>
-            </span>
-            <span className="text-violet-500">=</span>
-            <span className={`rounded-lg px-3 py-1.5 font-[var(--font-onboarding-mono)] shadow-sm ${
-              monthlyAvailable >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
-            }`}>
-              {t('goalSuggestion.available')}: {formatCurrency(monthlyAvailable)}
-            </span>
-          </div>
-        </div>
-
         <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
           {!isEditing ? (
             <div className="space-y-3">
@@ -103,6 +97,26 @@ export function StepGoalSuggestion({
                 <p className="mt-2 font-[var(--font-onboarding-mono)] text-3xl font-semibold text-violet-700">
                   {formatCurrency(goalTargetAmount)}
                 </p>
+                {isBelowMinimum && (
+                  <p className="mt-2 text-xs font-medium text-red-600">
+                    {t('goalSuggestion.belowMinimum', { amount: formatCurrency(monthlyExpenses) })}
+                  </p>
+                )}
+                {isBelowRecommended && (
+                  <p className="mt-2 text-xs font-medium text-amber-600">
+                    {t('goalSuggestion.belowRecommended')}
+                  </p>
+                )}
+                <p className={`mt-2 text-xs font-medium ${
+                  monthlyAvailable >= 0 ? 'text-emerald-600' : 'text-amber-600'
+                }`}>
+                  {t('goalSuggestion.available')}: <span className="font-[var(--font-onboarding-mono)]">{formatCurrency(monthlyAvailable)}</span>{t('goalSuggestion.perMonth')}
+                </p>
+                {linkedAccount && (
+                  <p className="mt-2 text-xs font-medium text-emerald-600">
+                    {t('goalSuggestion.linkedTo', { accountName: linkedAccount.name })} — {formatCurrency(linkedAccount.currentBalance)} {t('goalSuggestion.existingBalance')}
+                  </p>
+                )}
               </div>
               <p className="text-sm leading-relaxed text-slate-600">
                 {t('goalSuggestion.why')}
@@ -132,8 +146,43 @@ export function StepGoalSuggestion({
                 currency={currency}
                 label={t('goalSuggestion.targetLabel')}
                 allowNegative={false}
+                error={isBelowMinimum}
+                errorMessage={isBelowMinimum ? t('goalSuggestion.belowMinimum', { amount: formatCurrency(monthlyExpenses) }) : undefined}
                 className="rounded-xl border-violet-200 bg-white [font-family:var(--font-onboarding-mono)] focus:border-violet-400 focus:ring-violet-200"
               />
+              {isBelowRecommended && (
+                <p className="text-xs font-medium text-amber-600">
+                  {t('goalSuggestion.belowRecommended')}
+                </p>
+              )}
+              {accounts && accounts.length > 0 && (
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-slate-700">
+                    {t('goalSuggestion.linkedAccountLabel')}
+                  </label>
+                  <Select
+                    value={linkedAccountId?.toString() ?? ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      onLinkedAccountChange?.(val ? Number(val) : undefined);
+                    }}
+                    className="rounded-xl border-violet-200 focus:border-violet-400 focus:ring-violet-200"
+                  >
+                    <option value="">{t('goalSuggestion.noLinkedAccount')}</option>
+                    {accounts.map((account) => (
+                      <option key={account.id} value={account.id.toString()}>
+                        {account.name}
+                      </option>
+                    ))}
+                  </Select>
+                  <p className="text-xs text-slate-500">{t('goalSuggestion.linkedAccountHelp')}</p>
+                  {linkedAccount && (
+                    <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+                      {t('goalSuggestion.startingBalance')}: {formatCurrency(linkedAccount.currentBalance)}
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="flex justify-end">
                 <Button
                   variant="ghost"
@@ -158,11 +207,11 @@ export function StepGoalSuggestion({
           </Button>
           <Button
             onClick={onNext}
-            disabled={!goalName.trim() || goalTargetAmount <= 0}
+            disabled={!goalName.trim() || goalTargetAmount <= 0 || isBelowMinimum || isSubmitting}
             className="rounded-xl bg-violet-600 px-6 text-white shadow-[0_12px_25px_-15px_rgba(124,58,237,1)] hover:bg-violet-700"
           >
-            {t('next')}
-            <ArrowRightIcon className="ml-2 h-4 w-4" />
+            {isSubmitting ? t('submitting') : t('finish')}
+            {!isSubmitting && <ArrowRightIcon className="ml-2 h-4 w-4" />}
           </Button>
         </div>
       </section>
@@ -173,14 +222,35 @@ export function StepGoalSuggestion({
           viewBox="0 0 280 190"
           className="h-[160px] w-full"
           role="img"
-          aria-label="Emergency fund illustration"
+          aria-label="Financial goal illustration"
         >
-          <path d="M90 144c0-32 22-52 50-52s50 20 50 52v22H90z" fill="#ede9fe" stroke="#7c3aed" strokeWidth="3" />
-          <path d="M111 114h58" stroke="#7c3aed" strokeWidth="3" strokeLinecap="round" />
-          <path d="M120 96a25 25 0 0 1 40 0" fill="none" stroke="#7c3aed" strokeWidth="3" strokeLinecap="round" />
-          <path d="M56 120l22-34 22 34" fill="none" stroke="#14b8a6" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M46 120h64v27H46z" fill="#ccfbf1" stroke="#14b8a6" strokeWidth="3" />
-          <path d="M214 78c8 0 8 12 0 12s-8-12 0-12zM237 101c8 0 8 12 0 12s-8-12 0-12zM224 126c8 0 8 12 0 12s-8-12 0-12z" fill="#a78bfa" className="animate-pulse" />
+          {/* Ground line */}
+          <path d="M20 170h240" stroke="#c4b5fd" strokeWidth="2" strokeLinecap="round" />
+
+          {/* Rising steps / staircase — centered in viewBox */}
+          <g transform="translate(69,170)">
+            {/* Step 1 */}
+            <rect x="0" y="-28" width="40" height="28" rx="4" fill="#ede9fe" stroke="#8b5cf6" strokeWidth="2" />
+            <text x="20" y="-10" textAnchor="middle" fontSize="11" fontWeight="700" fill="#7c3aed" fontFamily="system-ui">1</text>
+
+            {/* Step 2 */}
+            <rect x="48" y="-56" width="40" height="56" rx="4" fill="#ddd6fe" stroke="#8b5cf6" strokeWidth="2" />
+            <text x="68" y="-32" textAnchor="middle" fontSize="11" fontWeight="700" fill="#7c3aed" fontFamily="system-ui">2</text>
+
+            {/* Step 3 */}
+            <rect x="96" y="-84" width="40" height="84" rx="4" fill="#c4b5fd" stroke="#7c3aed" strokeWidth="2" />
+            <text x="116" y="-56" textAnchor="middle" fontSize="11" fontWeight="700" fill="#6d28d9" fontFamily="system-ui">3</text>
+          </g>
+
+          {/* Flag on top of step 3 */}
+          <g transform="translate(185,62)">
+            {/* Flagpole */}
+            <path d="M0 24 v-48" stroke="#7c3aed" strokeWidth="2.5" strokeLinecap="round" />
+            {/* Flag */}
+            <path d="M0-24 l26 10 l-26 10 z" fill="#8b5cf6" stroke="#7c3aed" strokeWidth="1.5" strokeLinejoin="round" />
+            {/* Star on flag */}
+            <circle cx="12" cy="-14" r="3" fill="#ede9fe" />
+          </g>
         </svg>
 
         <div className="rounded-2xl border border-violet-200/85 bg-white/80 p-4">

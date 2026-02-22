@@ -1,21 +1,18 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { DM_Mono, Manrope } from 'next/font/google';
-import { useAuth } from '@/contexts/auth-context';
-import { apiClient } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
-import { StepProgressIndicator } from './step-progress-indicator';
-import { StepWelcome } from './step-welcome';
-import { StepIncome } from './step-income';
-import { StepExpenses } from './step-expenses';
-import { StepGoalSuggestion } from './step-goal-suggestion';
-import { StepComplete } from './step-complete';
+import { useLocale } from '@/contexts/locale-context';
+import { StepProgressIndicator } from '@/components/onboarding/step-progress-indicator';
+import { StepWelcome } from '@/components/onboarding/step-welcome';
+import { StepIncome } from '@/components/onboarding/step-income';
+import { StepExpenses } from '@/components/onboarding/step-expenses';
+import { StepGoalSuggestion } from '@/components/onboarding/step-goal-suggestion';
+import { StepComplete } from '@/components/onboarding/step-complete';
 
 const TOTAL_STEPS = 5;
-const REDIRECT_SECONDS = 3;
 
 const manrope = Manrope({
   subsets: ['latin'],
@@ -28,37 +25,30 @@ const dmMono = DM_Mono({
   variable: '--font-onboarding-mono',
 });
 
-export function OnboardingWizard() {
+/**
+ * Dev-only preview page for the onboarding wizard.
+ * No auth, no API calls — just renders the UI with mock data.
+ * Navigate to /onboarding/preview to use it.
+ */
+export default function OnboardingPreviewPage() {
   const t = useTranslations('onboarding');
-  const router = useRouter();
-  const { user, refreshUser } = useAuth();
+  const { locale, setLocale } = useLocale();
 
   const [currentStep, setCurrentStep] = useState(1);
   const [monthlyIncome, setMonthlyIncome] = useState(0);
   const [monthlyExpenses, setMonthlyExpenses] = useState(0);
   const [goalName, setGoalName] = useState('');
   const [goalTargetAmount, setGoalTargetAmount] = useState(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [redirectCountdown, setRedirectCountdown] = useState(REDIRECT_SECONDS);
-  const [error, setError] = useState<string | null>(null);
-  const [accounts, setAccounts] = useState<Array<{ id: number; name: string; currentBalance: number }>>([]);
   const [linkedAccountId, setLinkedAccountId] = useState<number | undefined>(undefined);
 
-  const currency = user?.currency || 'NZD';
+  const mockAccounts = [
+    { id: 1, name: 'Savings Account', currentBalance: 5000 },
+    { id: 2, name: 'Emergency Fund', currentBalance: 12500 },
+    { id: 3, name: 'Checking Account', currentBalance: 1200 },
+  ];
 
-  useEffect(() => {
-    apiClient.getAccountsWithBalances()
-      .then((data: any) => {
-        if (Array.isArray(data)) {
-          setAccounts(data.map((a: any) => ({ id: a.id, name: a.name, currentBalance: a.currentBalance ?? 0 })));
-        }
-      })
-      .catch(() => {
-        // Accounts are optional for onboarding — silently ignore
-      });
-  }, []);
+  const currency = 'BRL';
 
-  // When moving from expenses to goal suggestion, pre-populate defaults
   const handleExpensesNext = useCallback(() => {
     if (!goalName) {
       setGoalName(t('goalSuggestion.suggestedGoal'));
@@ -69,58 +59,10 @@ export function OnboardingWizard() {
     setCurrentStep(4);
   }, [goalName, goalTargetAmount, monthlyExpenses, t]);
 
-  const handleComplete = useCallback(async () => {
-    setIsSubmitting(true);
-    setError(null);
-
-    try {
-      await apiClient.completeOnboarding({
-        monthlyIncome,
-        monthlyExpenses,
-        goalName: goalName.trim(),
-        goalTargetAmount,
-        goalType: 'EmergencyFund',
-        dataEntryMethod: 'manual',
-        ...(linkedAccountId !== undefined && { linkedAccountId }),
-      });
-
-      setCurrentStep(5);
-      setRedirectCountdown(REDIRECT_SECONDS);
-      setIsSubmitting(false);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'An error occurred';
-      setError(message);
-      setIsSubmitting(false);
-    }
-  }, [monthlyIncome, monthlyExpenses, goalName, goalTargetAmount, linkedAccountId]);
-
-  const navigateToDashboard = useCallback(async () => {
-    try {
-      await refreshUser();
-    } catch {
-      // The user state can be refreshed on the dashboard route if this fails.
-    }
-    router.replace('/dashboard');
-  }, [refreshUser, router]);
-
-  useEffect(() => {
-    if (currentStep !== 5) {
-      return;
-    }
-
-    const countdownInterval = setInterval(() => {
-      setRedirectCountdown((previous) => (previous > 1 ? previous - 1 : 1));
-    }, 1000);
-
-    const redirectTimer = setTimeout(() => {
-      void navigateToDashboard();
-    }, REDIRECT_SECONDS * 1000);
-
-    return () => {
-      clearInterval(countdownInterval);
-      clearTimeout(redirectTimer);
-    };
-  }, [currentStep, navigateToDashboard]);
+  const handleComplete = useCallback(() => {
+    // No API call — just advance to completion step
+    setCurrentStep(5);
+  }, []);
 
   const showProgress = currentStep > 1 && currentStep < 6;
 
@@ -132,6 +74,50 @@ export function OnboardingWizard() {
         dmMono.variable
       )}
     >
+      {/* Dev toolbar */}
+      <div className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-full border border-violet-200 bg-white/95 px-4 py-2 shadow-lg backdrop-blur">
+        <span className="text-xs font-medium text-violet-600">Step:</span>
+        {[1, 2, 3, 4, 5].map((step) => (
+          <button
+            key={step}
+            onClick={() => {
+              if (step >= 3 && monthlyIncome === 0) setMonthlyIncome(5000);
+              if (step >= 4 && monthlyExpenses === 0) setMonthlyExpenses(3500);
+              if (step >= 4 && !goalName) {
+                setGoalName(t('goalSuggestion.suggestedGoal'));
+                setGoalTargetAmount(3500 * 3);
+              }
+              setCurrentStep(step);
+            }}
+            className={cn(
+              'flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-all',
+              currentStep === step
+                ? 'bg-violet-600 text-white'
+                : 'bg-violet-100 text-violet-600 hover:bg-violet-200'
+            )}
+          >
+            {step}
+          </button>
+        ))}
+        <div className="mx-1 h-5 w-px bg-violet-200" />
+        <div className="flex items-center gap-1">
+          {(['en', 'pt-BR'] as const).map((lang) => (
+            <button
+              key={lang}
+              onClick={() => setLocale(lang)}
+              className={cn(
+                'rounded-full px-2.5 py-1 text-xs font-bold transition-all',
+                locale === lang
+                  ? 'bg-violet-600 text-white'
+                  : 'bg-violet-100 text-violet-600 hover:bg-violet-200'
+              )}
+            >
+              {lang === 'en' ? 'EN' : 'PT'}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
         <div className="absolute -left-44 -top-44 h-[580px] w-[580px] rounded-full bg-violet-200/55 blur-[110px]" />
         <div className="absolute -bottom-56 -right-40 h-[560px] w-[560px] rounded-full bg-fuchsia-200/50 blur-[120px]" />
@@ -198,8 +184,7 @@ export function OnboardingWizard() {
                   currency={currency}
                   onNext={handleComplete}
                   onBack={() => setCurrentStep(3)}
-                  isSubmitting={isSubmitting}
-                  accounts={accounts}
+                  accounts={mockAccounts}
                   linkedAccountId={linkedAccountId}
                   onLinkedAccountChange={setLinkedAccountId}
                 />
@@ -207,21 +192,13 @@ export function OnboardingWizard() {
 
               {currentStep === 5 && (
                 <StepComplete
-                  countdown={redirectCountdown}
-                  onGoNow={() => {
-                    void navigateToDashboard();
-                  }}
+                  countdown={3}
+                  onGoNow={() => setCurrentStep(1)}
                 />
               )}
             </div>
           </div>
         </div>
-
-        {error && (
-          <div className="mx-auto w-full max-w-[860px] rounded-2xl border border-red-200 bg-red-50/90 px-4 py-3">
-            <p className="text-sm text-red-700">{error}</p>
-          </div>
-        )}
 
         {!showProgress && currentStep !== 5 && (
           <p className="mx-auto text-center text-xs font-medium tracking-[0.12em] text-violet-500/70">

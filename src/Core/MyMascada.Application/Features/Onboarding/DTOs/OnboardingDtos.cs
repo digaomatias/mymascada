@@ -8,6 +8,7 @@ public class CompleteOnboardingRequest
     public decimal GoalTargetAmount { get; set; }
     public string GoalType { get; set; } = "EmergencyFund";
     public string DataEntryMethod { get; set; } = "manual";
+    public int? LinkedAccountId { get; set; }
 }
 
 public class OnboardingCompleteResponse

@@ -3069,7 +3069,8 @@
     "goalSuggestion": {
       "title": "Sua Primeira Meta",
       "subtitle": "Com base nas suas finanças, sugerimos:",
-      "available": "Disponível por mês",
+      "available": "Disponível",
+      "perMonth": "/mês",
       "suggestedGoal": "Criar uma reserva de emergência de 3 meses",
       "targetLabel": "Valor Alvo",
       "goalNameLabel": "Nome da Meta",
@@ -3083,7 +3084,15 @@
       "timelineTitle": "Projeção de 3 meses",
       "monthLabel": "Mês {month}",
       "timelineHintPositive": "Com seu saldo atual, essa meta pode avançar rapidamente.",
-      "timelineHintNegative": "Ainda sem sobra mensal. Você pode definir a meta agora e ajustar depois."
+      "timelineHintNegative": "Ainda sem sobra mensal. Você pode definir a meta agora e ajustar depois.",
+      "noLinkedAccount": "Nenhuma conta vinculada",
+      "linkedAccountLabel": "Vincular conta existente (opcional)",
+      "linkedAccountHelp": "Vincule uma conta poupança para contar o saldo como progresso.",
+      "startingBalance": "Saldo inicial",
+      "linkedTo": "Vinculada a {accountName}",
+      "existingBalance": "saldo existente",
+      "belowMinimum": "O valor deve ser pelo menos 1 mês de despesas ({amount}).",
+      "belowRecommended": "Recomendamos pelo menos 3 meses de despesas. Você pode continuar com esse valor."
     },
     "dataEntry": {
       "title": "Como você quer adicionar transações?",
@@ -3110,6 +3119,7 @@
     },
     "next": "Próximo",
     "back": "Voltar",
-    "finish": "Concluir Configuração"
+    "finish": "Concluir Configuração",
+    "submitting": "Salvando..."
   }
 }

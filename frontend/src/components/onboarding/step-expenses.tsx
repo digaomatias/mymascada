@@ -36,33 +36,78 @@ export function StepExpenses({ value, onChange, currency, onNext, onBack }: Step
           role="img"
           aria-label="Expense illustration"
         >
-          <rect x="48" y="124" width="194" height="72" rx="18" fill="#ffffff" stroke="#f59e0b" strokeWidth="3" />
-          <rect x="66" y="82" width="126" height="72" rx="10" fill="#fffbeb" stroke="#f59e0b" strokeWidth="3" />
-          <rect x="90" y="64" width="126" height="72" rx="10" fill="#fff7ed" stroke="#fb923c" strokeWidth="3" />
-          <path d="M79 102h58M79 114h72M79 126h40" stroke="#b45309" strokeWidth="3" strokeLinecap="round" />
-          <path d="M104 84h58M104 96h72M104 108h36" stroke="#c2410c" strokeWidth="3" strokeLinecap="round" />
-          <path
-            d="M236 70a38 38 0 1 1-1 0"
-            fill="none"
-            stroke="#f59e0b"
-            strokeWidth="9"
-            strokeLinecap="round"
-          />
-          <path d="M236 70a38 38 0 0 1 24 10" fill="none" stroke="#7c3aed" strokeWidth="9" strokeLinecap="round" />
-          {[
-            { x1: 216, y1: 170, x2: 258, y2: 154 },
-            { x1: 206, y1: 145, x2: 252, y2: 129 },
-            { x1: 198, y1: 118, x2: 242, y2: 102 },
-          ].map((arrow, index) => (
-            <g
-              key={`${arrow.x1}-${arrow.y1}`}
-              className="animate-[onboarding-drift_2.6s_ease-in-out_infinite]"
-              style={{ animationDelay: `${index * 0.3}s` }}
-            >
-              <path d={`M${arrow.x1} ${arrow.y1}L${arrow.x2} ${arrow.y2}`} stroke="#f59e0b" strokeWidth="2.8" strokeLinecap="round" strokeDasharray="4 5" />
-              <path d={`M${arrow.x2 - 6} ${arrow.y2 - 2}L${arrow.x2 + 2} ${arrow.y2}L${arrow.x2 - 2} ${arrow.y2 + 6}`} fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          {/* Receipt */}
+          <g transform="translate(120,18)">
+            {/* Receipt body with torn bottom edge */}
+            <path
+              d="M-50 0 h100 a6 6 0 0 1 6 6 v148 l-7-5 -7 5 -7-5 -7 5 -7-5 -7 5 -7-5 -7 5 -7-5 -7 5 -7-5 -7 5 -7-5 -7 5 v-148 a6 6 0 0 1 6 -6z"
+              fill="#ffffff"
+              stroke="#f59e0b"
+              strokeWidth="2.5"
+              strokeLinejoin="round"
+            />
+
+            {/* Receipt header — store name */}
+            <rect x="-30" y="14" width="60" height="6" rx="3" fill="#fde68a" />
+
+            {/* Divider line */}
+            <path d="M-38 30 h76" stroke="#fde68a" strokeWidth="1.5" strokeDasharray="3 3" />
+
+            {/* Line items */}
+            <path d="M-34 44 h42" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M26 44 h12" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" />
+
+            <path d="M-34 58 h50" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M28 58 h10" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" />
+
+            <path d="M-34 72 h36" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M24 72 h14" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" />
+
+            <path d="M-34 86 h46" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M30 86 h8" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" />
+
+            {/* Total divider */}
+            <path d="M-38 100 h76" stroke="#f59e0b" strokeWidth="2" />
+
+            {/* Total line — bold */}
+            <path d="M-34 116 h28" stroke="#92400e" strokeWidth="3.5" strokeLinecap="round" />
+            <path d="M18 116 h20" stroke="#92400e" strokeWidth="3.5" strokeLinecap="round" />
+          </g>
+
+          {/* Expense category icons — house, bag, car */}
+          {/* House (rent) */}
+          <g transform="translate(246,56)">
+            <g className="animate-[onboarding-coin-fall_2.4s_ease-in-out_infinite]" style={{ animationDelay: '0s' }}>
+              <circle r="18" fill="#fffbeb" stroke="#f59e0b" strokeWidth="2.5" />
+              <path d="M0-9 l10 8 v8 h-6 v-5 h-8 v5 h-6 v-8 z" fill="#fde68a" stroke="#d97706" strokeWidth="1.8" strokeLinejoin="round" />
             </g>
-          ))}
+          </g>
+
+          {/* Shopping bag (groceries) */}
+          <g transform="translate(268,108)">
+            <g className="animate-[onboarding-coin-fall_2.4s_ease-in-out_infinite]" style={{ animationDelay: '0.5s' }}>
+              <circle r="15" fill="#fffbeb" stroke="#f59e0b" strokeWidth="2.5" />
+              <rect x="-7" y="-3" width="14" height="12" rx="2" fill="#fde68a" stroke="#d97706" strokeWidth="1.8" />
+              <path d="M-4-3 v-3 a4 4 0 0 1 8 0 v3" fill="none" stroke="#d97706" strokeWidth="1.8" strokeLinecap="round" />
+            </g>
+          </g>
+
+          {/* Car (transport) */}
+          <g transform="translate(250,158)">
+            <g className="animate-[onboarding-coin-fall_2.4s_ease-in-out_infinite]" style={{ animationDelay: '1s' }}>
+              <circle r="13" fill="#fffbeb" stroke="#f59e0b" strokeWidth="2.5" />
+              <path d="M-7 1 h14 v4 h-14 z M-5 1 l2-5 h6 l2 5" fill="#fde68a" stroke="#d97706" strokeWidth="1.5" strokeLinejoin="round" />
+              <circle cx="-4" cy="5" r="1.5" fill="#d97706" />
+              <circle cx="4" cy="5" r="1.5" fill="#d97706" />
+            </g>
+          </g>
+
+          {/* Downward arrow — money going out */}
+          <g transform="translate(60,105)">
+            <g className="animate-[onboarding-coin-fall_2s_ease-in-out_infinite]" style={{ animationDelay: '0.3s' }}>
+              <path d="M0-15 v30 M-10 5 l10 14 l10-14" stroke="#f59e0b" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            </g>
+          </g>
         </svg>
         <div className="rounded-2xl border border-amber-200/80 bg-white/80 p-4">
           <p className="text-sm font-semibold text-amber-900">{t('expenses.breakdown')}</p>

@@ -29,25 +29,57 @@ export function StepIncome({ value, onChange, currency, onNext, onBack }: StepIn
           role="img"
           aria-label="Income illustration"
         >
-          <rect x="52" y="118" width="176" height="84" rx="20" fill="#ffffff" stroke="#10b981" strokeWidth="3" />
-          <rect x="64" y="136" width="92" height="34" rx="8" fill="#d1fae5" />
-          <path d="M73 147h74M73 158h54" stroke="#047857" strokeWidth="3" strokeLinecap="round" />
-          <path d="M201 118v-20a20 20 0 0 0-20-20H99a20 20 0 0 0-20 20v20" fill="none" stroke="#10b981" strokeWidth="3" />
+          {/* Ground line */}
+          <path d="M30 195h260" stroke="#a7f3d0" strokeWidth="3" strokeLinecap="round" />
+
+          {/* Stack of bills (fanned, behind wallet) */}
+          <g transform="translate(160,100)">
+            {/* Bill 3 (back) */}
+            <rect x="-52" y="-62" width="104" height="52" rx="6" fill="#d1fae5" stroke="#10b981" strokeWidth="2" transform="rotate(-8)" />
+            <path d="M-38 -42h32" stroke="#059669" strokeWidth="2" strokeLinecap="round" transform="rotate(-8)" />
+
+            {/* Bill 2 (middle) */}
+            <rect x="-52" y="-58" width="104" height="52" rx="6" fill="#ecfdf5" stroke="#10b981" strokeWidth="2" transform="rotate(4)" />
+            <path d="M-38 -38h40" stroke="#059669" strokeWidth="2" strokeLinecap="round" transform="rotate(4)" />
+
+            {/* Bill 1 (front) — the main one sticking out */}
+            <rect x="-52" y="-54" width="104" height="52" rx="6" fill="#ffffff" stroke="#10b981" strokeWidth="2.5" />
+            {/* Dollar sign on front bill */}
+            <text x="0" y="-22" textAnchor="middle" fontSize="22" fontWeight="700" fill="#059669" fontFamily="system-ui">$</text>
+          </g>
+
+          {/* Wallet body */}
+          <g transform="translate(160,140)">
+            <rect x="-68" y="-16" width="136" height="68" rx="16" fill="#ffffff" stroke="#10b981" strokeWidth="3" />
+            {/* Wallet flap — extends 12px into body so white fill hides the seam */}
+            <path d="M-68 -4 v-22 a12 12 0 0 1 12 -12 h112 a12 12 0 0 1 12 12 v22" fill="#ffffff" stroke="#10b981" strokeWidth="3" />
+            {/* Wallet clasp */}
+            <circle cx="56" cy="10" r="8" fill="#d1fae5" stroke="#10b981" strokeWidth="2.5" />
+            <circle cx="56" cy="10" r="3" fill="#10b981" />
+            {/* Card slots inside */}
+            <path d="M-48 6h60M-48 18h40" stroke="#a7f3d0" strokeWidth="3" strokeLinecap="round" />
+          </g>
+
+          {/* Coins floating in from the side */}
           {[
-            { cx: 250, cy: 160, delay: '0s' },
-            { cx: 270, cy: 128, delay: '0.5s' },
-            { cx: 246, cy: 94, delay: '1s' },
+            { cx: 248, cy: 90, delay: '0s', r: 16 },
+            { cx: 270, cy: 130, delay: '0.6s', r: 12 },
+            { cx: 252, cy: 166, delay: '1.2s', r: 10 },
           ].map((coin) => (
             <g
               key={`${coin.cx}-${coin.cy}`}
               className="animate-[onboarding-coin-rise_2.2s_ease-in-out_infinite]"
               style={{ animationDelay: coin.delay }}
             >
-              <circle cx={coin.cx} cy={coin.cy} r="14" fill="#ecfdf5" stroke="#10b981" strokeWidth="3" />
-              <path d={`M${coin.cx - 5} ${coin.cy}h10`} stroke="#059669" strokeWidth="3" strokeLinecap="round" />
+              <circle cx={coin.cx} cy={coin.cy} r={coin.r} fill="#ecfdf5" stroke="#10b981" strokeWidth="2.5" />
+              <text x={coin.cx} y={coin.cy + 4} textAnchor="middle" fontSize={coin.r} fontWeight="700" fill="#059669" fontFamily="system-ui">$</text>
             </g>
           ))}
-          <path d="M30 190h260" stroke="#a7f3d0" strokeWidth="4" strokeLinecap="round" />
+
+          {/* Down-arrow indicating income flowing in */}
+          <g className="animate-[onboarding-coin-rise_2s_ease-in-out_infinite]" style={{ animationDelay: '0.3s' }}>
+            <path d="M75 70 v30 M65 90 l10 14 l10-14" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          </g>
         </svg>
         <div className="rounded-2xl border border-emerald-200/80 bg-white/80 p-4">
           <p className="text-sm font-semibold text-emerald-900">{t('income.detailTitle')}</p>
