@@ -27,7 +27,7 @@ const CardHeader = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
     return (
       <div
         ref={ref}
-        className={cn('pb-4 border-b border-gray-200', className)}
+        className={cn('pb-4 border-b border-violet-100/50', className)}
         {...props}
       />
     );

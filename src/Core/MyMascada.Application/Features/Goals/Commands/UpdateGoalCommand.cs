@@ -25,13 +25,16 @@ public class UpdateGoalCommandHandler : IRequestHandler<UpdateGoalCommand, GoalD
 {
     private readonly IGoalRepository _goalRepository;
     private readonly IAccountRepository _accountRepository;
+    private readonly ITransactionRepository _transactionRepository;
 
     public UpdateGoalCommandHandler(
         IGoalRepository goalRepository,
-        IAccountRepository accountRepository)
+        IAccountRepository accountRepository,
+        ITransactionRepository transactionRepository)
     {
         _goalRepository = goalRepository;
         _accountRepository = accountRepository;
+        _transactionRepository = transactionRepository;
     }
 
     public async Task<GoalDetailDto> Handle(UpdateGoalCommand request, CancellationToken cancellationToken)
@@ -71,7 +74,9 @@ public class UpdateGoalCommandHandler : IRequestHandler<UpdateGoalCommand, GoalD
             goal.TargetAmount = request.TargetAmount.Value;
         }
 
-        if (request.CurrentAmount.HasValue)
+        // Only allow manual CurrentAmount updates for goals without a linked account.
+        // Linked goals derive their current amount from the account balance.
+        if (request.CurrentAmount.HasValue && !goal.LinkedAccountId.HasValue)
         {
             if (request.CurrentAmount.Value < 0)
             {
@@ -123,14 +128,24 @@ public class UpdateGoalCommandHandler : IRequestHandler<UpdateGoalCommand, GoalD
             goal.LinkedAccountId = null;
         }
 
-        // Auto-complete: if CurrentAmount >= TargetAmount after update
-        if (goal.Status == GoalStatus.Active && goal.CurrentAmount >= goal.TargetAmount)
+        // Look up live balance for linked account to check auto-complete
+        decimal? linkedAccountBalance = null;
+        if (goal.LinkedAccountId.HasValue)
+        {
+            var accountBalances = await _transactionRepository.GetAccountBalancesAsync(request.UserId);
+            linkedAccountBalance = accountBalances.GetValueOrDefault(goal.LinkedAccountId.Value);
+        }
+
+        var effectiveAmount = linkedAccountBalance ?? goal.CurrentAmount;
+
+        // Auto-complete: if effective amount >= TargetAmount after update
+        if (goal.Status == GoalStatus.Active && effectiveAmount >= goal.TargetAmount)
         {
             goal.MarkCompleted();
         }
 
         var updatedGoal = await _goalRepository.UpdateGoalAsync(goal, cancellationToken);
-        return MapToDetailDto(updatedGoal);
+        return MapToDetailDto(updatedGoal, linkedAccountBalance);
     }
 
     private static DateTime EnsureUtc(DateTime dateTime) => dateTime.Kind switch
@@ -141,7 +156,7 @@ public class UpdateGoalCommandHandler : IRequestHandler<UpdateGoalCommand, GoalD
         _ => DateTime.SpecifyKind(dateTime, DateTimeKind.Utc)
     };
 
-    private static GoalDetailDto MapToDetailDto(Goal goal)
+    private static GoalDetailDto MapToDetailDto(Goal goal, decimal? linkedAccountBalance)
     {
         var now = DateTimeProvider.UtcNow;
         int? daysRemaining = null;
@@ -150,15 +165,21 @@ public class UpdateGoalCommandHandler : IRequestHandler<UpdateGoalCommand, GoalD
             daysRemaining = (int)(goal.Deadline.Value.Date - now.Date).TotalDays;
         }
 
+        var currentAmount = linkedAccountBalance ?? goal.CurrentAmount;
+        var progressPercentage = goal.TargetAmount > 0
+            ? Math.Round((currentAmount / goal.TargetAmount) * 100, 2)
+            : 0;
+        var remainingAmount = Math.Max(goal.TargetAmount - currentAmount, 0);
+
         return new GoalDetailDto
         {
             Id = goal.Id,
             Name = goal.Name,
             Description = goal.Description,
             TargetAmount = goal.TargetAmount,
-            CurrentAmount = goal.CurrentAmount,
-            ProgressPercentage = goal.GetProgressPercentage(),
-            RemainingAmount = goal.GetRemainingAmount(),
+            CurrentAmount = currentAmount,
+            ProgressPercentage = progressPercentage,
+            RemainingAmount = remainingAmount,
             GoalType = goal.GoalType.ToString(),
             Status = goal.Status.ToString(),
             Deadline = goal.Deadline,

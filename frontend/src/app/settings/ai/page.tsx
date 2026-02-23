@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/auth-context';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import Navigation from '@/components/navigation';
+import { AppLayout } from '@/components/app-layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -266,9 +266,9 @@ export default function AiSettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200 flex items-center justify-center">
+      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
+          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <SparklesIcon className="w-8 h-8 text-white" />
           </div>
           <div className="mt-6 text-gray-700 font-medium">{tCommon('loading')}</div>
@@ -284,11 +284,8 @@ export default function AiSettingsPage() {
   const isLoadingData = loadingSettings || loadingProviders;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200">
-      <Navigation />
-
-      <main className="container-responsive py-4 sm:py-6 lg:py-8 pb-24 md:pb-8">
-        {/* Back link */}
+    <AppLayout>
+      {/* Back link */}
         <Link
           href="/settings"
           className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4"
@@ -572,7 +569,6 @@ export default function AiSettingsPage() {
             </Card>
           </div>
         )}
-      </main>
 
       <ConfirmationDialog
         isOpen={showRemoveConfirm}
@@ -584,7 +580,7 @@ export default function AiSettingsPage() {
         cancelText={tCommon('cancel')}
         variant="danger"
       />
-    </div>
+    </AppLayout>
   );
 }
 

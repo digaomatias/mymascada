@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import Navigation from '@/components/navigation';
+import { AppLayout } from '@/components/app-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -82,10 +82,7 @@ export default function CreateGoalPage() {
   const canSubmit = name.trim() !== '' && parseFloat(targetAmount) > 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200">
-      <Navigation />
-
-      <main className="container mx-auto px-4 py-4 sm:py-6 lg:py-8">
+    <AppLayout>
         {/* Navigation Bar */}
         <div className="flex items-center justify-between mb-6">
           <Link href="/goals">
@@ -199,7 +196,6 @@ export default function CreateGoalPage() {
             </CardContent>
           </Card>
         </div>
-      </main>
-    </div>
+    </AppLayout>
   );
 }

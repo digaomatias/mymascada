@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { useRouter } from 'next/navigation';
-import Navigation from '@/components/navigation';
+import { AppLayout } from '@/components/app-layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -204,33 +204,27 @@ export default function RulesPage() {
 
   if (isLoading || loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Navigation />
-        <div className="container-responsive py-6">
-          <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-gray-200 rounded w-48"></div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-24 bg-gray-200 rounded"></div>
-              ))}
-            </div>
-            <div className="space-y-4">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-32 bg-gray-200 rounded"></div>
-              ))}
-            </div>
+      <AppLayout>
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 bg-gray-200 rounded w-48"></div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-24 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-32 bg-gray-200 rounded"></div>
+            ))}
           </div>
         </div>
-      </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      
-      <div className="container-responsive py-6">
-        {/* Header */}
+    <AppLayout>
+      {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{t('page.title')}</h1>
@@ -549,7 +543,6 @@ export default function RulesPage() {
             </div>
           </div>
         )}
-      </div>
-    </div>
+    </AppLayout>
   );
 }

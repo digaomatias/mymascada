@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/auth-context';
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
-import Navigation from '@/components/navigation';
+import { AppLayout } from '@/components/app-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -195,9 +195,9 @@ export default function TransactionDetailsPage() {
 
   if (isLoading || loadingTransaction) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200 flex items-center justify-center">
+      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
+          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <EyeIcon className="w-8 h-8 text-white" />
           </div>
           <div className="mt-6 text-gray-700 font-medium">{t('loadingTransaction')}</div>
@@ -212,20 +212,16 @@ export default function TransactionDetailsPage() {
 
   if (error && !transaction) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200">
-        <Navigation />
-        
-        <main className="container-responsive py-4 sm:py-6 lg:py-8">
-          <Card className="max-w-2xl mx-auto bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-            <CardContent className="p-8 text-center">
-              <ExclamationTriangleIcon className="w-16 h-16 text-danger-500 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('transactionNotFound')}</h2>
-              <p className="text-gray-600 mb-6">{error}</p>
-              <TransactionBackButton />
-            </CardContent>
-          </Card>
-        </main>
-      </div>
+      <AppLayout>
+        <Card className="max-w-2xl mx-auto bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+          <CardContent className="p-8 text-center">
+            <ExclamationTriangleIcon className="w-16 h-16 text-danger-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('transactionNotFound')}</h2>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <TransactionBackButton />
+          </CardContent>
+        </Card>
+      </AppLayout>
     );
   }
 
@@ -236,230 +232,226 @@ export default function TransactionDetailsPage() {
   const isIncome = transaction.amount > 0; // Positive = Income, Negative = Expense
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200">
-      <Navigation />
-      
-      <main className="container-responsive py-4 sm:py-6 lg:py-8 mobile-form-safe">
-        {/* Header */}
-        <div className="mb-6 lg:mb-8">
-          {/* Navigation Bar */}
-          <div className="flex items-center justify-between mb-6">
-            <TransactionBackButton />
-          </div>
-          
-          
-          {/* Page Title */}
-          <div className="text-center mb-8">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-              {t('transactionDetails')}
-            </h1>
-            <p className="text-gray-600 text-sm sm:text-base">
-              {t('viewAndManage')}
-            </p>
-          </div>
+    <AppLayout>
+      {/* Header */}
+      <div className="mb-6 lg:mb-8">
+        {/* Navigation Bar */}
+        <div className="flex items-center justify-between mb-6">
+          <TransactionBackButton />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Details */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Transaction Overview */}
-            <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg relative z-10 overflow-visible">
-              <CardHeader>
-                <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                  {isIncome ? (
-                    <ArrowTrendingUpIcon className="w-5 h-5 text-success-500" />
-                  ) : (
-                    <ArrowTrendingDownIcon className="w-5 h-5 text-red-500" />
-                  )}
-                  {transaction.userDescription || transaction.description}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">{tCommon('amount')}</span>
-                  <span className={`text-2xl font-bold ${isIncome ? 'text-success-600' : 'text-red-600'}`}>
-                    {formatCurrency(transaction.amount)}
-                  </span>
-                </div>
 
+        {/* Page Title */}
+        <div className="text-center mb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+            {t('transactionDetails')}
+          </h1>
+          <p className="text-gray-600 text-sm sm:text-base">
+            {t('viewAndManage')}
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Details */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Transaction Overview */}
+          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg relative z-10 overflow-visible">
+            <CardHeader>
+              <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                {isIncome ? (
+                  <ArrowTrendingUpIcon className="w-5 h-5 text-success-500" />
+                ) : (
+                  <ArrowTrendingDownIcon className="w-5 h-5 text-red-500" />
+                )}
+                {transaction.userDescription || transaction.description}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600">{tCommon('amount')}</span>
+                <span className={`text-2xl font-bold ${isIncome ? 'text-success-600' : 'text-red-600'}`}>
+                  {formatCurrency(transaction.amount)}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600">{tCommon('date')}</span>
+                <div className="flex items-center gap-2">
+                  <CalendarIcon className="w-4 h-4 text-gray-400" />
+                  <span className="font-medium">{formatDate(transaction.transactionDate)}</span>
+                </div>
+              </div>
+
+              {transaction.accountName && (
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">{tCommon('date')}</span>
+                  <span className="text-gray-600">{tCommon('account')}</span>
                   <div className="flex items-center gap-2">
-                    <CalendarIcon className="w-4 h-4 text-gray-400" />
-                    <span className="font-medium">{formatDate(transaction.transactionDate)}</span>
+                    <WalletIcon className="w-4 h-4 text-gray-400" />
+                    <span className="font-medium">{transaction.accountName}</span>
                   </div>
                 </div>
+              )}
 
-                {transaction.accountName && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">{tCommon('account')}</span>
-                    <div className="flex items-center gap-2">
-                      <WalletIcon className="w-4 h-4 text-gray-400" />
-                      <span className="font-medium">{transaction.accountName}</span>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">{tCommon('category')}</span>
-                  {transaction.categoryName ? (
-                    <Badge 
-                      variant="secondary"
-                      style={{ backgroundColor: transaction.categoryColor + '20', color: transaction.categoryColor }}
-                      className="border-0"
-                    >
-                      <TagIcon className="w-3 h-3 mr-1" />
-                      {transaction.categoryName}
-                    </Badge>
-                  ) : (
-                    <div className="flex-1 max-w-xs ml-4">
-                      {updatingCategory ? (
-                        <div className="flex items-center justify-center py-2">
-                          <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
-                          <span className="ml-2 text-sm text-gray-600">{t('saving')}</span>
-                        </div>
-                      ) : (
-                        <CategoryPicker
-                          value=""
-                          onChange={handleCategoryAssignment}
-                          categories={categories}
-                          placeholder={t('chooseCategory')}
-                          disabled={loadingCategories || updatingCategory}
-                          disableQuickPicks={true}
-                        />
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">{tCommon('status')}</span>
-                  <Badge variant={getStatusKey(transaction.status) === 'cleared' ? 'default' : 'secondary'}>
-                    {t(`status.${getStatusKey(transaction.status)}`)}
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600">{tCommon('category')}</span>
+                {transaction.categoryName ? (
+                  <Badge
+                    variant="secondary"
+                    style={{ backgroundColor: transaction.categoryColor + '20', color: transaction.categoryColor }}
+                    className="border-0"
+                  >
+                    <TagIcon className="w-3 h-3 mr-1" />
+                    {transaction.categoryName}
                   </Badge>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">{tCommon('source')}</span>
-                  <Badge variant="outline">
-                    {t(`source.${getSourceKey(transaction.source)}`)}
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Additional Details */}
-            <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                  <DocumentTextIcon className="w-5 h-5" />
-                  {t('additionalInformation')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {transaction.description !== transaction.userDescription && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-600 mb-1 block">{t('originalDescription')}</label>
-                    <p className="text-gray-900">{transaction.description}</p>
+                ) : (
+                  <div className="flex-1 max-w-xs ml-4">
+                    {updatingCategory ? (
+                      <div className="flex items-center justify-center py-2">
+                        <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                        <span className="ml-2 text-sm text-gray-600">{t('saving')}</span>
+                      </div>
+                    ) : (
+                      <CategoryPicker
+                        value=""
+                        onChange={handleCategoryAssignment}
+                        categories={categories}
+                        placeholder={t('chooseCategory')}
+                        disabled={loadingCategories || updatingCategory}
+                        disableQuickPicks={true}
+                      />
+                    )}
                   </div>
                 )}
+              </div>
 
-                {transaction.notes && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-600 mb-1 block">{tCommon('notes')}</label>
-                    <p className="text-gray-900">{transaction.notes}</p>
-                  </div>
-                )}
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600">{tCommon('status')}</span>
+                <Badge variant={getStatusKey(transaction.status) === 'cleared' ? 'default' : 'secondary'}>
+                  {t(`status.${getStatusKey(transaction.status)}`)}
+                </Badge>
+              </div>
 
-                {transaction.location && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-600 mb-1 block">{t('location')}</label>
-                    <div className="flex items-center gap-2">
-                      <MapPinIcon className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-900">{transaction.location}</span>
-                    </div>
-                  </div>
-                )}
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600">{tCommon('source')}</span>
+                <Badge variant="outline">
+                  {t(`source.${getSourceKey(transaction.source)}`)}
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
 
-                {Array.isArray(transaction.tags) && transaction.tags.length > 0 && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-600 mb-2 block">{t('tags')}</label>
-                    <div className="flex flex-wrap gap-2">
-                      {transaction.tags.map((tag, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {transaction.externalId && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-600 mb-1 block">{t('externalId')}</label>
-                    <code className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-700">
-                      {transaction.externalId}
-                    </code>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Actions Sidebar */}
-          <div className="space-y-6">
-            {/* Quick Actions */}
-            <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-lg font-bold text-gray-900">{tCommon('actions')}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <EditTransactionButton
-                  transactionId={transaction.id.toString()}
-                  onSuccess={loadTransaction}
-                  className="w-full bg-primary-500 hover:bg-primary-600"
-                />
-
-                <Button
-                  variant="secondary"
-                  className="w-full border-danger-300 text-danger-600 hover:bg-danger-50"
-                  onClick={() => setDeleteConfirm({ show: true, transactionId: transaction.id })}
-                >
-                  <TrashIcon className="w-4 h-4 mr-2" />
-                  {t('deleteTransaction')}
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Transaction Info */}
-            <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-lg font-bold text-gray-900">{t('transactionInfo')}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">{t('id')}</span>
-                  <span className="font-mono text-gray-900">#{transaction.id}</span>
+          {/* Additional Details */}
+          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <DocumentTextIcon className="w-5 h-5" />
+                {t('additionalInformation')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {transaction.description !== transaction.userDescription && (
+                <div>
+                  <label className="text-sm font-medium text-gray-600 mb-1 block">{t('originalDescription')}</label>
+                  <p className="text-gray-900">{transaction.description}</p>
                 </div>
+              )}
 
-                <div className="flex justify-between">
-                  <span className="text-gray-600">{tCommon('type')}</span>
-                  <Badge variant={isIncome ? 'default' : 'secondary'}>
-                    {isIncome ? tCommon('income') : tCommon('expense')}
-                  </Badge>
+              {transaction.notes && (
+                <div>
+                  <label className="text-sm font-medium text-gray-600 mb-1 block">{tCommon('notes')}</label>
+                  <p className="text-gray-900">{transaction.notes}</p>
                 </div>
+              )}
 
-                <div className="flex justify-between">
-                  <span className="text-gray-600">{tCommon('reviewed')}</span>
-                  <Badge variant={transaction.isReviewed ? 'default' : 'secondary'}>
-                    {transaction.isReviewed ? tCommon('yes') : tCommon('no')}
-                  </Badge>
+              {transaction.location && (
+                <div>
+                  <label className="text-sm font-medium text-gray-600 mb-1 block">{t('location')}</label>
+                  <div className="flex items-center gap-2">
+                    <MapPinIcon className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-900">{transaction.location}</span>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              )}
+
+              {Array.isArray(transaction.tags) && transaction.tags.length > 0 && (
+                <div>
+                  <label className="text-sm font-medium text-gray-600 mb-2 block">{t('tags')}</label>
+                  <div className="flex flex-wrap gap-2">
+                    {transaction.tags.map((tag, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {transaction.externalId && (
+                <div>
+                  <label className="text-sm font-medium text-gray-600 mb-1 block">{t('externalId')}</label>
+                  <code className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-700">
+                    {transaction.externalId}
+                  </code>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
-      </main>
+
+        {/* Actions Sidebar */}
+        <div className="space-y-6">
+          {/* Quick Actions */}
+          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-lg font-bold text-gray-900">{tCommon('actions')}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <EditTransactionButton
+                transactionId={transaction.id.toString()}
+                onSuccess={loadTransaction}
+                className="w-full bg-primary-500 hover:bg-primary-600"
+              />
+
+              <Button
+                variant="secondary"
+                className="w-full border-danger-300 text-danger-600 hover:bg-danger-50"
+                onClick={() => setDeleteConfirm({ show: true, transactionId: transaction.id })}
+              >
+                <TrashIcon className="w-4 h-4 mr-2" />
+                {t('deleteTransaction')}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Transaction Info */}
+          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-lg font-bold text-gray-900">{t('transactionInfo')}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">{t('id')}</span>
+                <span className="font-mono text-gray-900">#{transaction.id}</span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-gray-600">{tCommon('type')}</span>
+                <Badge variant={isIncome ? 'default' : 'secondary'}>
+                  {isIncome ? tCommon('income') : tCommon('expense')}
+                </Badge>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-gray-600">{tCommon('reviewed')}</span>
+                <Badge variant={transaction.isReviewed ? 'default' : 'secondary'}>
+                  {transaction.isReviewed ? tCommon('yes') : tCommon('no')}
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
       {/* Delete Confirmation Dialog */}
       <ConfirmationDialog
@@ -471,6 +463,6 @@ export default function TransactionDetailsPage() {
         confirmText={deleting ? tCommon('loading') : tCommon('delete')}
         variant="danger"
       />
-    </div>
+    </AppLayout>
   );
 }

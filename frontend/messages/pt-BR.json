@@ -341,6 +341,80 @@
       "progressEncouragement": "Você já guardou {amount} para {goalName}. Cada centavo conta!",
       "default": "Continue assim! Cada passo conta para suas metas.",
       "title": "Insight Financeiro"
+    },
+    "periodMonth": "Mês",
+    "periodQuarter": "Trimestre",
+    "templateEducation": "Educação",
+    "templateAdvanced": "Avançado",
+    "cards": {
+      "runway": {
+        "title": "Sua Pista Financeira",
+        "months": "meses",
+        "description": "Você cobriria {months} meses de despesas se a renda parasse hoje.",
+        "zeroMonths": "0 meses",
+        "targetRange": "3–6 meses (meta típica)",
+        "acrossAccounts": "em todas as contas",
+        "earned": "Ganho",
+        "spent": "Gasto",
+        "kept": "Guardado",
+        "saved": "Poupado"
+      },
+      "goal": {
+        "safetyNet": "Reserva",
+        "funded": "financiado",
+        "details": "Detalhes",
+        "onTrack": "No caminho",
+        "viewGoal": "Ver meta",
+        "noGoals": "Defina uma Meta",
+        "noGoalsDesc": "Metas dão direção e propósito ao seu dinheiro.",
+        "createGoal": "Criar Meta"
+      },
+      "cashflow": {
+        "title": "Seu Fluxo de Dinheiro",
+        "subtitle": "A diferença entre receita e despesa é o que você guarda.",
+        "income": "Receita",
+        "expenses": "Despesas",
+        "noData": "Dados insuficientes para exibir o gráfico"
+      },
+      "attention": {
+        "title": "Precisa de Atenção",
+        "allClear": "Tudo em ordem!",
+        "uncategorized": "{count} transações sem categoria",
+        "uncategorizedDetail": "Categorizar ajuda a rastrear padrões de gastos",
+        "categoryHygiene": "Higiene de fluxo",
+        "categoryFixed": "Despesas fixas",
+        "categoryVariable": "Despesas variáveis",
+        "tagMinutes": "~5 min",
+        "tagDueSoon": "Vence logo",
+        "tagDueIn": "Em {days} dias",
+        "tagOverLimit": "Acima do limite",
+        "dueSoon": "vence em breve",
+        "billDetail": "Recorrente · R${amount}/mês",
+        "overBudget": "Orçamento de {name} excedido em R${amount}",
+        "overBudgetDetail": "R${amount}/ano de impacto se continuar"
+      },
+      "transactions": {
+        "title": "Transações Recentes",
+        "viewAll": "Ver todas",
+        "empty": "Nenhuma transação ainda"
+      },
+      "budget": {
+        "title": "Saúde do Orçamento",
+        "overLimit": "{count} de {total} acima do limite",
+        "allOnTrack": "Tudo no caminho",
+        "whatIf": "Simulação e-se",
+        "whatIfDesc": "Reduzir {name} em {amount} pode acelerar suas metas.",
+        "adjustBudget": "Ajustar orçamento",
+        "noBudgets": "Crie Orçamentos",
+        "noBudgetsDesc": "Orçamentos ajudam a controlar gastos e poupar mais.",
+        "createBudget": "Criar Orçamento"
+      },
+      "coach": {
+        "title": "Seu Coach IA",
+        "subtitle": "Insights personalizados para sua jornada",
+        "noInsights": "Tudo certo! Nenhuma ação necessária agora.",
+        "askAbout": "Perguntar sobre minhas finanças"
+      }
     }
   },
   "upcomingBills": {
@@ -1740,8 +1814,10 @@
       "aiCleaningDescription": "Limpa automaticamente as descrições brutas de transações bancárias usando IA. Extrai nomes de comerciantes e produz descrições legíveis."
     },
     "dashboardLayout": {
-      "title": "Layout do Painel",
-      "description": "Escolha entre o layout focado em metas ou a visão clássica de transações.",
+      "title": "Template do Painel",
+      "description": "Escolha entre o layout educacional ou a visão avançada com mais dados.",
+      "education": "Educação",
+      "advanced": "Avançado",
       "goalsFirst": "Metas Primeiro",
       "classic": "Clássico"
     },
@@ -3016,6 +3092,7 @@
       "goalType": "Tipo de Meta",
       "targetAmount": "Valor Alvo",
       "currentAmount": "Valor Atual",
+      "currentAmountLinkedHint": "Este valor é calculado a partir do saldo da conta vinculada.",
       "deadline": "Prazo",
       "deadlineHelp": "Opcional. Defina uma data limite para manter o foco.",
       "linkedAccount": "Conta Vinculada",

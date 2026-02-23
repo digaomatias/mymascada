@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import Navigation from '@/components/navigation';
+import { AppLayout } from '@/components/app-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -252,14 +252,11 @@ export default function EditBudgetPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200">
-        <Navigation />
-        <main className="container mx-auto px-4 py-6 max-w-3xl space-y-6">
+      <AppLayout>
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-64" />
           <Skeleton className="h-96" />
-        </main>
-      </div>
+      </AppLayout>
     );
   }
 
@@ -272,9 +269,7 @@ export default function EditBudgetPage() {
     newCategories.reduce((sum, c) => sum + c.budgetedAmount, 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200">
-      <Navigation />
-      <main className="container mx-auto px-4 py-6 max-w-3xl space-y-6">
+    <AppLayout>
       {/* Header */}
       <div>
         <Link href={`/budgets/${budgetId}`}>
@@ -563,7 +558,6 @@ export default function EditBudgetPage() {
           {isSaving ? t('edit.saving') : t('edit.saveChanges')}
         </Button>
       </div>
-      </main>
-    </div>
+    </AppLayout>
   );
 }

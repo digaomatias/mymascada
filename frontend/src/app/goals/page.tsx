@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import Navigation from '@/components/navigation';
+import { AppLayout } from '@/components/app-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -57,10 +57,7 @@ export default function GoalsPage() {
   }, [showCompleted]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200">
-      <Navigation />
-
-      <main className="container mx-auto px-4 py-6 space-y-6">
+    <AppLayout>
         {/* Header with Filters */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -198,7 +195,6 @@ export default function GoalsPage() {
             ))}
           </div>
         )}
-      </main>
-    </div>
+    </AppLayout>
   );
 }

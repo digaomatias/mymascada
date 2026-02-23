@@ -17,13 +17,15 @@ public static class FeatureFlagsExtensions
         var emailNotifications = IsEmailConfigured(configuration);
         var googleOAuth = IsNonPlaceholder(configuration["Authentication:Google:ClientId"], "YOUR_GOOGLE_CLIENT_ID");
         var bankSync = configuration.GetValue<bool>("Akahu:Enabled");
+        var hasGlobalAiKey = IsNonPlaceholder(configuration["LLM:OpenAI:ApiKey"], "YOUR_OPENAI_API_KEY");
 
         // Singleton — values never change after startup
         services.AddSingleton<IFeatureFlags>(new StartupFeatureFlags(
             aiCategorization,
             emailNotifications,
             googleOAuth,
-            bankSync));
+            bankSync,
+            hasGlobalAiKey));
 
         // Registration strategy depends on email availability
         if (emailNotifications)

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <linearGradient id="bg-ledgerlift" x1="3" y1="2" x2="29" y2="30" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#6D28D9"/>
+    </linearGradient>
+    <linearGradient id="line-ledgerlift" x1="8" y1="21.5" x2="24" y2="11.5" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#DDD6FE"/>
+      <stop offset="1" stop-color="#FFFFFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="8" fill="url(#bg-ledgerlift)"/>
+  <rect x="3.75" y="3.75" width="24.5" height="24.5" rx="6.25" fill="white" fill-opacity="0.08" stroke="#C4B5FD" stroke-opacity="0.58" stroke-width="0.5"/>
+  <rect x="8.3" y="16.2" width="2.5" height="6.4" rx="1.2" fill="#EDE9FE"/>
+  <rect x="12.7" y="13.4" width="2.5" height="9.2" rx="1.2" fill="#DDD6FE"/>
+  <rect x="17.1" y="10.5" width="2.5" height="12.1" rx="1.2" fill="#C4B5FD"/>
+  <path d="M8.3 21.6L13.1 18.4L16.5 18.9L23.4 13" stroke="url(#line-ledgerlift)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M21.8 13H23.8V15" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M20.5 8.4L21.2 9.8L22.8 10.1L21.7 11.3L22 12.9L20.5 12.2L19.1 12.9L19.3 11.3L18.2 10.1L19.8 9.8L20.5 8.4Z" fill="#FFFFFF" fill-opacity="0.95"/>
+</svg>

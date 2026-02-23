@@ -15,10 +15,12 @@ public class GetGoalQuery : IRequest<GoalDetailDto?>
 public class GetGoalQueryHandler : IRequestHandler<GetGoalQuery, GoalDetailDto?>
 {
     private readonly IGoalRepository _goalRepository;
+    private readonly ITransactionRepository _transactionRepository;
 
-    public GetGoalQueryHandler(IGoalRepository goalRepository)
+    public GetGoalQueryHandler(IGoalRepository goalRepository, ITransactionRepository transactionRepository)
     {
         _goalRepository = goalRepository;
+        _transactionRepository = transactionRepository;
     }
 
     public async Task<GoalDetailDto?> Handle(GetGoalQuery request, CancellationToken cancellationToken)
@@ -29,10 +31,18 @@ public class GetGoalQueryHandler : IRequestHandler<GetGoalQuery, GoalDetailDto?>
             return null;
         }
 
-        return MapToDetailDto(goal);
+        // Look up live account balance for goals with linked accounts
+        decimal? linkedAccountBalance = null;
+        if (goal.LinkedAccountId.HasValue)
+        {
+            var accountBalances = await _transactionRepository.GetAccountBalancesAsync(request.UserId);
+            linkedAccountBalance = accountBalances.GetValueOrDefault(goal.LinkedAccountId.Value);
+        }
+
+        return MapToDetailDto(goal, linkedAccountBalance);
     }
 
-    private static GoalDetailDto MapToDetailDto(Goal goal)
+    private static GoalDetailDto MapToDetailDto(Goal goal, decimal? linkedAccountBalance)
     {
         var now = DateTimeProvider.UtcNow;
         int? daysRemaining = null;
@@ -41,15 +51,21 @@ public class GetGoalQueryHandler : IRequestHandler<GetGoalQuery, GoalDetailDto?>
             daysRemaining = (int)(goal.Deadline.Value.Date - now.Date).TotalDays;
         }
 
+        var currentAmount = linkedAccountBalance ?? goal.CurrentAmount;
+        var progressPercentage = goal.TargetAmount > 0
+            ? Math.Round((currentAmount / goal.TargetAmount) * 100, 2)
+            : 0;
+        var remainingAmount = Math.Max(goal.TargetAmount - currentAmount, 0);
+
         return new GoalDetailDto
         {
             Id = goal.Id,
             Name = goal.Name,
             Description = goal.Description,
             TargetAmount = goal.TargetAmount,
-            CurrentAmount = goal.CurrentAmount,
-            ProgressPercentage = goal.GetProgressPercentage(),
-            RemainingAmount = goal.GetRemainingAmount(),
+            CurrentAmount = currentAmount,
+            ProgressPercentage = progressPercentage,
+            RemainingAmount = remainingAmount,
             GoalType = goal.GoalType.ToString(),
             Status = goal.Status.ToString(),
             Deadline = goal.Deadline,

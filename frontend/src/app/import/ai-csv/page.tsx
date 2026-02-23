@@ -6,7 +6,7 @@ import { useState, Suspense } from 'react';
 export const dynamic = 'force-dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
-import Navigation from '@/components/navigation';
+import { AppLayout } from '@/components/app-layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -111,9 +111,9 @@ function AICSVImportContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200 flex items-center justify-center">
+      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
+          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <SparklesIcon className="w-8 h-8 text-white" />
           </div>
           <div className="mt-6 text-gray-700 font-medium">{t('aiCsv.loading')}</div>
@@ -462,11 +462,8 @@ function AICSVImportContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200">
-      <Navigation />
-
-      <main className="container-responsive py-4 sm:py-6 lg:py-8">
-        {/* Header */}
+    <AppLayout>
+      {/* Header */}
         <div className="mb-6 lg:mb-8">
           <div className="flex items-center justify-between mb-6">
             <Button
@@ -500,17 +497,16 @@ function AICSVImportContent() {
         <div className="max-w-4xl mx-auto">
           {renderCurrentStep()}
         </div>
-      </main>
-    </div>
+    </AppLayout>
   );
 }
 
 function AICSVImportFallback() {
   const t = useTranslations('import');
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200 flex items-center justify-center">
+    <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
       <div className="text-center">
-        <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
+        <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
           <SparklesIcon className="w-8 h-8 text-white" />
         </div>
         <div className="mt-6 text-gray-700 font-medium">{t('aiCsv.loading')}</div>

@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/auth-context';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   ChartBarIcon,
@@ -11,12 +11,13 @@ import {
   BuildingOffice2Icon,
   TagIcon,
   CogIcon,
-  ChevronDownIcon,
   EllipsisHorizontalIcon,
   AdjustmentsHorizontalIcon,
   WalletIcon,
   ChatBubbleLeftRightIcon,
   FlagIcon,
+  ChevronRightIcon,
+  ArrowRightOnRectangleIcon,
 } from '@heroicons/react/24/outline';
 import { AppIcon } from '@/components/app-icon';
 
@@ -26,31 +27,22 @@ export default function Navigation() {
   const pathname = usePathname();
   const t = useTranslations('nav');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isManageDropdownOpen, setIsManageDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = () => {
     logout();
     router.push('/');
   };
 
-  // Close dropdown when clicking outside
+  // Close mobile menu on route change
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsManageDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
 
   if (!isAuthenticated) {
     return null;
   }
 
-  // Primary navigation items (visible in top bar)
+  // Primary navigation items
   const primaryNavItems = [
     { href: '/dashboard', labelKey: 'dashboard' as const, icon: ChartBarIcon },
     { href: '/transactions', labelKey: 'transactions' as const, icon: ArrowsRightLeftIcon },
@@ -60,7 +52,7 @@ export default function Navigation() {
     { href: '/chat', labelKey: 'aiChat' as const, icon: ChatBubbleLeftRightIcon },
   ];
 
-  // Items under "Manage" dropdown
+  // Management items (below separator)
   const manageItems = [
     { href: '/accounts', labelKey: 'accounts' as const, icon: BuildingOffice2Icon },
     { href: '/categories', labelKey: 'categories' as const, icon: TagIcon },
@@ -90,162 +82,153 @@ export default function Navigation() {
     return pathname === href || pathname.startsWith(href + '/');
   };
 
-  const isManageActive = manageItems.some(item => isActiveLink(item.href));
-
   return (
     <>
-      {/* Desktop/Tablet Navigation */}
-      <nav className="hidden md:block bg-primary-dark shadow-lg">
-        <div className="container-responsive">
-          <div className="flex justify-between h-16">
-            {/* Logo and Desktop Navigation */}
-            <div className="flex items-center">
-              <Link href="/dashboard" className="flex items-center space-x-3">
-                <div className="w-8 h-8">
-                  <AppIcon size={32} />
-                </div>
-                <span className="text-xl font-bold text-white">MyMascada</span>
-              </Link>
-
-              {/* Desktop Navigation Links */}
-              <div className="ml-10 flex space-x-2">
-                {primaryNavItems.map((item) => {
-                  const IconComponent = item.icon;
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`nav-link text-white hover:bg-primary-600 flex items-center ${
-                        isActiveLink(item.href) ? 'bg-primary-600' : ''
-                      }`}
-                    >
-                      <IconComponent className="w-4 h-4 mr-2" />
-                      {t(item.labelKey)}
-                    </Link>
-                  );
-                })}
-
-                {/* Manage Dropdown */}
-                <div className="relative" ref={dropdownRef}>
-                  <button
-                    onClick={() => setIsManageDropdownOpen(!isManageDropdownOpen)}
-                    className={`nav-link text-white hover:bg-primary-600 flex items-center cursor-pointer ${
-                      isManageActive ? 'bg-primary-600' : ''
-                    }`}
-                  >
-                    <CogIcon className="w-4 h-4 mr-2" />
-                    {t('manage')}
-                    <ChevronDownIcon className={`w-4 h-4 ml-1 transition-transform ${
-                      isManageDropdownOpen ? 'rotate-180' : ''
-                    }`} />
-                  </button>
-
-                  {isManageDropdownOpen && (
-                    <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg py-1 z-50">
-                      {manageItems.map((item) => {
-                        const IconComponent = item.icon;
-                        return (
-                          <Link
-                            key={item.href}
-                            href={item.href}
-                            onClick={() => setIsManageDropdownOpen(false)}
-                            className={`flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 ${
-                              isActiveLink(item.href) ? 'bg-primary-50 text-primary-700' : ''
-                            }`}
-                          >
-                            <IconComponent className="w-4 h-4" />
-                            {t(item.labelKey)}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
+      {/* ── Desktop Sidebar (lg+) ── */}
+      <aside className="hidden lg:flex flex-col fixed inset-y-0 left-0 z-40 w-[260px] bg-gradient-to-b from-[#1a0e3e] via-[#241456] to-[#1a0e3e] border-r border-white/15">
+        {/* Logo */}
+        <div className="flex items-center gap-3 px-5 pt-6 pb-4">
+          <Link href="/dashboard" className="flex items-center gap-3">
+            <div className="w-9 h-9">
+              <AppIcon size={36} />
             </div>
-
-            {/* Desktop User Menu */}
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-primary-200">
-                {t('welcome', { name: user?.firstName || user?.userName || '' })}
-              </span>
-              <button
-                onClick={handleLogout}
-                className="btn-secondary text-white! border-white! hover:bg-white/10!"
-              >
-                {t('logout')}
-              </button>
+            <div>
+              <span className="text-lg font-bold text-white tracking-tight">MyMascada</span>
+              <span className="block text-[10px] font-medium text-violet-300/60 tracking-widest uppercase -mt-0.5">Finance</span>
             </div>
-          </div>
+          </Link>
         </div>
-      </nav>
 
-      {/* Mobile Navigation */}
-      <nav className="md:hidden">
-        {/* Mobile Top Bar */}
-        <div className="bg-primary-dark shadow-lg">
-          <div className="container-responsive">
-            <div className="flex justify-between h-16">
-              <Link href="/dashboard" className="flex items-center space-x-2">
-                <div className="w-8 h-8">
-                  <AppIcon size={32} />
-                </div>
-                <span className="text-lg font-bold text-white">MyMascada</span>
-              </Link>
-
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="text-white p-2 rounded-md hover:bg-primary-600 focus:outline-hidden focus:ring-2 focus:ring-white cursor-pointer"
-                aria-label={t('toggleMenu')}
+        {/* Primary nav */}
+        <nav className="flex-1 px-3 pt-2 space-y-1 overflow-y-auto">
+          {primaryNavItems.map((item) => {
+            const active = isActiveLink(item.href);
+            const IconComponent = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`nav-link flex items-center gap-2.5 ${
+                  active
+                    ? 'nav-link-active'
+                    : 'text-violet-200/80 hover:bg-white/8 hover:text-white'
+                }`}
               >
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  {isMobileMenuOpen ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  )}
-                </svg>
-              </button>
-            </div>
+                <IconComponent className="w-[18px] h-[18px] shrink-0" />
+                <span className="flex-1">{t(item.labelKey)}</span>
+                {active && <ChevronRightIcon className="w-3.5 h-3.5 opacity-40" />}
+              </Link>
+            );
+          })}
+
+          {/* Separator */}
+          <div className="my-3 border-t border-white/10" />
+
+          {/* Manage items */}
+          {manageItems.map((item) => {
+            const active = isActiveLink(item.href);
+            const IconComponent = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`nav-link flex items-center gap-2.5 ${
+                  active
+                    ? 'nav-link-active'
+                    : 'text-violet-200/80 hover:bg-white/8 hover:text-white'
+                }`}
+              >
+                <IconComponent className="w-[18px] h-[18px] shrink-0" />
+                <span className="flex-1">{t(item.labelKey)}</span>
+                {active && <ChevronRightIcon className="w-3.5 h-3.5 opacity-40" />}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* User info + logout */}
+        <div className="px-4 py-4 border-t border-white/10">
+          <div className="text-xs text-violet-300/60 truncate mb-2">
+            {user?.firstName || user?.userName || user?.email}
+          </div>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-[13px] font-medium text-violet-200/80 hover:bg-white/8 hover:text-white transition-colors cursor-pointer"
+          >
+            <ArrowRightOnRectangleIcon className="w-[18px] h-[18px]" />
+            {t('logout')}
+          </button>
+        </div>
+      </aside>
+
+      {/* ── Mobile / Tablet Navigation (< lg) ── */}
+      <nav className="lg:hidden">
+        {/* Mobile Top Bar */}
+        <div className="bg-gradient-to-r from-[#1a0e3e] to-[#241456] shadow-lg">
+          <div className="flex justify-between items-center h-14 px-4">
+            <Link href="/dashboard" className="flex items-center gap-2">
+              <div className="w-8 h-8">
+                <AppIcon size={32} />
+              </div>
+              <span className="text-lg font-bold text-white">MyMascada</span>
+            </Link>
+
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="text-white p-2 rounded-xl hover:bg-white/10 focus:outline-hidden focus:ring-2 focus:ring-white/30 cursor-pointer"
+              aria-label={t('toggleMenu')}
+            >
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                {isMobileMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
           </div>
         </div>
 
         {/* Mobile Slide-out Menu */}
         {isMobileMenuOpen && (
-          <div className="fixed inset-0 z-50 bg-black bg-opacity-50" onClick={() => setIsMobileMenuOpen(false)}>
+          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}>
             <div
-              className="fixed right-0 top-0 h-full w-64 bg-primary-700 shadow-xl"
+              className="fixed right-0 top-0 h-full w-72 bg-gradient-to-b from-[#1a0e3e] via-[#241456] to-[#1a0e3e] shadow-xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-4 border-b border-primary-600">
-                <p className="text-sm text-primary-200">{t('welcome', { name: '' }).split(',')[0]}</p>
-                <p className="text-sm font-medium text-white">{user?.email}</p>
+              <div className="px-5 pt-5 pb-3 border-b border-white/10">
+                <p className="text-xs text-violet-300/60">{t('welcome', { name: '' }).split(',')[0]}</p>
+                <p className="text-sm font-medium text-white truncate">{user?.email}</p>
               </div>
 
-              <div className="p-2">
+              <div className="p-3 space-y-0.5">
                 {[...mobileTabItems, ...mobileMoreItems].map((item) => {
                   const IconComponent = item.icon;
+                  const active = isActiveLink(item.href);
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={`nav-link block text-white hover:bg-primary-600 flex items-center mb-1 ${
-                        isActiveLink(item.href) ? 'bg-primary-600' : ''
+                      className={`nav-link flex items-center gap-2.5 ${
+                        active
+                          ? 'nav-link-active'
+                          : 'text-violet-200/80 hover:bg-white/8 hover:text-white'
                       }`}
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      <IconComponent className="w-4 h-4 mr-2" />
+                      <IconComponent className="w-[18px] h-[18px]" />
                       {t(item.labelKey)}
                     </Link>
                   );
                 })}
               </div>
 
-              <div className="p-4 mt-auto absolute bottom-0 left-0 right-0">
+              <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10">
                 <button
                   onClick={handleLogout}
-                  className="w-full btn-secondary text-white! border-white! hover:bg-white/10!"
+                  className="flex items-center justify-center gap-2 w-full px-3 py-2.5 rounded-xl text-[13px] font-medium text-violet-200/80 hover:bg-white/8 hover:text-white transition-colors cursor-pointer"
                 >
+                  <ArrowRightOnRectangleIcon className="w-[18px] h-[18px]" />
                   {t('logout')}
                 </button>
               </div>
@@ -254,22 +237,23 @@ export default function Navigation() {
         )}
 
         {/* Mobile Bottom Tab Bar */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40">
+        <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-violet-100/50 shadow-lg z-40 pb-safe">
           <div className="grid grid-cols-5 h-16">
             {mobileTabItems.map((item) => {
               const IconComponent = item.icon;
+              const active = isActiveLink(item.href);
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={`flex flex-col items-center justify-center py-2 ${
-                    isActiveLink(item.href)
-                      ? 'text-primary-600'
-                      : 'text-gray-600 hover:text-primary-600'
+                    active
+                      ? 'text-violet-600'
+                      : 'text-gray-500 hover:text-violet-600'
                   }`}
                 >
                   <IconComponent className="w-5 h-5" />
-                  <span className="text-xs mt-1">{t(item.labelKey)}</span>
+                  <span className="text-[10px] mt-1 font-medium">{t(item.labelKey)}</span>
                 </Link>
               );
             })}
@@ -277,10 +261,10 @@ export default function Navigation() {
             {/* More button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="flex flex-col items-center justify-center py-2 text-gray-600 hover:text-primary-600 cursor-pointer"
+              className="flex flex-col items-center justify-center py-2 text-gray-500 hover:text-violet-600 cursor-pointer"
             >
               <EllipsisHorizontalIcon className="w-5 h-5" />
-              <span className="text-xs mt-1">{t('more')}</span>
+              <span className="text-[10px] mt-1 font-medium">{t('more')}</span>
             </button>
           </div>
         </div>

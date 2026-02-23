@@ -5,7 +5,7 @@ import { useFeatures } from '@/contexts/features-context';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback, Suspense } from 'react';
 import React from 'react';
-import Navigation from '@/components/navigation';
+import { AppLayout } from '@/components/app-layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -704,9 +704,9 @@ function TransactionsPageContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200 flex items-center justify-center">
+      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
+          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <WalletIcon className="w-8 h-8 text-white" />
           </div>
           <div className="mt-6 text-gray-700 font-medium">{t('loading')}</div>
@@ -720,10 +720,7 @@ function TransactionsPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200">
-      <Navigation />
-      
-      <main className="container-responsive py-4 sm:py-6 lg:py-8">
+    <AppLayout>
         {/* Header */}
         <div className="mb-6 lg:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -1751,8 +1748,6 @@ function TransactionsPageContent() {
             </CardContent>
           )}
         </Card>
-      </main>
-
       {/* Floating Action Button - Mobile only, hidden in selection mode */}
       {!isSelectionMode && (
         <FloatingActionButton
@@ -1809,7 +1804,7 @@ function TransactionsPageContent() {
         onClose={() => setShowTransfersModal(false)}
         onRefresh={() => fetchTransactions(currentPage, searchTerm, transferFilter, selectedCategoryId, selectedAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter, sortBy, sortDirection)}
       />
-    </div>
+    </AppLayout>
   );
 }
 
@@ -1819,7 +1814,7 @@ export const dynamic = 'force-dynamic';
 export default function TransactionsPage() {
   const tCommon = useTranslations('common');
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200 flex items-center justify-center"><div className="text-gray-700 font-medium">{tCommon('loading')}</div></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[#faf8ff] flex items-center justify-center"><div className="text-gray-700 font-medium">{tCommon('loading')}</div></div>}>
       <TransactionsPageContent />
     </Suspense>
   );

@@ -27,6 +27,7 @@ public class AuthController : ControllerBase
     private readonly IUserAiSettingsRepository _aiSettingsRepository;
     private readonly IConfiguration _configuration;
     private readonly IUserFinancialProfileRepository _financialProfileRepository;
+    private readonly IAccountRepository _accountRepository;
 
     public AuthController(
         IMediator mediator,
@@ -37,7 +38,8 @@ public class AuthController : ControllerBase
         IWebHostEnvironment environment,
         IUserAiSettingsRepository aiSettingsRepository,
         IConfiguration configuration,
-        IUserFinancialProfileRepository financialProfileRepository)
+        IUserFinancialProfileRepository financialProfileRepository,
+        IAccountRepository accountRepository)
     {
         _mediator = mediator;
         _authService = authService;
@@ -48,6 +50,7 @@ public class AuthController : ControllerBase
         _aiSettingsRepository = aiSettingsRepository;
         _configuration = configuration;
         _financialProfileRepository = financialProfileRepository;
+        _accountRepository = accountRepository;
     }
 
     [HttpPost("register")]
@@ -192,9 +195,10 @@ public class AuthController : ControllerBase
         var hasAiConfigured = (aiSettings != null && !string.IsNullOrEmpty(aiSettings.EncryptedApiKey))
             || (!string.IsNullOrEmpty(globalApiKey) && globalApiKey != "YOUR_OPENAI_API_KEY");
 
-        // Check onboarding status
+        // Check onboarding status — also skip for users who already have accounts
         var financialProfile = await _financialProfileRepository.GetByUserIdAsync(userId);
-        var isOnboardingComplete = financialProfile != null && financialProfile.OnboardingCompleted;
+        var hasAccounts = (await _accountRepository.GetByUserIdAsync(userId)).Any();
+        var isOnboardingComplete = (financialProfile != null && financialProfile.OnboardingCompleted) || hasAccounts;
 
         var userDto = new UserDto
         {

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import Navigation from '@/components/navigation';
+import { AppLayout } from '@/components/app-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -228,10 +228,7 @@ export default function CreateBudgetPage() {
   const totalBudget = selectedCategories.reduce((sum, c) => sum + c.budgetedAmount, 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200">
-      <Navigation />
-
-      <main className="container mx-auto px-4 py-4 sm:py-6 lg:py-8">
+    <AppLayout>
         {/* Header */}
         <div className="mb-6 lg:mb-8">
           {/* Navigation Bar */}
@@ -633,7 +630,6 @@ export default function CreateBudgetPage() {
             </Card>
           )}
         </div>
-      </main>
-    </div>
+    </AppLayout>
   );
 }

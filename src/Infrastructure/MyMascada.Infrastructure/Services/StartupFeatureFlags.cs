@@ -12,16 +12,19 @@ public class StartupFeatureFlags : IFeatureFlags
     public bool EmailNotifications { get; }
     public bool GoogleOAuth { get; }
     public bool BankSync { get; }
+    public bool HasGlobalAiKey { get; }
 
     public StartupFeatureFlags(
         bool aiCategorization,
         bool emailNotifications,
         bool googleOAuth,
-        bool bankSync)
+        bool bankSync,
+        bool hasGlobalAiKey)
     {
         AiCategorization = aiCategorization;
         EmailNotifications = emailNotifications;
         GoogleOAuth = googleOAuth;
         BankSync = bankSync;
+        HasGlobalAiKey = hasGlobalAiKey;
     }
 }

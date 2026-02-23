@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Navigation from '@/components/navigation';
+import { AppLayout } from '@/components/app-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CategoryTrendChart } from '@/components/analytics/category-trend-chart';
@@ -107,41 +107,32 @@ export default function CategoryTrendsPage() {
 
   if (isLoading || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200">
-        <Navigation />
-        <main className="container-responsive py-8">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-300 rounded w-1/3 mb-8"></div>
-            <div className="h-[500px] bg-gray-200 rounded mb-6"></div>
-            <div className="h-48 bg-gray-200 rounded"></div>
-          </div>
-        </main>
-      </div>
+      <AppLayout>
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-300 rounded w-1/3 mb-8"></div>
+          <div className="h-[500px] bg-gray-200 rounded mb-6"></div>
+          <div className="h-48 bg-gray-200 rounded"></div>
+        </div>
+      </AppLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200">
-        <Navigation />
-        <main className="container-responsive py-8">
-          <div className="text-center py-12">
-            <p className="text-red-600 mb-4">{error}</p>
-            <Button variant="primary" onClick={loadCategoryTrends}>
-              {t('categoryTrends.tryAgain')}
-            </Button>
-          </div>
-        </main>
-      </div>
+      <AppLayout>
+        <div className="text-center py-12">
+          <p className="text-red-600 mb-4">{error}</p>
+          <Button variant="primary" onClick={loadCategoryTrends}>
+            {t('categoryTrends.tryAgain')}
+          </Button>
+        </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200">
-      <Navigation />
-
-      <main className="container-responsive py-8">
-        {/* Header with back link */}
+    <AppLayout>
+      {/* Header with back link */}
         <div className="mb-6">
           <Link href="/analytics" className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 mb-4">
             <ArrowLeftIcon className="w-4 h-4" />
@@ -267,7 +258,6 @@ export default function CategoryTrendsPage() {
             />
           </CardContent>
         </Card>
-      </main>
-    </div>
+    </AppLayout>
   );
 }

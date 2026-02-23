@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import Navigation from '@/components/navigation';
+import { AppLayout } from '@/components/app-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -123,9 +123,7 @@ export default function BudgetDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200">
-        <Navigation />
-        <main className="container mx-auto px-4 py-6 space-y-6">
+      <AppLayout>
           <Skeleton className="h-8 w-64" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Skeleton className="h-32" />
@@ -133,8 +131,7 @@ export default function BudgetDetailPage() {
             <Skeleton className="h-32" />
           </div>
           <Skeleton className="h-64" />
-        </main>
-      </div>
+      </AppLayout>
     );
   }
 
@@ -143,9 +140,7 @@ export default function BudgetDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200">
-      <Navigation />
-      <main className="container mx-auto px-4 py-6 space-y-6">
+    <AppLayout>
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="space-y-1">
@@ -307,7 +302,6 @@ export default function BudgetDetailPage() {
           )}
         </CardContent>
       </Card>
-      </main>
-    </div>
+    </AppLayout>
   );
 }

@@ -22,13 +22,16 @@ public class CreateGoalCommandHandler : IRequestHandler<CreateGoalCommand, GoalD
 {
     private readonly IGoalRepository _goalRepository;
     private readonly IAccountRepository _accountRepository;
+    private readonly ITransactionRepository _transactionRepository;
 
     public CreateGoalCommandHandler(
         IGoalRepository goalRepository,
-        IAccountRepository accountRepository)
+        IAccountRepository accountRepository,
+        ITransactionRepository transactionRepository)
     {
         _goalRepository = goalRepository;
         _accountRepository = accountRepository;
+        _transactionRepository = transactionRepository;
     }
 
     public async Task<GoalDetailDto> Handle(CreateGoalCommand request, CancellationToken cancellationToken)
@@ -81,7 +84,16 @@ public class CreateGoalCommandHandler : IRequestHandler<CreateGoalCommand, GoalD
         };
 
         var createdGoal = await _goalRepository.CreateGoalAsync(goal, cancellationToken);
-        return MapToDetailDto(createdGoal);
+
+        // Look up live account balance for linked goals
+        decimal? linkedAccountBalance = null;
+        if (createdGoal.LinkedAccountId.HasValue)
+        {
+            var accountBalances = await _transactionRepository.GetAccountBalancesAsync(request.UserId);
+            linkedAccountBalance = accountBalances.GetValueOrDefault(createdGoal.LinkedAccountId.Value);
+        }
+
+        return MapToDetailDto(createdGoal, linkedAccountBalance);
     }
 
     private static DateTime EnsureUtc(DateTime dateTime) => dateTime.Kind switch
@@ -92,7 +104,7 @@ public class CreateGoalCommandHandler : IRequestHandler<CreateGoalCommand, GoalD
         _ => DateTime.SpecifyKind(dateTime, DateTimeKind.Utc)
     };
 
-    private static GoalDetailDto MapToDetailDto(Goal goal)
+    private static GoalDetailDto MapToDetailDto(Goal goal, decimal? linkedAccountBalance)
     {
         var now = DateTimeProvider.UtcNow;
         int? daysRemaining = null;
@@ -101,15 +113,21 @@ public class CreateGoalCommandHandler : IRequestHandler<CreateGoalCommand, GoalD
             daysRemaining = (int)(goal.Deadline.Value.Date - now.Date).TotalDays;
         }
 
+        var currentAmount = linkedAccountBalance ?? goal.CurrentAmount;
+        var progressPercentage = goal.TargetAmount > 0
+            ? Math.Round((currentAmount / goal.TargetAmount) * 100, 2)
+            : 0;
+        var remainingAmount = Math.Max(goal.TargetAmount - currentAmount, 0);
+
         return new GoalDetailDto
         {
             Id = goal.Id,
             Name = goal.Name,
             Description = goal.Description,
             TargetAmount = goal.TargetAmount,
-            CurrentAmount = goal.CurrentAmount,
-            ProgressPercentage = goal.GetProgressPercentage(),
-            RemainingAmount = goal.GetRemainingAmount(),
+            CurrentAmount = currentAmount,
+            ProgressPercentage = progressPercentage,
+            RemainingAmount = remainingAmount,
             GoalType = goal.GoalType.ToString(),
             Status = goal.Status.ToString(),
             Deadline = goal.Deadline,

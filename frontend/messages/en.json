@@ -342,6 +342,80 @@
       "progressEncouragement": "You've saved {amount} toward {goalName}. Every bit counts!",
       "default": "Keep going! Every step counts toward your goals.",
       "title": "Financial Insight"
+    },
+    "periodMonth": "Month",
+    "periodQuarter": "Quarter",
+    "templateEducation": "Education",
+    "templateAdvanced": "Advanced",
+    "cards": {
+      "runway": {
+        "title": "Your Financial Runway",
+        "months": "months",
+        "description": "You could cover {months} months of expenses if income stopped today.",
+        "zeroMonths": "0 months",
+        "targetRange": "3–6 months (typical target)",
+        "acrossAccounts": "across all accounts",
+        "earned": "Earned",
+        "spent": "Spent",
+        "kept": "Kept",
+        "saved": "Saved"
+      },
+      "goal": {
+        "safetyNet": "Safety Net",
+        "funded": "funded",
+        "details": "Details",
+        "onTrack": "On track",
+        "viewGoal": "View goal",
+        "noGoals": "Set a Financial Goal",
+        "noGoalsDesc": "Goals give your money direction and purpose.",
+        "createGoal": "Create Goal"
+      },
+      "cashflow": {
+        "title": "Your Money Flow",
+        "subtitle": "The gap between income and expenses is what you keep.",
+        "income": "Income",
+        "expenses": "Expenses",
+        "noData": "Not enough data to display chart"
+      },
+      "attention": {
+        "title": "Needs Attention",
+        "allClear": "Everything looks good!",
+        "uncategorized": "{count} transactions need categorizing",
+        "uncategorizedDetail": "Categorizing helps track spending patterns",
+        "categoryHygiene": "Cash-flow hygiene",
+        "categoryFixed": "Fixed expenses",
+        "categoryVariable": "Variable expenses",
+        "tagMinutes": "~5 min",
+        "tagDueSoon": "Due soon",
+        "tagDueIn": "In {days} days",
+        "tagOverLimit": "Over limit",
+        "dueSoon": "due soon",
+        "billDetail": "Recurring · ${amount}/month",
+        "overBudget": "{name} budget exceeded by ${amount}",
+        "overBudgetDetail": "${amount}/year impact if sustained"
+      },
+      "transactions": {
+        "title": "Recent Transactions",
+        "viewAll": "View all",
+        "empty": "No transactions yet"
+      },
+      "budget": {
+        "title": "Budget Health Lab",
+        "overLimit": "{count} of {total} over limit",
+        "allOnTrack": "All on track",
+        "whatIf": "What-if simulation",
+        "whatIfDesc": "Reducing {name} by {amount} could move your goals forward.",
+        "adjustBudget": "Adjust budget",
+        "noBudgets": "Set Up Budgets",
+        "noBudgetsDesc": "Budgets help you control spending and save more.",
+        "createBudget": "Create Budget"
+      },
+      "coach": {
+        "title": "Your AI Coach",
+        "subtitle": "Personalised insights for your journey",
+        "noInsights": "You're doing great! No action items right now.",
+        "askAbout": "Ask about my finances"
+      }
     }
   },
   "upcomingBills": {
@@ -1741,8 +1815,10 @@
       "aiCleaningDescription": "Automatically clean up raw bank transaction descriptions using AI. Extracts merchant names and produces human-readable descriptions."
     },
     "dashboardLayout": {
-      "title": "Dashboard Layout",
-      "description": "Choose between the goal-focused layout or the classic transaction overview.",
+      "title": "Dashboard Template",
+      "description": "Choose between the education-focused layout or the advanced data-dense view.",
+      "education": "Education",
+      "advanced": "Advanced",
       "goalsFirst": "Goals First",
       "classic": "Classic"
     },
@@ -3017,6 +3093,7 @@
       "goalType": "Goal Type",
       "targetAmount": "Target Amount",
       "currentAmount": "Current Amount",
+      "currentAmountLinkedHint": "This value is calculated from the linked account balance.",
       "deadline": "Deadline",
       "deadlineHelp": "Optional. Set a target date to stay on track.",
       "linkedAccount": "Linked Account",

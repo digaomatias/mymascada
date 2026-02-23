@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/auth-context';
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
-import Navigation from '@/components/navigation';
+import { AppLayout } from '@/components/app-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -186,9 +186,9 @@ export default function EditCategoryPage() {
 
   if (isLoading || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200 flex items-center justify-center">
+      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
+          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <TagIcon className="w-8 h-8 text-white" />
           </div>
           <div className="mt-6 text-gray-700 font-medium">{t('details.loadingCategory')}</div>
@@ -203,9 +203,7 @@ export default function EditCategoryPage() {
 
   if (category.isSystemCategory) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200">
-        <Navigation />
-        <main className="container-responsive py-4 sm:py-6 lg:py-8">
+      <AppLayout>
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('edit.cannotEditSystem')}</h1>
             <p className="text-gray-600 mb-6">{t('edit.systemCategoriesCannotBeModified')}</p>
@@ -213,8 +211,7 @@ export default function EditCategoryPage() {
               <Button>{t('edit.backToCategory')}</Button>
             </Link>
           </div>
-        </main>
-      </div>
+      </AppLayout>
     );
   }
 
@@ -225,10 +222,7 @@ export default function EditCategoryPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200">
-      <Navigation />
-      
-      <main className="container-responsive py-4 sm:py-6 lg:py-8">
+    <AppLayout>
         {/* Header */}
         <div className="mb-6 lg:mb-8">
           {/* Navigation Bar */}
@@ -416,7 +410,6 @@ export default function EditCategoryPage() {
             </CardContent>
           </Card>
         </div>
-      </main>
-    </div>
+    </AppLayout>
   );
 }

@@ -53,7 +53,7 @@ export function StepGoalSuggestion({
 
   const formatCurrency = (amount: number) => {
     try {
-      return new Intl.NumberFormat(undefined, {
+      return new Intl.NumberFormat('en-NZ', {
         style: 'currency',
         currency: currency,
       }).format(amount);

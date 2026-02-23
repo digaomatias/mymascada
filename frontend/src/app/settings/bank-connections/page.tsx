@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/auth-context';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import Navigation from '@/components/navigation';
+import { AppLayout } from '@/components/app-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BankConnectionList } from '@/components/bank-connections/bank-connection-list';
@@ -184,7 +184,7 @@ export default function BankConnectionsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200 flex items-center justify-center">
+      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <BuildingLibraryIcon className="w-8 h-8 text-white" />
@@ -202,11 +202,8 @@ export default function BankConnectionsPage() {
   const hasAkahuProvider = providers.some(p => p.providerId === 'akahu');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200">
-      <Navigation />
-
-      <main className="container-responsive py-4 sm:py-6 lg:py-8">
-        {/* Header */}
+    <AppLayout>
+      {/* Header */}
         <div className="mb-6 lg:mb-8">
           <div className="flex items-center gap-2 mb-2">
             <Link
@@ -300,7 +297,6 @@ export default function BankConnectionsPage() {
             )}
           </CardContent>
         </Card>
-      </main>
 
       {/* Akahu Setup Dialog - for entering credentials */}
       <AkahuSetupDialog
@@ -322,7 +318,7 @@ export default function BankConnectionsPage() {
         akahuAccounts={akahuAccounts}
         onComplete={handleCompleteConnection}
       />
-    </div>
+    </AppLayout>
   );
 }
 

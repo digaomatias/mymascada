@@ -16,13 +16,25 @@ public class LoginQueryHandler : IRequestHandler<LoginQuery, AuthenticationRespo
 {
     private readonly IUserRepository _userRepository;
     private readonly IAuthenticationService _authenticationService;
+    private readonly IUserFinancialProfileRepository _financialProfileRepository;
+    private readonly IUserAiSettingsRepository _aiSettingsRepository;
+    private readonly IAccountRepository _accountRepository;
+    private readonly IFeatureFlags _featureFlags;
 
     public LoginQueryHandler(
         IUserRepository userRepository,
-        IAuthenticationService authenticationService)
+        IAuthenticationService authenticationService,
+        IUserFinancialProfileRepository financialProfileRepository,
+        IUserAiSettingsRepository aiSettingsRepository,
+        IAccountRepository accountRepository,
+        IFeatureFlags featureFlags)
     {
         _userRepository = userRepository;
         _authenticationService = authenticationService;
+        _financialProfileRepository = financialProfileRepository;
+        _aiSettingsRepository = aiSettingsRepository;
+        _accountRepository = accountRepository;
+        _featureFlags = featureFlags;
     }
 
     public async Task<AuthenticationResponse> Handle(LoginQuery request, CancellationToken cancellationToken)
@@ -119,6 +131,16 @@ public class LoginQueryHandler : IRequestHandler<LoginQuery, AuthenticationRespo
         response.ExpiresAt = expiresAt;
         response.RefreshToken = refreshToken.Token;
         response.RefreshTokenExpiresAt = refreshToken.ExpiryDate;
+        // Check if user has AI configured (own key or global key)
+        var aiSettings = await _aiSettingsRepository.GetByUserIdAsync(user.Id);
+        var hasAiConfigured = (aiSettings != null && !string.IsNullOrEmpty(aiSettings.EncryptedApiKey))
+            || _featureFlags.HasGlobalAiKey;
+
+        // Check onboarding status — also skip for users who already have accounts
+        var financialProfile = await _financialProfileRepository.GetByUserIdAsync(user.Id);
+        var hasAccounts = (await _accountRepository.GetByUserIdAsync(user.Id)).Any();
+        var isOnboardingComplete = (financialProfile != null && financialProfile.OnboardingCompleted) || hasAccounts;
+
         response.User = new UserDto
         {
             Id = user.Id,
@@ -129,7 +151,10 @@ public class LoginQueryHandler : IRequestHandler<LoginQuery, AuthenticationRespo
             FullName = user.FullName,
             Currency = user.Currency,
             TimeZone = user.TimeZone,
-            ProfilePictureUrl = user.ProfilePictureUrl
+            ProfilePictureUrl = user.ProfilePictureUrl,
+            Locale = user.Locale ?? "en",
+            HasAiConfigured = hasAiConfigured,
+            IsOnboardingComplete = isOnboardingComplete
         };
 
         return response;

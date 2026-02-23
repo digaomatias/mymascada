@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { getReturnUrl } from '@/lib/navigation-utils';
 import { useEffect, useState, useCallback } from 'react';
-import Navigation from '@/components/navigation';
+import { AppLayout } from '@/components/app-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TransactionForm, TransactionStatus } from '@/components/forms/transaction-form';
 import { apiClient } from '@/lib/api-client';
@@ -184,9 +184,9 @@ export default function EditTransactionPage() {
 
   if (isLoading || loadingTransaction) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200 flex items-center justify-center">
+      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
+          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <PencilIcon className="w-8 h-8 text-white" />
           </div>
           <div className="mt-6 text-gray-700 font-medium">{t('loadingTransaction')}</div>
@@ -201,20 +201,16 @@ export default function EditTransactionPage() {
 
   if (error && !transaction) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200">
-        <Navigation />
-        
-        <main className="container-responsive py-4 sm:py-6 lg:py-8">
-          <Card className="max-w-2xl mx-auto bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-            <CardContent className="p-8 text-center">
-              <ExclamationTriangleIcon className="w-16 h-16 text-danger-500 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('notFound')}</h2>
-              <p className="text-gray-600 mb-6">{error}</p>
-              <TransactionBackButton />
-            </CardContent>
-          </Card>
-        </main>
-      </div>
+      <AppLayout>
+        <Card className="max-w-2xl mx-auto bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+          <CardContent className="p-8 text-center">
+            <ExclamationTriangleIcon className="w-16 h-16 text-danger-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('notFound')}</h2>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <TransactionBackButton />
+          </CardContent>
+        </Card>
+      </AppLayout>
     );
   }
 
@@ -234,92 +230,88 @@ export default function EditTransactionPage() {
   } : undefined;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200">
-      <Navigation />
-      
-      <main className="container-responsive py-4 sm:py-6 lg:py-8 mobile-form-safe">
-        {/* Header */}
-        <div className="mb-6 lg:mb-8">
-          {/* Navigation Bar */}
-          <div className="flex items-center justify-between mb-6">
-            <TransactionBackButton size="sm" />
-          </div>
-          
-          {/* Page Title */}
-          <div className="text-center mb-8">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-              {t('editTransaction')}
-            </h1>
-            <p className="text-gray-600 text-sm sm:text-base">
-              {t('editTransactionDesc')}
-            </p>
-          </div>
+    <AppLayout>
+      {/* Header */}
+      <div className="mb-6 lg:mb-8">
+        {/* Navigation Bar */}
+        <div className="flex items-center justify-between mb-6">
+          <TransactionBackButton size="sm" />
         </div>
 
-        {/* Success Message */}
-        {success && (
-          <Card className="mb-6 bg-success-50 border-success-200 shadow-lg">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2">
-                <CheckIcon className="w-5 h-5 text-success-600" />
-                <span className="text-success-800 font-medium">{t('transactionUpdated')}</span>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {/* Page Title */}
+        <div className="text-center mb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+            {t('editTransaction')}
+          </h1>
+          <p className="text-gray-600 text-sm sm:text-base">
+            {t('editTransactionDesc')}
+          </p>
+        </div>
+      </div>
 
-        {/* Error Message */}
-        {error && (
-          <Card className="mb-6 bg-danger-50 border-danger-200 shadow-lg">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2">
-                <ExclamationTriangleIcon className="w-5 h-5 text-danger-600" />
-                <span className="text-danger-800 font-medium">{error}</span>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Transfer Warning */}
-        {transaction && isTransfer(transaction) && (
-          <Card className="mb-6 bg-blue-50 border-blue-200 shadow-lg">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2">
-                <ArrowsRightLeftIcon className="w-5 h-5 text-blue-600" />
-                <div>
-                  <span className="text-blue-800 font-medium">{t('transferTransaction')}</span>
-                  <p className="text-blue-700 text-sm mt-1">
-                    {t('transferInfo')}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Edit Form */}
-        <Card className="max-w-4xl mx-auto bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <PencilIcon className="w-5 h-5" />
-              {t('transactionDetails')}
-              {transaction && isTransfer(transaction) && (
-                <ArrowsRightLeftIcon className="w-5 h-5 text-blue-500" />
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {transaction && (
-              <TransactionForm
-                initialData={initialData}
-                onSubmit={handleSubmit}
-                onCancel={handleCancel}
-                submitText={loading ? t('updating') : t('updateTransaction')}
-              />
-            )}
+      {/* Success Message */}
+      {success && (
+        <Card className="mb-6 bg-success-50 border-success-200 shadow-lg">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <CheckIcon className="w-5 h-5 text-success-600" />
+              <span className="text-success-800 font-medium">{t('transactionUpdated')}</span>
+            </div>
           </CardContent>
         </Card>
-      </main>
-    </div>
+      )}
+
+      {/* Error Message */}
+      {error && (
+        <Card className="mb-6 bg-danger-50 border-danger-200 shadow-lg">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <ExclamationTriangleIcon className="w-5 h-5 text-danger-600" />
+              <span className="text-danger-800 font-medium">{error}</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Transfer Warning */}
+      {transaction && isTransfer(transaction) && (
+        <Card className="mb-6 bg-blue-50 border-blue-200 shadow-lg">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <ArrowsRightLeftIcon className="w-5 h-5 text-blue-600" />
+              <div>
+                <span className="text-blue-800 font-medium">{t('transferTransaction')}</span>
+                <p className="text-blue-700 text-sm mt-1">
+                  {t('transferInfo')}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Edit Form */}
+      <Card className="max-w-4xl mx-auto bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+        <CardHeader>
+          <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <PencilIcon className="w-5 h-5" />
+            {t('transactionDetails')}
+            {transaction && isTransfer(transaction) && (
+              <ArrowsRightLeftIcon className="w-5 h-5 text-blue-500" />
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {transaction && (
+            <TransactionForm
+              initialData={initialData}
+              onSubmit={handleSubmit}
+              onCancel={handleCancel}
+              submitText={loading ? t('updating') : t('updateTransaction')}
+            />
+          )}
+        </CardContent>
+      </Card>
+    </AppLayout>
   );
 }

@@ -73,7 +73,10 @@ builder.Services.AddScoped<MyMascada.Application.Common.Interfaces.ICurrentUserS
 
 // Add Data Protection and Session support for OAuth
 // Persist keys to a directory so they survive container restarts
-var keysDirectory = builder.Environment.IsDevelopment()
+var isLocalDev = builder.Environment.IsDevelopment()
+    || builder.Environment.EnvironmentName == "Debug"
+    || builder.Environment.EnvironmentName == "Prod-QA";
+var keysDirectory = isLocalDev
     ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MyMascada", "Keys")
     : "/app/data/keys";
 

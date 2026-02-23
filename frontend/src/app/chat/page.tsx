@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, KeyboardEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/contexts/auth-context';
-import Navigation from '@/components/navigation';
+import { AppLayout } from '@/components/app-layout';
 import { Button } from '@/components/ui/button';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { apiClient } from '@/lib/api-client';
@@ -244,7 +244,7 @@ export default function ChatPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
+          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <ChatBubbleLeftRightIcon className="w-8 h-8 text-white" />
           </div>
           <div className="mt-6 text-gray-700 font-medium">{tCommon('loading')}</div>
@@ -260,9 +260,7 @@ export default function ChatPage() {
   // Not Configured State
   if (chatConfigured === false) {
     return (
-      <div className="min-h-screen flex flex-col bg-gray-50">
-        <Navigation />
-        <main className="flex-1 flex items-center justify-center p-4 pb-24 md:pb-4">
+      <AppLayout mainClassName="relative z-10 flex-1 flex items-center justify-center p-4 pb-24 md:pb-4">
           <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center">
             <div className="w-16 h-16 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <ExclamationCircleIcon className="w-8 h-8 text-amber-600" />
@@ -280,18 +278,14 @@ export default function ChatPage() {
               </Button>
             </Link>
           </div>
-        </main>
-      </div>
+      </AppLayout>
     );
   }
 
   const hasMessages = messages.length > 0;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <Navigation />
-
-      <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full pb-24 md:pb-0">
+    <AppLayout mainClassName="relative z-10 flex-1 flex flex-col max-w-4xl mx-auto w-full pb-24 md:pb-0" noBackground>
         {/* Header bar with clear button */}
         {hasMessages && (
           <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 bg-white/80 backdrop-blur-xs">
@@ -457,8 +451,6 @@ export default function ChatPage() {
             </Button>
           </div>
         </div>
-      </main>
-
       <ConfirmationDialog
         isOpen={showClearConfirm}
         onClose={() => setShowClearConfirm(false)}
@@ -469,7 +461,7 @@ export default function ChatPage() {
         cancelText={tCommon('cancel')}
         variant="danger"
       />
-    </div>
+    </AppLayout>
   );
 }
 

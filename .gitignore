@@ -117,6 +117,7 @@ Desktop.ini
 # Local configuration files
 appsettings.Development.json
 appsettings.Local.json
+appsettings.Prod-QA.json
 secrets.json
 
 # Temporary files

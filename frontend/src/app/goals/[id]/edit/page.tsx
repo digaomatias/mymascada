@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import Navigation from '@/components/navigation';
+import { AppLayout } from '@/components/app-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -111,21 +111,15 @@ export default function EditGoalPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200">
-        <Navigation />
-        <main className="container mx-auto px-4 py-6 space-y-6">
+      <AppLayout>
           <Skeleton className="h-8 w-64" />
           <Skeleton className="h-96" />
-        </main>
-      </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200">
-      <Navigation />
-
-      <main className="container mx-auto px-4 py-4 sm:py-6 lg:py-8">
+    <AppLayout>
         {/* Navigation Bar */}
         <div className="flex items-center justify-between mb-6">
           <Link href={`/goals/${goalId}`}>
@@ -191,7 +185,11 @@ export default function EditGoalPage() {
                       value={currentAmount}
                       onChange={(e) => setCurrentAmount(e.target.value)}
                       placeholder="0.00"
+                      disabled={!!linkedAccountId}
                     />
+                    {linkedAccountId && (
+                      <p className="text-xs text-gray-500">{t('form.currentAmountLinkedHint')}</p>
+                    )}
                   </div>
                 </div>
 
@@ -270,7 +268,6 @@ export default function EditGoalPage() {
             </CardContent>
           </Card>
         </div>
-      </main>
-    </div>
+    </AppLayout>
   );
 }

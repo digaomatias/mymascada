@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Navigation from '@/components/navigation';
+import { AppLayout } from '@/components/app-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CategorySpendingChart } from '@/components/charts/category-spending-chart';
@@ -207,9 +207,7 @@ export default function AnalyticsPage() {
 
   if (isLoading || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200">
-        <Navigation />
-        <main className="container-responsive py-8">
+      <AppLayout>
           <div className="animate-pulse">
             <div className="h-8 bg-gray-300 rounded w-1/3 mb-8"></div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -225,8 +223,7 @@ export default function AnalyticsPage() {
               ))}
             </div>
           </div>
-        </main>
-      </div>
+      </AppLayout>
     );
   }
 
@@ -236,10 +233,7 @@ export default function AnalyticsPage() {
   const avgMonthlyExpenses = monthlyTrends.length > 0 ? totalExpenses / monthlyTrends.length : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200">
-      <Navigation />
-      
-      <main className="container-responsive py-8">
+    <AppLayout>
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('title')}</h1>
@@ -437,7 +431,6 @@ export default function AnalyticsPage() {
             </CardContent>
           </Card>
         </div>
-      </main>
-    </div>
+    </AppLayout>
   );
 }

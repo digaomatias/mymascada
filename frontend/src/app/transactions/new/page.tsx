@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/auth-context';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
-import Navigation from '@/components/navigation';
+import { AppLayout } from '@/components/app-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { TransactionForm, TransactionFormData } from '@/components/forms/transaction-form';
@@ -80,9 +80,9 @@ function NewTransactionPageContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200 flex items-center justify-center">
+      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
+          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <BanknotesIcon className="w-8 h-8 text-white" />
           </div>
           <div className="mt-6 text-gray-700 font-medium">{tCommon('loading')}</div>
@@ -97,7 +97,7 @@ function NewTransactionPageContent() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200 flex items-center justify-center">
+      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
         <Card className="mx-4 max-w-md w-full bg-white/90 backdrop-blur-xs border-0 shadow-2xl">
           <CardContent className="p-8 text-center">
             <div className="w-16 h-16 bg-gradient-to-br from-success-500 to-success-600 rounded-2xl shadow-2xl flex items-center justify-center mx-auto mb-6">
@@ -115,55 +115,51 @@ function NewTransactionPageContent() {
   const accountIdFromUrl = searchParams.get('accountId') || undefined;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200">
-      <Navigation />
-      
-      <main className="container-responsive py-4 sm:py-6 lg:py-8 mobile-form-safe">
-        {/* Header */}
-        <div className="mb-6 lg:mb-8">
-          {/* Navigation Bar */}
-          <div className="flex items-center justify-between mb-6">
-            <Link href="/transactions">
-              <Button variant="secondary" size="sm" className="flex items-center gap-2">
-                <ArrowLeftIcon className="w-4 h-4" />
-                <span className="hidden sm:inline">{t('backToTransactions')}</span>
-                <span className="sm:hidden">{tCommon('back')}</span>
-              </Button>
-            </Link>
-          </div>
-          
-          {/* Page Title */}
-          <div className="text-center mb-8">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-              {t('addTransaction')}
-            </h1>
-            <p className="text-gray-600 text-sm sm:text-base">
-              {t('newTransactionDesc')}
-            </p>
-          </div>
+    <AppLayout>
+      {/* Header */}
+      <div className="mb-6 lg:mb-8">
+        {/* Navigation Bar */}
+        <div className="flex items-center justify-between mb-6">
+          <Link href="/transactions">
+            <Button variant="secondary" size="sm" className="flex items-center gap-2">
+              <ArrowLeftIcon className="w-4 h-4" />
+              <span className="hidden sm:inline">{t('backToTransactions')}</span>
+              <span className="sm:hidden">{tCommon('back')}</span>
+            </Button>
+          </Link>
         </div>
 
-        {/* Transaction Form */}
-        <div className="max-w-2xl mx-auto">
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BanknotesIcon className="w-6 h-6 text-primary-600" />
-                {t('transactionDetails')}
-              </CardTitle>
-            </CardHeader>
-            
-            <CardContent className="p-6">
-              <TransactionForm
-                initialData={accountIdFromUrl ? { accountId: accountIdFromUrl } : undefined}
-                onSubmit={handleSubmit}
-                onCancel={() => router.push('/transactions')}
-              />
-            </CardContent>
-          </Card>
+        {/* Page Title */}
+        <div className="text-center mb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+            {t('addTransaction')}
+          </h1>
+          <p className="text-gray-600 text-sm sm:text-base">
+            {t('newTransactionDesc')}
+          </p>
         </div>
-      </main>
-    </div>
+      </div>
+
+      {/* Transaction Form */}
+      <div className="max-w-2xl mx-auto">
+        <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BanknotesIcon className="w-6 h-6 text-primary-600" />
+              {t('transactionDetails')}
+            </CardTitle>
+          </CardHeader>
+
+          <CardContent className="p-6">
+            <TransactionForm
+              initialData={accountIdFromUrl ? { accountId: accountIdFromUrl } : undefined}
+              onSubmit={handleSubmit}
+              onCancel={() => router.push('/transactions')}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    </AppLayout>
   );
 }
 

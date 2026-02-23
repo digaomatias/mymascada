@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Manrope, DM_Mono } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/contexts/auth-context';
 import { AiSuggestionsProvider } from '@/contexts/ai-suggestions-context';
@@ -9,7 +9,8 @@ import { Toaster } from 'sonner';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 
-const inter = Inter({ subsets: ['latin'] });
+const manrope = Manrope({ subsets: ['latin'], variable: '--font-dash-sans' });
+const dmMono = DM_Mono({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-dash-mono' });
 
 export const metadata: Metadata = {
   title: 'MyMascada - Personal Finance Manager',
@@ -42,7 +43,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale}>
-      <body className={inter.className}>
+      <body className={`${manrope.className} ${manrope.variable} ${dmMono.variable}`}>
         <NextIntlClientProvider messages={messages}>
           <FeaturesProvider>
           <AuthProvider>

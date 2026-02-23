@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/auth-context';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import Navigation from '@/components/navigation';
+import { AppLayout } from '@/components/app-layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -68,24 +68,34 @@ export default function SettingsPage() {
   const [isSavingLocale, setIsSavingLocale] = useState(false);
   const [aiCleaningEnabled, setAiCleaningEnabled] = useState(false);
   const [isSavingAiCleaning, setIsSavingAiCleaning] = useState(false);
-  const [dashboardLayout, setDashboardLayout] = useState<'goals' | 'classic'>('goals');
+  const [dashboardTemplate, setDashboardTemplate] = useState<'education' | 'advanced'>('education');
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('mymascada_dashboard_layout');
-      if (stored === 'classic') {
-        setDashboardLayout('classic');
+      // Check for new key first
+      const stored = localStorage.getItem('mymascada_dashboard_template');
+      if (stored === 'education' || stored === 'advanced') {
+        setDashboardTemplate(stored);
+        return;
+      }
+      // Migrate old key if present
+      const oldValue = localStorage.getItem('mymascada_dashboard_layout');
+      if (oldValue) {
+        const migrated = oldValue === 'classic' ? 'advanced' : 'education';
+        setDashboardTemplate(migrated as 'education' | 'advanced');
+        localStorage.setItem('mymascada_dashboard_template', migrated);
+        localStorage.removeItem('mymascada_dashboard_layout');
       }
     } catch {
       // Ignore localStorage errors
     }
   }, []);
 
-  const handleDashboardLayoutToggle = () => {
-    const newLayout = dashboardLayout === 'goals' ? 'classic' : 'goals';
-    setDashboardLayout(newLayout);
+  const handleDashboardTemplateToggle = () => {
+    const newTemplate = dashboardTemplate === 'education' ? 'advanced' : 'education';
+    setDashboardTemplate(newTemplate);
     try {
-      localStorage.setItem('mymascada_dashboard_layout', newLayout);
+      localStorage.setItem('mymascada_dashboard_template', newTemplate);
     } catch {
       // Ignore localStorage errors
     }
@@ -183,9 +193,9 @@ export default function SettingsPage() {
 
   if (isLoading || localeLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200 flex items-center justify-center">
+      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
+          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <CogIcon className="w-8 h-8 text-white" />
           </div>
           <div className="mt-6 text-gray-700 font-medium">{tCommon('loading')}</div>
@@ -199,10 +209,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200">
-      <Navigation />
-
-      <main className="container-responsive py-4 sm:py-6 lg:py-8 pb-24 md:pb-8">
+    <AppLayout>
         {/* Header */}
         <div className="mb-6 lg:mb-8">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
@@ -372,7 +379,7 @@ export default function SettingsPage() {
             </Card>
           )}
 
-          {/* Dashboard Layout Card */}
+          {/* Dashboard Template Card */}
           <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg h-full">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
@@ -389,23 +396,23 @@ export default function SettingsPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-gray-900">
-                        {dashboardLayout === 'goals'
-                          ? t('dashboardLayout.goalsFirst')
-                          : t('dashboardLayout.classic')}
+                        {dashboardTemplate === 'education'
+                          ? t('dashboardLayout.education')
+                          : t('dashboardLayout.advanced')}
                       </p>
                     </div>
                     <button
                       type="button"
                       role="switch"
-                      aria-checked={dashboardLayout === 'goals'}
-                      onClick={handleDashboardLayoutToggle}
+                      aria-checked={dashboardTemplate === 'education'}
+                      onClick={handleDashboardTemplateToggle}
                       className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-                        dashboardLayout === 'goals' ? 'bg-primary-600' : 'bg-gray-200'
+                        dashboardTemplate === 'education' ? 'bg-primary-600' : 'bg-gray-200'
                       }`}
                     >
                       <span
                         className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                          dashboardLayout === 'goals' ? 'translate-x-5' : 'translate-x-0'
+                          dashboardTemplate === 'education' ? 'translate-x-5' : 'translate-x-0'
                         }`}
                       />
                     </button>
@@ -478,8 +485,7 @@ export default function SettingsPage() {
             })}
           </div>
         </div>
-      </main>
-    </div>
+    </AppLayout>
   );
 }
 
