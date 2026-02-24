@@ -6,7 +6,6 @@ import { CashflowChartCard } from '@/components/dashboard/cards/cashflow-chart-c
 import { AttentionItemsCard } from '@/components/dashboard/cards/attention-items-card';
 import { RecentTransactionsCard } from '@/components/dashboard/cards/recent-transactions-card';
 import { BudgetHealthCard } from '@/components/dashboard/cards/budget-health-card';
-import { AICoachCard } from '@/components/dashboard/cards/ai-coach-card';
 
 export function EducationTemplate() {
   return (
@@ -17,10 +16,9 @@ export function EducationTemplate() {
         <GoalSpotlightCard />
       </section>
 
-      {/* Row 2: Cashflow Chart + AI Coach */}
-      <section className="grid gap-5 lg:grid-cols-2">
+      {/* Row 2: Cashflow Chart */}
+      <section>
         <CashflowChartCard />
-        <AICoachCard />
       </section>
 
       {/* Row 3: Attention Items + Recent Transactions */}

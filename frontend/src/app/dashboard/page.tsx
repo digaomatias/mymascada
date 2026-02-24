@@ -86,7 +86,7 @@ function DashboardContent() {
 
   return (
     <DashboardProvider>
-      <AppLayout mainClassName="relative z-10 flex-1 mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-5 lg:px-6 lg:py-8">
+      <AppLayout mainClassName="relative z-10 flex-1 w-full px-4 py-6 sm:px-5 lg:px-6 lg:py-8">
         <DashboardHeader />
         <DashboardTemplateRenderer />
       </AppLayout>

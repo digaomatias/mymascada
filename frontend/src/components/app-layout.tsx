@@ -13,17 +13,17 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, mainClassName, noBackground }: AppLayoutProps) {
   return (
-    <div className="flex min-h-dvh bg-[#faf8ff]">
+    <div className="flex flex-col lg:flex-row min-h-dvh bg-[#faf8ff]">
       <Navigation />
 
       {/* Main content area — offset by sidebar width on lg+ */}
-      <div className="flex-1 flex flex-col min-w-0 lg:ml-[260px]">
+      <div className="flex-1 flex flex-col min-w-0 pb-20 lg:pb-0 lg:ml-[260px]">
         {!noBackground && <DashboardBackground />}
 
         <main
           className={
             mainClassName ??
-            'relative z-10 flex-1 mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8'
+            'relative z-10 flex-1 w-full px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8'
           }
         >
           {children}
