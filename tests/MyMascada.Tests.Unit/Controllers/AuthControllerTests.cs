@@ -27,6 +27,8 @@ public class AuthControllerTests
     private readonly IWebHostEnvironment _environment;
     private readonly IUserAiSettingsRepository _aiSettingsRepository;
     private readonly IConfiguration _configuration;
+    private readonly IUserFinancialProfileRepository _financialProfileRepository;
+    private readonly IAccountRepository _accountRepository;
     private readonly AuthController _controller;
 
     public AuthControllerTests()
@@ -40,7 +42,9 @@ public class AuthControllerTests
         _environment.EnvironmentName.Returns("Development");
         _aiSettingsRepository = Substitute.For<IUserAiSettingsRepository>();
         _configuration = Substitute.For<IConfiguration>();
-        _controller = new AuthController(_mediator, _authService, _dataProtectionProvider, _userRepository, _appOptions, _environment, _aiSettingsRepository, _configuration);
+        _financialProfileRepository = Substitute.For<IUserFinancialProfileRepository>();
+        _accountRepository = Substitute.For<IAccountRepository>();
+        _controller = new AuthController(_mediator, _authService, _dataProtectionProvider, _userRepository, _appOptions, _environment, _aiSettingsRepository, _configuration, _financialProfileRepository, _accountRepository);
 
         // Provide a default HttpContext so methods that access Request.Headers don't throw
         _controller.ControllerContext = new ControllerContext
