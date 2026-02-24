@@ -2,6 +2,7 @@ using System.Text;
 using Microsoft.Extensions.Logging;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Domain.Common;
+using MyMascada.Domain.Enums;
 
 namespace MyMascada.Infrastructure.Services.AI;
 
@@ -12,6 +13,7 @@ public class FinancialContextBuilder : IFinancialContextBuilder
     private readonly IBudgetRepository _budgetRepository;
     private readonly IRecurringPatternRepository _recurringPatternRepository;
     private readonly ICategoryRepository _categoryRepository;
+    private readonly IGoalRepository _goalRepository;
     private readonly ILogger<FinancialContextBuilder> _logger;
 
     public FinancialContextBuilder(
@@ -20,6 +22,7 @@ public class FinancialContextBuilder : IFinancialContextBuilder
         IBudgetRepository budgetRepository,
         IRecurringPatternRepository recurringPatternRepository,
         ICategoryRepository categoryRepository,
+        IGoalRepository goalRepository,
         ILogger<FinancialContextBuilder> logger)
     {
         _accountRepository = accountRepository;
@@ -27,6 +30,7 @@ public class FinancialContextBuilder : IFinancialContextBuilder
         _budgetRepository = budgetRepository;
         _recurringPatternRepository = recurringPatternRepository;
         _categoryRepository = categoryRepository;
+        _goalRepository = goalRepository;
         _logger = logger;
     }
 
@@ -46,6 +50,7 @@ public class FinancialContextBuilder : IFinancialContextBuilder
         var twelveMonthsAgo = now.AddMonths(-12);
         var monthlyTransactions = await SafeExecuteAsync(() =>
             _transactionRepository.GetByDateRangeAsync(userId, twelveMonthsAgo, now));
+        var goals = await SafeExecuteAsync(() => _goalRepository.GetActiveGoalsForUserAsync(userId));
 
         var sb = new StringBuilder();
 
@@ -54,6 +59,7 @@ public class FinancialContextBuilder : IFinancialContextBuilder
         BuildTopSpendingCategoriesSection(sb, monthlyTransactions, categories);
         BuildBudgetSection(sb, budget);
         BuildRecurringExpensesSection(sb, recurringPatterns);
+        BuildGoalsSection(sb, goals, balances);
         BuildRecentTransactionsSection(sb, recentTransactions);
 
         return sb.ToString();
@@ -223,6 +229,53 @@ public class FinancialContextBuilder : IFinancialContextBuilder
         }
 
         sb.AppendLine($"  Total monthly recurring: ~{totalMonthly:N2}");
+        sb.AppendLine();
+    }
+
+    private static void BuildGoalsSection(
+        StringBuilder sb,
+        IEnumerable<Domain.Entities.Goal>? goals,
+        Dictionary<int, decimal>? balances)
+    {
+        sb.AppendLine("=== FINANCIAL GOALS ===");
+
+        if (goals == null || !goals.Any())
+        {
+            sb.AppendLine("  No active goals.");
+            sb.AppendLine();
+            return;
+        }
+
+        var goalList = goals.ToList();
+        var totalProgress = 0m;
+
+        foreach (var goal in goalList)
+        {
+            var progress = goal.GetProgressPercentage();
+            totalProgress += progress;
+
+            var statusParts = new List<string> { goal.Status.ToString() };
+            if (goal.IsPinned) statusParts.Add("Pinned");
+            var statusLabel = string.Join(", ", statusParts);
+
+            sb.AppendLine($"  {goal.Name} ({goal.GoalType}) [{statusLabel}]:");
+            sb.AppendLine($"    Progress: ${goal.CurrentAmount:N2} / ${goal.TargetAmount:N2} ({progress}%)");
+
+            if (goal.LinkedAccountId.HasValue)
+            {
+                var accountName = goal.Account?.Name ?? $"Account #{goal.LinkedAccountId.Value}";
+                var liveBalance = balances?.GetValueOrDefault(goal.LinkedAccountId.Value);
+                var balanceInfo = liveBalance.HasValue ? $" (${liveBalance.Value:N2} live balance)" : "";
+                sb.AppendLine($"    Linked account: {accountName}{balanceInfo}");
+            }
+
+            var deadlineText = goal.Deadline.HasValue ? goal.Deadline.Value.ToString("yyyy-MM-dd") : "none";
+            sb.AppendLine($"    Deadline: {deadlineText}");
+            sb.AppendLine();
+        }
+
+        var avgProgress = goalList.Count > 0 ? totalProgress / goalList.Count : 0;
+        sb.AppendLine($"  Summary: {goalList.Count} active goals, {avgProgress:N1}% average progress");
         sb.AppendLine();
     }
 

@@ -1,4 +1,5 @@
-import type { GoalSummary } from '@/lib/api-client';
+import type { GoalDetail, GoalSummary } from '@/lib/api-client';
+import type { ComponentType } from 'react';
 import {
   ShieldCheckIcon,
   CreditCardIcon,
@@ -7,6 +8,7 @@ import {
   FlagIcon,
 } from '@heroicons/react/24/outline';
 import { formatCurrency } from '@/lib/utils';
+import { EmergencyFundPanel } from '@/components/goals/detail-panels/emergency-fund-panel';
 
 // --- Journey stages (presentation order, not user gating) ---
 
@@ -51,6 +53,7 @@ export interface GoalTypeConfig {
   heroMetric: (goal: GoalSummary, ctx: GoalContext) => HeroMetric | null;
   journeyStage: JourneyStage;
   journeyPriority: number;
+  DetailPanel?: ComponentType<{ goal: GoalDetail; ctx: GoalContext }>;
 }
 
 // --- Tracking state ---
@@ -139,6 +142,7 @@ export const GOAL_TYPE_CONFIGS: Record<string, GoalTypeConfig> = {
     },
     journeyStage: 'foundation',
     journeyPriority: 1,
+    DetailPanel: EmergencyFundPanel,
     heroMetric: (goal, ctx) => {
       if (ctx.monthlyExpenses > 0) {
         const months = goal.currentAmount / ctx.monthlyExpenses;

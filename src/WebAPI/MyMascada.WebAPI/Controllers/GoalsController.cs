@@ -271,4 +271,34 @@ public class GoalsController : ControllerBase
             return StatusCode(500, new { message = "An error occurred while updating goal pin state." });
         }
     }
+
+    /// <summary>
+    /// Get emergency fund analysis for a specific goal
+    /// </summary>
+    [HttpGet("{id}/emergency-fund-analysis")]
+    public async Task<IActionResult> GetEmergencyFundAnalysis(int id, [FromQuery] bool includeLlmAnalysis = false)
+    {
+        try
+        {
+            var query = new GetEmergencyFundAnalysisQuery(
+                _currentUserService.GetUserId(), id, includeLlmAnalysis);
+
+            var result = await _mediator.Send(query);
+
+            if (result == null)
+            {
+                return NotFound(new { message = "Goal not found or is not an emergency fund goal." });
+            }
+
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while analyzing the emergency fund." });
+        }
+    }
 }

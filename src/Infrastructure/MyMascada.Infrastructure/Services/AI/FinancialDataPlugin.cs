@@ -21,6 +21,7 @@ public class FinancialDataPlugin
     private readonly ITransferRepository _transferRepository;
     private readonly IRuleSuggestionService _ruleSuggestionService;
     private readonly ICategorizationRuleRepository _categorizationRuleRepository;
+    private readonly IGoalRepository _goalRepository;
 
     public FinancialDataPlugin(
         Guid userId,
@@ -31,7 +32,8 @@ public class FinancialDataPlugin
         IRecurringPatternRepository recurringPatternRepository,
         ITransferRepository transferRepository,
         IRuleSuggestionService ruleSuggestionService,
-        ICategorizationRuleRepository categorizationRuleRepository)
+        ICategorizationRuleRepository categorizationRuleRepository,
+        IGoalRepository goalRepository)
     {
         _userId = userId;
         _transactionRepository = transactionRepository;
@@ -42,6 +44,7 @@ public class FinancialDataPlugin
         _transferRepository = transferRepository;
         _ruleSuggestionService = ruleSuggestionService;
         _categorizationRuleRepository = categorizationRuleRepository;
+        _goalRepository = goalRepository;
     }
 
     [KernelFunction("GetTransactionsByCategory")]
@@ -962,6 +965,165 @@ public class FinancialDataPlugin
         catch (Exception ex)
         {
             return $"Error accepting rule suggestions: {ex.Message}";
+        }
+    }
+
+    [KernelFunction("GetGoals")]
+    [Description("Get all financial goals with progress status. Use when user asks about their goals, savings targets, or financial objectives.")]
+    public async Task<string> GetGoals(
+        [Description("Include completed/paused goals (default false)")] bool includeCompleted = false)
+    {
+        try
+        {
+            var goals = includeCompleted
+                ? await _goalRepository.GetGoalsForUserAsync(_userId)
+                : await _goalRepository.GetActiveGoalsForUserAsync(_userId);
+
+            var goalList = goals.ToList();
+
+            if (!goalList.Any())
+            {
+                return includeCompleted
+                    ? "No financial goals found."
+                    : "No active financial goals found. You can create goals in the Goals section of the app.";
+            }
+
+            // Fetch account balances for linked goals
+            var balances = await _transactionRepository.GetAccountBalancesAsync(_userId);
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"Financial goals ({goalList.Count} {(includeCompleted ? "total" : "active")}):");
+            sb.AppendLine();
+
+            var totalProgress = 0m;
+            var activeCount = 0;
+
+            foreach (var goal in goalList.OrderByDescending(g => g.IsPinned).ThenBy(g => g.DisplayOrder))
+            {
+                var progress = goal.GetProgressPercentage();
+                var remaining = goal.GetRemainingAmount();
+                var pinnedTag = goal.IsPinned ? " [Pinned]" : "";
+
+                sb.AppendLine($"  {goal.Name} ({goal.GoalType}){pinnedTag}:");
+                sb.AppendLine($"    Status: {goal.Status}");
+                sb.AppendLine($"    Progress: ${goal.CurrentAmount:N2} / ${goal.TargetAmount:N2} ({progress}%)");
+                sb.AppendLine($"    Remaining: ${remaining:N2}");
+
+                if (goal.Deadline.HasValue)
+                {
+                    var daysRemaining = (goal.Deadline.Value - DateTimeProvider.UtcNow).Days;
+                    var deadlineStatus = daysRemaining > 0 ? $"{daysRemaining} days remaining" : "past deadline";
+                    sb.AppendLine($"    Deadline: {goal.Deadline.Value:yyyy-MM-dd} ({deadlineStatus})");
+                }
+                else
+                {
+                    sb.AppendLine("    Deadline: none");
+                }
+
+                if (goal.LinkedAccountId.HasValue)
+                {
+                    var accountName = goal.Account?.Name ?? $"Account #{goal.LinkedAccountId.Value}";
+                    var liveBalance = balances.GetValueOrDefault(goal.LinkedAccountId.Value);
+                    sb.AppendLine($"    Linked account: {accountName} (${liveBalance:N2} live balance)");
+                }
+
+                sb.AppendLine();
+
+                if (goal.Status == GoalStatus.Active)
+                {
+                    totalProgress += progress;
+                    activeCount++;
+                }
+            }
+
+            var avgProgress = activeCount > 0 ? totalProgress / activeCount : 0;
+            sb.AppendLine($"Summary: {activeCount} active goals, {avgProgress:N1}% average progress");
+
+            return sb.ToString();
+        }
+        catch (Exception ex)
+        {
+            return $"Error retrieving goals: {ex.Message}";
+        }
+    }
+
+    [KernelFunction("GetGoalDetails")]
+    [Description("Get detailed information about a specific goal by name. Use when user asks about a particular goal.")]
+    public async Task<string> GetGoalDetails(
+        [Description("Goal name to look up")] string goalName)
+    {
+        try
+        {
+            var goals = await _goalRepository.GetGoalsForUserAsync(_userId);
+            var goalList = goals.ToList();
+
+            var matchedGoal = goalList.FirstOrDefault(g =>
+                g.Name.Contains(goalName, StringComparison.OrdinalIgnoreCase));
+
+            if (matchedGoal == null)
+            {
+                var availableNames = goalList.Select(g => g.Name);
+                return $"No goal found matching '{goalName}'. Available goals: {string.Join(", ", availableNames)}";
+            }
+
+            var progress = matchedGoal.GetProgressPercentage();
+            var remaining = matchedGoal.GetRemainingAmount();
+            var onTrack = matchedGoal.IsOnTrack();
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"Goal: {matchedGoal.Name}");
+            sb.AppendLine($"  Type: {matchedGoal.GoalType}");
+            sb.AppendLine($"  Status: {matchedGoal.Status}");
+            sb.AppendLine($"  Pinned: {(matchedGoal.IsPinned ? "Yes" : "No")}");
+
+            if (!string.IsNullOrWhiteSpace(matchedGoal.Description))
+            {
+                sb.AppendLine($"  Description: {matchedGoal.Description}");
+            }
+
+            sb.AppendLine();
+            sb.AppendLine($"  Progress: ${matchedGoal.CurrentAmount:N2} / ${matchedGoal.TargetAmount:N2} ({progress}%)");
+            sb.AppendLine($"  Remaining: ${remaining:N2}");
+
+            if (matchedGoal.Deadline.HasValue)
+            {
+                var daysRemaining = (matchedGoal.Deadline.Value - DateTimeProvider.UtcNow).Days;
+                var deadlineStatus = daysRemaining > 0 ? $"{daysRemaining} days remaining" : "past deadline";
+                sb.AppendLine($"  Deadline: {matchedGoal.Deadline.Value:yyyy-MM-dd} ({deadlineStatus})");
+
+                if (daysRemaining > 0 && remaining > 0)
+                {
+                    var monthsRemaining = Math.Max(1, daysRemaining / 30.0);
+                    var monthlyNeeded = remaining / (decimal)monthsRemaining;
+                    sb.AppendLine($"  Monthly savings needed: ${monthlyNeeded:N2}");
+                }
+            }
+            else
+            {
+                sb.AppendLine("  Deadline: none");
+            }
+
+            sb.AppendLine($"  On track: {(onTrack ? "Yes" : "No — behind pace")}");
+
+            if (matchedGoal.LinkedAccountId.HasValue)
+            {
+                var balances = await _transactionRepository.GetAccountBalancesAsync(_userId);
+                var accountName = matchedGoal.Account?.Name ?? $"Account #{matchedGoal.LinkedAccountId.Value}";
+                var liveBalance = balances.GetValueOrDefault(matchedGoal.LinkedAccountId.Value);
+                sb.AppendLine();
+                sb.AppendLine($"  Linked account: {accountName}");
+                sb.AppendLine($"  Account live balance: ${liveBalance:N2}");
+            }
+
+            sb.AppendLine();
+            sb.AppendLine($"  Created: {matchedGoal.CreatedAt:yyyy-MM-dd}");
+            sb.AppendLine($"  Last updated: {matchedGoal.UpdatedAt:yyyy-MM-dd}");
+
+            return sb.ToString();
+        }
+        catch (Exception ex)
+        {
+            return $"Error retrieving goal details: {ex.Message}";
         }
     }
 

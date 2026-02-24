@@ -1582,6 +1582,10 @@ class ApiClient {
     return this.request(`/api/goals/${id}/pin`, { method: 'PATCH', body: JSON.stringify({ isPinned }) });
   }
 
+  async getEmergencyFundAnalysis(goalId: number, includeLlmAnalysis = false): Promise<EmergencyFundAnalysisDto> {
+    return this.request(`/api/goals/${goalId}/emergency-fund-analysis?includeLlmAnalysis=${includeLlmAnalysis}`);
+  }
+
   // User Data methods (LGPD/GDPR compliance)
   async getUserDataSummary(): Promise<UserDataSummary> {
     return this.request('/api/UserData/summary');
@@ -2044,6 +2048,44 @@ export interface UpdateGoalRequest {
   status?: string;
   deadline?: string;
   linkedAccountId?: number;
+}
+
+// Emergency Fund Analysis Types
+export interface EmergencyFundAnalysisDto {
+  averageMonthlyExpenses: number;
+  averageMonthlyExpenses6M: number;
+  onboardingMonthlyExpenses: number;
+  recommendedTarget3M: number;
+  recommendedTarget6M: number;
+  currentAmount: number;
+  monthsCovered: number;
+  transactionMonthsAvailable: number;
+  monthlyBreakdown: MonthlyExpenseBreakdown[];
+  monthlyRecurringTotal: number;
+  activeRecurringCount: number;
+  essentialAnalysis?: EssentialExpenseAnalysis;
+}
+
+export interface MonthlyExpenseBreakdown {
+  year: number;
+  month: number;
+  totalExpenses: number;
+  income: number;
+}
+
+export interface EssentialExpenseAnalysis {
+  estimatedMonthlyEssentials: number;
+  estimatedMonthlyDiscretionary: number;
+  recommendedTarget3M: number;
+  recommendedTarget6M: number;
+  categories: ExpenseCategoryBreakdown[];
+  reasoning: string;
+}
+
+export interface ExpenseCategoryBreakdown {
+  categoryName: string;
+  monthlyAverage: number;
+  isEssential: boolean;
 }
 
 // Onboarding Types
