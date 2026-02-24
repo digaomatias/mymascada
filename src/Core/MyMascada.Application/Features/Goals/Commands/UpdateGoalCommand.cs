@@ -18,6 +18,7 @@ public class UpdateGoalCommand : IRequest<GoalDetailDto>
     public DateTime? Deadline { get; set; }
     public int? LinkedAccountId { get; set; }
     public bool ClearLinkedAccount { get; set; }
+    public bool? IsPinned { get; set; }
     public Guid UserId { get; set; }
 }
 
@@ -128,6 +129,11 @@ public class UpdateGoalCommandHandler : IRequestHandler<UpdateGoalCommand, GoalD
             goal.LinkedAccountId = null;
         }
 
+        if (request.IsPinned.HasValue)
+        {
+            goal.IsPinned = request.IsPinned.Value;
+        }
+
         // Look up live balance for linked account to check auto-complete
         decimal? linkedAccountBalance = null;
         if (goal.LinkedAccountId.HasValue)
@@ -187,6 +193,7 @@ public class UpdateGoalCommandHandler : IRequestHandler<UpdateGoalCommand, GoalD
             LinkedAccountName = goal.Account?.Name,
             LinkedAccountId = goal.LinkedAccountId,
             DisplayOrder = goal.DisplayOrder,
+            IsPinned = goal.IsPinned,
             CreatedAt = goal.CreatedAt,
             UpdatedAt = goal.UpdatedAt
         };

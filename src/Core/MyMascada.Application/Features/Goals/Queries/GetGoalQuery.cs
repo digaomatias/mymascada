@@ -73,6 +73,7 @@ public class GetGoalQueryHandler : IRequestHandler<GetGoalQuery, GoalDetailDto?>
             LinkedAccountName = goal.Account?.Name,
             LinkedAccountId = goal.LinkedAccountId,
             DisplayOrder = goal.DisplayOrder,
+            IsPinned = goal.IsPinned,
             CreatedAt = goal.CreatedAt,
             UpdatedAt = goal.UpdatedAt
         };

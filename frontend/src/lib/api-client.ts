@@ -1578,6 +1578,10 @@ class ApiClient {
     return this.request(`/api/goals/${id}/progress`, { method: 'PUT', body: JSON.stringify({ currentAmount }) });
   }
 
+  async toggleGoalPin(id: number, isPinned: boolean): Promise<void> {
+    return this.request(`/api/goals/${id}/pin`, { method: 'PATCH', body: JSON.stringify({ isPinned }) });
+  }
+
   // User Data methods (LGPD/GDPR compliance)
   async getUserDataSummary(): Promise<UserDataSummary> {
     return this.request('/api/UserData/summary');
@@ -1748,6 +1752,18 @@ class ApiClient {
 
   async clearChatHistory(): Promise<void> {
     return this.request('/api/ai-chat/messages', { method: 'DELETE' });
+  }
+
+  // Dashboard Nudge Dismissal methods
+  async getDismissedNudges(): Promise<string[]> {
+    return this.request('/api/dashboard-nudges/dismissed');
+  }
+
+  async dismissNudge(nudgeType: string, snoozeDays?: number): Promise<void> {
+    return this.request(`/api/dashboard-nudges/${nudgeType}/dismiss`, {
+      method: 'POST',
+      body: JSON.stringify(snoozeDays ? { snoozeDays } : {}),
+    });
   }
 
   // Feature flags (anonymous endpoint)
@@ -2001,6 +2017,7 @@ export interface GoalSummary {
   deadline?: string;
   daysRemaining?: number;
   linkedAccountName?: string;
+  isPinned: boolean;
 }
 
 export interface GoalDetail extends GoalSummary {

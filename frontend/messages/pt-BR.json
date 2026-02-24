@@ -3106,6 +3106,48 @@
     "createdAt": "Criada em",
     "updatedAt": "Última Atualização",
     "backToGoals": "Voltar às Metas",
+    "journeySubtitle": "Acompanhe sua jornada financeira, um marco de cada vez.",
+    "stages": {
+      "foundation": "Base",
+      "freedom": "Liberdade",
+      "growth": "Crescimento",
+      "dreams": "Sonhos"
+    },
+    "pinned": "Fixadas",
+    "completed": "Concluídas",
+    "pinGoal": "Fixar meta",
+    "unpinGoal": "Desafixar meta",
+    "goalPinned": "Meta fixada",
+    "goalUnpinned": "Meta desafixada",
+    "pinError": "Falha ao atualizar fixação",
+    "viewDetails": "Ver detalhes",
+    "focus": "Foco",
+    "trackingState": {
+      "noDeadline": "Sem Prazo",
+      "onTrack": "No Caminho",
+      "behind": "Atrasada",
+      "overdue": "Vencida",
+      "paused": "Pausada",
+      "complete": "Concluída"
+    },
+    "nudge": {
+      "noEmergencyFund": "Especialistas financeiros recomendam criar uma reserva de emergência primeiro. Ela protege suas outras metas de despesas inesperadas.",
+      "createEmergencyFund": "Criar reserva de emergência",
+      "lowEmergencyFund": "Sua reserva cobre {months} meses. Especialistas recomendam acumular 3 meses antes de focar em outras metas.",
+      "viewEmergencyFund": "Ver reserva de emergência",
+      "lowEmergencyFundPercent": "Sua reserva está em {percent}. Especialistas recomendam acumular 3 meses de despesas.",
+      "overdueGoal": "'{name}' passou do prazo. Revise seu objetivo ou cronograma.",
+      "reviewGoal": "Revisar meta",
+      "nearComplete": "Quase lá! '{name}' está {percent} financiada.",
+      "viewGoal": "Ver meta",
+      "allOnTrack": "Suas metas estão no caminho certo. Continue assim!"
+    },
+    "emptyState": {
+      "title": "Nenhuma meta ainda",
+      "description": "Comece sua jornada financeira criando sua primeira meta.",
+      "cta": "Crie sua primeira meta"
+    },
+    "funded": "{percent} financiada",
     "filters": {
       "showCompleted": "Mostrar concluídas"
     },

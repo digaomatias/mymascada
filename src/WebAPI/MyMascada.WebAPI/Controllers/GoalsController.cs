@@ -234,4 +234,41 @@ public class GoalsController : ControllerBase
             return StatusCode(500, new { message = "An error occurred while updating goal progress." });
         }
     }
+
+    /// <summary>
+    /// Toggle the pinned state of a goal
+    /// </summary>
+    [HttpPatch("{id}/pin")]
+    public async Task<ActionResult<GoalDetailDto>> ToggleGoalPin(int id, [FromBody] ToggleGoalPinRequest request)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var command = new UpdateGoalCommand
+            {
+                GoalId = id,
+                IsPinned = request.IsPinned,
+                UserId = _currentUserService.GetUserId()
+            };
+
+            var goal = await _mediator.Send(command);
+            return Ok(goal);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while updating goal pin state." });
+        }
+    }
 }

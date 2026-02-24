@@ -14,6 +14,7 @@ public class GoalSummaryDto
     public DateTime? Deadline { get; set; }
     public int? DaysRemaining { get; set; }
     public string? LinkedAccountName { get; set; }
+    public bool IsPinned { get; set; }
 }
 
 public class GoalDetailDto
@@ -32,8 +33,14 @@ public class GoalDetailDto
     public string? LinkedAccountName { get; set; }
     public int? LinkedAccountId { get; set; }
     public int DisplayOrder { get; set; }
+    public bool IsPinned { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+}
+
+public class ToggleGoalPinRequest
+{
+    public bool IsPinned { get; set; }
 }
 
 public class CreateGoalRequest

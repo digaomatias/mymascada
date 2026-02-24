@@ -30,6 +30,8 @@ public class Goal : BaseEntity
 
     public int DisplayOrder { get; set; }
 
+    public bool IsPinned { get; set; }
+
     // Navigation properties
     public Account? Account { get; set; }
 

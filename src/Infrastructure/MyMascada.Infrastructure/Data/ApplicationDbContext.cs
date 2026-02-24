@@ -776,6 +776,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.TargetAmount).HasPrecision(18, 2);
             entity.Property(e => e.CurrentAmount).HasPrecision(18, 2);
             entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.IsPinned).HasDefaultValue(false);
 
             // Indexes for efficient querying
             entity.HasIndex(e => e.UserId);

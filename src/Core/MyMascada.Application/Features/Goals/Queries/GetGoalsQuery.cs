@@ -80,7 +80,8 @@ public class GetGoalsQueryHandler : IRequestHandler<GetGoalsQuery, IEnumerable<G
             Status = goal.Status.ToString(),
             Deadline = goal.Deadline,
             DaysRemaining = daysRemaining,
-            LinkedAccountName = goal.Account?.Name
+            LinkedAccountName = goal.Account?.Name,
+            IsPinned = goal.IsPinned
         };
     }
 }

@@ -3107,6 +3107,48 @@
     "createdAt": "Created",
     "updatedAt": "Last Updated",
     "backToGoals": "Back to Goals",
+    "journeySubtitle": "Track your financial journey, one milestone at a time.",
+    "stages": {
+      "foundation": "Foundation",
+      "freedom": "Freedom",
+      "growth": "Growth",
+      "dreams": "Dreams"
+    },
+    "pinned": "Pinned",
+    "completed": "Completed",
+    "pinGoal": "Pin goal",
+    "unpinGoal": "Unpin goal",
+    "goalPinned": "Goal pinned",
+    "goalUnpinned": "Goal unpinned",
+    "pinError": "Failed to update pin",
+    "viewDetails": "View details",
+    "focus": "Focus",
+    "trackingState": {
+      "noDeadline": "No Deadline",
+      "onTrack": "On Track",
+      "behind": "Behind",
+      "overdue": "Overdue",
+      "paused": "Paused",
+      "complete": "Complete"
+    },
+    "nudge": {
+      "noEmergencyFund": "Financial experts recommend building an emergency fund first. It protects your other goals from unexpected expenses.",
+      "createEmergencyFund": "Create emergency fund",
+      "lowEmergencyFund": "Your safety net covers {months} months. Financial experts recommend building to 3 months before focusing on other goals.",
+      "viewEmergencyFund": "View emergency fund",
+      "lowEmergencyFundPercent": "Your safety net is at {percent}. Financial experts recommend building to 3 months of expenses.",
+      "overdueGoal": "'{name}' is past its deadline. Review your target or timeline.",
+      "reviewGoal": "Review goal",
+      "nearComplete": "Almost there! '{name}' is {percent} funded.",
+      "viewGoal": "View goal",
+      "allOnTrack": "Your goals are on track. Keep the momentum going!"
+    },
+    "emptyState": {
+      "title": "No goals yet",
+      "description": "Start your financial journey by creating your first goal.",
+      "cta": "Create your first goal"
+    },
+    "funded": "{percent} funded",
     "filters": {
       "showCompleted": "Show completed"
     },
