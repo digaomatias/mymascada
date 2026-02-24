@@ -46,6 +46,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<UserTelegramSettings> UserTelegramSettings => Set<UserTelegramSettings>();
     public DbSet<Goal> Goals => Set<Goal>();
     public DbSet<UserFinancialProfile> UserFinancialProfiles => Set<UserFinancialProfile>();
+    public DbSet<DashboardNudgeDismissal> DashboardNudgeDismissals => Set<DashboardNudgeDismissal>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -801,6 +802,18 @@ public class ApplicationDbContext : DbContext
 
             // One profile per user
             entity.HasIndex(e => e.UserId).IsUnique();
+
+            entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
+        // DashboardNudgeDismissal configuration
+        modelBuilder.Entity<DashboardNudgeDismissal>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.NudgeType).IsRequired().HasMaxLength(50);
+
+            entity.HasIndex(e => new { e.UserId, e.NudgeType }).IsUnique();
 
             entity.HasQueryFilter(e => !e.IsDeleted);
         });

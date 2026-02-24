@@ -52,6 +52,9 @@ public static class RepositoryServiceExtensions
         // Onboarding repositories
         services.AddScoped<IUserFinancialProfileRepository, UserFinancialProfileRepository>();
 
+        // Dashboard nudge repositories
+        services.AddScoped<IDashboardNudgeDismissalRepository, DashboardNudgeDismissalRepository>();
+
         return services;
     }
 }
