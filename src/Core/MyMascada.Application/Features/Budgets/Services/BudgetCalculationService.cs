@@ -582,7 +582,7 @@ public class BudgetCalculationService : IBudgetCalculationService
             .Select(bc => bc.CategoryId)
             .ToList();
 
-        // Calculate total spending
+        // Calculate total spending (respecting per-category IncludeSubcategories setting)
         decimal totalSpent = 0;
         if (categoryIds.Any())
         {
@@ -594,7 +594,25 @@ public class BudgetCalculationService : IBudgetCalculationService
                 includeSubcategories: true,
                 cancellationToken);
 
-            totalSpent = spending.Values.Sum(s => s.TotalSpent);
+            foreach (var bc in budget.BudgetCategories.Where(bc => !bc.IsDeleted))
+            {
+                var catSpending = spending.GetValueOrDefault(bc.CategoryId);
+                if (!bc.IncludeSubcategories && catSpending != null)
+                {
+                    var actualSpending = await GetCategorySpendingAsync(
+                        bc.CategoryId,
+                        userId,
+                        periodStart,
+                        periodEnd,
+                        includeSubcategories: false,
+                        cancellationToken);
+                    totalSpent += actualSpending.TotalSpent;
+                }
+                else
+                {
+                    totalSpent += catSpending?.TotalSpent ?? 0;
+                }
+            }
         }
 
         var totalBudgeted = budget.GetTotalBudgetedAmount();

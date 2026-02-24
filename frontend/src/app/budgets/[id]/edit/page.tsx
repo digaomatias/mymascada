@@ -1,93 +1,82 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { AppLayout } from '@/components/app-layout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import { apiClient } from '@/lib/api-client';
-import {
-  BudgetDetail,
-  BudgetSuggestion,
-  UpdateBudgetRequest,
-  CreateBudgetCategoryRequest,
-  UpdateBudgetCategoryRequest,
-  formatCurrency,
-} from '@/types/budget';
+import type { BudgetDetail, BudgetSuggestion } from '@/types/budget';
+import { formatCurrency } from '@/types/budget';
 import { toast } from 'sonner';
+import {
+  ArrowLeftIcon,
+  LightBulbIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
+import { renderCategoryIcon } from '@/lib/category-icons';
+
+const BUDGET_BASE = '/budgets';
 
 interface Category {
   id: number;
   name: string;
-  canonicalKey?: string;
-  type: number;
-  parentId: number | null;
-  color?: string;
   icon?: string;
-  isSystem?: boolean;
-  children?: Category[];
 }
-import {
-  ArrowLeft,
-  Lightbulb,
-  Plus,
-  Search,
-  Trash2,
-  Wallet,
-} from 'lucide-react';
-import { renderCategoryIcon } from '@/lib/category-icons';
+
+interface CategoryDraft {
+  budgetedAmount: number;
+  allowRollover: boolean;
+  includeSubcategories: boolean;
+}
+
+interface NewCategoryDraft extends CategoryDraft {
+  categoryId: number;
+  categoryName: string;
+  categoryIcon?: string;
+  suggestion?: BudgetSuggestion;
+}
 
 export default function EditBudgetPage() {
   const params = useParams();
   const router = useRouter();
   const t = useTranslations('budgets');
   const tCommon = useTranslations('common');
-
   const budgetId = Number(params.id);
 
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [budget, setBudget] = useState<BudgetDetail | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [suggestions, setSuggestions] = useState<BudgetSuggestion[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Form state
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [isRecurring, setIsRecurring] = useState(true);
 
-  // Category allocations (for existing categories)
-  const [categoryAllocations, setCategoryAllocations] = useState<Record<number, {
-    budgetedAmount: number;
-    allowRollover: boolean;
-    includeSubcategories: boolean;
-  }>>({});
-
-  // New categories to add
-  const [newCategories, setNewCategories] = useState<{
-    categoryId: number;
-    categoryName: string;
-    categoryIcon?: string;
-    budgetedAmount: number;
-    allowRollover: boolean;
-    includeSubcategories: boolean;
-    suggestion?: BudgetSuggestion;
-  }[]>([]);
+  const [categoryAllocations, setCategoryAllocations] = useState<Record<number, CategoryDraft>>({});
+  const [removedCategoryIds, setRemovedCategoryIds] = useState<number[]>([]);
+  const [newCategories, setNewCategories] = useState<NewCategoryDraft[]>([]);
 
   useEffect(() => {
-    const loadData = async () => {
+    if (isNaN(budgetId)) {
+      router.push(BUDGET_BASE);
+      return;
+    }
+
+    const load = async () => {
       try {
-        setIsLoading(true);
+        setLoading(true);
         const [budgetData, categoriesData, suggestionsData] = await Promise.all([
           apiClient.getBudget(budgetId),
           apiClient.getCategories() as Promise<Category[]>,
@@ -95,56 +84,83 @@ export default function EditBudgetPage() {
         ]);
 
         setBudget(budgetData);
-        setCategories(categoriesData as Category[]);
+        setCategories(categoriesData);
         setSuggestions(suggestionsData);
-
-        // Initialize form state
         setName(budgetData.name);
         setDescription(budgetData.description || '');
         setIsActive(budgetData.isActive);
         setIsRecurring(budgetData.isRecurring);
 
-        // Initialize category allocations
-        const allocations: Record<number, {
-          budgetedAmount: number;
-          allowRollover: boolean;
-          includeSubcategories: boolean;
-        }> = {};
-        budgetData.categories.forEach((cat) => {
-          allocations[cat.categoryId] = {
-            budgetedAmount: cat.budgetedAmount,
-            allowRollover: cat.allowRollover,
-            includeSubcategories: cat.includeSubcategories,
+        const initialAllocations: Record<number, CategoryDraft> = {};
+        budgetData.categories.forEach((category) => {
+          initialAllocations[category.categoryId] = {
+            budgetedAmount: category.budgetedAmount,
+            allowRollover: category.allowRollover,
+            includeSubcategories: category.includeSubcategories,
           };
         });
-        setCategoryAllocations(allocations);
+        setCategoryAllocations(initialAllocations);
       } catch {
         toast.error(t('loadError'));
-        router.push('/budgets');
+        router.push(BUDGET_BASE);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
-    if (budgetId) {
-      loadData();
-    }
-  }, [budgetId]);
+    load();
+  }, [budgetId, router, t]);
 
-  const existingCategoryIds = budget?.categories.map((c) => c.categoryId) || [];
-  const newCategoryIds = newCategories.map((c) => c.categoryId);
-  const allSelectedCategoryIds = [...existingCategoryIds, ...newCategoryIds];
+  const selectedCategoryIds = useMemo(() => {
+    return new Set([
+      ...Object.keys(categoryAllocations).map(Number),
+      ...newCategories.map((entry) => entry.categoryId),
+    ]);
+  }, [categoryAllocations, newCategories]);
 
-  const filteredCategories = categories.filter(
-    (cat) =>
-      cat.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      !allSelectedCategoryIds.includes(cat.id)
-  );
+  const filteredCategories = useMemo(() => {
+    return categories.filter((category) => {
+      return (
+        !selectedCategoryIds.has(category.id) &&
+        category.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    });
+  }, [categories, searchTerm, selectedCategoryIds]);
+
+  const existingCategoryMeta = useMemo(() => {
+    const map = new Map<number, { name: string; icon?: string }>();
+    budget?.categories.forEach((category) => {
+      map.set(category.categoryId, {
+        name: category.categoryName,
+        icon: category.categoryIcon,
+      });
+    });
+    return map;
+  }, [budget]);
+
+  const handleExistingCategoryUpdate = (categoryId: number, updates: Partial<CategoryDraft>) => {
+    setCategoryAllocations((current) => ({
+      ...current,
+      [categoryId]: {
+        ...current[categoryId],
+        ...updates,
+      },
+    }));
+  };
+
+  const handleRemoveExistingCategory = (categoryId: number) => {
+    setRemovedCategoryIds((current) => [...new Set([...current, categoryId])]);
+    setCategoryAllocations((current) => {
+      const next = { ...current };
+      delete next[categoryId];
+      return next;
+    });
+  };
 
   const handleAddCategory = (category: Category) => {
-    const suggestion = suggestions.find((s) => s.categoryId === category.id);
-    setNewCategories([
-      ...newCategories,
+    const suggestion = suggestions.find((entry) => entry.categoryId === category.id);
+    setNewCategories((current) => [
+      ...current,
       {
         categoryId: category.id,
         categoryName: category.name,
@@ -157,406 +173,349 @@ export default function EditBudgetPage() {
     ]);
   };
 
-  const handleRemoveNewCategory = (categoryId: number) => {
-    setNewCategories(newCategories.filter((c) => c.categoryId !== categoryId));
-  };
-
-  const handleUpdateNewCategory = (categoryId: number, updates: Partial<{
-    budgetedAmount: number;
-    allowRollover: boolean;
-    includeSubcategories: boolean;
-  }>) => {
-    setNewCategories(
-      newCategories.map((c) =>
-        c.categoryId === categoryId ? { ...c, ...updates } : c
-      )
+  const handleUpdateNewCategory = (categoryId: number, updates: Partial<CategoryDraft>) => {
+    setNewCategories((current) =>
+      current.map((entry) =>
+        entry.categoryId === categoryId ? { ...entry, ...updates } : entry,
+      ),
     );
   };
 
-  const handleUpdateExistingCategory = (categoryId: number, updates: Partial<{
-    budgetedAmount: number;
-    allowRollover: boolean;
-    includeSubcategories: boolean;
-  }>) => {
-    setCategoryAllocations((prev) => ({
-      ...prev,
-      [categoryId]: { ...prev[categoryId], ...updates },
-    }));
+  const handleRemoveNewCategory = (categoryId: number) => {
+    setNewCategories((current) =>
+      current.filter((entry) => entry.categoryId !== categoryId),
+    );
   };
 
-  const handleRemoveExistingCategory = async (categoryId: number) => {
-    const category = budget?.categories.find((c) => c.categoryId === categoryId);
-    if (!category || !confirm(t('removeCategoryConfirm', { category: category.categoryName }))) {
+  const totalBudget = useMemo(() => {
+    const existing = Object.values(categoryAllocations).reduce(
+      (sum, entry) => sum + entry.budgetedAmount,
+      0,
+    );
+    const added = newCategories.reduce((sum, entry) => sum + entry.budgetedAmount, 0);
+    return existing + added;
+  }, [categoryAllocations, newCategories]);
+
+  const handleSave = async () => {
+    if (!budget || !name.trim()) return;
+
+    setSaving(true);
+    try {
+      await apiClient.updateBudget(budget.id, {
+        name: name.trim(),
+        description: description.trim() || undefined,
+        isActive,
+        isRecurring,
+      });
+    } catch {
+      toast.error(t('updateError'));
+      setSaving(false);
       return;
     }
 
-    try {
-      await apiClient.removeBudgetCategory(budgetId, categoryId);
-      toast.success(t('categoryRemoved'));
-      // Refresh budget data
-      const updatedBudget = await apiClient.getBudget(budgetId);
-      setBudget(updatedBudget);
-      const newAllocations = { ...categoryAllocations };
-      delete newAllocations[categoryId];
-      setCategoryAllocations(newAllocations);
-    } catch {
-      toast.error(t('deleteError'));
+    for (const categoryId of removedCategoryIds) {
+      try {
+        await apiClient.removeBudgetCategory(budget.id, categoryId);
+      } catch {
+        const meta = existingCategoryMeta.get(categoryId);
+        toast.error(t('removeCategoryError', { name: meta?.name || String(categoryId) }));
+      }
     }
+
+    for (const [categoryId, allocation] of Object.entries(categoryAllocations)) {
+      try {
+        await apiClient.updateBudgetCategory(budget.id, Number(categoryId), {
+          budgetedAmount: allocation.budgetedAmount,
+          allowRollover: allocation.allowRollover,
+          includeSubcategories: allocation.includeSubcategories,
+        });
+      } catch {
+        const meta = existingCategoryMeta.get(Number(categoryId));
+        toast.error(t('updateCategoryError', { name: meta?.name || categoryId }));
+      }
+    }
+
+    for (const category of newCategories) {
+      try {
+        await apiClient.addBudgetCategory(budget.id, {
+          categoryId: category.categoryId,
+          budgetedAmount: category.budgetedAmount,
+          allowRollover: category.allowRollover,
+          includeSubcategories: category.includeSubcategories,
+        });
+      } catch {
+        toast.error(t('addCategoryError', { name: category.categoryName }));
+      }
+    }
+
+    toast.success(t('budgetUpdated'));
+    setSaving(false);
+    router.push(`${BUDGET_BASE}/${budget.id}`);
   };
 
-  const handleSave = async () => {
-    try {
-      setIsSaving(true);
-
-      // Update budget basic info
-      const updateRequest: UpdateBudgetRequest = {
-        name,
-        description: description || undefined,
-        isActive,
-        isRecurring,
-      };
-      await apiClient.updateBudget(budgetId, updateRequest);
-
-      // Update existing category allocations
-      for (const category of budget?.categories || []) {
-        const allocation = categoryAllocations[category.categoryId];
-        if (allocation) {
-          const update: UpdateBudgetCategoryRequest = {
-            budgetedAmount: allocation.budgetedAmount,
-            allowRollover: allocation.allowRollover,
-            includeSubcategories: allocation.includeSubcategories,
-          };
-          await apiClient.updateBudgetCategory(budgetId, category.categoryId, update);
-        }
-      }
-
-      // Add new categories
-      for (const newCat of newCategories) {
-        const request: CreateBudgetCategoryRequest = {
-          categoryId: newCat.categoryId,
-          budgetedAmount: newCat.budgetedAmount,
-          allowRollover: newCat.allowRollover,
-          includeSubcategories: newCat.includeSubcategories,
-        };
-        await apiClient.addBudgetCategory(budgetId, request);
-      }
-
-      toast.success(t('budgetUpdated'));
-      router.push(`/budgets/${budgetId}`);
-    } catch {
-      toast.error(t('updateError'));
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  if (isLoading) {
+  if (loading) {
     return (
       <AppLayout>
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-64" />
-          <Skeleton className="h-96" />
+        <div className="space-y-4">
+          <div className="h-24 animate-pulse rounded-[24px] border border-violet-100/80 bg-white/80" />
+          <div className="h-96 animate-pulse rounded-[24px] border border-violet-100/80 bg-white/80" />
+        </div>
       </AppLayout>
     );
   }
 
-  if (!budget) {
-    return null;
-  }
-
-  const totalBudget =
-    Object.values(categoryAllocations).reduce((sum, a) => sum + a.budgetedAmount, 0) +
-    newCategories.reduce((sum, c) => sum + c.budgetedAmount, 0);
+  if (!budget) return null;
 
   return (
     <AppLayout>
-      {/* Header */}
       <div>
-        <Link href={`/budgets/${budgetId}`}>
-          <Button variant="ghost" size="sm" className="-ml-2 mb-2">
-            <ArrowLeft className="h-4 w-4 mr-1" />
+        <header className="mb-5">
+          <Link
+            href={`${BUDGET_BASE}/${budget.id}`}
+            className="inline-flex items-center text-sm font-medium text-slate-500 transition-colors hover:text-violet-700"
+          >
+            <ArrowLeftIcon className="mr-1.5 h-4 w-4" />
             {tCommon('back')}
-          </Button>
-        </Link>
-        <h1 className="text-2xl font-bold flex items-center gap-2 text-gray-900">
-          <Wallet className="h-6 w-6" />
-          {t('edit.title')}
-        </h1>
-      </div>
+          </Link>
+          <h1 className="mt-2 font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
+            {t('editBudget')}
+          </h1>
+          <p className="mt-1.5 text-[15px] text-slate-500">{t('edit.subtitle')}</p>
+        </header>
 
-      {/* Basic Information */}
-      <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-        <CardHeader>
-          <CardTitle>{t('edit.basicInfo')}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        <div className="space-y-5">
+        <section className="space-y-4 rounded-[28px] border border-violet-100/80 bg-white/92 p-6 shadow-[0_20px_42px_-30px_rgba(76,29,149,0.45)]">
+          <div>
+            <h2 className="text-lg font-semibold tracking-[-0.02em] text-slate-900">
+              {t('edit.basicInfo')}
+            </h2>
+          </div>
+
           <div className="space-y-2">
-            <Label htmlFor="name">{t('wizard.budgetName')} *</Label>
+            <Label htmlFor="edit-name">{t('wizard.budgetName')} *</Label>
             <Input
-              id="name"
+              id="edit-name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(event) => setName(event.target.value)}
               placeholder={t('wizard.budgetNamePlaceholder')}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">{t('wizard.budgetDescription')}</Label>
+            <Label htmlFor="edit-description">{t('wizard.budgetDescription')}</Label>
             <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder={t('wizard.budgetDescriptionPlaceholder')}
+              id="edit-description"
               rows={3}
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              placeholder={t('wizard.budgetDescriptionPlaceholder')}
             />
           </div>
 
-          <div className="flex items-center gap-6">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="isActive"
-                checked={isActive}
-                onCheckedChange={(checked) => setIsActive(checked === true)}
-              />
-              <Label htmlFor="isActive">{t('active')}</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="isRecurring"
-                checked={isRecurring}
-                onCheckedChange={(checked) => setIsRecurring(checked === true)}
-              />
-              <Label htmlFor="isRecurring">{t('wizard.isRecurring')}</Label>
-            </div>
+          <div className="flex flex-wrap gap-4">
+            <label className="inline-flex items-center gap-2 text-sm text-slate-600">
+              <Checkbox checked={isActive} onCheckedChange={(checked) => setIsActive(checked === true)} />
+              {t('active')}
+            </label>
+            <label className="inline-flex items-center gap-2 text-sm text-slate-600">
+              <Checkbox checked={isRecurring} onCheckedChange={(checked) => setIsRecurring(checked === true)} />
+              {t('wizard.isRecurring')}
+            </label>
           </div>
-        </CardContent>
-      </Card>
+        </section>
 
-      {/* Category Allocations */}
-      <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-        <CardHeader>
-          <CardTitle>{t('edit.categoryAllocations')}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Existing categories */}
-          {budget.categories.map((category) => {
-            const allocation = categoryAllocations[category.categoryId];
-            if (!allocation) return null;
+        <section className="space-y-4 rounded-[28px] border border-violet-100/80 bg-white/92 p-6 shadow-[0_20px_42px_-30px_rgba(76,29,149,0.45)]">
+          <h2 className="text-lg font-semibold tracking-[-0.02em] text-slate-900">
+            {t('edit.categoryAllocations')}
+          </h2>
 
-            return (
-              <div key={category.categoryId} className="border rounded-lg p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {renderCategoryIcon(category.categoryIcon, 'h-4 w-4')}
-                    <span className="font-medium">{category.categoryName}</span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleRemoveExistingCategory(category.categoryId)}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-sm">{t('wizard.budgetAmount')}</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="10"
-                    value={allocation.budgetedAmount || ''}
-                    onChange={(e) =>
-                      handleUpdateExistingCategory(category.categoryId, {
-                        budgetedAmount: parseFloat(e.target.value) || 0,
-                      })
-                    }
-                  />
-                </div>
-
-                <div className="flex items-center gap-6">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`rollover-${category.categoryId}`}
-                      checked={allocation.allowRollover}
-                      onCheckedChange={(checked) =>
-                        handleUpdateExistingCategory(category.categoryId, {
-                          allowRollover: checked === true,
-                        })
-                      }
-                    />
-                    <Label htmlFor={`rollover-${category.categoryId}`} className="text-sm">
-                      {t('wizard.allowRollover')}
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`subcategories-${category.categoryId}`}
-                      checked={allocation.includeSubcategories}
-                      onCheckedChange={(checked) =>
-                        handleUpdateExistingCategory(category.categoryId, {
-                          includeSubcategories: checked === true,
-                        })
-                      }
-                    />
-                    <Label htmlFor={`subcategories-${category.categoryId}`} className="text-sm">
-                      {t('wizard.includeSubcategories')}
-                    </Label>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-
-          {/* New categories */}
-          {newCategories.map((newCat) => (
-            <div key={newCat.categoryId} className="border rounded-lg p-4 space-y-3 border-green-200 bg-green-50/50">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {renderCategoryIcon(newCat.categoryIcon, 'h-4 w-4')}
-                  <span className="font-medium">{newCat.categoryName}</span>
-                  <Badge variant="outline" className="text-xs text-green-600 border-green-600">New</Badge>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleRemoveNewCategory(newCat.categoryId)}
-                  className="text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-sm">{t('wizard.budgetAmount')}</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    min="0"
-                    step="10"
-                    value={newCat.budgetedAmount || ''}
-                    onChange={(e) =>
-                      handleUpdateNewCategory(newCat.categoryId, {
-                        budgetedAmount: parseFloat(e.target.value) || 0,
-                      })
-                    }
-                  />
-                  {newCat.suggestion && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        handleUpdateNewCategory(newCat.categoryId, {
-                          budgetedAmount: newCat.suggestion!.suggestedBudget,
-                        })
-                      }
-                      className="whitespace-nowrap"
+          <div className="space-y-3">
+            {Object.entries(categoryAllocations).map(([id, allocation]) => {
+              const categoryId = Number(id);
+              const meta = existingCategoryMeta.get(categoryId);
+              return (
+                <div key={id} className="rounded-xl border border-violet-100/80 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
+                      {renderCategoryIcon(meta?.icon, 'h-4 w-4')}
+                      {meta?.name || id}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveExistingCategory(categoryId)}
+                      className="rounded-md p-1 text-slate-400 hover:bg-violet-50 hover:text-rose-600"
                     >
-                      <Lightbulb className="h-4 w-4 mr-1" />
-                      {t('wizard.useSuggestion')}
-                    </Button>
-                  )}
-                </div>
-              </div>
+                      <TrashIcon className="h-4 w-4" />
+                    </button>
+                  </div>
 
-              <div className="flex items-center gap-6">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`rollover-new-${newCat.categoryId}`}
-                    checked={newCat.allowRollover}
-                    onCheckedChange={(checked) =>
-                      handleUpdateNewCategory(newCat.categoryId, {
-                        allowRollover: checked === true,
+                  <div className="mt-3 space-y-3">
+                    <div className="grid gap-3 sm:grid-cols-[140px_1fr] sm:items-center">
+                      <Label className="text-xs text-slate-500">{t('wizard.budgetAmount')}</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="5"
+                        value={allocation.budgetedAmount || ''}
+                        onChange={(event) =>
+                          handleExistingCategoryUpdate(categoryId, {
+                            budgetedAmount: parseFloat(event.target.value) || 0,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="flex flex-wrap gap-4">
+                      <label className="inline-flex items-center gap-2 text-xs text-slate-600">
+                        <Checkbox
+                          checked={allocation.allowRollover}
+                          onCheckedChange={(checked) =>
+                            handleExistingCategoryUpdate(categoryId, {
+                              allowRollover: checked === true,
+                            })
+                          }
+                        />
+                        {t('wizard.allowRollover')}
+                      </label>
+                      <label className="inline-flex items-center gap-2 text-xs text-slate-600">
+                        <Checkbox
+                          checked={allocation.includeSubcategories}
+                          onCheckedChange={(checked) =>
+                            handleExistingCategoryUpdate(categoryId, {
+                              includeSubcategories: checked === true,
+                            })
+                          }
+                        />
+                        {t('wizard.includeSubcategories')}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {newCategories.map((category) => (
+              <div key={category.categoryId} className="rounded-xl border border-violet-100/80 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
+                      {renderCategoryIcon(category.categoryIcon, 'h-4 w-4')}
+                      {category.categoryName}
+                      <Badge variant="secondary" className="text-[10px]">{t('edit.newBadge')}</Badge>
+                    </p>
+                    {category.suggestion ? (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleUpdateNewCategory(category.categoryId, { budgetedAmount: category.suggestion?.suggestedBudget || 0 })
+                        }
+                        className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-violet-600 hover:text-violet-700"
+                      >
+                        <LightBulbIcon className="h-3.5 w-3.5" />
+                        {t('wizard.useSuggestion')} · {formatCurrency(category.suggestion.suggestedBudget)}
+                      </button>
+                    ) : null}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveNewCategory(category.categoryId)}
+                    className="rounded-md p-1 text-slate-400 hover:bg-violet-50 hover:text-rose-600"
+                  >
+                    <TrashIcon className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div className="mt-3 grid gap-3 sm:grid-cols-[140px_1fr] sm:items-center">
+                  <Label className="text-xs text-slate-500">{t('wizard.budgetAmount')}</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="5"
+                    value={category.budgetedAmount || ''}
+                    onChange={(event) =>
+                      handleUpdateNewCategory(category.categoryId, {
+                        budgetedAmount: parseFloat(event.target.value) || 0,
                       })
                     }
                   />
-                  <Label htmlFor={`rollover-new-${newCat.categoryId}`} className="text-sm">
+                </div>
+
+                <div className="mt-3 flex flex-wrap gap-4">
+                  <label className="inline-flex items-center gap-2 text-xs text-slate-600">
+                    <Checkbox
+                      checked={category.allowRollover}
+                      onCheckedChange={(checked) =>
+                        handleUpdateNewCategory(category.categoryId, { allowRollover: checked === true })
+                      }
+                    />
                     {t('wizard.allowRollover')}
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`subcategories-new-${newCat.categoryId}`}
-                    checked={newCat.includeSubcategories}
-                    onCheckedChange={(checked) =>
-                      handleUpdateNewCategory(newCat.categoryId, {
-                        includeSubcategories: checked === true,
-                      })
-                    }
-                  />
-                  <Label htmlFor={`subcategories-new-${newCat.categoryId}`} className="text-sm">
+                  </label>
+                  <label className="inline-flex items-center gap-2 text-xs text-slate-600">
+                    <Checkbox
+                      checked={category.includeSubcategories}
+                      onCheckedChange={(checked) =>
+                        handleUpdateNewCategory(category.categoryId, { includeSubcategories: checked === true })
+                      }
+                    />
                     {t('wizard.includeSubcategories')}
-                  </Label>
+                  </label>
                 </div>
               </div>
-            </div>
-          ))}
-
-          {/* Total */}
-          <div className="flex justify-between items-center pt-4 border-t">
-            <span className="font-medium">{t('totalBudgeted')}</span>
-            <span className="text-xl font-bold">{formatCurrency(totalBudget)}</span>
+            ))}
           </div>
-        </CardContent>
-      </Card>
+        </section>
 
-      {/* Add More Categories */}
-      <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-        <CardHeader>
-          <CardTitle>{t('edit.addMoreCategories')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="relative mb-2">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <section className="space-y-3 rounded-[28px] border border-violet-100/80 bg-white/92 p-6 shadow-[0_20px_42px_-30px_rgba(76,29,149,0.45)]">
+          <h2 className="text-lg font-semibold tracking-[-0.02em] text-slate-900">
+            {t('edit.addMoreCategories')}
+          </h2>
+          <div className="relative">
+            <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(event) => setSearchTerm(event.target.value)}
               placeholder={t('wizard.searchCategories')}
               className="pl-9"
             />
           </div>
-          {filteredCategories.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-2">
-              {t('wizard.noMatchingCategories')}
-            </p>
-          ) : (
-            <div className="border rounded-md max-h-48 overflow-y-auto">
-              {filteredCategories.slice(0, 10).map((category) => {
-                const suggestion = suggestions.find((s) => s.categoryId === category.id);
-                return (
-                  <button
-                    key={category.id}
-                    onClick={() => handleAddCategory(category)}
-                    className="w-full flex items-center justify-between px-3 py-2 hover:bg-accent text-left"
-                  >
-                    <div className="flex items-center gap-2">
-                      {renderCategoryIcon(category.icon, 'h-4 w-4')}
-                      <span>{category.name}</span>
-                    </div>
-                    {suggestion && (
-                      <Badge variant="secondary" className="text-xs">
-                        <Lightbulb className="h-3 w-3 mr-1" />
-                        {formatCurrency(suggestion.suggestedBudget)}
-                      </Badge>
-                    )}
-                    <Plus className="h-4 w-4 text-muted-foreground" />
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          <div className="max-h-56 overflow-y-auto rounded-xl border border-violet-100/80">
+            {filteredCategories.slice(0, 15).map((category) => (
+              <button
+                key={category.id}
+                type="button"
+                onClick={() => handleAddCategory(category)}
+                className="flex w-full items-center justify-between border-b border-violet-100/70 px-3 py-2 text-left last:border-b-0 hover:bg-violet-50/40"
+              >
+                <span className="inline-flex items-center gap-2 text-sm text-slate-700">
+                  {renderCategoryIcon(category.icon, 'h-4 w-4')}
+                  {category.name}
+                </span>
+                <span className="inline-flex items-center gap-2 text-xs text-slate-500">
+                  <PlusIcon className="h-3.5 w-3.5" />
+                </span>
+              </button>
+            ))}
+            {filteredCategories.length === 0 ? (
+              <p className="px-3 py-3 text-sm text-slate-500">{t('wizard.noMatchingCategories')}</p>
+            ) : null}
+          </div>
+        </section>
 
-      {/* Save Button */}
-      <div className="flex justify-end gap-4">
-        <Link href={`/budgets/${budgetId}`}>
-          <Button variant="outline">{tCommon('cancel')}</Button>
-        </Link>
-        <Button onClick={handleSave} disabled={isSaving || !name.trim()}>
-          {isSaving ? t('edit.saving') : t('edit.saveChanges')}
-        </Button>
+        <footer className="sticky bottom-4 z-20 flex items-center justify-between rounded-2xl border border-violet-200/80 bg-white/95 p-4 shadow-[0_18px_36px_-24px_rgba(76,29,149,0.5)] backdrop-blur">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">{t('wizard.totalBudget')}</p>
+            <p className="text-xl font-semibold tracking-[-0.02em] text-slate-900">{formatCurrency(totalBudget)}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link href={`${BUDGET_BASE}/${budget.id}`}>
+              <Button variant="outline">{tCommon('cancel')}</Button>
+            </Link>
+            <Button onClick={handleSave} disabled={saving || !name.trim()} loading={saving}>
+              {tCommon('save')}
+            </Button>
+          </div>
+        </footer>
+        </div>
       </div>
     </AppLayout>
   );

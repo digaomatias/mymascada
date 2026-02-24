@@ -46,6 +46,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<UserTelegramSettings> UserTelegramSettings => Set<UserTelegramSettings>();
     public DbSet<Goal> Goals => Set<Goal>();
     public DbSet<UserFinancialProfile> UserFinancialProfiles => Set<UserFinancialProfile>();
+    public DbSet<DashboardNudgeDismissal> DashboardNudgeDismissals => Set<DashboardNudgeDismissal>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

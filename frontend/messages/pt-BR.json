@@ -346,6 +346,57 @@
     "periodQuarter": "Trimestre",
     "templateEducation": "Educação",
     "templateAdvanced": "Avançado",
+    "education": {
+      "nextAction": {
+        "title": "Próxima ação",
+        "dismiss": "Dispensar insight",
+        "whyPrefix": "Por que isso importa:",
+        "rules": {
+          "negativeCashflow": {
+            "message": "Seus gastos mensais estão {deficitAmount} acima da sua receita.",
+            "why": "Quando as despesas ficam acima da receita, o risco de dívida cresce e as metas atrasam.",
+            "cta": "Revisar transações"
+          },
+          "lowRunway": {
+            "message": "Sua pista financeira está abaixo de 1 mês agora.",
+            "why": "Construir uma reserva de 3-6 meses protege você contra choques de renda inesperados.",
+            "cta": "Fortalecer pista"
+          },
+          "overBudget": {
+            "message": "{count} orçamentos estão acima do limite (maior excesso de {overAmount}).",
+            "why": "Corrigir primeiro as categorias acima do limite pode liberar caixa rapidamente.",
+            "cta": "Corrigir desvio"
+          },
+          "missingEmergencyFund": {
+            "message": "Você ainda não tem uma meta de reserva de emergência.",
+            "why": "A reserva de emergência evita que imprevistos virem dívida.",
+            "cta": "Criar reserva"
+          },
+          "buildEmergencyFund": {
+            "message": "Sua reserva de emergência está {progress}% concluída.",
+            "why": "Contribuições consistentes aumentam sua estabilidade financeira mês a mês.",
+            "cta": "Contribuir agora"
+          },
+          "lowSavingsRate": {
+            "message": "Sua taxa de economia está em {savingsRate}% neste mês.",
+            "why": "Buscar pelo menos 20% normalmente melhora sua pista e o avanço das metas.",
+            "cta": "Aumentar economia"
+          },
+          "healthyMomentum": {
+            "message": "Bom ritmo neste mês. Vale manter essa consistência.",
+            "why": "Hábitos estáveis acumulam resultado e facilitam suas próximas metas.",
+            "cta": "Planejar próxima meta"
+          }
+        }
+      },
+      "concepts": {
+        "runway": "Pista financeira",
+        "overspending": "Excesso de gastos",
+        "emergency-fund": "Reserva de emergência",
+        "savings-rate": "Taxa de economia",
+        "momentum": "Ritmo"
+      }
+    },
     "cards": {
       "runway": {
         "title": "Sua Pista Financeira",
@@ -2846,8 +2897,12 @@
     "categoryCount": "{count} categorias",
     "categoryCountOne": "1 categoria",
     "noCategoriesInBudget": "Nenhuma categoria neste orçamento",
+    "viewDetails": "Ver detalhes",
     "addCategory": "Adicionar Categoria",
     "removeCategory": "Remover Categoria",
+    "removeCategoryError": "Falha ao remover {name}",
+    "updateCategoryError": "Falha ao atualizar {name}",
+    "addCategoryError": "Falha ao adicionar {name}",
     "removeCategoryConfirm": "Remover \"{category}\" deste orçamento?",
     "categoryRemoved": "Categoria removida do orçamento",
     "categoryAdded": "Categoria adicionada ao orçamento",
@@ -2916,15 +2971,39 @@
       "budgetPeriod": "Período do Orçamento",
       "categoriesAndAmounts": "Categorias e Valores",
       "createBudget": "Criar Orçamento",
-      "creating": "Criando..."
+      "creating": "Criando...",
+      "totalBudget": "Total do orçamento",
+      "nextAfterCreate": "Depois de criar este orçamento, você poderá ajustar limites por categoria e acompanhar o ritmo de gastos na tela de detalhes.",
+      "dateRange": "Intervalo de Datas"
     },
     "edit": {
       "title": "Editar Orçamento",
       "basicInfo": "Informações Básicas",
       "categoryAllocations": "Alocações por Categoria",
-      "addMoreCategories": "Adicionar Mais Categorias",
+      "addMoreCategories": "Adicionar mais categorias",
       "saveChanges": "Salvar Alterações",
-      "saving": "Salvando..."
+      "saving": "Salvando...",
+      "subtitle": "Ajuste alocações e mantenha este orçamento alinhado com sua realidade atual.",
+      "newBadge": "Novo"
+    },
+    "nudge": {
+      "overLimit": "Seu orçamento {name} está {amount} acima. Revisar suas principais categorias pode ajudar a identificar padrões.",
+      "atRisk": "Seu orçamento {name} está em {percent}%. Pequenos ajustes agora podem manter você no caminho certo.",
+      "endingSoon": "{days} dias restantes neste ciclo — um bom momento para revisar.",
+      "allOnTrack": "Todos os orçamentos estão no caminho certo. Você está criando ótimos hábitos.",
+      "reviewSpending": "Revisar gastos",
+      "viewDetails": "Ver detalhes",
+      "review": "Revisar"
+    },
+    "detail": {
+      "elapsedOfPeriod": "{percent}% do período decorrido",
+      "categoriesHint": "Comece pelas categorias com status amarelo/vermelho.",
+      "categoryTransactions": "{count} transações",
+      "paceLabel": "Ritmo de gastos",
+      "paceAhead": "Você está gastando {amount} ({percent}%) abaixo do ritmo esperado.",
+      "paceBehind": "Você está gastando {amount} ({percent}%) acima do ritmo esperado.",
+      "paceDetail": "Esperado: {expected} · Atual: {actual}",
+      "noSpendingYet": "Nenhum gasto registrado ainda"
     },
     "filters": {
       "showInactive": "Mostrar inativos",

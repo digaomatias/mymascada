@@ -347,6 +347,57 @@
     "periodQuarter": "Quarter",
     "templateEducation": "Education",
     "templateAdvanced": "Advanced",
+    "education": {
+      "nextAction": {
+        "title": "Next action",
+        "dismiss": "Dismiss insight",
+        "whyPrefix": "Why this matters:",
+        "rules": {
+          "negativeCashflow": {
+            "message": "Your monthly spending is {deficitAmount} above your income.",
+            "why": "When expenses stay above income, debt risk rises and goals slow down.",
+            "cta": "Review transactions"
+          },
+          "lowRunway": {
+            "message": "Your runway is under 1 month right now.",
+            "why": "Building toward 3-6 months helps protect you from unexpected income shocks.",
+            "cta": "Strengthen runway"
+          },
+          "overBudget": {
+            "message": "{count} budgets are over limit (largest over by {overAmount}).",
+            "why": "Fixing over-limit categories first can quickly free up monthly cash.",
+            "cta": "Fix budget drift"
+          },
+          "missingEmergencyFund": {
+            "message": "You still do not have an emergency fund goal.",
+            "why": "An emergency fund prevents short-term shocks from turning into debt.",
+            "cta": "Create emergency fund"
+          },
+          "buildEmergencyFund": {
+            "message": "Your emergency fund is {progress}% funded.",
+            "why": "Consistent contributions now increase financial stability month by month.",
+            "cta": "Contribute now"
+          },
+          "lowSavingsRate": {
+            "message": "Your savings rate is {savingsRate}% this month.",
+            "why": "Aiming for at least 20% usually improves runway and goal momentum.",
+            "cta": "Increase savings rate"
+          },
+          "healthyMomentum": {
+            "message": "Strong momentum this month. Keep this cadence.",
+            "why": "Stable habits compound and make future goals much easier to hit.",
+            "cta": "Plan your next goal"
+          }
+        }
+      },
+      "concepts": {
+        "runway": "Runway",
+        "overspending": "Overspending",
+        "emergency-fund": "Emergency fund",
+        "savings-rate": "Savings rate",
+        "momentum": "Momentum"
+      }
+    },
     "cards": {
       "runway": {
         "title": "Your Financial Runway",
@@ -2847,8 +2898,12 @@
     "categoryCount": "{count} categories",
     "categoryCountOne": "1 category",
     "noCategoriesInBudget": "No categories in this budget",
+    "viewDetails": "View details",
     "addCategory": "Add Category",
     "removeCategory": "Remove Category",
+    "removeCategoryError": "Failed to remove {name}",
+    "updateCategoryError": "Failed to update {name}",
+    "addCategoryError": "Failed to add {name}",
     "removeCategoryConfirm": "Remove \"{category}\" from this budget?",
     "categoryRemoved": "Category removed from budget",
     "categoryAdded": "Category added to budget",
@@ -2917,15 +2972,39 @@
       "budgetPeriod": "Budget Period",
       "categoriesAndAmounts": "Categories & Amounts",
       "createBudget": "Create Budget",
-      "creating": "Creating..."
+      "creating": "Creating...",
+      "totalBudget": "Total budget",
+      "nextAfterCreate": "After creating this budget, you'll be able to fine-tune category limits and monitor spending pace from the detail view.",
+      "dateRange": "Date Range"
     },
     "edit": {
       "title": "Edit Budget",
       "basicInfo": "Basic Information",
       "categoryAllocations": "Category Allocations",
-      "addMoreCategories": "Add More Categories",
+      "addMoreCategories": "Add more categories",
       "saveChanges": "Save Changes",
-      "saving": "Saving..."
+      "saving": "Saving...",
+      "subtitle": "Adjust allocations and keep this budget aligned with your current reality.",
+      "newBadge": "New"
+    },
+    "nudge": {
+      "overLimit": "Your {name} budget is {amount} over. Reviewing your top categories could help spot patterns.",
+      "atRisk": "Your {name} budget is at {percent}%. Small adjustments now can keep you on track.",
+      "endingSoon": "{days} days left in this cycle — a good time to review.",
+      "allOnTrack": "All budgets are on track. You're building great habits.",
+      "reviewSpending": "Review spending",
+      "viewDetails": "View details",
+      "review": "Review"
+    },
+    "detail": {
+      "elapsedOfPeriod": "{percent}% of period elapsed",
+      "categoriesHint": "Focus on categories with amber/rose status first.",
+      "categoryTransactions": "{count} transactions",
+      "paceLabel": "Spending pace",
+      "paceAhead": "You are spending {amount} ({percent}%) below expected pace.",
+      "paceBehind": "You are spending {amount} ({percent}%) above expected pace.",
+      "paceDetail": "Expected: {expected} · Actual: {actual}",
+      "noSpendingYet": "No spending recorded yet"
     },
     "filters": {
       "showInactive": "Show inactive",
