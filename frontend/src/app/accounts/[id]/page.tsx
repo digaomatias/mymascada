@@ -134,11 +134,6 @@ function AccountDetailsPageContent() {
         </Link>
 
         <div className="flex items-center gap-2">
-          <AddTransactionButton
-            accountId={account.id.toString()}
-            onSuccess={handleTransactionUpdate}
-            className="btn-sm"
-          />
           <Link href={`/accounts/${account.id}/edit`}>
             <Button variant="secondary" size="sm" className="flex items-center gap-2">
               <PencilIcon className="w-4 h-4" />
