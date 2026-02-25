@@ -38,8 +38,7 @@ Config is in `.env` at the repo root. Key values:
 - DB credentials: see `.env`
 
 ### Test User Account
-- Email: `automation@example.com`
-- Password: `SecureLogin123!`
+- Credentials stored in `.env` (not committed to repo)
 
 ## Architecture
 
