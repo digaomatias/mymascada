@@ -161,7 +161,7 @@ caddy-config/
 .playwright-mcp/
 
 # Claude
-.claude/
+.claude/settings.local.json
 tasks.md
 CLAUDE.md
 
@@ -221,3 +221,5 @@ AI_COLLABORATION_SUMMARY.md
 Analysis.MD
 saas-beta-checklist.md
 to-localize.md
+# Agent swarm
+.clawdbot/
