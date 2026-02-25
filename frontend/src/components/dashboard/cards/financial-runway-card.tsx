@@ -60,7 +60,7 @@ export function FinancialRunwayCard() {
         const monthlyExpenses = period === 'quarter' ? expenses / 3 : expenses;
         const runwayMonths =
           monthlyExpenses > 0
-            ? Math.floor(totalBalance / monthlyExpenses)
+            ? Math.round((totalBalance / monthlyExpenses) * 10) / 10
             : 0;
         const netSaved = income - expenses;
         const savingsRate = income > 0 ? Math.round((netSaved / income) * 100) : 0;
@@ -97,12 +97,12 @@ export function FinancialRunwayCard() {
                 <p className="text-sm font-semibold text-slate-500">{t('title')}</p>
                 <div className="mt-2 flex items-baseline gap-3">
                   <p className="font-[var(--font-dash-mono)] text-5xl font-semibold tracking-[-0.02em] text-slate-900 sm:text-[3.2rem]">
-                    {data.runwayMonths}
+                    {data.runwayMonths === 0 ? '0' : data.runwayMonths.toFixed(1)}
                   </p>
                   <p className="text-xl font-medium text-slate-400">{t('months')}</p>
                 </div>
                 <p className="mt-1.5 max-w-sm text-[15px] leading-relaxed text-slate-500">
-                  {t('description', { months: data.runwayMonths })}
+                  {t('description', { months: data.runwayMonths === 0 ? '0' : data.runwayMonths.toFixed(1) })}
                 </p>
               </div>
               {/* Inline period toggle */}
