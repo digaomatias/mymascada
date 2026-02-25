@@ -142,9 +142,9 @@ public class GetPotentialTransfersQueryHandlerTests
             AccountName = "Account B"
         };
 
-        _transactionRepository.GetUserTransactionsAsync(userId, false, false, false)
+        _transactionRepository.GetUserTransactionsAsync(userId, false, true, false)
             .Returns(transactions);
-        
+
         _mapper.Map<TransactionDto>(outgoingTransaction).Returns(outgoingDto);
         _mapper.Map<TransactionDto>(incomingTransaction).Returns(incomingDto);
 
@@ -156,7 +156,7 @@ public class GetPotentialTransfersQueryHandlerTests
         // Assert
         result.TransferGroups.Should().HaveCount(1);
         var transferGroup = result.TransferGroups.First();
-        
+
         // CRITICAL: Direction should be correct regardless of processing order
         transferGroup.SourceTransaction.Id.Should().Be(10, "outgoing transaction should always be source");
         transferGroup.DestinationTransaction.Id.Should().Be(20, "incoming transaction should always be destination");
@@ -207,9 +207,9 @@ public class GetPotentialTransfersQueryHandlerTests
             Description = "Another purchase"
         };
 
-        _transactionRepository.GetUserTransactionsAsync(userId, false, false, false)
+        _transactionRepository.GetUserTransactionsAsync(userId, false, true, false)
             .Returns(transactions);
-        
+
         _mapper.Map<TransactionDto>(transaction1).Returns(dto1);
         _mapper.Map<TransactionDto>(transaction2).Returns(dto2);
 
@@ -265,9 +265,9 @@ public class GetPotentialTransfersQueryHandlerTests
             Description = "Another deposit"
         };
 
-        _transactionRepository.GetUserTransactionsAsync(userId, false, false, false)
+        _transactionRepository.GetUserTransactionsAsync(userId, false, true, false)
             .Returns(transactions);
-        
+
         _mapper.Map<TransactionDto>(transaction1).Returns(dto1);
         _mapper.Map<TransactionDto>(transaction2).Returns(dto2);
 
@@ -305,7 +305,7 @@ public class GetPotentialTransfersQueryHandlerTests
             Description = t.Description
         }).ToList();
 
-        _transactionRepository.GetUserTransactionsAsync(userId, false, false, false)
+        _transactionRepository.GetUserTransactionsAsync(userId, false, true, false)
             .Returns(transactions);
 
         foreach (var (transaction, dto) in transactions.Zip(dtos))
@@ -383,7 +383,7 @@ public class GetPotentialTransfersQueryHandlerTests
             AccountName = "ANZ Savings"
         };
 
-        _transactionRepository.GetUserTransactionsAsync(userId, false, false, false)
+        _transactionRepository.GetUserTransactionsAsync(userId, false, true, false)
             .Returns(transactions);
 
         _mapper.Map<TransactionDto>(transaction1).Returns(dto1);
@@ -442,7 +442,7 @@ public class GetPotentialTransfersQueryHandlerTests
             Description = "Transfer"
         };
 
-        _transactionRepository.GetUserTransactionsAsync(userId, false, false, false)
+        _transactionRepository.GetUserTransactionsAsync(userId, false, true, false)
             .Returns(transactions);
 
         _mapper.Map<TransactionDto>(transaction1).Returns(dto1);
@@ -500,7 +500,7 @@ public class GetPotentialTransfersQueryHandlerTests
             Description = "Transfer"
         };
 
-        _transactionRepository.GetUserTransactionsAsync(userId, false, false, false)
+        _transactionRepository.GetUserTransactionsAsync(userId, false, true, false)
             .Returns(transactions);
 
         _mapper.Map<TransactionDto>(transaction1).Returns(dto1);

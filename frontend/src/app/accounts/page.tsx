@@ -2,11 +2,10 @@
 
 import { useAuth } from '@/contexts/auth-context';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AppLayout } from '@/components/app-layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn, BackendAccountType } from '@/lib/utils';
 import { AccountTypeBadge } from '@/components/ui/account-type-badge';
 import { apiClient, ReceivedShareDto } from '@/lib/api-client';
 import { CheckIcon, XMarkIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
@@ -14,13 +13,17 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import {
   BuildingOffice2Icon,
-  CurrencyDollarIcon,
+  CreditCardIcon,
   BanknotesIcon,
+  CurrencyDollarIcon,
   EllipsisVerticalIcon,
   PencilIcon,
   TrashIcon,
   DocumentArrowUpIcon,
-  UserGroupIcon
+  UserGroupIcon,
+  WalletIcon,
+  ChartBarIcon,
+  BuildingLibraryIcon,
 } from '@heroicons/react/24/outline';
 import {
   DropdownMenu,
@@ -52,7 +55,20 @@ interface Account {
   sharedByUserName?: string;
 }
 
-// Account type mapping removed - now using utility functions from lib/utils
+// Gradient + icon config per account type (backend 1-based values)
+const ACCOUNT_TYPE_STYLES: Record<number, { gradient: string; icon: typeof BuildingOffice2Icon }> = {
+  [BackendAccountType.Checking]: { gradient: 'from-blue-500 to-blue-600', icon: BuildingLibraryIcon },
+  [BackendAccountType.Savings]: { gradient: 'from-emerald-500 to-emerald-600', icon: BanknotesIcon },
+  [BackendAccountType.CreditCard]: { gradient: 'from-rose-500 to-rose-600', icon: CreditCardIcon },
+  [BackendAccountType.Investment]: { gradient: 'from-violet-500 to-fuchsia-500', icon: ChartBarIcon },
+  [BackendAccountType.Loan]: { gradient: 'from-amber-500 to-amber-600', icon: CurrencyDollarIcon },
+  [BackendAccountType.Cash]: { gradient: 'from-slate-500 to-slate-600', icon: WalletIcon },
+  [BackendAccountType.Other]: { gradient: 'from-slate-400 to-slate-500', icon: BuildingOffice2Icon },
+};
+
+function getAccountTypeStyle(type: number) {
+  return ACCOUNT_TYPE_STYLES[type] ?? ACCOUNT_TYPE_STYLES[BackendAccountType.Other];
+}
 
 export default function AccountsPage() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -61,7 +77,6 @@ export default function AccountsPage() {
   const tCommon = useTranslations('common');
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
-  const [totalBalance, setTotalBalance] = useState(0);
   const [archiveConfirm, setArchiveConfirm] = useState<{ show: boolean; account?: Account }>({ show: false });
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; account?: Account }>({ show: false });
   const [shareModal, setShareModal] = useState<{ show: boolean; account?: Account }>({ show: false });
@@ -73,7 +88,6 @@ export default function AccountsPage() {
       router.push('/auth/login');
     }
   }, [isAuthenticated, isLoading, router]);
-
 
   useEffect(() => {
     if (isAuthenticated && typeof window !== 'undefined') {
@@ -87,12 +101,6 @@ export default function AccountsPage() {
       setLoading(true);
       const accountsData = await apiClient.getAccountsWithBalances() as Account[];
       setAccounts(accountsData || []);
-
-      // Calculate total balance using calculated balance (excluding credit cards and loans which are liabilities)
-      const total = (accountsData || [])
-        .filter((account: Account) => account.type !== 2 && account.type !== 4) // Exclude credit cards (2) and loans (4) - 0-based values
-        .reduce((sum: number, account: Account) => sum + account.calculatedBalance, 0);
-      setTotalBalance(total);
     } catch (error) {
       console.error('Failed to load accounts:', error);
       setAccounts([]);
@@ -100,6 +108,23 @@ export default function AccountsPage() {
       setLoading(false);
     }
   };
+
+  // Compute net worth (assets - liabilities)
+  const { totalAssets, totalLiabilities, netWorth } = useMemo(() => {
+    const liabilityTypes = new Set<number>([BackendAccountType.CreditCard, BackendAccountType.Loan]);
+    let assets = 0;
+    let liabilities = 0;
+    for (const a of accounts) {
+      if (liabilityTypes.has(a.type)) {
+        liabilities += Math.abs(a.calculatedBalance);
+      } else {
+        assets += a.calculatedBalance;
+      }
+    }
+    return { totalAssets: assets, totalLiabilities: liabilities, netWorth: assets - liabilities };
+  }, [accounts]);
+
+  const activeCount = useMemo(() => accounts.filter((a) => a.isActive).length, [accounts]);
 
   const loadPendingInvitations = async () => {
     try {
@@ -151,15 +176,12 @@ export default function AccountsPage() {
 
   const handleArchiveAccount = async (account: Account) => {
     try {
-      // Archive the account
       await apiClient.archiveAccount(account.id);
       toast.success(t('archivedSuccess', { name: account.name }));
-      loadAccounts(); // Refresh the list
+      loadAccounts();
       setArchiveConfirm({ show: false });
     } catch (error: unknown) {
       console.error('Failed to archive account:', error);
-
-      // Handle specific error cases
       if (error instanceof Error && error.message?.includes('transactions')) {
         toast.error(t('archiveHasTransactions'));
       } else {
@@ -171,7 +193,7 @@ export default function AccountsPage() {
   const handleDeleteAccount = async (account: Account) => {
     try {
       await apiClient.deleteAccount(account.id);
-      loadAccounts(); // Refresh the list
+      loadAccounts();
       toast.success(t('deletedSuccess', { name: account.name }));
       setDeleteConfirm({ show: false });
     } catch (error: unknown) {
@@ -203,294 +225,186 @@ export default function AccountsPage() {
 
   return (
     <AppLayout>
-        {/* Header */}
-        <div className="mb-6 lg:mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
-                {t('title')}
-              </h1>
-              <p className="text-gray-600 mt-1">
-                {t('subtitle')}
-              </p>
+      {/* Header */}
+      <header className="flex flex-wrap items-end justify-between gap-4 mb-5">
+        <div>
+          <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
+            {t('title')}
+          </h1>
+          <p className="mt-1.5 text-[15px] text-slate-500">
+            {t('subtitle')}
+          </p>
+        </div>
+        <AddAccountButton
+          onSuccess={loadAccounts}
+          className="flex items-center gap-2"
+        />
+      </header>
+
+      <div className="space-y-5">
+        {/* Hero net worth section */}
+        {!loading && accounts.length > 0 && (
+          <section className="rounded-[26px] border border-violet-100/60 bg-white/90 p-6 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-slate-500">{t('netWorth')}</p>
+                <div className="mt-2 flex items-baseline gap-3">
+                  <p className="font-[var(--font-dash-mono)] text-5xl font-semibold tracking-[-0.02em] text-slate-900 sm:text-[3.2rem]">
+                    {formatCurrency(netWorth)}
+                  </p>
+                </div>
+              </div>
+              {/* Quick stats */}
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    {t('totalAccounts')}
+                  </p>
+                  <p className="mt-1 font-[var(--font-dash-mono)] text-xl font-semibold text-slate-900">
+                    {accounts.length}
+                  </p>
+                </div>
+                <div className="h-8 w-px bg-slate-200" />
+                <div className="text-right">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    {t('activeAccounts')}
+                  </p>
+                  <p className="mt-1 font-[var(--font-dash-mono)] text-xl font-semibold text-slate-900">
+                    {activeCount}
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <AddAccountButton
-              onSuccess={loadAccounts}
-              className="flex items-center gap-2"
-            />
-          </div>
-        </div>
-
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{t('totalAccounts')}</p>
-                  <p className="text-2xl font-bold text-gray-900">{accounts.length}</p>
-                </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center">
-                  <BuildingOffice2Icon className="w-6 h-6 text-white" />
-                </div>
+            {/* Asset / Liability breakdown bar */}
+            <div className="mt-5">
+              <div className="flex items-center justify-between text-xs font-medium text-slate-400">
+                <span className="text-emerald-600">{formatCurrency(totalAssets)}</span>
+                <span className="text-rose-500">{formatCurrency(totalLiabilities)}</span>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{t('netWorth')}</p>
-                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalBalance)}</p>
-                </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-success-400 to-success-600 rounded-xl flex items-center justify-center">
-                  <CurrencyDollarIcon className="w-6 h-6 text-white" />
-                </div>
+              <div className="mt-1.5 flex h-3 overflow-hidden rounded-full bg-slate-100">
+                {totalAssets + totalLiabilities > 0 && (
+                  <>
+                    <div
+                      className="h-full rounded-l-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-700"
+                      style={{ width: `${(totalAssets / (totalAssets + totalLiabilities)) * 100}%` }}
+                    />
+                    <div
+                      className="h-full rounded-r-full bg-gradient-to-r from-rose-400 to-rose-500 transition-all duration-700"
+                      style={{ width: `${(totalLiabilities / (totalAssets + totalLiabilities)) * 100}%` }}
+                    />
+                  </>
+                )}
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{t('activeAccounts')}</p>
-                  <p className="text-2xl font-bold text-gray-900">{accounts.filter(a => a.isActive).length}</p>
-                </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center">
-                  <BanknotesIcon className="w-6 h-6 text-white" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </section>
+        )}
 
         {/* Pending Invitations */}
         {pendingInvitations.length > 0 && (
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg border-l-4 border-l-amber-400 mb-8">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <EnvelopeIcon className="w-5 h-5 text-amber-600" />
+          <section className="rounded-2xl border border-amber-200/70 bg-amber-50/50 p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+                <EnvelopeIcon className="h-[18px] w-[18px]" />
+              </div>
+              <h2 className="text-sm font-semibold text-slate-800">
                 {t('sharing.pendingInvitations')}
-                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">
-                  {pendingInvitations.length}
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="space-y-3">
-                {pendingInvitations.map((invitation) => (
-                  <div
-                    key={invitation.id}
-                    className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-lg bg-gray-50/50 opacity-75 border border-gray-200"
-                  >
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 bg-gradient-to-br from-gray-300 to-gray-500 rounded-xl flex items-center justify-center">
-                        <BuildingOffice2Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                      </div>
-                      <div className="min-w-0">
-                        <h4 className="text-base font-semibold text-gray-900 truncate">{invitation.accountName}</h4>
-                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                            {t('sharing.pendingInvitation')}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            {t('sharing.sharedByName', { name: invitation.sharedByName })}
-                            {' - '}
-                            {getShareRoleName(invitation.role)}
-                          </span>
-                        </div>
-                      </div>
+              </h2>
+              <span className="inline-flex items-center justify-center h-5 min-w-5 rounded-full bg-amber-200 px-1.5 text-[11px] font-bold text-amber-800">
+                {pendingInvitations.length}
+              </span>
+            </div>
+            <div className="space-y-2">
+              {pendingInvitations.map((invitation) => (
+                <div
+                  key={invitation.id}
+                  className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border border-amber-200/50 bg-white/80 p-3.5"
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-amber-500">
+                      <BuildingOffice2Icon className="h-5 w-5 text-white" />
                     </div>
-                    <div className="flex items-center gap-2 pl-13 sm:pl-0">
-                      <Button
-                        size="sm"
-                        onClick={() => handleAcceptInvitation(invitation.id)}
-                        disabled={processingShareIds.has(invitation.id)}
-                      >
-                        <CheckIcon className="w-4 h-4 mr-1" />
-                        {t('sharing.accept')}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeclineInvitation(invitation.id)}
-                        disabled={processingShareIds.has(invitation.id)}
-                      >
-                        <XMarkIcon className="w-4 h-4 mr-1" />
-                        {t('sharing.decline')}
-                      </Button>
+                    <div className="min-w-0">
+                      <h4 className="text-sm font-semibold text-slate-900 truncate">{invitation.accountName}</h4>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {t('sharing.sharedByName', { name: invitation.sharedByName })}
+                        {' \u00B7 '}
+                        {getShareRoleName(invitation.role)}
+                      </p>
                     </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  <div className="flex items-center gap-2 pl-13 sm:pl-0">
+                    <Button
+                      size="sm"
+                      onClick={() => handleAcceptInvitation(invitation.id)}
+                      disabled={processingShareIds.has(invitation.id)}
+                    >
+                      <CheckIcon className="w-4 h-4 mr-1" />
+                      {t('sharing.accept')}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeclineInvitation(invitation.id)}
+                      disabled={processingShareIds.has(invitation.id)}
+                    >
+                      <XMarkIcon className="w-4 h-4 mr-1" />
+                      {t('sharing.decline')}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
         )}
 
-        {/* Accounts List */}
-        <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BuildingOffice2Icon className="w-6 h-6 text-primary-600" />
-              {t('yourAccounts')}
-            </CardTitle>
-          </CardHeader>
+        {/* Accounts list */}
+        {loading ? (
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="h-28 animate-pulse rounded-[26px] border border-violet-100/80 bg-white/80"
+              />
+            ))}
+          </div>
+        ) : accounts.length === 0 ? (
+          /* Empty state */
+          <section className="rounded-[28px] border border-violet-100/80 bg-white/92 p-10 text-center shadow-[0_20px_50px_-30px_rgba(76,29,149,0.45)]">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-100 text-violet-600">
+              <BuildingOffice2Icon className="h-7 w-7" />
+            </div>
+            <h3 className="mt-4 text-xl font-semibold text-slate-900">{t('noAccounts')}</h3>
+            <p className="mt-2 text-sm text-slate-500">
+              {t('noAccountsDescription')}
+            </p>
+            <div className="mt-5 inline-flex">
+              <AddAccountButton
+                onSuccess={loadAccounts}
+                className="flex items-center gap-2"
+              >
+                {t('createFirst')}
+              </AddAccountButton>
+            </div>
+          </section>
+        ) : (
+          <div className="space-y-3">
+            {accounts.map((account) => (
+              <AccountCard
+                key={account.id}
+                account={account}
+                onClick={() => router.push(`/accounts/${account.id}`)}
+                onShare={(a) => setShareModal({ show: true, account: a })}
+                onArchive={(a) => setArchiveConfirm({ show: true, account: a })}
+                onDelete={(a) => setDeleteConfirm({ show: true, account: a })}
+                getShareRoleName={getShareRoleName}
+                t={t}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
-          <CardContent>
-            {loading ? (
-              <div className="space-y-4">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="animate-pulse">
-                    <div className="flex items-center gap-4 p-4 bg-gray-100 rounded-lg">
-                      <div className="w-12 h-12 bg-gray-300 rounded-xl"></div>
-                      <div className="flex-1">
-                        <div className="h-4 bg-gray-300 rounded w-1/2 mb-2"></div>
-                        <div className="h-3 bg-gray-300 rounded w-1/4"></div>
-                      </div>
-                      <div className="h-6 bg-gray-300 rounded w-20"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : accounts.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-20 h-20 bg-gradient-to-br from-primary-400 to-primary-600 rounded-3xl shadow-2xl flex items-center justify-center mx-auto mb-6">
-                  <BuildingOffice2Icon className="w-10 h-10 text-white" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('noAccounts')}</h3>
-                <p className="text-gray-600 mb-6">
-                  {t('noAccountsDescription')}
-                </p>
-                <AddAccountButton
-                  onSuccess={loadAccounts}
-                  className="flex items-center gap-2"
-                >
-                  {t('createFirst')}
-                </AddAccountButton>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {accounts.map((account) => (
-                  <div
-                    key={account.id}
-                    className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-                    onClick={() => router.push(`/accounts/${account.id}`)}
-                  >
-                    {/* Mobile Layout: Stack vertically */}
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-                      {/* Top row on mobile: Icon + Name */}
-                      <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                        {/* Account Icon */}
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center">
-                          <BuildingOffice2Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                        </div>
-
-                        {/* Account Name and Type */}
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-base sm:text-lg font-semibold text-gray-900 truncate">{account.name}</h4>
-                          <div className="flex items-center gap-2 mt-1 flex-wrap">
-                            <AccountTypeBadge type={account.type} />
-                            {account.institution && (
-                              <span className="text-xs sm:text-sm text-gray-500 truncate">{account.institution}</span>
-                            )}
-                            {account.isSharedWithMe && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                <UserGroupIcon className="w-3 h-3" />
-                                {t('sharing.sharedByName', { name: account.sharedByUserName || '' })}
-                                {' - '}
-                                {getShareRoleName(account.shareRole)}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Bottom row on mobile: Balance + Action Menu */}
-                      <div className="flex items-center justify-between sm:justify-end gap-3 sm:ml-auto pl-13 sm:pl-0">
-                        <div className="text-left sm:text-right">
-                          <p className="text-base sm:text-lg font-bold text-gray-900">
-                            {formatCurrency(account.calculatedBalance)}
-                          </p>
-                          <p className="text-xs text-gray-500 uppercase">
-                            {account.currency}
-                          </p>
-                        </div>
-
-                        {/* Action Menu */}
-                        <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="w-8 h-8 p-0"
-                              >
-                                <EllipsisVerticalIcon className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48 bg-white border border-gray-200 shadow-lg z-50">
-                              {(!account.isSharedWithMe || account.shareRole === 2) && (
-                                <DropdownMenuItem asChild>
-                                  <Link
-                                    href={`/transactions/new?accountId=${account.id}`}
-                                    className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-sm"
-                                  >
-                                    <DocumentArrowUpIcon className="w-4 h-4" />
-                                    {t('addTransaction')}
-                                  </Link>
-                                </DropdownMenuItem>
-                              )}
-                              {account.isOwner && (
-                                <>
-                                  <DropdownMenuItem
-                                    onClick={() => setShareModal({ show: true, account })}
-                                    className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer"
-                                  >
-                                    <UserGroupIcon className="w-4 h-4" />
-                                    {t('sharing.shareAccount')}
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem asChild>
-                                    <Link
-                                      href={`/accounts/${account.id}/edit`}
-                                      className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-sm"
-                                    >
-                                      <PencilIcon className="w-4 h-4" />
-                                      {t('editAccount')}
-                                    </Link>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    variant="destructive"
-                                    onClick={() => setArchiveConfirm({ show: true, account })}
-                                    className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer"
-                                  >
-                                    <TrashIcon className="w-4 h-4" />
-                                    {t('archiveAccount')}
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator className="my-1 bg-gray-200" />
-                                  <DropdownMenuItem
-                                    variant="destructive"
-                                    onClick={() => setDeleteConfirm({ show: true, account })}
-                                    className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer"
-                                  >
-                                    <TrashIcon className="w-4 h-4" />
-                                    {t('deletePermanently')}
-                                  </DropdownMenuItem>
-                                </>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
       {/* Archive Confirmation Dialog */}
       <ConfirmationDialog
         isOpen={archiveConfirm.show}
@@ -525,6 +439,149 @@ export default function AccountsPage() {
         />
       )}
     </AppLayout>
+  );
+}
+
+// --- Account Card ---
+
+function AccountCard({
+  account,
+  onClick,
+  onShare,
+  onArchive,
+  onDelete,
+  getShareRoleName,
+  t,
+}: {
+  account: Account;
+  onClick: () => void;
+  onShare: (account: Account) => void;
+  onArchive: (account: Account) => void;
+  onDelete: (account: Account) => void;
+  getShareRoleName: (role?: number) => string;
+  t: ReturnType<typeof useTranslations<'accounts'>>;
+}) {
+  const style = getAccountTypeStyle(account.type);
+  const Icon = style.icon;
+
+  return (
+    <article
+      onClick={onClick}
+      className="cursor-pointer rounded-[26px] border border-violet-100/80 bg-white/90 p-5 shadow-[0_20px_44px_-32px_rgba(76,29,149,0.48)] transition-shadow hover:shadow-[0_24px_52px_-28px_rgba(76,29,149,0.55)]"
+    >
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+        {/* Left: icon + name + badges */}
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div
+            className={cn(
+              'flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br',
+              style.gradient,
+            )}
+          >
+            <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <h3 className="line-clamp-1 text-lg font-semibold tracking-[-0.02em] text-slate-900">
+                {account.name}
+              </h3>
+            </div>
+            <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+              <AccountTypeBadge type={account.type} />
+              {account.institution && (
+                <span className="text-xs text-slate-500 truncate">{account.institution}</span>
+              )}
+              {account.isSharedWithMe && (
+                <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                  <UserGroupIcon className="h-3 w-3" />
+                  {t('sharing.sharedByName', { name: account.sharedByUserName || '' })}
+                  {' \u00B7 '}
+                  {getShareRoleName(account.shareRole)}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Right: balance + menu */}
+        <div className="flex items-center justify-between sm:justify-end gap-3 pl-13 sm:pl-0">
+          <div className="text-left sm:text-right">
+            <p className="font-[var(--font-dash-mono)] text-xl font-bold tracking-tight text-slate-900">
+              {formatCurrency(account.calculatedBalance)}
+            </p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+              {account.currency}
+            </p>
+          </div>
+
+          {/* Action Menu */}
+          <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 rounded-lg p-0 text-slate-400 transition-colors hover:bg-violet-50 hover:text-violet-600"
+                >
+                  <EllipsisVerticalIcon className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48 bg-white border border-gray-200 shadow-lg z-50">
+                {(!account.isSharedWithMe || account.shareRole === 2) && (
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href={`/transactions/new?accountId=${account.id}`}
+                      className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-sm"
+                    >
+                      <DocumentArrowUpIcon className="w-4 h-4" />
+                      {t('addTransaction')}
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                {account.isOwner && (
+                  <>
+                    <DropdownMenuItem
+                      onClick={() => onShare(account)}
+                      className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer"
+                    >
+                      <UserGroupIcon className="w-4 h-4" />
+                      {t('sharing.shareAccount')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link
+                        href={`/accounts/${account.id}/edit`}
+                        className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-sm"
+                      >
+                        <PencilIcon className="w-4 h-4" />
+                        {t('editAccount')}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={() => onArchive(account)}
+                      className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer"
+                    >
+                      <TrashIcon className="w-4 h-4" />
+                      {t('archiveAccount')}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="my-1 bg-gray-200" />
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={() => onDelete(account)}
+                      className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer"
+                    >
+                      <TrashIcon className="w-4 h-4" />
+                      {t('deletePermanently')}
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </div>
+    </article>
   );
 }
 
