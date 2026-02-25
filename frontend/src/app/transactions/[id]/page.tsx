@@ -21,8 +21,7 @@ import {
   WalletIcon,
   MapPinIcon,
   DocumentTextIcon,
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
+
   CheckCircleIcon,
   ClockIcon,
 } from '@heroicons/react/24/outline';
@@ -284,43 +283,26 @@ export default function TransactionDetailsPage() {
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
             {/* Left: Transaction identity + amount */}
             <div className="min-w-0 flex-1">
-              {/* Icon + Description */}
-              <div className="flex items-center gap-3">
-                <div
-                  className={cn(
-                    'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br',
-                    isIncome ? 'from-emerald-500 to-emerald-600' : 'from-red-500 to-rose-600',
-                  )}
-                >
-                  {isIncome ? (
-                    <ArrowTrendingUpIcon className="h-6 w-6 text-white" />
-                  ) : (
-                    <ArrowTrendingDownIcon className="h-6 w-6 text-white" />
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <h1 className="font-[var(--font-dash-sans)] text-2xl sm:text-3xl font-semibold tracking-[-0.03em] text-slate-900 truncate">
-                    {transaction.userDescription || transaction.description}
-                  </h1>
-                  <div className="mt-0.5 flex flex-wrap items-center gap-2">
-                    <Badge variant={isIncome ? 'default' : 'secondary'}>
-                      {isIncome ? tCommon('income') : tCommon('expense')}
-                    </Badge>
-                    <Badge variant={getStatusKey(transaction.status) === 'cleared' ? 'default' : 'secondary'}>
-                      {t(`status.${getStatusKey(transaction.status)}`)}
-                    </Badge>
-                  </div>
-                </div>
+              {/* Description */}
+              <h1 className="font-[var(--font-dash-sans)] text-2xl sm:text-3xl font-semibold tracking-[-0.03em] text-slate-900">
+                {transaction.userDescription || transaction.description}
+              </h1>
+
+              {/* Badges */}
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <Badge variant={isIncome ? 'default' : 'secondary'}>
+                  {isIncome ? tCommon('income') : tCommon('expense')}
+                </Badge>
+                <Badge variant={getStatusKey(transaction.status) === 'cleared' ? 'default' : 'secondary'}>
+                  {t(`status.${getStatusKey(transaction.status)}`)}
+                </Badge>
               </div>
 
               {/* Amount */}
-              <div className="mt-5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                  {tCommon('amount')}
-                </p>
+              <div className="mt-6">
                 <p
                   className={cn(
-                    'mt-1 font-[var(--font-dash-mono)] text-4xl sm:text-5xl font-semibold tracking-[-0.02em]',
+                    'font-[var(--font-dash-mono)] text-4xl sm:text-5xl font-semibold tracking-[-0.02em]',
                     isIncome ? 'text-emerald-600' : 'text-red-600',
                   )}
                 >
