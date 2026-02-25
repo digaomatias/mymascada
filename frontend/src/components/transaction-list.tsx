@@ -584,7 +584,6 @@ export function TransactionList({
           </div>
           
           <div className="flex gap-2">
-            {headerActions}
             {!isSelectionMode ? (
               <>
                 <Button
@@ -606,6 +605,7 @@ export function TransactionList({
                   <CheckIcon className="w-4 h-4" />
                   <span className="hidden sm:inline">{t('select')}</span>
                 </Button>
+                {headerActions}
               </>
             ) : (
               <>

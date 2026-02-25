@@ -134,6 +134,10 @@ function AccountDetailsPageContent() {
         </Link>
 
         <div className="flex items-center gap-2">
+          <ReconcileAccountButton
+            accountId={account.id}
+            className="btn-sm"
+          />
           <Link href={`/accounts/${account.id}/edit`}>
             <Button variant="secondary" size="sm" className="flex items-center gap-2">
               <PencilIcon className="w-4 h-4" />
@@ -295,19 +299,13 @@ function AccountDetailsPageContent() {
             compact={false}
             title={t('accountTransactions')}
             headerActions={
-              <>
-                <ReconcileAccountButton
-                  accountId={account.id}
-                  className="btn-sm"
-                />
-                <AddTransactionButton
-                  accountId={account.id.toString()}
-                  onSuccess={handleTransactionUpdate}
-                  className="btn-sm"
-                >
-                  {t('addTransaction')}
-                </AddTransactionButton>
-              </>
+              <AddTransactionButton
+                accountId={account.id.toString()}
+                onSuccess={handleTransactionUpdate}
+                className="btn-sm"
+              >
+                {t('addTransaction')}
+              </AddTransactionButton>
             }
           />
         </section>
