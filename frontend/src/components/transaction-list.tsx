@@ -70,6 +70,7 @@ interface TransactionListProps {
   showAccountFilter?: boolean;
   compact?: boolean;
   title?: string;
+  headerActions?: React.ReactNode;
 }
 
 export function TransactionList({ 
@@ -78,7 +79,8 @@ export function TransactionList({
   onFilteredBalanceChange, 
   showAccountFilter = true, 
   compact = false,
-  title
+  title,
+  headerActions
 }: TransactionListProps) {
   const { isMobile } = useDeviceDetect();
   const router = useRouter();
@@ -575,8 +577,8 @@ export function TransactionList({
       {!compact && (
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">{resolvedTitle}</h2>
-            <p className="text-sm text-gray-600">
+            <h2 className="text-lg font-semibold text-slate-900">{resolvedTitle}</h2>
+            <p className="text-sm text-slate-600">
               {totalCount > 0 ? t('count', { count: totalCount }) : t('noTransactions')}
             </p>
           </div>
@@ -603,6 +605,7 @@ export function TransactionList({
                   <CheckIcon className="w-4 h-4" />
                   <span className="hidden sm:inline">{t('select')}</span>
                 </Button>
+                {headerActions}
               </>
             ) : (
               <>
@@ -644,7 +647,7 @@ export function TransactionList({
 
       {/* Search Bar */}
       <div className="relative">
-        <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
         <Input
           type="text"
           placeholder={t('searchPlaceholder')}
@@ -656,11 +659,11 @@ export function TransactionList({
 
       {/* Filters */}
       {showFilters && (
-        <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg overflow-visible">
+        <Card className="rounded-[26px] border border-violet-100/80 bg-white/90 shadow-[0_20px_44px_-32px_rgba(76,29,149,0.48)] overflow-visible">
           <CardContent className="p-4 overflow-visible">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 overflow-visible">
               <div className="overflow-visible">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
                   {tFilters('dateRange')}
                 </label>
                 
@@ -683,7 +686,7 @@ export function TransactionList({
                         className={`${isMobile ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-xs'} rounded-md transition-colors cursor-pointer ${
                           dateFilter === filterType
                             ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white font-medium'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                         }`}
                       >
                         {labels[filterType]}
@@ -711,7 +714,7 @@ export function TransactionList({
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
                   {tCommon('category')}
                 </label>
                 <CategoryFilter
@@ -724,7 +727,7 @@ export function TransactionList({
               
               {showAccountFilter && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
                     {tCommon('account')}
                   </label>
                   <select
@@ -743,7 +746,7 @@ export function TransactionList({
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
                   {tFilters('transfers')}
                 </label>
                 <select
@@ -758,7 +761,7 @@ export function TransactionList({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
                   {tFilters('reviewStatus')}
                 </label>
                 <select
@@ -773,7 +776,7 @@ export function TransactionList({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
                   {tCommon('type')}
                 </label>
                 <select
@@ -788,7 +791,7 @@ export function TransactionList({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
                   {tFilters('reconciliationStatus')}
                 </label>
                 <select
@@ -826,11 +829,11 @@ export function TransactionList({
 
       {/* Bulk Action Toolbar */}
       {isSelectionMode && selectedTransactionIds.size > 0 && (
-        <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-lg">
+        <Card className="rounded-[26px] border border-violet-100/80 bg-white/95 shadow-[0_20px_44px_-32px_rgba(76,29,149,0.48)] backdrop-blur-sm">
           <CardContent className={`${isMobile ? 'p-3' : 'p-4'}`}>
             <div className={`flex items-center ${isMobile ? 'gap-2' : 'justify-between'}`}>
               <div className="flex items-center gap-2">
-                <span className={`${isMobile ? 'px-2 py-1 bg-primary-100 text-primary-700 rounded-full text-xs font-medium' : 'text-sm font-medium text-gray-700'}`}>
+                <span className={`${isMobile ? 'px-2 py-1 bg-primary-100 text-primary-700 rounded-full text-xs font-medium' : 'text-sm font-medium text-slate-700'}`}>
                   {isMobile
                     ? t('selectedCountShort', { count: selectedTransactionIds.size })
                     : t('selectedCount', { count: selectedTransactionIds.size })}
@@ -841,14 +844,14 @@ export function TransactionList({
                 {bulkCategorizing ? (
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
-                    <span className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>
+                    <span className={`${isMobile ? 'text-xs' : 'text-sm'} text-slate-600`}>
                       Processing...
                     </span>
                   </div>
                 ) : (
                   <div className={`flex items-center gap-2 ${isMobile ? 'flex-1' : ''}`}>
                     <div className={`flex items-center gap-2 ${isMobile ? 'flex-1' : ''}`}>
-                      <span className="text-sm text-gray-600 hidden sm:inline">{tCommon('category')}:</span>
+                      <span className="text-sm text-slate-600 hidden sm:inline">{tCommon('category')}:</span>
                       <div className={`${isMobile ? 'flex-1' : 'w-48'}`}>
                         <CategoryPicker
                           value=""
@@ -879,19 +882,19 @@ export function TransactionList({
       )}
 
       {/* Transaction List */}
-      <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+      <Card className="rounded-[26px] border border-violet-100/80 bg-white/90 shadow-[0_20px_44px_-32px_rgba(76,29,149,0.48)]">
         {loading ? (
           <CardContent className="p-6">
             <div className="space-y-4">
               {Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="animate-pulse">
-                  <div className="flex items-center gap-4 p-4 bg-gray-100 rounded-lg">
-                    <div className="w-12 h-12 bg-gray-300 rounded-xl"></div>
+                  <div className="flex items-center gap-4 p-4 bg-slate-100 rounded-lg">
+                    <div className="w-12 h-12 bg-slate-300 rounded-xl"></div>
                     <div className="flex-1">
-                      <div className="h-4 bg-gray-300 rounded w-1/2 mb-2"></div>
-                      <div className="h-3 bg-gray-300 rounded w-1/4"></div>
+                      <div className="h-4 bg-slate-300 rounded w-1/2 mb-2"></div>
+                      <div className="h-3 bg-slate-300 rounded w-1/4"></div>
                     </div>
-                    <div className="h-6 bg-gray-300 rounded w-20"></div>
+                    <div className="h-6 bg-slate-300 rounded w-20"></div>
                   </div>
                 </div>
               ))}
@@ -902,14 +905,14 @@ export function TransactionList({
             <div className="w-20 h-20 bg-gradient-to-br from-primary-400 to-primary-600 rounded-3xl shadow-2xl flex items-center justify-center mx-auto mb-6">
               <WalletIcon className="w-10 h-10 text-white" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('noTransactionsFound')}</h3>
-            <p className="text-gray-600 mb-6">
+            <h3 className="text-xl font-semibold text-slate-900 mb-2">{t('noTransactionsFound')}</h3>
+            <p className="text-slate-600 mb-6">
               {searchTerm ? t('adjustSearchTerms') : accountId ? t('noTransactionsFiltered') : t('getStarted')}
             </p>
           </CardContent>
         ) : (
           <CardContent className="p-0">
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-slate-100">
               {groupedTransactions.map((item) => {
                 // Handle transfer groups
                 if ('isTransferGroup' in item && item.isTransferGroup) {
@@ -917,7 +920,7 @@ export function TransactionList({
                   return (
                     <div key={item.id}>
                       <div 
-                        className={`${isMobile ? 'p-3 border-l-4 border-blue-500' : 'p-4'} hover:bg-gray-50 transition-colors cursor-pointer`}
+                        className={`${isMobile ? 'p-3 border-l-4 border-blue-500' : 'p-4'} hover:bg-slate-50 transition-colors cursor-pointer`}
                         onClick={() => toggleTransferExpansion(item.transferId)}
                       >
                         <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-3'}`}>
@@ -930,11 +933,11 @@ export function TransactionList({
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between">
                               <div className="min-w-0 flex-1">
-                                <p className="text-sm font-semibold text-gray-900 truncate">
+                                <p className="text-sm font-semibold text-slate-900 truncate">
                                   {item.description}
                                 </p>
                                 
-                                <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                                <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
                                   <span className="flex items-center gap-1">
                                     <CalendarIcon className="w-3 h-3" />
                                     {formatDate(item.transactionDate)}
@@ -945,15 +948,15 @@ export function TransactionList({
                               
                               <div className="flex items-center gap-3 ml-3">
                                 <div className="text-right">
-                                  <p className="text-sm font-bold text-blue-600">
+                                  <p className="font-[var(--font-dash-mono)] text-sm font-bold text-blue-600">
                                     {formatCurrency(item.amount)}
                                   </p>
-                                  <p className="text-xs text-gray-500">
+                                  <p className="text-xs text-slate-500">
                                     {t('internalTransfer')}
                                   </p>
                                 </div>
                                 <svg
-                                  className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                  className={`w-5 h-5 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
                                   fill="none"
                                   viewBox="0 0 24 24"
                                   stroke="currentColor"
@@ -967,7 +970,7 @@ export function TransactionList({
                       </div>
                       
                       {isExpanded && (
-                        <div className="bg-gray-50 border-t border-gray-100">
+                        <div className="bg-slate-50 border-t border-slate-100">
                           <div className="p-4 space-y-3">
                             {item.transactions.map((trans) => (
                               <div key={trans.id} className={`flex items-center justify-between p-3 bg-white rounded-lg border ${trans.isTransferSource ? 'border-red-200' : 'border-green-200'}`}>
@@ -980,21 +983,21 @@ export function TransactionList({
                                     )}
                                   </div>
                                   <div>
-                                    <p className="text-sm font-medium text-gray-900">
+                                    <p className="text-sm font-medium text-slate-900">
                                       {trans.accountName}
                                     </p>
-                                    <p className="text-xs text-gray-500">
+                                    <p className="text-xs text-slate-500">
                                       Transaction #{trans.id}
                                     </p>
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                  <p className={`text-sm font-bold ${trans.isTransferSource ? 'text-red-600' : 'text-green-600'}`}>
+                                  <p className={`font-[var(--font-dash-mono)] text-sm font-bold ${trans.isTransferSource ? 'text-red-600' : 'text-green-600'}`}>
                                     {formatCurrency(trans.amount)}
                                   </p>
                                   <ContextualTransactionLink
                                     transactionId={trans.id}
-                                    className="text-gray-400 hover:text-gray-600"
+                                    className="text-slate-400 hover:text-slate-600"
                                     onClick={(e) => e.stopPropagation()}
                                   >
                                     <EyeIcon className="w-4 h-4" />
@@ -1026,7 +1029,7 @@ export function TransactionList({
                                 ? 'border-blue-500' 
                                 : isIncome 
                                   ? 'border-success-500' 
-                                  : 'border-red-500'
+                                  : 'border-slate-300'
                             }` 
                           : ''
                     } ${openMenuId === transaction.id ? 'z-30' : ''}`}
@@ -1034,8 +1037,8 @@ export function TransactionList({
                     <div 
                       className={`block ${isMobile ? 'p-3 pr-3' : 'p-4 pr-12'} transition-colors ${
                         isSelectionMode 
-                          ? 'cursor-pointer hover:bg-gray-50' 
-                          : 'cursor-pointer hover:bg-gray-50'
+                          ? 'cursor-pointer hover:bg-slate-50' 
+                          : 'cursor-pointer hover:bg-slate-50'
                       }`}
                       onClick={(e) => {
                         if (isSelectionMode) {
@@ -1127,7 +1130,7 @@ export function TransactionList({
                             <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
                               isSelected 
                                 ? 'bg-primary-500 border-primary-500' 
-                                : 'border-gray-300 hover:border-primary-400'
+                                : 'border-slate-300 hover:border-primary-400'
                             }`}>
                               {isSelected && (
                                 <CheckIcon className="w-3 h-3 text-white" />
@@ -1142,14 +1145,14 @@ export function TransactionList({
                               ? 'bg-gradient-to-br from-blue-100 to-blue-200'
                               : isIncome 
                                 ? 'bg-gradient-to-br from-success-100 to-success-200' 
-                                : 'bg-gradient-to-br from-red-100 to-red-200'
+                                : 'bg-gradient-to-br from-slate-100 to-slate-200'
                           }`}>
                             {isTransfer(transaction) ? (
                               <ArrowsRightLeftIcon className="w-6 h-6 text-blue-600" />
                             ) : isIncome ? (
-                              <ArrowTrendingUpIcon className="w-6 h-6 text-success-600" />
+                              <ArrowTrendingUpIcon className="w-6 h-6 text-emerald-600" />
                             ) : (
-                              <ArrowTrendingDownIcon className="w-6 h-6 text-red-600" />
+                              <ArrowTrendingDownIcon className="w-6 h-6 text-slate-600" />
                             )}
                           </div>
                         )}
@@ -1158,7 +1161,7 @@ export function TransactionList({
                           <div className="flex items-start justify-between">
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2">
-                                <p className="text-sm font-semibold text-gray-900 truncate">
+                                <p className="text-sm font-semibold text-slate-900 truncate">
                                   {transaction.userDescription || transaction.description}
                                 </p>
                                 {isTransfer(transaction) && (
@@ -1169,7 +1172,7 @@ export function TransactionList({
                                 )}
                               </div>
                               
-                              <div className="flex items-center gap-2 sm:gap-3 mt-1 text-xs text-gray-500 flex-wrap">
+                              <div className="flex items-center gap-2 sm:gap-3 mt-1 text-xs text-slate-500 flex-wrap">
                                 <span className="flex items-center gap-1 whitespace-nowrap">
                                   <CalendarIcon className="w-3 h-3 flex-shrink-0" />
                                   {formatDate(transaction.transactionDate)}
@@ -1202,8 +1205,8 @@ export function TransactionList({
                             
                             <div className="flex items-center gap-3 ml-3">
                               <div className="text-right">
-                                <p className={`text-sm font-bold ${
-                                  isIncome ? 'text-success-600' : 'text-red-600'
+                                <p className={`font-[var(--font-dash-mono)] text-sm font-bold ${
+                                  isIncome ? 'text-emerald-600' : 'text-red-600'
                                 }`}>
                                   {formatCurrency(transaction.amount)}
                                 </p>
@@ -1233,12 +1236,12 @@ export function TransactionList({
                               <EllipsisVerticalIcon className="w-4 h-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48 bg-white border border-gray-200 shadow-lg z-50">
+                          <DropdownMenuContent align="end" className="w-48 bg-white border border-slate-200 shadow-lg z-50">
                             <DropdownMenuItem asChild>
                               <ContextualTransactionLink 
                                 transactionId={transaction.id}
                                 mode="edit"
-                                className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-sm"
+                                className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-sm"
                               >
                                 <PencilIcon className="w-4 h-4" />
                                 {t('editTransaction')}
@@ -1247,7 +1250,7 @@ export function TransactionList({
                             <DropdownMenuItem asChild>
                               <ContextualTransactionLink
                                 transactionId={transaction.id}
-                                className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-sm"
+                                className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-sm"
                               >
                                 <EyeIcon className="w-4 h-4" />
                                 {t('viewDetails')}
@@ -1260,13 +1263,13 @@ export function TransactionList({
                                   setCreateTransferForTransaction(transaction);
                                   setOpenMenuId(null);
                                 }}
-                                className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-sm cursor-pointer"
+                                className="flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-sm cursor-pointer"
                               >
                                 <ArrowsRightLeftIcon className="w-4 h-4" />
                                 {t('createTransfer')}
                               </DropdownMenuItem>
                             )}
-                            <DropdownMenuSeparator className="my-1 bg-gray-200" />
+                            <DropdownMenuSeparator className="my-1 bg-slate-200" />
                             <DropdownMenuItem 
                               onClick={() => setDeleteConfirm({ show: true, transactionId: transaction.id })}
                               className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-sm cursor-pointer"
@@ -1310,9 +1313,9 @@ export function TransactionList({
             
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="border-t border-gray-100 p-4">
+              <div className="border-t border-slate-100 p-4">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm text-gray-700 whitespace-nowrap">
+                  <p className="text-sm text-slate-700 whitespace-nowrap">
                     {t('page', { current: currentPage, total: totalPages })}
                   </p>
 
