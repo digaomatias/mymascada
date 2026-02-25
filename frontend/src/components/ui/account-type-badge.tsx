@@ -2,22 +2,12 @@
 
 import { Badge } from '@/components/ui/badge';
 import { useTranslations } from 'next-intl';
-import { BackendAccountType, getAccountTypeColor } from '@/lib/utils';
+import { BackendAccountType, FRONTEND_TO_BACKEND_TYPE, getAccountTypeColor } from '@/lib/utils';
 
 interface AccountTypeBadgeProps {
   type: number;
   className?: string;
 }
-
-// Mapping from 0-based frontend values to 1-based backend values
-const frontendToBackend: Record<number, number> = {
-  0: BackendAccountType.Checking,
-  1: BackendAccountType.Savings,
-  2: BackendAccountType.CreditCard,
-  3: BackendAccountType.Investment,
-  4: BackendAccountType.Loan,
-  5: BackendAccountType.Cash,
-};
 
 // Map from 1-based backend values to translation keys
 const accountTypeKeyMap: Record<number, string> = {
@@ -32,15 +22,9 @@ const accountTypeKeyMap: Record<number, string> = {
 
 // Map account type to translation key, handling both 0-based and 1-based values
 const getAccountTypeKey = (type: number): string => {
-  // Try direct lookup (1-based backend values)
-  const key = accountTypeKeyMap[type];
-  if (key) return key;
-
-  // Fallback: try 0-based frontend values
-  const backendType = frontendToBackend[type];
-  if (backendType !== undefined) return accountTypeKeyMap[backendType];
-
-  return 'other';
+  return accountTypeKeyMap[type]
+    ?? accountTypeKeyMap[FRONTEND_TO_BACKEND_TYPE[type]]
+    ?? 'other';
 };
 
 export function AccountTypeBadge({ type, className = '' }: AccountTypeBadgeProps) {
