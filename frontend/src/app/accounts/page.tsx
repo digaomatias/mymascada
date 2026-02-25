@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { AppLayout } from '@/components/app-layout';
 import { Button } from '@/components/ui/button';
-import { formatCurrency, cn, BackendAccountType } from '@/lib/utils';
+import { formatCurrency, cn, BackendAccountType, FRONTEND_TO_BACKEND_TYPE } from '@/lib/utils';
 import { AccountTypeBadge } from '@/components/ui/account-type-badge';
 import { apiClient, ReceivedShareDto } from '@/lib/api-client';
 import { CheckIcon, XMarkIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
@@ -67,7 +67,9 @@ const ACCOUNT_TYPE_STYLES: Record<number, { gradient: string; icon: typeof Build
 };
 
 function getAccountTypeStyle(type: number) {
-  return ACCOUNT_TYPE_STYLES[type] ?? ACCOUNT_TYPE_STYLES[BackendAccountType.Other];
+  return ACCOUNT_TYPE_STYLES[type]
+    ?? ACCOUNT_TYPE_STYLES[FRONTEND_TO_BACKEND_TYPE[type]]
+    ?? ACCOUNT_TYPE_STYLES[BackendAccountType.Other];
 }
 
 export default function AccountsPage() {

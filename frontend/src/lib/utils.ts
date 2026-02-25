@@ -100,8 +100,18 @@ export const AccountType = {
   Cash: 5
 } as const;
 
+// Mapping from 0-based frontend values to 1-based backend values
+export const FRONTEND_TO_BACKEND_TYPE: Record<number, number> = {
+  0: BackendAccountType.Checking,
+  1: BackendAccountType.Savings,
+  2: BackendAccountType.CreditCard,
+  3: BackendAccountType.Investment,
+  4: BackendAccountType.Loan,
+  5: BackendAccountType.Cash,
+};
+
 // Mapping from backend values (1-based) to display labels
-const accountTypeLabels = {
+const accountTypeLabels: Record<number, string> = {
   [BackendAccountType.Checking]: 'Checking',
   [BackendAccountType.Savings]: 'Savings',
   [BackendAccountType.CreditCard]: 'Credit Card',
@@ -112,7 +122,7 @@ const accountTypeLabels = {
 } as const;
 
 // Mapping from backend values (1-based) to colors
-const accountTypeColors = {
+const accountTypeColors: Record<number, string> = {
   [BackendAccountType.Checking]: 'bg-blue-100 text-blue-800',
   [BackendAccountType.Savings]: 'bg-green-100 text-green-800',
   [BackendAccountType.CreditCard]: 'bg-red-100 text-red-800',
@@ -120,52 +130,20 @@ const accountTypeColors = {
   [BackendAccountType.Loan]: 'bg-yellow-100 text-yellow-800',
   [BackendAccountType.Cash]: 'bg-gray-100 text-gray-800',
   [BackendAccountType.Other]: 'bg-slate-100 text-slate-800'
-} as const;
+};
 
 // Convert backend account type to display label
 export function getAccountTypeLabel(backendAccountType: number): string {
-  // Handle both 0-based (frontend) and 1-based (backend) enum values
-  const frontendToBackend: Record<number, number> = {
-    0: BackendAccountType.Checking,    // Frontend 0 -> Backend 1
-    1: BackendAccountType.Savings,     // Frontend 1 -> Backend 2  
-    2: BackendAccountType.CreditCard,  // Frontend 2 -> Backend 3
-    3: BackendAccountType.Investment,  // Frontend 3 -> Backend 4
-    4: BackendAccountType.Loan,        // Frontend 4 -> Backend 5
-    5: BackendAccountType.Cash         // Frontend 5 -> Backend 6
-  };
-  
-  // First try direct mapping (1-based backend values)
-  let mappedType = accountTypeLabels[backendAccountType as keyof typeof accountTypeLabels];
-  
-  // If not found, try 0-based to 1-based conversion
-  if (!mappedType && frontendToBackend[backendAccountType]) {
-    mappedType = accountTypeLabels[frontendToBackend[backendAccountType] as keyof typeof accountTypeLabels];
-  }
-  
-  return mappedType || 'Unknown';
+  return accountTypeLabels[backendAccountType]
+    ?? accountTypeLabels[FRONTEND_TO_BACKEND_TYPE[backendAccountType]]
+    ?? accountTypeLabels[BackendAccountType.Other];
 }
 
 // Convert backend account type to color classes
 export function getAccountTypeColor(backendAccountType: number): string {
-  // Handle both 0-based (frontend) and 1-based (backend) enum values
-  const frontendToBackend: Record<number, number> = {
-    0: BackendAccountType.Checking,    // Frontend 0 -> Backend 1
-    1: BackendAccountType.Savings,     // Frontend 1 -> Backend 2  
-    2: BackendAccountType.CreditCard,  // Frontend 2 -> Backend 3
-    3: BackendAccountType.Investment,  // Frontend 3 -> Backend 4
-    4: BackendAccountType.Loan,        // Frontend 4 -> Backend 5
-    5: BackendAccountType.Cash         // Frontend 5 -> Backend 6
-  };
-  
-  // First try direct mapping (1-based backend values)
-  let colorClass = accountTypeColors[backendAccountType as keyof typeof accountTypeColors];
-  
-  // If not found, try 0-based to 1-based conversion
-  if (!colorClass && frontendToBackend[backendAccountType]) {
-    colorClass = accountTypeColors[frontendToBackend[backendAccountType] as keyof typeof accountTypeColors];
-  }
-  
-  return colorClass || 'bg-gray-100 text-gray-800';
+  return accountTypeColors[backendAccountType]
+    ?? accountTypeColors[FRONTEND_TO_BACKEND_TYPE[backendAccountType]]
+    ?? accountTypeColors[BackendAccountType.Other];
 }
 
 // Convert frontend form enum (0-based) to backend enum (1-based)
