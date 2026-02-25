@@ -4,23 +4,21 @@ import { useAuth } from '@/contexts/auth-context';
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState, useCallback, Suspense } from 'react';
 import { AppLayout } from '@/components/app-layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { formatCurrency, formatMonthYearFromName } from '@/lib/utils';
+import { formatCurrency, formatMonthYearFromName, cn } from '@/lib/utils';
 import { AccountTypeBadge } from '@/components/ui/account-type-badge';
+import { getAccountTypeStyle } from '@/lib/account-styles';
 import { apiClient } from '@/lib/api-client';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import {
   BuildingOffice2Icon,
-  CurrencyDollarIcon,
   CalendarIcon,
   PencilIcon,
   ArrowLeftIcon,
   DocumentArrowUpIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
-  CheckBadgeIcon
 } from '@heroicons/react/24/outline';
 import { AddTransactionButton } from '@/components/buttons/add-transaction-button';
 import { ReconcileAccountButton } from '@/components/buttons/reconcile-account-button';
@@ -110,7 +108,7 @@ function AccountDetailsPageContent() {
           <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <BuildingOffice2Icon className="w-8 h-8 text-white" />
           </div>
-          <div className="mt-6 text-gray-700 font-medium">{t('loadingAccount')}</div>
+          <div className="mt-6 text-slate-700 font-medium">{t('loadingAccount')}</div>
         </div>
       </div>
     );
@@ -120,107 +118,116 @@ function AccountDetailsPageContent() {
     return null;
   }
 
+  const typeStyle = getAccountTypeStyle(account.type);
+  const TypeIcon = typeStyle.icon;
+
   return (
     <AppLayout>
-      {/* Header */}
-      <div className="mb-6 lg:mb-8">
-        {/* Navigation Bar */}
-        <div className="flex items-center justify-between mb-6">
-          <Link href="/accounts">
+      {/* Navigation Bar */}
+      <header className="flex flex-wrap items-center justify-between gap-4 mb-5">
+        <Link href="/accounts">
+          <Button variant="secondary" size="sm" className="flex items-center gap-2">
+            <ArrowLeftIcon className="w-4 h-4" />
+            <span className="hidden sm:inline">{t('backToAccounts')}</span>
+            <span className="sm:hidden">{t('back')}</span>
+          </Button>
+        </Link>
+
+        <div className="flex items-center gap-2">
+          <AddTransactionButton
+            accountId={account.id.toString()}
+            onSuccess={handleTransactionUpdate}
+            className="btn-sm"
+          />
+          <Link href={`/accounts/${account.id}/edit`}>
             <Button variant="secondary" size="sm" className="flex items-center gap-2">
-              <ArrowLeftIcon className="w-4 h-4" />
-              <span className="hidden sm:inline">{t('backToAccounts')}</span>
-              <span className="sm:hidden">{t('back')}</span>
+              <PencilIcon className="w-4 h-4" />
+              <span className="hidden sm:inline">{t('editAccount')}</span>
+              <span className="sm:hidden">{tCommon('edit')}</span>
             </Button>
           </Link>
-
-          <div className="flex items-center gap-2">
-            <AddTransactionButton
-              accountId={account.id.toString()}
-              onSuccess={handleTransactionUpdate}
-              className="btn-sm"
-            />
-            <Link href={`/accounts/${account.id}/edit`}>
-              <Button variant="secondary" size="sm" className="flex items-center gap-2">
-                <PencilIcon className="w-4 h-4" />
-                <span className="hidden sm:inline">{t('editAccount')}</span>
-                <span className="sm:hidden">{tCommon('edit')}</span>
-              </Button>
-            </Link>
-          </div>
         </div>
+      </header>
 
-        {/* Account Header */}
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-600 rounded-3xl shadow-2xl flex items-center justify-center mx-auto mb-4">
-            <BuildingOffice2Icon className="w-10 h-10 text-white" />
-          </div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-            {account.name}
-          </h1>
-          <div className="flex items-center justify-center gap-3">
-            <AccountTypeBadge type={account.type} />
-            {account.institution && (
-              <span className="text-gray-600 text-sm">{account.institution}</span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Balance Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {/* Current Balance */}
-        <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">{t('currentBalance')}</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(account.calculatedBalance || 0)}</p>
-                <p className="text-xs text-gray-500 mt-1">{account.currency}</p>
-              </div>
-              <div className="w-12 h-12 flex-shrink-0 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center">
-                <CurrencyDollarIcon className="w-6 h-6 text-white" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Filtered Balance */}
-        {filteredBalance !== null && (
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{t('filteredBalance')}</p>
-                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(filteredBalance || 0)}</p>
-                  <p className="text-xs text-gray-500 mt-1">{t('forCurrentFilters')}</p>
-                </div>
-                <div className={`w-12 h-12 flex-shrink-0 rounded-xl flex items-center justify-center ${
-                  (filteredBalance || 0) >= 0
-                    ? 'bg-gradient-to-br from-success-400 to-success-600'
-                    : 'bg-gradient-to-br from-red-400 to-red-600'
-                }`}>
-                  {(filteredBalance || 0) >= 0 ? (
-                    <ArrowTrendingUpIcon className="w-6 h-6 text-white" />
-                  ) : (
-                    <ArrowTrendingDownIcon className="w-6 h-6 text-white" />
+      <div className="space-y-5">
+        {/* Hero Section */}
+        <section className="rounded-[26px] border border-violet-100/60 bg-white/90 p-6 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+            {/* Left: Account identity + balance */}
+            <div className="min-w-0 flex-1">
+              {/* Account Icon + Name */}
+              <div className="flex items-center gap-3">
+                <div
+                  className={cn(
+                    'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br',
+                    typeStyle.gradient,
                   )}
+                >
+                  <TypeIcon className="h-6 w-6 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <h1 className="font-[var(--font-dash-sans)] text-2xl sm:text-3xl font-semibold tracking-[-0.03em] text-slate-900 truncate">
+                    {account.name}
+                  </h1>
+                  <div className="mt-0.5 flex flex-wrap items-center gap-2">
+                    <AccountTypeBadge type={account.type} />
+                    {account.institution && (
+                      <span className="text-xs text-slate-500">{account.institution}</span>
+                    )}
+                  </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
 
-        {/* Monthly Spending */}
-        <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">{t('monthlySpending')}</p>
-                <p className="text-2xl font-bold text-gray-900">
+              {/* Balance */}
+              <div className="mt-5">
+                <p className="text-sm font-semibold text-slate-500">{t('currentBalance')}</p>
+                <div className="mt-1 flex items-baseline gap-3">
+                  <p className="font-[var(--font-dash-mono)] text-4xl sm:text-5xl font-semibold tracking-[-0.02em] text-slate-900">
+                    {formatCurrency(account.calculatedBalance || 0)}
+                  </p>
+                </div>
+                <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+                  {account.currency}
+                </p>
+              </div>
+
+              {/* Filtered balance indicator */}
+              {filteredBalance !== null && (
+                <div className="mt-3 flex items-center gap-2">
+                  <div
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md ${
+                      (filteredBalance || 0) >= 0
+                        ? 'bg-emerald-100 text-emerald-600'
+                        : 'bg-red-100 text-red-600'
+                    }`}
+                  >
+                    {(filteredBalance || 0) >= 0 ? (
+                      <ArrowTrendingUpIcon className="h-3.5 w-3.5" />
+                    ) : (
+                      <ArrowTrendingDownIcon className="h-3.5 w-3.5" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-slate-500">{t('filteredBalance')}</p>
+                    <p className="font-[var(--font-dash-mono)] text-lg font-semibold text-slate-900">
+                      {formatCurrency(filteredBalance || 0)}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Right: Quick stats */}
+            <div className="flex items-start gap-5 lg:gap-6">
+              {/* Monthly Spending */}
+              <div className="text-left lg:text-right">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  {t('monthlySpending')}
+                </p>
+                <p className="mt-1 font-[var(--font-dash-mono)] text-xl font-semibold text-slate-900">
                   {formatCurrency(account.monthlySpending.currentMonthSpending)}
                 </p>
-                <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+                <div className="flex items-center lg:justify-end gap-1 mt-0.5 text-xs text-slate-500">
                   <CalendarIcon className="w-3 h-3" />
                   {formatMonthYearFromName(
                     account.monthlySpending.monthName,
@@ -228,15 +235,16 @@ function AccountDetailsPageContent() {
                     locale
                   )}
                 </div>
-                {/* Change indicator */}
                 {account.monthlySpending.changePercentage !== 0 && (
-                  <div className={`flex items-center gap-1 mt-1 text-xs ${
-                    account.monthlySpending.trendDirection === 'up'
-                      ? 'text-red-600'
-                      : account.monthlySpending.trendDirection === 'down'
-                      ? 'text-green-600'
-                      : 'text-gray-500'
-                  }`}>
+                  <div
+                    className={`flex items-center lg:justify-end gap-1 mt-0.5 text-xs ${
+                      account.monthlySpending.trendDirection === 'up'
+                        ? 'text-red-600'
+                        : account.monthlySpending.trendDirection === 'down'
+                        ? 'text-emerald-600'
+                        : 'text-slate-500'
+                    }`}
+                  >
                     {account.monthlySpending.trendDirection === 'up' ? (
                       <ArrowTrendingUpIcon className="w-3 h-3" />
                     ) : account.monthlySpending.trendDirection === 'down' ? (
@@ -246,78 +254,50 @@ function AccountDetailsPageContent() {
                   </div>
                 )}
               </div>
-              <div className={`w-12 h-12 flex-shrink-0 rounded-xl flex items-center justify-center ${
-                account.monthlySpending.trendDirection === 'up'
-                  ? 'bg-gradient-to-br from-red-400 to-red-600'
-                  : account.monthlySpending.trendDirection === 'down'
-                  ? 'bg-gradient-to-br from-green-400 to-green-600'
-                  : 'bg-gradient-to-br from-primary-400 to-primary-600'
-              }`}>
-                {account.monthlySpending.trendDirection === 'up' ? (
-                  <ArrowTrendingUpIcon className="w-6 h-6 text-white" />
-                ) : account.monthlySpending.trendDirection === 'down' ? (
-                  <ArrowTrendingDownIcon className="w-6 h-6 text-white" />
-                ) : (
-                  <CurrencyDollarIcon className="w-6 h-6 text-white" />
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Reconciliation Status */}
-        <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">{t('lastReconciled')}</p>
+              <div className="h-12 w-px bg-slate-200 self-center" />
+
+              {/* Reconciliation */}
+              <div className="text-left lg:text-right">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  {t('lastReconciled')}
+                </p>
                 {account.lastReconciledDate ? (
                   <>
-                    <p className="text-2xl font-bold text-gray-900">
+                    <p className="mt-1 font-[var(--font-dash-mono)] text-xl font-semibold text-slate-900">
                       {new Date(account.lastReconciledDate).toLocaleDateString()}
                     </p>
                     {account.lastReconciledBalance !== undefined && account.lastReconciledBalance !== null && (
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-slate-500 mt-0.5">
                         {t('reconciledBalance')}: {formatCurrency(account.lastReconciledBalance)}
                       </p>
                     )}
                   </>
                 ) : (
-                  <p className="text-2xl font-medium text-gray-400">{t('neverReconciled')}</p>
+                  <p className="mt-1 text-sm font-medium text-slate-400">{t('neverReconciled')}</p>
                 )}
               </div>
-              <div className={`w-12 h-12 flex-shrink-0 rounded-xl flex items-center justify-center ${
-                account.lastReconciledDate
-                  ? 'bg-gradient-to-br from-purple-400 to-purple-600'
-                  : 'bg-gradient-to-br from-gray-300 to-gray-400'
-              }`}>
-                <CheckBadgeIcon className="w-6 h-6 text-white" />
-              </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </section>
 
-      {/* Account Notes */}
-      {account.notes && (
-        <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg mb-8">
-          <CardHeader>
-            <CardTitle className="text-lg">{tCommon('notes')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-700 whitespace-pre-wrap">{account.notes}</p>
-          </CardContent>
-        </Card>
-      )}
+        {/* Account Notes */}
+        {account.notes && (
+          <section className="rounded-[26px] border border-violet-100/80 bg-white/90 p-5 shadow-[0_20px_44px_-32px_rgba(76,29,149,0.48)]">
+            <h2 className="font-[var(--font-dash-sans)] text-base font-semibold text-slate-900 mb-2">
+              {tCommon('notes')}
+            </h2>
+            <p className="text-sm text-slate-600 whitespace-pre-wrap">{account.notes}</p>
+          </section>
+        )}
 
-      {/* Transactions Section */}
-      <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg mb-8">
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <DocumentArrowUpIcon className="w-6 h-6 text-primary-600" />
+        {/* Transactions Section */}
+        <section className="rounded-[26px] border border-violet-100/80 bg-white/90 shadow-[0_20px_44px_-32px_rgba(76,29,149,0.48)]">
+          <div className="flex flex-wrap items-center justify-between gap-3 p-5 pb-0">
+            <h2 className="font-[var(--font-dash-sans)] flex items-center gap-2 text-lg font-semibold text-slate-900">
+              <DocumentArrowUpIcon className="w-5 h-5 text-violet-600" />
               {t('accountTransactions')}
-            </span>
+            </h2>
             <div className="flex items-center gap-2">
               <ReconcileAccountButton
                 accountId={account.id}
@@ -331,19 +311,19 @@ function AccountDetailsPageContent() {
                 {t('addTransaction')}
               </AddTransactionButton>
             </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          <TransactionList
-            accountId={account.id}
-            onTransactionUpdate={handleTransactionUpdate}
-            onFilteredBalanceChange={setFilteredBalance}
-            showAccountFilter={false}
-            compact={false}
-            title={t('accountTransactions')}
-          />
-        </CardContent>
-      </Card>
+          </div>
+          <div className="p-5">
+            <TransactionList
+              accountId={account.id}
+              onTransactionUpdate={handleTransactionUpdate}
+              onFilteredBalanceChange={setFilteredBalance}
+              showAccountFilter={false}
+              compact={false}
+              title={t('accountTransactions')}
+            />
+          </div>
+        </section>
+      </div>
     </AppLayout>
   );
 }
