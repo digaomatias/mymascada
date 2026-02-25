@@ -4,11 +4,10 @@ import { useAuth } from '@/contexts/auth-context';
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
 import { AppLayout } from '@/components/app-layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { apiClient } from '@/lib/api-client';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { EditTransactionButton } from '@/components/buttons/edit-transaction-button';
 import { CategoryPicker } from '@/components/forms/category-picker';
 import { TransactionBackButton } from '@/components/ui/smart-back-button';
@@ -23,10 +22,13 @@ import {
   MapPinIcon,
   DocumentTextIcon,
   ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon
+  ArrowTrendingDownIcon,
+  CheckCircleIcon,
+  ClockIcon,
 } from '@heroicons/react/24/outline';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 interface Category {
   id: number;
@@ -93,7 +95,7 @@ export default function TransactionDetailsPage() {
   const router = useRouter();
   const params = useParams();
   const transactionId = params?.id as string;
-  
+
   const [loadingTransaction, setLoadingTransaction] = useState(true);
   const [transaction, setTransaction] = useState<Transaction | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -102,6 +104,7 @@ export default function TransactionDetailsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [updatingCategory, setUpdatingCategory] = useState(false);
+  const [reviewingTransaction, setReviewingTransaction] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -113,7 +116,7 @@ export default function TransactionDetailsPage() {
     try {
       setLoadingTransaction(true);
       setError(null);
-      
+
       const transactionData = await apiClient.getTransaction(parseInt(transactionId)) as Transaction;
       setTransaction(transactionData);
     } catch (err) {
@@ -138,18 +141,18 @@ export default function TransactionDetailsPage() {
 
   const handleCategoryAssignment = async (categoryId: string | number) => {
     if (!transaction) return;
-    
+
     try {
       setUpdatingCategory(true);
-      
+
       // Map status to enum values
       const statusMap: Record<string, number> = {
         'pending': 1,
-        'cleared': 2, 
+        'cleared': 2,
         'reconciled': 3,
         'cancelled': 4
       };
-      
+
       const statusString = getStatusKey(transaction.status);
       const statusValue = statusMap[statusString] || 2; // Default to Cleared
 
@@ -159,7 +162,7 @@ export default function TransactionDetailsPage() {
         transactionDate: transaction.transactionDate,
         status: statusValue,
       });
-      
+
       // Reload transaction to get updated category info
       await loadTransaction();
       toast.success(tToasts('categoryAssigned'));
@@ -168,6 +171,22 @@ export default function TransactionDetailsPage() {
       toast.error(tToasts('categoryAssignFailed'));
     } finally {
       setUpdatingCategory(false);
+    }
+  };
+
+  const handleMarkAsReviewed = async () => {
+    if (!transaction) return;
+
+    try {
+      setReviewingTransaction(true);
+      await apiClient.reviewTransaction(transaction.id);
+      setTransaction(prev => prev ? { ...prev, isReviewed: !prev.isReviewed } : null);
+      toast.success(tToasts('transactionReviewed'));
+    } catch (err) {
+      console.error('Failed to review transaction:', err);
+      toast.error(t('failedToLoadTransaction'));
+    } finally {
+      setReviewingTransaction(false);
     }
   };
 
@@ -200,7 +219,7 @@ export default function TransactionDetailsPage() {
           <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <EyeIcon className="w-8 h-8 text-white" />
           </div>
-          <div className="mt-6 text-gray-700 font-medium">{t('loadingTransaction')}</div>
+          <div className="mt-6 text-slate-700 font-medium">{t('loadingTransaction')}</div>
         </div>
       </div>
     );
@@ -213,14 +232,12 @@ export default function TransactionDetailsPage() {
   if (error && !transaction) {
     return (
       <AppLayout>
-        <Card className="max-w-2xl mx-auto bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-          <CardContent className="p-8 text-center">
-            <ExclamationTriangleIcon className="w-16 h-16 text-danger-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('transactionNotFound')}</h2>
-            <p className="text-gray-600 mb-6">{error}</p>
-            <TransactionBackButton />
-          </CardContent>
-        </Card>
+        <div className="rounded-[26px] border border-violet-100/60 bg-white/90 p-8 shadow-lg shadow-violet-200/20 backdrop-blur-xs max-w-2xl mx-auto text-center">
+          <ExclamationTriangleIcon className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h2 className="font-[var(--font-dash-sans)] text-xl font-semibold text-slate-900 mb-2">{t('transactionNotFound')}</h2>
+          <p className="text-slate-600 mb-6">{error}</p>
+          <TransactionBackButton />
+        </div>
       </AppLayout>
     );
   }
@@ -229,154 +246,276 @@ export default function TransactionDetailsPage() {
     return null;
   }
 
-  const isIncome = transaction.amount > 0; // Positive = Income, Negative = Expense
+  const isIncome = transaction.amount > 0;
+
+  const hasAdditionalInfo =
+    (transaction.description !== transaction.userDescription) ||
+    transaction.notes ||
+    transaction.location ||
+    (Array.isArray(transaction.tags) && transaction.tags.length > 0) ||
+    transaction.externalId;
 
   return (
     <AppLayout>
-      {/* Header */}
-      <div className="mb-6 lg:mb-8">
-        {/* Navigation Bar */}
-        <div className="flex items-center justify-between mb-6">
-          <TransactionBackButton />
+      {/* Navigation Bar */}
+      <header className="flex flex-wrap items-center justify-between gap-4 mb-5">
+        <TransactionBackButton />
+
+        <div className="flex items-center gap-2">
+          <EditTransactionButton
+            transactionId={transaction.id.toString()}
+            onSuccess={loadTransaction}
+          />
+          <Button
+            variant="secondary"
+            size="sm"
+            className="flex items-center gap-2 border-red-300 text-red-600 hover:bg-red-50"
+            onClick={() => setDeleteConfirm({ show: true, transactionId: transaction.id })}
+          >
+            <TrashIcon className="w-4 h-4" />
+            <span className="hidden sm:inline">{t('deleteTransaction')}</span>
+          </Button>
         </div>
+      </header>
 
-
-        {/* Page Title */}
-        <div className="text-center mb-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-            {t('transactionDetails')}
-          </h1>
-          <p className="text-gray-600 text-sm sm:text-base">
-            {t('viewAndManage')}
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Details */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Transaction Overview */}
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg relative z-10 overflow-visible">
-            <CardHeader>
-              <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                {isIncome ? (
-                  <ArrowTrendingUpIcon className="w-5 h-5 text-success-500" />
-                ) : (
-                  <ArrowTrendingDownIcon className="w-5 h-5 text-red-500" />
-                )}
-                {transaction.userDescription || transaction.description}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">{tCommon('amount')}</span>
-                <span className={`text-2xl font-bold ${isIncome ? 'text-success-600' : 'text-red-600'}`}>
-                  {formatCurrency(transaction.amount)}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">{tCommon('date')}</span>
-                <div className="flex items-center gap-2">
-                  <CalendarIcon className="w-4 h-4 text-gray-400" />
-                  <span className="font-medium">{formatDate(transaction.transactionDate)}</span>
+      <div className="space-y-5">
+        {/* Hero Section */}
+        <section className="rounded-[26px] border border-violet-100/60 bg-white/90 p-6 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+            {/* Left: Transaction identity + amount */}
+            <div className="min-w-0 flex-1">
+              {/* Icon + Description */}
+              <div className="flex items-center gap-3">
+                <div
+                  className={cn(
+                    'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br',
+                    isIncome ? 'from-emerald-500 to-emerald-600' : 'from-red-500 to-rose-600',
+                  )}
+                >
+                  {isIncome ? (
+                    <ArrowTrendingUpIcon className="h-6 w-6 text-white" />
+                  ) : (
+                    <ArrowTrendingDownIcon className="h-6 w-6 text-white" />
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <h1 className="font-[var(--font-dash-sans)] text-2xl sm:text-3xl font-semibold tracking-[-0.03em] text-slate-900 truncate">
+                    {transaction.userDescription || transaction.description}
+                  </h1>
+                  <div className="mt-0.5 flex flex-wrap items-center gap-2">
+                    <Badge variant={isIncome ? 'default' : 'secondary'}>
+                      {isIncome ? tCommon('income') : tCommon('expense')}
+                    </Badge>
+                    <Badge variant={getStatusKey(transaction.status) === 'cleared' ? 'default' : 'secondary'}>
+                      {t(`status.${getStatusKey(transaction.status)}`)}
+                    </Badge>
+                  </div>
                 </div>
               </div>
 
-              {transaction.accountName && (
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">{tCommon('account')}</span>
-                  <div className="flex items-center gap-2">
-                    <WalletIcon className="w-4 h-4 text-gray-400" />
-                    <span className="font-medium">{transaction.accountName}</span>
-                  </div>
+              {/* Amount */}
+              <div className="mt-5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  {tCommon('amount')}
+                </p>
+                <p
+                  className={cn(
+                    'mt-1 font-[var(--font-dash-mono)] text-4xl sm:text-5xl font-semibold tracking-[-0.02em]',
+                    isIncome ? 'text-emerald-600' : 'text-red-600',
+                  )}
+                >
+                  {formatCurrency(transaction.amount)}
+                </p>
+              </div>
+            </div>
+
+            {/* Right: Quick stats */}
+            <div className="flex items-start gap-5 lg:gap-6">
+              {/* Date */}
+              <div className="text-left lg:text-right">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  {tCommon('date')}
+                </p>
+                <div className="mt-1 flex items-center lg:justify-end gap-1.5">
+                  <CalendarIcon className="w-4 h-4 text-slate-400" />
+                  <p className="font-[var(--font-dash-mono)] text-lg font-semibold text-slate-900">
+                    {formatDate(transaction.transactionDate)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="h-12 w-px bg-slate-200 self-center" />
+
+              {/* Account */}
+              <div className="text-left lg:text-right">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  {tCommon('account')}
+                </p>
+                {transaction.accountName ? (
+                  <Link
+                    href={`/accounts/${transaction.accountId}`}
+                    className="mt-1 flex items-center lg:justify-end gap-1.5 group"
+                  >
+                    <WalletIcon className="w-4 h-4 text-slate-400 group-hover:text-violet-500 transition-colors" />
+                    <p className="font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900 group-hover:text-violet-600 transition-colors">
+                      {transaction.accountName}
+                    </p>
+                  </Link>
+                ) : (
+                  <p className="mt-1 text-sm font-medium text-slate-400">—</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Details Card */}
+        <section className="rounded-[26px] border border-violet-100/60 bg-white/90 p-5 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
+          <h2 className="font-[var(--font-dash-sans)] text-base font-semibold text-slate-900 mb-4">
+            {tCommon('details')}
+          </h2>
+          <div className="space-y-4">
+            {/* Category */}
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                {tCommon('category')}
+              </span>
+              {transaction.categoryName ? (
+                <Badge
+                  variant="secondary"
+                  style={{ backgroundColor: transaction.categoryColor + '20', color: transaction.categoryColor }}
+                  className="border-0"
+                >
+                  <TagIcon className="w-3 h-3 mr-1" />
+                  {transaction.categoryName}
+                </Badge>
+              ) : (
+                <div className="flex-1 max-w-xs ml-4">
+                  {updatingCategory ? (
+                    <div className="flex items-center justify-center py-2">
+                      <div className="w-4 h-4 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+                      <span className="ml-2 text-sm text-slate-500">{t('saving')}</span>
+                    </div>
+                  ) : (
+                    <CategoryPicker
+                      value=""
+                      onChange={handleCategoryAssignment}
+                      categories={categories}
+                      placeholder={t('chooseCategory')}
+                      disabled={loadingCategories || updatingCategory}
+                      disableQuickPicks={true}
+                    />
+                  )}
                 </div>
               )}
+            </div>
 
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">{tCommon('category')}</span>
-                {transaction.categoryName ? (
-                  <Badge
-                    variant="secondary"
-                    style={{ backgroundColor: transaction.categoryColor + '20', color: transaction.categoryColor }}
-                    className="border-0"
-                  >
-                    <TagIcon className="w-3 h-3 mr-1" />
-                    {transaction.categoryName}
+            <div className="h-px bg-slate-100" />
+
+            {/* Source */}
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                {tCommon('source')}
+              </span>
+              <Badge variant="outline">
+                {t(`source.${getSourceKey(transaction.source)}`)}
+              </Badge>
+            </div>
+
+            <div className="h-px bg-slate-100" />
+
+            {/* Reviewed Status + Toggle */}
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                {tCommon('reviewed')}
+              </span>
+              <div className="flex items-center gap-2">
+                {transaction.isReviewed ? (
+                  <Badge variant="default" className="bg-emerald-100 text-emerald-700 border-0">
+                    <CheckCircleIcon className="w-3.5 h-3.5 mr-1" />
+                    {t('reviewed')}
                   </Badge>
                 ) : (
-                  <div className="flex-1 max-w-xs ml-4">
-                    {updatingCategory ? (
-                      <div className="flex items-center justify-center py-2">
-                        <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
-                        <span className="ml-2 text-sm text-gray-600">{t('saving')}</span>
-                      </div>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleMarkAsReviewed}
+                    disabled={reviewingTransaction}
+                    className="flex items-center gap-1.5 text-xs"
+                  >
+                    {reviewingTransaction ? (
+                      <>
+                        <div className="w-3.5 h-3.5 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+                        {t('reviewing')}
+                      </>
                     ) : (
-                      <CategoryPicker
-                        value=""
-                        onChange={handleCategoryAssignment}
-                        categories={categories}
-                        placeholder={t('chooseCategory')}
-                        disabled={loadingCategories || updatingCategory}
-                        disableQuickPicks={true}
-                      />
+                      <>
+                        <ClockIcon className="w-3.5 h-3.5" />
+                        {t('markAsReviewed')}
+                      </>
                     )}
-                  </div>
+                  </Button>
                 )}
               </div>
+            </div>
 
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">{tCommon('status')}</span>
-                <Badge variant={getStatusKey(transaction.status) === 'cleared' ? 'default' : 'secondary'}>
-                  {t(`status.${getStatusKey(transaction.status)}`)}
-                </Badge>
-              </div>
+            <div className="h-px bg-slate-100" />
 
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">{tCommon('source')}</span>
-                <Badge variant="outline">
-                  {t(`source.${getSourceKey(transaction.source)}`)}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
+            {/* Transaction ID */}
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                {t('id')}
+              </span>
+              <span className="font-[var(--font-dash-mono)] text-sm text-slate-700">
+                #{transaction.id}
+              </span>
+            </div>
+          </div>
+        </section>
 
-          {/* Additional Details */}
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <DocumentTextIcon className="w-5 h-5" />
-                {t('additionalInformation')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+        {/* Additional Information Card */}
+        {hasAdditionalInfo && (
+          <section className="rounded-[26px] border border-violet-100/60 bg-white/90 p-5 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
+            <h2 className="font-[var(--font-dash-sans)] flex items-center gap-2 text-base font-semibold text-slate-900 mb-4">
+              <DocumentTextIcon className="w-5 h-5 text-violet-600" />
+              {t('additionalInformation')}
+            </h2>
+            <div className="space-y-4">
               {transaction.description !== transaction.userDescription && (
                 <div>
-                  <label className="text-sm font-medium text-gray-600 mb-1 block">{t('originalDescription')}</label>
-                  <p className="text-gray-900">{transaction.description}</p>
+                  <label className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1 block">
+                    {t('originalDescription')}
+                  </label>
+                  <p className="text-sm text-slate-700">{transaction.description}</p>
                 </div>
               )}
 
               {transaction.notes && (
                 <div>
-                  <label className="text-sm font-medium text-gray-600 mb-1 block">{tCommon('notes')}</label>
-                  <p className="text-gray-900">{transaction.notes}</p>
+                  <label className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1 block">
+                    {tCommon('notes')}
+                  </label>
+                  <p className="text-sm text-slate-700 whitespace-pre-wrap">{transaction.notes}</p>
                 </div>
               )}
 
               {transaction.location && (
                 <div>
-                  <label className="text-sm font-medium text-gray-600 mb-1 block">{t('location')}</label>
+                  <label className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1 block">
+                    {t('location')}
+                  </label>
                   <div className="flex items-center gap-2">
-                    <MapPinIcon className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-900">{transaction.location}</span>
+                    <MapPinIcon className="w-4 h-4 text-slate-400" />
+                    <span className="text-sm text-slate-700">{transaction.location}</span>
                   </div>
                 </div>
               )}
 
               {Array.isArray(transaction.tags) && transaction.tags.length > 0 && (
                 <div>
-                  <label className="text-sm font-medium text-gray-600 mb-2 block">{t('tags')}</label>
+                  <label className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2 block">
+                    {t('tags')}
+                  </label>
                   <div className="flex flex-wrap gap-2">
                     {transaction.tags.map((tag, index) => (
                       <Badge key={index} variant="outline" className="text-xs">
@@ -389,68 +528,17 @@ export default function TransactionDetailsPage() {
 
               {transaction.externalId && (
                 <div>
-                  <label className="text-sm font-medium text-gray-600 mb-1 block">{t('externalId')}</label>
-                  <code className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-700">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1 block">
+                    {t('externalId')}
+                  </label>
+                  <code className="text-xs bg-slate-100 px-2 py-1 rounded font-[var(--font-dash-mono)] text-slate-600">
                     {transaction.externalId}
                   </code>
                 </div>
               )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Actions Sidebar */}
-        <div className="space-y-6">
-          {/* Quick Actions */}
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-lg font-bold text-gray-900">{tCommon('actions')}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <EditTransactionButton
-                transactionId={transaction.id.toString()}
-                onSuccess={loadTransaction}
-                className="w-full bg-primary-500 hover:bg-primary-600"
-              />
-
-              <Button
-                variant="secondary"
-                className="w-full border-danger-300 text-danger-600 hover:bg-danger-50"
-                onClick={() => setDeleteConfirm({ show: true, transactionId: transaction.id })}
-              >
-                <TrashIcon className="w-4 h-4 mr-2" />
-                {t('deleteTransaction')}
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Transaction Info */}
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-lg font-bold text-gray-900">{t('transactionInfo')}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600">{t('id')}</span>
-                <span className="font-mono text-gray-900">#{transaction.id}</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-gray-600">{tCommon('type')}</span>
-                <Badge variant={isIncome ? 'default' : 'secondary'}>
-                  {isIncome ? tCommon('income') : tCommon('expense')}
-                </Badge>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-gray-600">{tCommon('reviewed')}</span>
-                <Badge variant={transaction.isReviewed ? 'default' : 'secondary'}>
-                  {transaction.isReviewed ? tCommon('yes') : tCommon('no')}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </section>
+        )}
       </div>
 
       {/* Delete Confirmation Dialog */}
