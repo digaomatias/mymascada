@@ -16,7 +16,7 @@ import {
   CalendarIcon,
   PencilIcon,
   ArrowLeftIcon,
-  DocumentArrowUpIcon,
+
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
 } from '@heroicons/react/24/outline';
@@ -286,36 +286,30 @@ function AccountDetailsPageContent() {
         )}
 
         {/* Transactions Section */}
-        <section className="rounded-[26px] border border-violet-100/80 bg-white/90 shadow-[0_20px_44px_-32px_rgba(76,29,149,0.48)]">
-          <div className="flex flex-wrap items-center justify-between gap-3 p-5 pb-0">
-            <h2 className="font-[var(--font-dash-sans)] flex items-center gap-2 text-lg font-semibold text-slate-900">
-              <DocumentArrowUpIcon className="w-5 h-5 text-violet-600" />
-              {t('accountTransactions')}
-            </h2>
-            <div className="flex items-center gap-2">
-              <ReconcileAccountButton
-                accountId={account.id}
-                className="btn-sm"
-              />
-              <AddTransactionButton
-                accountId={account.id.toString()}
-                onSuccess={handleTransactionUpdate}
-                className="btn-sm"
-              >
-                {t('addTransaction')}
-              </AddTransactionButton>
-            </div>
-          </div>
-          <div className="p-5">
-            <TransactionList
-              accountId={account.id}
-              onTransactionUpdate={handleTransactionUpdate}
-              onFilteredBalanceChange={setFilteredBalance}
-              showAccountFilter={false}
-              compact={false}
-              title={t('accountTransactions')}
-            />
-          </div>
+        <section className="rounded-[26px] border border-violet-100/80 bg-white/90 shadow-[0_20px_44px_-32px_rgba(76,29,149,0.48)] p-5">
+          <TransactionList
+            accountId={account.id}
+            onTransactionUpdate={handleTransactionUpdate}
+            onFilteredBalanceChange={setFilteredBalance}
+            showAccountFilter={false}
+            compact={false}
+            title={t('accountTransactions')}
+            headerActions={
+              <>
+                <ReconcileAccountButton
+                  accountId={account.id}
+                  className="btn-sm"
+                />
+                <AddTransactionButton
+                  accountId={account.id.toString()}
+                  onSuccess={handleTransactionUpdate}
+                  className="btn-sm"
+                >
+                  {t('addTransaction')}
+                </AddTransactionButton>
+              </>
+            }
+          />
         </section>
       </div>
     </AppLayout>

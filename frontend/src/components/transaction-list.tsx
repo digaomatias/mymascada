@@ -70,6 +70,7 @@ interface TransactionListProps {
   showAccountFilter?: boolean;
   compact?: boolean;
   title?: string;
+  headerActions?: React.ReactNode;
 }
 
 export function TransactionList({ 
@@ -78,7 +79,8 @@ export function TransactionList({
   onFilteredBalanceChange, 
   showAccountFilter = true, 
   compact = false,
-  title
+  title,
+  headerActions
 }: TransactionListProps) {
   const { isMobile } = useDeviceDetect();
   const router = useRouter();
@@ -582,6 +584,7 @@ export function TransactionList({
           </div>
           
           <div className="flex gap-2">
+            {headerActions}
             {!isSelectionMode ? (
               <>
                 <Button
