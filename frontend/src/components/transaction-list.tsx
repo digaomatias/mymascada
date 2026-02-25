@@ -1147,7 +1147,7 @@ export function TransactionList({
                             {isTransfer(transaction) ? (
                               <ArrowsRightLeftIcon className="w-6 h-6 text-blue-600" />
                             ) : isIncome ? (
-                              <ArrowTrendingUpIcon className="w-6 h-6 text-success-600" />
+                              <ArrowTrendingUpIcon className="w-6 h-6 text-emerald-600" />
                             ) : (
                               <ArrowTrendingDownIcon className="w-6 h-6 text-slate-600" />
                             )}
@@ -1203,7 +1203,7 @@ export function TransactionList({
                             <div className="flex items-center gap-3 ml-3">
                               <div className="text-right">
                                 <p className={`font-[var(--font-dash-mono)] text-sm font-bold ${
-                                  isIncome ? 'text-success-600' : 'text-red-600'
+                                  isIncome ? 'text-emerald-600' : 'text-red-600'
                                 }`}>
                                   {formatCurrency(transaction.amount)}
                                 </p>

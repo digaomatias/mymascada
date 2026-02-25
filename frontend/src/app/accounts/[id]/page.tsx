@@ -190,11 +190,12 @@ function AccountDetailsPageContent() {
               {filteredBalance !== null && (
                 <div className="mt-3 flex items-center gap-2">
                   <div
-                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md ${
+                    className={cn(
+                      'flex h-6 w-6 shrink-0 items-center justify-center rounded-md',
                       (filteredBalance || 0) >= 0
                         ? 'bg-emerald-100 text-emerald-600'
                         : 'bg-red-100 text-red-600'
-                    }`}
+                    )}
                   >
                     {(filteredBalance || 0) >= 0 ? (
                       <ArrowTrendingUpIcon className="h-3.5 w-3.5" />
@@ -232,13 +233,11 @@ function AccountDetailsPageContent() {
                 </div>
                 {account.monthlySpending.changePercentage !== 0 && (
                   <div
-                    className={`flex items-center lg:justify-end gap-1 mt-0.5 text-xs ${
-                      account.monthlySpending.trendDirection === 'up'
-                        ? 'text-red-600'
-                        : account.monthlySpending.trendDirection === 'down'
-                        ? 'text-emerald-600'
-                        : 'text-slate-500'
-                    }`}
+                    className={cn('flex items-center lg:justify-end gap-1 mt-0.5 text-xs', {
+                      'text-red-600': account.monthlySpending.trendDirection === 'up',
+                      'text-emerald-600': account.monthlySpending.trendDirection === 'down',
+                      'text-slate-500': account.monthlySpending.trendDirection === 'neutral',
+                    })}
                   >
                     {account.monthlySpending.trendDirection === 'up' ? (
                       <ArrowTrendingUpIcon className="w-3 h-3" />
