@@ -43,8 +43,8 @@ namespace MyMascada.WebAPI.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "DashboardNudgeDismissals");
+            // No-op: this migration only fixes model snapshot drift.
+            // The database schema was already correct before this migration.
         }
     }
 }
