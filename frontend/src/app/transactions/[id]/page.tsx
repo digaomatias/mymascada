@@ -286,7 +286,10 @@ export default function TransactionDetailsPage() {
             {/* Left: Transaction identity + amount */}
             <div className="min-w-0 flex-1">
               {/* Description */}
-              <h1 className="font-[var(--font-dash-sans)] text-2xl sm:text-3xl font-semibold tracking-[-0.03em] text-slate-900">
+              <h1
+                className="font-[var(--font-dash-sans)] text-2xl sm:text-3xl font-semibold tracking-[-0.03em] text-slate-900 line-clamp-2"
+                title={transaction.userDescription || transaction.description}
+              >
                 {transaction.userDescription || transaction.description}
               </h1>
 
