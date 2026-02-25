@@ -12,13 +12,17 @@ interface EditTransactionButtonProps {
   onSuccess?: () => void;
   className?: string;
   children?: React.ReactNode;
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline';
+  size?: 'sm' | 'md' | 'lg' | 'icon';
 }
 
 export function EditTransactionButton({ 
   transactionId, 
   onSuccess,
   className = '',
-  children
+  children,
+  variant,
+  size,
 }: EditTransactionButtonProps) {
   const [showModal, setShowModal] = useState(false);
   const { isMobile } = useDeviceDetect();
@@ -45,6 +49,8 @@ export function EditTransactionButton({
     <>
       <Button 
         onClick={handleClick}
+        variant={variant}
+        size={size}
         className={className}
       >
         <PencilIcon className="w-5 h-5 mr-2" />

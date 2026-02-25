@@ -261,10 +261,6 @@ export default function TransactionDetailsPage() {
         <TransactionBackButton />
 
         <div className="flex items-center gap-2">
-          <EditTransactionButton
-            transactionId={transaction.id.toString()}
-            onSuccess={loadTransaction}
-          />
           <Button
             variant="secondary"
             size="sm"
@@ -274,6 +270,12 @@ export default function TransactionDetailsPage() {
             <TrashIcon className="w-4 h-4" />
             <span className="hidden sm:inline">{t('deleteTransaction')}</span>
           </Button>
+          <EditTransactionButton
+            transactionId={transaction.id.toString()}
+            onSuccess={loadTransaction}
+            variant="secondary"
+            size="sm"
+          />
         </div>
       </header>
 
