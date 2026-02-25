@@ -66,8 +66,28 @@ const ACCOUNT_TYPE_STYLES: Record<number, { gradient: string; icon: typeof Build
   [BackendAccountType.Other]: { gradient: 'from-slate-400 to-slate-500', icon: BuildingOffice2Icon },
 };
 
+// Mapping from 0-based frontend values to 1-based backend values
+const FRONTEND_TO_BACKEND_TYPE: Record<number, number> = {
+  0: BackendAccountType.Checking,
+  1: BackendAccountType.Savings,
+  2: BackendAccountType.CreditCard,
+  3: BackendAccountType.Investment,
+  4: BackendAccountType.Loan,
+  5: BackendAccountType.Cash,
+};
+
 function getAccountTypeStyle(type: number) {
-  return ACCOUNT_TYPE_STYLES[type] ?? ACCOUNT_TYPE_STYLES[BackendAccountType.Other];
+  // Try direct lookup (1-based backend values)
+  const style = ACCOUNT_TYPE_STYLES[type];
+  if (style) return style;
+
+  // Fallback: try 0-based frontend values
+  const backendType = FRONTEND_TO_BACKEND_TYPE[type];
+  if (backendType !== undefined) {
+    return ACCOUNT_TYPE_STYLES[backendType];
+  }
+
+  return ACCOUNT_TYPE_STYLES[BackendAccountType.Other];
 }
 
 export default function AccountsPage() {

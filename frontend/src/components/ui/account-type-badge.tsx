@@ -9,19 +9,38 @@ interface AccountTypeBadgeProps {
   className?: string;
 }
 
-// Map backend account type to translation key
-// NOTE: This function receives BACKEND values (1-based) from the API
-const getAccountTypeKey = (backendType: number): string => {
-  switch (backendType) {
-    case BackendAccountType.Checking: return 'checking';     // 1
-    case BackendAccountType.Savings: return 'savings';       // 2
-    case BackendAccountType.CreditCard: return 'creditCard'; // 3
-    case BackendAccountType.Investment: return 'investment'; // 4
-    case BackendAccountType.Loan: return 'loan';             // 5
-    case BackendAccountType.Cash: return 'cash';             // 6
-    case BackendAccountType.Other: return 'other';           // 99
-    default: return 'other';
-  }
+// Mapping from 0-based frontend values to 1-based backend values
+const frontendToBackend: Record<number, number> = {
+  0: BackendAccountType.Checking,
+  1: BackendAccountType.Savings,
+  2: BackendAccountType.CreditCard,
+  3: BackendAccountType.Investment,
+  4: BackendAccountType.Loan,
+  5: BackendAccountType.Cash,
+};
+
+// Map from 1-based backend values to translation keys
+const accountTypeKeyMap: Record<number, string> = {
+  [BackendAccountType.Checking]: 'checking',
+  [BackendAccountType.Savings]: 'savings',
+  [BackendAccountType.CreditCard]: 'creditCard',
+  [BackendAccountType.Investment]: 'investment',
+  [BackendAccountType.Loan]: 'loan',
+  [BackendAccountType.Cash]: 'cash',
+  [BackendAccountType.Other]: 'other',
+};
+
+// Map account type to translation key, handling both 0-based and 1-based values
+const getAccountTypeKey = (type: number): string => {
+  // Try direct lookup (1-based backend values)
+  const key = accountTypeKeyMap[type];
+  if (key) return key;
+
+  // Fallback: try 0-based frontend values
+  const backendType = frontendToBackend[type];
+  if (backendType !== undefined) return accountTypeKeyMap[backendType];
+
+  return 'other';
 };
 
 export function AccountTypeBadge({ type, className = '' }: AccountTypeBadgeProps) {
