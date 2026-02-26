@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 import { formatCurrency } from '@/lib/utils';
 import { CategoryTrendData, PeriodAmount } from '@/lib/api-client';
+import { ChartBarIcon } from '@heroicons/react/24/outline';
 import { useTranslations } from 'next-intl';
 
 // Default color palette for categories without a color
@@ -78,32 +79,36 @@ export function CategoryTrendChart({ categories, selectedCategoryIds }: Category
       const total = payload.reduce((sum: number, entry: any) => sum + (entry.value || 0), 0);
 
       return (
-        <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200 max-w-xs">
-          <p className="font-semibold text-gray-900 mb-2">{label}</p>
+        <div className="max-w-xs rounded-xl border border-violet-100/70 bg-white/98 p-4 shadow-[0_18px_36px_-26px_rgba(76,29,149,0.55)] backdrop-blur-xs">
+          <p className="mb-2 font-[var(--font-dash-sans)] text-sm font-semibold text-slate-900">{label}</p>
           {payload.map((entry: any, index: number) => {
             const percentage = total > 0 ? ((entry.value / total) * 100).toFixed(1) : 0;
             return (
               <div
                 key={index}
-                className="flex justify-between items-center text-sm py-1"
+                className="flex items-center justify-between py-1 text-sm"
               >
                 <div className="flex items-center gap-2">
                   <div
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: entry.color }}
                   />
-                  <span className="text-gray-700 truncate max-w-[120px]">{entry.name}</span>
+                  <span className="max-w-[120px] truncate text-slate-700">{entry.name}</span>
                 </div>
                 <div className="text-right">
-                  <span className="font-medium text-gray-900">{formatCurrency(entry.value)}</span>
-                  <span className="text-gray-500 ml-1">({percentage}%)</span>
+                  <span className="font-[var(--font-dash-mono)] font-medium text-slate-900">
+                    {formatCurrency(entry.value)}
+                  </span>
+                  <span className="ml-1 text-slate-500">({percentage}%)</span>
                 </div>
               </div>
             );
           })}
-          <div className="mt-2 pt-2 border-t border-gray-200 flex justify-between items-center text-sm">
-            <span className="font-medium text-gray-700">{t('total')}</span>
-            <span className="font-bold text-gray-900">{formatCurrency(total)}</span>
+          <div className="mt-2 flex items-center justify-between border-t border-slate-200 pt-2 text-sm">
+            <span className="font-medium text-slate-700">{t('total')}</span>
+            <span className="font-[var(--font-dash-mono)] font-bold text-slate-900">
+              {formatCurrency(total)}
+            </span>
           </div>
         </div>
       );
@@ -113,20 +118,26 @@ export function CategoryTrendChart({ categories, selectedCategoryIds }: Category
 
   if (displayCategories.length === 0) {
     return (
-      <div className="h-[500px] flex items-center justify-center text-gray-500">
-        <p>{t('selectToViewTrends')}</p>
+      <div className="flex h-[420px] items-center justify-center rounded-2xl border border-dashed border-violet-200/70 bg-violet-50/30 text-slate-500">
+        <div className="text-center">
+          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100 text-violet-600">
+            <ChartBarIcon className="h-5 w-5" />
+          </div>
+          <p className="text-sm font-medium">{t('selectToViewTrends')}</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <ResponsiveContainer width="100%" height={500}>
-      <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+    <ResponsiveContainer width="100%" height={420}>
+      <LineChart data={chartData} margin={{ top: 16, right: 12, left: 4, bottom: 8 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
         <XAxis
           dataKey="periodLabel"
-          tick={{ fontSize: 12 }}
-          tickLine={{ stroke: '#e5e7eb' }}
+          axisLine={{ stroke: '#cbd5e1' }}
+          tick={{ fontSize: 12, fill: '#64748b' }}
+          tickLine={{ stroke: '#cbd5e1' }}
         />
         <YAxis
           tickFormatter={(value) => {
@@ -135,11 +146,12 @@ export function CategoryTrendChart({ categories, selectedCategoryIds }: Category
             }
             return `$${value}`;
           }}
-          tick={{ fontSize: 12 }}
-          tickLine={{ stroke: '#e5e7eb' }}
+          axisLine={{ stroke: '#cbd5e1' }}
+          tick={{ fontSize: 12, fill: '#64748b' }}
+          tickLine={{ stroke: '#cbd5e1' }}
         />
         <Tooltip content={<CustomTooltip />} />
-        <Legend wrapperStyle={{ paddingTop: '20px' }} />
+        <Legend wrapperStyle={{ paddingTop: '16px' }} />
         {displayCategories.map((category, index) => (
           <Line
             key={category.categoryId}
@@ -147,9 +159,9 @@ export function CategoryTrendChart({ categories, selectedCategoryIds }: Category
             dataKey={`cat_${category.categoryId}`}
             name={category.categoryName}
             stroke={getCategoryColor(category, index)}
-            strokeWidth={2}
-            dot={{ fill: getCategoryColor(category, index), strokeWidth: 2, r: 4 }}
-            activeDot={{ r: 6, strokeWidth: 2 }}
+            strokeWidth={2.6}
+            dot={{ fill: getCategoryColor(category, index), strokeWidth: 0, r: 3.5 }}
+            activeDot={{ r: 5 }}
           />
         ))}
       </LineChart>

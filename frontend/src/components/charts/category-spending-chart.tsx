@@ -51,7 +51,7 @@ export function CategorySpendingChart({ data, title }: CategorySpendingChartProp
   const t = useTranslations('dashboard');
   const [chartType, setChartType] = useState<'pie' | 'bar'>('pie');
   const displayTitle = title || t('spendingByCategory');
-  
+
   // Prepare data for charts
   const chartData = data.map((item, index) => ({
     ...item,
@@ -65,15 +65,15 @@ export function CategorySpendingChart({ data, title }: CategorySpendingChartProp
     if (active && payload && payload[0]) {
       const data = payload[0].payload;
       return (
-        <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-          <p className="font-semibold text-gray-900">{data.displayName}</p>
-          <p className="text-sm text-gray-600">
+        <div className="rounded-xl border border-violet-100/60 bg-white p-3 shadow-lg shadow-violet-200/20">
+          <p className="font-[var(--font-dash-sans)] font-semibold text-slate-900">{data.displayName}</p>
+          <p className="font-[var(--font-dash-mono)] text-sm text-slate-600">
             Amount: {formatCurrency(data.value)}
           </p>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-slate-600">
             Percentage: {data.percentage.toFixed(1)}%
           </p>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-slate-600">
             Transactions: {data.transactionCount}
           </p>
         </div>
@@ -92,7 +92,7 @@ export function CategorySpendingChart({ data, title }: CategorySpendingChartProp
   if (!data || data.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-500">{t('noSpendingData')}</p>
+        <p className="text-slate-500">{t('noSpendingData')}</p>
       </div>
     );
   }
@@ -100,7 +100,7 @@ export function CategorySpendingChart({ data, title }: CategorySpendingChartProp
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">{displayTitle}</h3>
+        <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900">{displayTitle}</h3>
         <div className="flex gap-2">
           <Button
             variant={chartType === 'pie' ? 'primary' : 'secondary'}
@@ -123,7 +123,7 @@ export function CategorySpendingChart({ data, title }: CategorySpendingChartProp
         </div>
       </div>
 
-      <div className="bg-white rounded-lg p-4">
+      <div className="rounded-lg p-4">
         {chartType === 'pie' ? (
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -156,14 +156,14 @@ export function CategorySpendingChart({ data, title }: CategorySpendingChartProp
               margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis 
-                dataKey="displayName" 
+              <XAxis
+                dataKey="displayName"
                 angle={-45}
                 textAnchor="end"
                 height={100}
                 tick={{ fontSize: 12 }}
               />
-              <YAxis 
+              <YAxis
                 tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
                 tick={{ fontSize: 12 }}
               />
@@ -180,15 +180,15 @@ export function CategorySpendingChart({ data, title }: CategorySpendingChartProp
 
       {/* Summary Stats */}
       <div className="grid grid-cols-2 gap-4 text-sm">
-        <div className="bg-gray-50 rounded-lg p-3">
-          <p className="text-gray-600">{t('totalSpending')}</p>
-          <p className="text-lg font-bold text-gray-900">
+        <div className="bg-slate-50/80 rounded-xl p-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{t('totalSpending')}</p>
+          <p className="mt-0.5 font-[var(--font-dash-mono)] text-lg font-bold text-slate-900">
             {formatCurrency(chartData.reduce((sum, item) => sum + item.value, 0))}
           </p>
         </div>
-        <div className="bg-gray-50 rounded-lg p-3">
-          <p className="text-gray-600">{t('categories')}</p>
-          <p className="text-lg font-bold text-gray-900">{data.length}</p>
+        <div className="bg-slate-50/80 rounded-xl p-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{t('categories')}</p>
+          <p className="mt-0.5 font-[var(--font-dash-mono)] text-lg font-bold text-slate-900">{data.length}</p>
         </div>
       </div>
     </div>

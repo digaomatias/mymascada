@@ -2525,6 +2525,12 @@
     "topExpenses": "Top Expenses",
     "incomeSourcesTitle": "Income Sources",
     "savingsGoal": "Savings Goal",
+    "periods": {
+      "month": "Month",
+      "quarter": "Quarter",
+      "year": "Year",
+      "allTime": "All Time"
+    },
     "onTrack": "On Track",
     "behindSchedule": "Behind Schedule",
     "summary": {

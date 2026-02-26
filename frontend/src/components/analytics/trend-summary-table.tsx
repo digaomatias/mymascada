@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import { CategoryTrendData } from '@/lib/api-client';
 import { ArrowTrendingUpIcon, ArrowTrendingDownIcon, MinusIcon } from '@heroicons/react/24/outline';
 import { useTranslations } from 'next-intl';
@@ -83,75 +83,74 @@ export function TrendSummaryTable({ categories, selectedCategoryIds }: TrendSumm
   const TrendIcon = ({ trend }: { trend: 'up' | 'down' | 'stable' }) => {
     switch (trend) {
       case 'up':
-        return <ArrowTrendingUpIcon className="w-4 h-4 text-red-500" />;
+        return <ArrowTrendingUpIcon className="h-4 w-4 text-rose-500" />;
       case 'down':
-        return <ArrowTrendingDownIcon className="w-4 h-4 text-green-500" />;
+        return <ArrowTrendingDownIcon className="h-4 w-4 text-emerald-500" />;
       default:
-        return <MinusIcon className="w-4 h-4 text-gray-400" />;
+        return <MinusIcon className="h-4 w-4 text-slate-400" />;
     }
   };
 
   if (categoriesWithTrend.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
+      <div className="text-center py-8 text-slate-500">
         {t('selectToView')}
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
+    <div className="overflow-x-auto rounded-2xl border border-violet-100/70 bg-white/95">
+      <table className="min-w-full divide-y divide-slate-200">
+        <thead className="bg-violet-50/45">
           <tr>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
               {t('category')}
             </th>
-            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
               {t('avgMonthly')}
             </th>
-            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
               {t('trend')}
             </th>
-            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
               {t('highestMonth')}
             </th>
-            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
               {t('lowestMonth')}
             </th>
-            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
               {t('total')}
             </th>
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
+        <tbody className="divide-y divide-slate-100 bg-white">
           {categoriesWithTrend.map((cat) => (
-            <tr key={cat.categoryId} className="hover:bg-gray-50">
+            <tr key={cat.categoryId} className="transition-colors hover:bg-violet-50/45">
               <td className="px-4 py-3 whitespace-nowrap">
                 <div className="flex items-center gap-2">
                   <div
                     className="w-3 h-3 rounded-full flex-shrink-0"
                     style={{ backgroundColor: cat.categoryColor || '#8B5CF6' }}
                   />
-                  <span className="text-sm font-medium text-gray-900">
+                  <span className="text-sm font-medium text-slate-900">
                     {cat.categoryName}
                   </span>
                 </div>
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-gray-900">
+              <td className="px-4 py-3 whitespace-nowrap text-right font-[var(--font-dash-mono)] text-sm text-slate-900">
                 {formatCurrency(cat.averageMonthlySpent)}
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-center">
                 <div className="flex items-center justify-center gap-1">
                   <TrendIcon trend={cat.trend} />
                   <span
-                    className={`text-sm font-medium ${
-                      cat.trend === 'up'
-                        ? 'text-red-600'
-                        : cat.trend === 'down'
-                          ? 'text-green-600'
-                          : 'text-gray-500'
-                    }`}
+                    className={cn(
+                      'text-sm font-medium',
+                      cat.trend === 'up' && 'text-rose-600',
+                      cat.trend === 'down' && 'text-emerald-600',
+                      cat.trend === 'stable' && 'text-slate-500'
+                    )}
                   >
                     {cat.trendPercentage > 0 ? '+' : ''}
                     {cat.trendPercentage.toFixed(1)}%
@@ -160,25 +159,25 @@ export function TrendSummaryTable({ categories, selectedCategoryIds }: TrendSumm
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-right">
                 <div className="text-sm">
-                  <span className="font-medium text-gray-900">
+                  <span className="font-[var(--font-dash-mono)] font-medium text-slate-900">
                     {formatCurrency(cat.highestMonth.amount)}
                   </span>
-                  <span className="text-gray-500 ml-1">
+                  <span className="text-slate-500 ml-1">
                     ({cat.highestMonth.label})
                   </span>
                 </div>
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-right">
                 <div className="text-sm">
-                  <span className="font-medium text-gray-900">
+                  <span className="font-[var(--font-dash-mono)] font-medium text-slate-900">
                     {formatCurrency(cat.lowestMonth.amount)}
                   </span>
-                  <span className="text-gray-500 ml-1">
+                  <span className="text-slate-500 ml-1">
                     ({cat.lowestMonth.label})
                   </span>
                 </div>
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-bold text-gray-900">
+              <td className="px-4 py-3 whitespace-nowrap text-right font-[var(--font-dash-mono)] text-sm font-bold text-slate-900">
                 {formatCurrency(cat.totalSpent)}
               </td>
             </tr>

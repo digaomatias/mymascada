@@ -1,40 +1,40 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { AppLayout } from '@/components/app-layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CategorySpendingChart } from '@/components/charts/category-spending-chart';
 import { PeriodSelector, PeriodType } from '@/components/analytics/period-selector';
 import { apiClient } from '@/lib/api-client';
-import { formatCurrency } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import { useAuth } from '@/contexts/auth-context';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import {
+  ArrowRightIcon,
+  ArrowTrendingDownIcon,
+  ArrowTrendingUpIcon,
+  BanknotesIcon,
   CalendarIcon,
   ChartBarIcon,
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
-  BanknotesIcon,
   CurrencyDollarIcon,
-  ArrowRightIcon
+  SparklesIcon,
 } from '@heroicons/react/24/outline';
 import {
-  LineChart,
-  Line,
-  AreaChart,
   Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-  BarChart,
-  Bar
 } from 'recharts';
-import { useTranslations } from 'next-intl';
 
 interface MonthlyTrend {
   month: string;
@@ -48,6 +48,43 @@ interface YearlyComparison {
   totalIncome: number;
   totalExpenses: number;
   netIncome: number;
+}
+
+const PANEL_CLASS =
+  'rounded-[26px] border border-violet-100/70 bg-white/92 p-5 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs';
+
+const STAT_CARD_CLASS =
+  'rounded-2xl border border-violet-100/80 bg-white/92 p-4 shadow-[0_16px_34px_-26px_rgba(76,29,149,0.4)]';
+
+const SKELETON_BANNER_CLASS = 'h-20 rounded-[24px] border border-violet-100/80 bg-white/85';
+const SKELETON_STAT_CARD_CLASS = 'h-32 rounded-2xl border border-violet-100/80 bg-white/85';
+const SKELETON_PANEL_CLASS = 'rounded-[26px] border border-violet-100/80 bg-white/85';
+
+interface StatCardProps {
+  label: string;
+  value: string;
+  hint?: string;
+  tone: string;
+  iconBg: string;
+  iconColor: string;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+}
+
+function StatCard({ label, value, hint, tone, iconBg, iconColor, icon: Icon }: StatCardProps) {
+  return (
+    <article className={STAT_CARD_CLASS}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">{label}</p>
+          <p className={cn('mt-1 font-[var(--font-dash-mono)] text-2xl font-semibold', tone)}>{value}</p>
+          {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
+        </div>
+        <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl', iconBg)}>
+          <Icon className={cn('h-5 w-5', iconColor)} />
+        </div>
+      </div>
+    </article>
+  );
 }
 
 export default function AnalyticsPage() {
@@ -85,15 +122,12 @@ export default function AnalyticsPage() {
     try {
       setLoading(true);
 
-      // Load monthly trends for the selected period
       const trends: MonthlyTrend[] = [];
 
-      // Calculate start month and months to load based on period type
       let monthsToLoad: number;
       let startMonth: number;
       let startYear: number;
 
-      // Get the quarter from selected month (1-4)
       const selectedQuarter = Math.ceil(selectedMonth / 3);
       const quarterStartMonth = (selectedQuarter - 1) * 3 + 1;
 
@@ -126,62 +160,56 @@ export default function AnalyticsPage() {
         let year = startYear;
 
         while (month > 12) {
-          month = month - 12;
-          year = year + 1;
+          month -= 12;
+          year += 1;
         }
 
         try {
-          const summary = await apiClient.getMonthlySummary(year, month) as any;
+          const summary = (await apiClient.getMonthlySummary(year, month)) as any;
           trends.push({
-            month: new Date(year, month - 1).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+            month: new Date(year, month - 1).toLocaleDateString('en-US', {
+              month: 'short',
+              year: '2-digit',
+            }),
             income: summary.totalIncome || 0,
             expenses: Math.abs(summary.totalExpenses || 0),
-            net: summary.netAmount || 0
+            net: summary.netAmount || 0,
           });
         } catch {
-          // Skip months without data
+          // Ignore missing months.
         }
       }
 
       setMonthlyTrends(trends);
 
-      // Load category spending for selected month (or first month of selected period)
       const categoryMonth = timeRange === 'quarter' ? quarterStartMonth : selectedMonth;
-      const currentSummary = await apiClient.getMonthlySummary(
-        selectedYear,
-        categoryMonth
-      ) as any;
+      const currentSummary = (await apiClient.getMonthlySummary(selectedYear, categoryMonth)) as any;
+      setCategoryData(currentSummary?.topCategories ?? []);
 
-      if (currentSummary?.topCategories) {
-        setCategoryData(currentSummary.topCategories);
-      }
-      
-      // Load yearly comparison (last 3 years)
       const yearlyComparison: YearlyComparison[] = [];
       for (let y = selectedYear - 2; y <= selectedYear; y++) {
         let yearIncome = 0;
         let yearExpenses = 0;
-        
+
         for (let m = 1; m <= 12; m++) {
           try {
-            const summary = await apiClient.getMonthlySummary(y, m) as any;
+            const summary = (await apiClient.getMonthlySummary(y, m)) as any;
             yearIncome += summary.totalIncome || 0;
             yearExpenses += Math.abs(summary.totalExpenses || 0);
           } catch {
-            // Skip months without data
+            // Ignore missing months.
           }
         }
-        
+
         yearlyComparison.push({
           year: y,
           totalIncome: yearIncome,
           totalExpenses: yearExpenses,
-          netIncome: yearIncome - yearExpenses
+          netIncome: yearIncome - yearExpenses,
         });
       }
-      
+
       setYearlyData(yearlyComparison);
-      
     } catch (error) {
       console.error('Failed to load analytics data:', error);
     } finally {
@@ -192,10 +220,10 @@ export default function AnalyticsPage() {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload[0]) {
       return (
-        <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-          <p className="font-semibold text-gray-900">{label}</p>
+        <div className="rounded-xl border border-violet-100/70 bg-white/98 p-3 shadow-[0_18px_36px_-26px_rgba(76,29,149,0.55)] backdrop-blur-xs">
+          <p className="font-[var(--font-dash-sans)] text-sm font-semibold text-slate-900">{label}</p>
           {payload.map((entry: any, index: number) => (
-            <p key={index} className="text-sm" style={{ color: entry.color }}>
+            <p key={index} className="font-[var(--font-dash-mono)] text-sm" style={{ color: entry.color }}>
               {entry.name}: {formatCurrency(entry.value)}
             </p>
           ))}
@@ -205,232 +233,297 @@ export default function AnalyticsPage() {
     return null;
   };
 
-  if (isLoading || loading) {
-    return (
-      <AppLayout>
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-300 rounded w-1/3 mb-8"></div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Card key={i} className="bg-white/90">
-                  <CardHeader>
-                    <div className="h-6 bg-gray-300 rounded w-1/2"></div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-64 bg-gray-200 rounded"></div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-      </AppLayout>
-    );
-  }
-
   const totalIncome = monthlyTrends.reduce((sum, m) => sum + m.income, 0);
   const totalExpenses = monthlyTrends.reduce((sum, m) => sum + m.expenses, 0);
   const avgMonthlyIncome = monthlyTrends.length > 0 ? totalIncome / monthlyTrends.length : 0;
   const avgMonthlyExpenses = monthlyTrends.length > 0 ? totalExpenses / monthlyTrends.length : 0;
+  const netAmount = totalIncome - totalExpenses;
+  const savingsRate = totalIncome > 0 ? (netAmount / totalIncome) * 100 : 0;
+  const totalCategorySpend = categoryData.reduce((sum, item) => sum + Math.abs(item.amount), 0);
+
+  const bestMonth = useMemo(
+    () => (monthlyTrends.length > 0 ? monthlyTrends.reduce((best, cur) => (cur.net > best.net ? cur : best)) : null),
+    [monthlyTrends],
+  );
+
+  const lowestMonth = useMemo(
+    () =>
+      monthlyTrends.length > 0
+        ? monthlyTrends.reduce((worst, cur) => (cur.net < worst.net ? cur : worst))
+        : null,
+    [monthlyTrends],
+  );
+
+  const bestYear = useMemo(
+    () => (yearlyData.length > 0 ? yearlyData.reduce((best, cur) => (cur.netIncome > best.netIncome ? cur : best)) : null),
+    [yearlyData],
+  );
+
+  if (isLoading || loading) {
+    return (
+      <AppLayout>
+        <div className="animate-pulse space-y-5">
+          <div className="h-10 w-64 rounded-xl bg-slate-200" />
+          <div className={SKELETON_BANNER_CLASS} />
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={`metric-${i}`} className={SKELETON_STAT_CARD_CLASS} />
+            ))}
+          </div>
+          <div className="grid gap-6 xl:grid-cols-3">
+            <div className={cn('h-[390px] xl:col-span-2', SKELETON_PANEL_CLASS)} />
+            <div className={cn('h-[390px]', SKELETON_PANEL_CLASS)} />
+            <div className={cn('h-[390px] xl:col-span-2', SKELETON_PANEL_CLASS)} />
+            <div className={cn('h-[390px]', SKELETON_PANEL_CLASS)} />
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  const insightTone = netAmount >= 0 ? 'emerald' : 'amber';
 
   return (
     <AppLayout>
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('title')}</h1>
-          <p className="text-gray-600">{t('subtitle')}</p>
+      <header className="mb-5 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
+            {t('title')}
+          </h1>
+          <p className="mt-1.5 text-[15px] text-slate-500">{t('subtitle')}</p>
         </div>
 
-        {/* Period Selector */}
-        <PeriodSelector
-          period={timeRange}
-          selectedYear={selectedYear}
-          selectedMonth={selectedMonth}
-          onPeriodChange={setTimeRange}
-          onYearChange={setSelectedYear}
-          onMonthChange={setSelectedMonth}
+        <Link href="/analytics/trends">
+          <Button variant="outline" className="gap-2">
+            {t('categoryTrends.viewCategoryTrends')}
+            <ArrowRightIcon className="h-4 w-4" />
+          </Button>
+        </Link>
+      </header>
+
+      <PeriodSelector
+        period={timeRange}
+        selectedYear={selectedYear}
+        selectedMonth={selectedMonth}
+        onPeriodChange={setTimeRange}
+        onYearChange={setSelectedYear}
+        onMonthChange={setSelectedMonth}
+      />
+
+      <section
+        className={cn(
+          'mb-6 rounded-2xl border p-4',
+          insightTone === 'emerald' ? 'border-emerald-200/75 bg-emerald-50/55' : 'border-amber-200/75 bg-amber-50/55',
+        )}
+      >
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-start gap-3">
+            <div
+              className={cn(
+                'mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg',
+                insightTone === 'emerald' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700',
+              )}
+            >
+              <SparklesIcon className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-800">
+                {netAmount >= 0 ? t('onTrack') : t('behindSchedule')}
+              </p>
+              <p className="text-sm text-slate-600">
+                {t('summary.totalSaved')}: <span className="font-[var(--font-dash-mono)]">{formatCurrency(netAmount)}</span>{' '}
+                • {t('summary.savingsRate')}: <span className="font-[var(--font-dash-mono)]">{savingsRate.toFixed(1)}%</span>
+              </p>
+            </div>
+          </div>
+
+          <p className="text-xs font-medium uppercase tracking-[0.08em] text-slate-500">
+            {t('dateRange')} • {monthlyTrends.length}
+          </p>
+        </div>
+      </section>
+
+      <section className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          label={t('summary.avgMonthlyIncome')}
+          value={formatCurrency(avgMonthlyIncome)}
+          hint={t('charts.income')}
+          tone="text-emerald-600"
+          iconBg="bg-emerald-50"
+          iconColor="text-emerald-600"
+          icon={ArrowTrendingUpIcon}
         />
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{t('summary.avgMonthlyIncome')}</p>
-                  <p className="text-2xl font-bold text-green-600">{formatCurrency(avgMonthlyIncome)}</p>
-                </div>
-                <ArrowTrendingUpIcon className="w-8 h-8 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
+        <StatCard
+          label={t('summary.avgMonthlyExpenses')}
+          value={formatCurrency(avgMonthlyExpenses)}
+          hint={t('charts.expenses')}
+          tone="text-rose-600"
+          iconBg="bg-rose-50"
+          iconColor="text-rose-600"
+          icon={ArrowTrendingDownIcon}
+        />
 
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{t('summary.avgMonthlyExpenses')}</p>
-                  <p className="text-2xl font-bold text-red-600">{formatCurrency(avgMonthlyExpenses)}</p>
-                </div>
-                <ArrowTrendingDownIcon className="w-8 h-8 text-red-500" />
-              </div>
-            </CardContent>
-          </Card>
+        <StatCard
+          label={t('summary.totalSaved')}
+          value={formatCurrency(netAmount)}
+          hint={netAmount >= 0 ? t('onTrack') : t('behindSchedule')}
+          tone={netAmount >= 0 ? 'text-emerald-600' : 'text-rose-600'}
+          iconBg="bg-violet-50"
+          iconColor="text-violet-600"
+          icon={BanknotesIcon}
+        />
 
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{t('summary.totalSaved')}</p>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {formatCurrency(totalIncome - totalExpenses)}
-                  </p>
-                </div>
-                <BanknotesIcon className="w-8 h-8 text-blue-500" />
-              </div>
-            </CardContent>
-          </Card>
+        <StatCard
+          label={t('stats.totalSpending')}
+          value={formatCurrency(totalCategorySpend)}
+          hint={`${categoryData.length} ${t('byCategory').toLowerCase()}`}
+          tone="text-slate-900"
+          iconBg="bg-slate-100"
+          iconColor="text-slate-700"
+          icon={CurrencyDollarIcon}
+        />
+      </section>
 
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{t('summary.savingsRate')}</p>
-                  <p className="text-2xl font-bold text-purple-600">
-                    {totalIncome > 0 ? ((totalIncome - totalExpenses) / totalIncome * 100).toFixed(1) : 0}%
-                  </p>
-                </div>
-                <CurrencyDollarIcon className="w-8 h-8 text-purple-500" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      <div className="grid gap-6 xl:grid-cols-3">
+        <section className={cn(PANEL_CLASS, 'xl:col-span-2')}>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="flex items-center gap-2 font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900">
+              <ChartBarIcon className="h-5 w-5 text-violet-600" />
+              {t('charts.incomeVsExpenses')}
+            </h2>
+            <span className="text-xs uppercase tracking-[0.08em] text-slate-500">{t('trends')}</span>
+          </div>
 
-        {/* Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Income vs Expenses Trend */}
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ChartBarIcon className="w-5 h-5" />
-                {t('charts.incomeVsExpenses')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={monthlyTrends}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                  <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} tick={{ fontSize: 12 }} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend />
-                  <Area
-                    type="monotone"
-                    dataKey="income"
-                    stackId="1"
-                    stroke="#10B981"
-                    fill="#10B981"
-                    fillOpacity={0.6}
-                    name={t('charts.income')}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="expenses"
-                    stackId="2"
-                    stroke="#EF4444"
-                    fill="#EF4444"
-                    fillOpacity={0.6}
-                    name={t('charts.expenses')}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+          <div className="mt-4 h-[330px] rounded-2xl bg-slate-50/55 p-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={monthlyTrends} margin={{ top: 8, right: 8, left: -12, bottom: 4 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#64748b' }} tickLine={false} axisLine={false} />
+                <YAxis
+                  tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                  tick={{ fontSize: 12, fill: '#64748b' }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                <Area
+                  type="monotone"
+                  dataKey="income"
+                  stroke="#10b981"
+                  fill="#10b981"
+                  fillOpacity={0.22}
+                  strokeWidth={2.5}
+                  name={t('charts.income')}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="expenses"
+                  stroke="#f43f5e"
+                  fill="#f43f5e"
+                  fillOpacity={0.18}
+                  strokeWidth={2.5}
+                  name={t('charts.expenses')}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
 
-          {/* Net Income Trend */}
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CalendarIcon className="w-5 h-5" />
-                {t('charts.netIncomeTrend')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={monthlyTrends}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                  <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} tick={{ fontSize: 12 }} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="net"
-                    stroke="#3B82F6"
-                    strokeWidth={3}
-                    dot={{ fill: '#3B82F6' }}
-                    name={t('charts.netIncome')}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+        <section className={PANEL_CLASS}>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="flex items-center gap-2 font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900">
+              <CalendarIcon className="h-5 w-5 text-violet-600" />
+              {t('charts.netIncomeTrend')}
+            </h2>
+          </div>
 
-          {/* Category Spending Chart */}
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle>{t('charts.spendingByCategory')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {categoryData.length > 0 ? (
-                <CategorySpendingChart data={categoryData} title="" />
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  {t('charts.noCategoryData')}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <div className="mt-4 h-[240px] rounded-2xl bg-slate-50/55 p-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={monthlyTrends} margin={{ top: 10, right: 8, left: -12, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#64748b' }} tickLine={false} axisLine={false} />
+                <YAxis
+                  tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                  tick={{ fontSize: 11, fill: '#64748b' }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Line
+                  type="monotone"
+                  dataKey="net"
+                  stroke="#6366f1"
+                  strokeWidth={2.7}
+                  dot={{ fill: '#6366f1', r: 3.5 }}
+                  activeDot={{ r: 5 }}
+                  name={t('charts.netIncome')}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
 
-          {/* Yearly Comparison */}
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle>{t('charts.yearlyComparison')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={yearlyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="year" tick={{ fontSize: 12 }} />
-                  <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} tick={{ fontSize: 12 }} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend />
-                  <Bar dataKey="totalIncome" fill="#10B981" name={t('charts.income')} radius={[8, 8, 0, 0]} />
-                  <Bar dataKey="totalExpenses" fill="#EF4444" name={t('charts.expenses')} radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+            <div className="rounded-xl border border-violet-100/80 bg-violet-50/35 p-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">{t('stats.highestMonth')}</p>
+              <p className="mt-1 font-[var(--font-dash-mono)] text-sm font-semibold text-slate-900">
+                {bestMonth ? `${bestMonth.month} • ${formatCurrency(bestMonth.net)}` : '—'}
+              </p>
+            </div>
+            <div className="rounded-xl border border-violet-100/80 bg-violet-50/35 p-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">{t('stats.lowestMonth')}</p>
+              <p className="mt-1 font-[var(--font-dash-mono)] text-sm font-semibold text-slate-900">
+                {lowestMonth ? `${lowestMonth.month} • ${formatCurrency(lowestMonth.net)}` : '—'}
+              </p>
+            </div>
+          </div>
+        </section>
 
-        {/* Category Trends Link */}
-        <div className="mt-8">
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{t('categoryTrends.title')}</h3>
-                  <p className="text-sm text-gray-600">{t('categoryTrends.subtitle')}</p>
-                </div>
-                <Link href="/analytics/trends">
-                  <Button variant="primary" className="flex items-center gap-2">
-                    {t('categoryTrends.viewCategoryTrends')}
-                    <ArrowRightIcon className="w-4 h-4" />
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <section className={cn(PANEL_CLASS, 'xl:col-span-2')}>
+          {categoryData.length > 0 ? (
+            <CategorySpendingChart data={categoryData} title={t('charts.spendingByCategory')} />
+          ) : (
+            <div className="flex h-[320px] items-center justify-center rounded-2xl border border-dashed border-violet-200/80 bg-violet-50/30 text-slate-500">
+              <p className="text-sm font-medium">{t('charts.noCategoryData')}</p>
+            </div>
+          )}
+        </section>
+
+        <section className={PANEL_CLASS}>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900">
+              {t('charts.yearlyComparison')}
+            </h2>
+          </div>
+
+          <div className="mt-4 h-[240px] rounded-2xl bg-slate-50/55 p-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={yearlyData} margin={{ top: 10, right: 8, left: -14, bottom: 4 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="year" tick={{ fontSize: 12, fill: '#64748b' }} tickLine={false} axisLine={false} />
+                <YAxis
+                  tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                  tick={{ fontSize: 11, fill: '#64748b' }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                <Bar dataKey="totalIncome" fill="#10b981" name={t('charts.income')} radius={[7, 7, 0, 0]} />
+                <Bar dataKey="totalExpenses" fill="#f43f5e" name={t('charts.expenses')} radius={[7, 7, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="mt-4 rounded-xl border border-violet-100/80 bg-violet-50/35 p-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">{t('summary.totalSaved')}</p>
+            <p className="mt-1 font-[var(--font-dash-mono)] text-sm font-semibold text-slate-900">
+              {bestYear ? `${bestYear.year} • ${formatCurrency(bestYear.netIncome)}` : '—'}
+            </p>
+          </div>
+        </section>
+      </div>
     </AppLayout>
   );
 }
