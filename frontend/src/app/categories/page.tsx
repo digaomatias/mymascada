@@ -89,6 +89,8 @@ export default function CategoriesPage() {
   const [initializingCategories, setInitializingCategories] = useState(false);
   const [activeTab, setActiveTab] = useState<'categories' | 'bank-mappings'>('categories');
   const [collapsedGroups, setCollapsedGroups] = useState<Set<number>>(new Set());
+  const [showAll, setShowAll] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
   const getCategoryTypeLabel = (type: number) => {
     switch (type) {
@@ -110,6 +112,14 @@ export default function CategoriesPage() {
       loadCategories();
     }
   }, [isAuthenticated]);
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const loadCategories = async () => {
     try {
@@ -167,15 +177,37 @@ export default function CategoriesPage() {
     }
   };
 
-  const filteredCategories = categories.filter(category => {
-    const matchesSearch = category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         category.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         category.fullPath.toLowerCase().includes(searchTerm.toLowerCase());
+  const TOP_COUNT = 30;
+  const viewMode: 'top' | 'all' | 'search' = debouncedSearch ? 'search' : showAll ? 'all' : 'top';
 
-    const matchesType = selectedType === '' || category.type === selectedType;
+  // Categories after type filter only (before view mode logic)
+  const typeFilteredCategories = useMemo(() => {
+    if (selectedType === '') return categories;
+    return categories.filter(c => c.type === selectedType);
+  }, [categories, selectedType]);
 
-    return matchesSearch && matchesType;
-  });
+  const displayCategories = useMemo(() => {
+    if (viewMode === 'search') {
+      const term = debouncedSearch.toLowerCase();
+      return typeFilteredCategories.filter(c =>
+        c.name.toLowerCase().includes(term) ||
+        c.description?.toLowerCase().includes(term) ||
+        c.fullPath.toLowerCase().includes(term)
+      );
+    }
+
+    if (viewMode === 'all') {
+      return typeFilteredCategories;
+    }
+
+    // Top mode: sort by transaction count desc, take top N
+    return [...typeFilteredCategories]
+      .sort((a, b) => b.transactionCount - a.transactionCount)
+      .slice(0, TOP_COUNT);
+  }, [typeFilteredCategories, debouncedSearch, viewMode]);
+
+  // Whether there are hidden categories in top mode
+  const hasMoreCategories = viewMode === 'top' && typeFilteredCategories.length > displayCategories.length;
 
   // Group categories by type, then sort by hierarchy (parents first, children indented)
   const groupedByType = useMemo(() => {
@@ -183,7 +215,7 @@ export default function CategoriesPage() {
     const groups: { type: number; label: string; categories: Category[] }[] = [];
 
     for (const type of typeOrder) {
-      const typeCats = filteredCategories.filter(c => c.type === type);
+      const typeCats = displayCategories.filter(c => c.type === type);
       if (typeCats.length === 0) continue;
 
       // Separate parents and children
@@ -224,7 +256,7 @@ export default function CategoriesPage() {
     }
 
     return groups;
-  }, [filteredCategories]);
+  }, [displayCategories]);
 
   const toggleGroup = (type: number) => {
     setCollapsedGroups(prev => {
@@ -365,6 +397,7 @@ export default function CategoriesPage() {
                     onClick={() => {
                       setSelectedType('');
                       setSearchTerm('');
+                      setShowAll(false);
                     }}
                   >
                     {tCommon('clear')}
@@ -385,6 +418,17 @@ export default function CategoriesPage() {
 
         {/* Categories List */}
         {activeTab === 'categories' && (
+        <>
+        {/* Status label */}
+        {!loading && displayCategories.length > 0 && (
+          <p className="text-sm text-slate-500 mb-3">
+            {viewMode === 'search'
+              ? t('searchResultsCount', { count: displayCategories.length, term: debouncedSearch })
+              : viewMode === 'all'
+                ? t('showingAllCount', { count: displayCategories.length })
+                : t('showingTopByUsage', { count: displayCategories.length })}
+          </p>
+        )}
         <Card className="rounded-[26px] border border-violet-100/60 bg-white/90 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
           <CardContent className="p-0">
             {loading ? (
@@ -402,7 +446,7 @@ export default function CategoriesPage() {
                   </div>
                 ))}
               </div>
-            ) : filteredCategories.length === 0 ? (
+            ) : displayCategories.length === 0 ? (
               <div className="text-center py-12 px-6">
                 <div className="w-20 h-20 bg-gradient-to-br from-primary-400 to-primary-600 rounded-3xl shadow-2xl flex items-center justify-center mx-auto mb-6">
                   <TagIcon className="w-10 h-10 text-white" />
@@ -593,10 +637,27 @@ export default function CategoriesPage() {
                     </div>
                   );
                 })}
+
+                {/* Show all / Show top toggle button */}
+                {(viewMode === 'all' || hasMoreCategories) && (
+                  <div className="py-3 text-center border-t border-slate-100">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowAll(!showAll)}
+                      className="text-slate-500 hover:text-violet-600"
+                    >
+                      {showAll
+                        ? t('showTopCategories')
+                        : t('showAllCategories', { count: typeFilteredCategories.length })}
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
         </Card>
+        </>
         )}
     </AppLayout>
   );
