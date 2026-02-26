@@ -201,9 +201,50 @@ export default function CategoriesPage() {
   // Whether there are hidden categories in top mode
   const hasMoreCategories = viewMode === 'top' && categories.length > displayCategories.length;
 
-  // Sort by hierarchy (parents first, children indented) in a single flat list
+  // Sort categories: hierarchy for 'all' mode, keep usage order for 'top'/'search'
   const sortedCategories = useMemo(() => {
-    // Separate parents and children
+    // In top/search mode, keep the usage-based order but group children under parents
+    if (viewMode === 'top' || viewMode === 'search') {
+      // Build a set of visible IDs for quick lookup
+      const visibleIds = new Set(displayCategories.map(c => c.id));
+      const sorted: Category[] = [];
+      const added = new Set<number>();
+
+      for (const cat of displayCategories) {
+        if (added.has(cat.id)) continue;
+
+        if (!cat.parentCategoryId) {
+          // Parent: add it, then its visible children right after
+          sorted.push(cat);
+          added.add(cat.id);
+          const children = displayCategories.filter(
+            c => c.parentCategoryId === cat.id && !added.has(c.id)
+          );
+          for (const child of children) {
+            sorted.push(child);
+            added.add(child.id);
+          }
+        } else {
+          // Child appearing before its parent in the list
+          // Add the parent first if it's visible and not yet added
+          if (visibleIds.has(cat.parentCategoryId) && !added.has(cat.parentCategoryId)) {
+            const parent = displayCategories.find(c => c.id === cat.parentCategoryId);
+            if (parent) {
+              sorted.push(parent);
+              added.add(parent.id);
+            }
+          }
+          if (!added.has(cat.id)) {
+            sorted.push(cat);
+            added.add(cat.id);
+          }
+        }
+      }
+
+      return sorted;
+    }
+
+    // 'all' mode: full hierarchy sort
     const parents = displayCategories.filter(c => !c.parentCategoryId).sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
     const childrenMap = new Map<number, Category[]>();
     for (const c of displayCategories.filter(c => c.parentCategoryId)) {
@@ -211,12 +252,10 @@ export default function CategoriesPage() {
       existing.push(c);
       childrenMap.set(c.parentCategoryId!, existing);
     }
-    // Sort children within each parent
     for (const [, children] of childrenMap) {
       children.sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
     }
 
-    // Build flat list: parent → children → parent → children ...
     const sorted: Category[] = [];
     for (const parent of parents) {
       sorted.push(parent);
@@ -225,7 +264,6 @@ export default function CategoriesPage() {
         sorted.push(...children);
       }
     }
-    // Also add any orphaned children (whose parent might be filtered out)
     const addedIds = new Set(sorted.map(c => c.id));
     for (const c of displayCategories) {
       if (!addedIds.has(c.id)) {
@@ -234,7 +272,7 @@ export default function CategoriesPage() {
     }
 
     return sorted;
-  }, [displayCategories]);
+  }, [displayCategories, viewMode]);
 
   if (isLoading) {
     return (
