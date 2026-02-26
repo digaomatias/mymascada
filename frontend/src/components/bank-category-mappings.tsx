@@ -56,7 +56,6 @@ interface Category {
   id: number;
   name: string;
   fullPath?: string;
-  type: number;
   parentId: number | null;
   color?: string;
   icon?: string;
@@ -122,7 +121,6 @@ export default function BankCategoryMappings() {
             id: cat.id,
             name: cat.name,
             fullPath: cat.fullPath,
-            type: cat.type ?? 0,
             parentId: cat.parentCategoryId ?? null,
             color: cat.color,
             icon: cat.icon,

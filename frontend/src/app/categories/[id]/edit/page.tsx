@@ -41,7 +41,6 @@ interface FormData {
   name: string;
   description: string;
   color: string;
-  type: number;
   parentCategoryId: number | null;
 }
 
@@ -69,7 +68,6 @@ export default function EditCategoryPage() {
     name: '',
     description: '',
     color: '#6B7280',
-    type: 2,
     parentCategoryId: null
   });
   const [errors, setErrors] = useState<{[K in keyof FormData]?: string}>({});
@@ -89,7 +87,6 @@ export default function EditCategoryPage() {
         name: categoryData.name,
         description: categoryData.description || '',
         color: categoryData.color || '#6B7280',
-        type: categoryData.type,
         parentCategoryId: categoryData.parentCategoryId || null
       });
     } catch (error) {
@@ -159,7 +156,6 @@ export default function EditCategoryPage() {
         description: formData.description.trim() || undefined,
         color: formData.color,
         icon: category.icon,
-        type: formData.type,
         parentCategoryId: formData.parentCategoryId || undefined,
         sortOrder: category.sortOrder,
         isActive: category.isActive

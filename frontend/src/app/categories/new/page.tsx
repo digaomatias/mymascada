@@ -21,7 +21,7 @@ interface Category {
   id: number;
   name: string;
   color?: string;
-  type?: number;
+
   isSystemCategory?: boolean;
   fullPath?: string;
 }
@@ -42,7 +42,7 @@ export default function NewCategoryPage() {
     name: '',
     description: '',
     color: '#6B7280',
-    type: 2, // Default to Expense
+
     parentCategoryId: '',
   });
 
@@ -99,7 +99,7 @@ export default function NewCategoryPage() {
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
         color: formData.color,
-        type: formData.type,
+
         parentCategoryId: formData.parentCategoryId ? parseInt(formData.parentCategoryId) : undefined,
         sortOrder: 999,
       };
