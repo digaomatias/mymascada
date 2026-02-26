@@ -1,5 +1,4 @@
 using MyMascada.Domain.Common;
-using MyMascada.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace MyMascada.Domain.Entities;
@@ -34,11 +33,6 @@ public class Category : BaseEntity
     /// </summary>
     [MaxLength(50)]
     public string? Icon { get; set; }
-
-    /// <summary>
-    /// Type of category (Income, Expense, Transfer)
-    /// </summary>
-    public CategoryType Type { get; set; } = CategoryType.Expense;
 
     /// <summary>
     /// Stable identifier for seeded categories, enabling matching regardless of display language or user renames.

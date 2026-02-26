@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Domain.Entities;
-using MyMascada.Domain.Enums;
 using MyMascada.Infrastructure.Data;
 
 namespace MyMascada.Infrastructure.Services;
@@ -60,7 +59,6 @@ public class CategorySeedingService : ICategorySeedingService
         string CanonicalKey,
         string Icon,
         string Color,
-        CategoryType Type,
         Dictionary<string, LocaleText> Locales,
         List<CategorySeed>? Children = null);
 
@@ -73,7 +71,7 @@ public class CategorySeedingService : ICategorySeedingService
         // =================================================================
         // INCOME CATEGORIES
         // =================================================================
-        new("income", "💰", "#4CAF50", CategoryType.Income,
+        new("income", "💰", "#4CAF50",
             new()
             {
                 ["en"] = new("Income", "All sources of income"),
@@ -81,43 +79,43 @@ public class CategorySeedingService : ICategorySeedingService
             },
             new()
             {
-                new("salary", "💼", "#66BB6A", CategoryType.Income,
+                new("salary", "💼", "#66BB6A",
                     new()
                     {
                         ["en"] = new("Salary", "Regular employment income"),
                         ["pt-BR"] = new("Salário", "Renda de emprego regular")
                     }),
-                new("freelance", "🎯", "#81C784", CategoryType.Income,
+                new("freelance", "🎯", "#81C784",
                     new()
                     {
                         ["en"] = new("Freelance", "Contract and freelance work"),
                         ["pt-BR"] = new("Freelance", "Trabalho autônomo e freelance")
                     }),
-                new("business_income", "🏢", "#A5D6A7", CategoryType.Income,
+                new("business_income", "🏢", "#A5D6A7",
                     new()
                     {
                         ["en"] = new("Business Income", "Revenue from business activities"),
                         ["pt-BR"] = new("Renda Empresarial", "Receita de atividades empresariais")
                     }),
-                new("investment_income", "📈", "#C8E6C9", CategoryType.Income,
+                new("investment_income", "📈", "#C8E6C9",
                     new()
                     {
                         ["en"] = new("Investment Income", "Dividends, interest, capital gains"),
                         ["pt-BR"] = new("Renda de Investimentos", "Dividendos, juros, ganhos de capital")
                     }),
-                new("side_hustle", "⚡", "#E8F5E8", CategoryType.Income,
+                new("side_hustle", "⚡", "#E8F5E8",
                     new()
                     {
                         ["en"] = new("Side Hustle", "Income from side projects"),
                         ["pt-BR"] = new("Renda Extra", "Renda de projetos paralelos")
                     }),
-                new("gifts_bonuses", "🎁", "#F1F8E9", CategoryType.Income,
+                new("gifts_bonuses", "🎁", "#F1F8E9",
                     new()
                     {
                         ["en"] = new("Gifts & Bonuses", "Monetary gifts and work bonuses"),
                         ["pt-BR"] = new("Presentes & Bônus", "Presentes em dinheiro e bônus de trabalho")
                     }),
-                new("other_income", "➕", "#F9FBE7", CategoryType.Income,
+                new("other_income", "➕", "#F9FBE7",
                     new()
                     {
                         ["en"] = new("Other Income", "Miscellaneous income sources"),
@@ -128,7 +126,7 @@ public class CategorySeedingService : ICategorySeedingService
         // =================================================================
         // HOUSING & UTILITIES
         // =================================================================
-        new("housing_utilities", "🏠", "#2196F3", CategoryType.Expense,
+        new("housing_utilities", "🏠", "#2196F3",
             new()
             {
                 ["en"] = new("Housing & Utilities", "Housing costs and utilities"),
@@ -136,49 +134,49 @@ public class CategorySeedingService : ICategorySeedingService
             },
             new()
             {
-                new("rent_mortgage", "🏘️", "#42A5F5", CategoryType.Expense,
+                new("rent_mortgage", "🏘️", "#42A5F5",
                     new()
                     {
                         ["en"] = new("Rent/Mortgage", "Monthly housing payments"),
                         ["pt-BR"] = new("Aluguel/Financiamento", "Pagamentos mensais de moradia")
                     }),
-                new("electricity", "⚡", "#64B5F6", CategoryType.Expense,
+                new("electricity", "⚡", "#64B5F6",
                     new()
                     {
                         ["en"] = new("Electricity", "Electric utility bills"),
                         ["pt-BR"] = new("Energia Elétrica", "Contas de energia elétrica")
                     }),
-                new("gas_utility", "🔥", "#90CAF9", CategoryType.Expense,
+                new("gas_utility", "🔥", "#90CAF9",
                     new()
                     {
                         ["en"] = new("Gas", "Natural gas and heating"),
                         ["pt-BR"] = new("Gás", "Gás natural e aquecimento")
                     }),
-                new("water_sewer", "💧", "#BBDEFB", CategoryType.Expense,
+                new("water_sewer", "💧", "#BBDEFB",
                     new()
                     {
                         ["en"] = new("Water & Sewer", "Water and sewer utilities"),
                         ["pt-BR"] = new("Água & Esgoto", "Serviços de água e esgoto")
                     }),
-                new("internet_cable", "📡", "#E3F2FD", CategoryType.Expense,
+                new("internet_cable", "📡", "#E3F2FD",
                     new()
                     {
                         ["en"] = new("Internet & Cable", "Internet and TV services"),
                         ["pt-BR"] = new("Internet & TV", "Serviços de internet e TV")
                     }),
-                new("trash_recycling", "🗑️", "#F3E5F5", CategoryType.Expense,
+                new("trash_recycling", "🗑️", "#F3E5F5",
                     new()
                     {
                         ["en"] = new("Trash & Recycling", "Waste management services"),
                         ["pt-BR"] = new("Lixo & Reciclagem", "Serviços de coleta de lixo")
                     }),
-                new("home_insurance", "🛡️", "#E8EAF6", CategoryType.Expense,
+                new("home_insurance", "🛡️", "#E8EAF6",
                     new()
                     {
                         ["en"] = new("Home Insurance", "Property and home insurance"),
                         ["pt-BR"] = new("Seguro Residencial", "Seguro de propriedade e residência")
                     }),
-                new("home_maintenance", "🔧", "#C5CAE9", CategoryType.Expense,
+                new("home_maintenance", "🔧", "#C5CAE9",
                     new()
                     {
                         ["en"] = new("Home Maintenance", "Repairs and maintenance"),
@@ -189,7 +187,7 @@ public class CategorySeedingService : ICategorySeedingService
         // =================================================================
         // TRANSPORTATION
         // =================================================================
-        new("transportation", "🚗", "#FF9800", CategoryType.Expense,
+        new("transportation", "🚗", "#FF9800",
             new()
             {
                 ["en"] = new("Transportation", "Vehicle and transportation costs"),
@@ -197,49 +195,49 @@ public class CategorySeedingService : ICategorySeedingService
             },
             new()
             {
-                new("gas_fuel", "⛽", "#FFB74D", CategoryType.Expense,
+                new("gas_fuel", "⛽", "#FFB74D",
                     new()
                     {
                         ["en"] = new("Gas & Fuel", "Vehicle fuel costs"),
                         ["pt-BR"] = new("Combustível", "Custos de combustível do veículo")
                     }),
-                new("car_payment", "🚙", "#FFCC02", CategoryType.Expense,
+                new("car_payment", "🚙", "#FFCC02",
                     new()
                     {
                         ["en"] = new("Car Payment", "Vehicle loan payments"),
                         ["pt-BR"] = new("Parcela do Carro", "Pagamentos de financiamento do veículo")
                     }),
-                new("car_insurance", "🛡️", "#FFD54F", CategoryType.Expense,
+                new("car_insurance", "🛡️", "#FFD54F",
                     new()
                     {
                         ["en"] = new("Car Insurance", "Vehicle insurance premiums"),
                         ["pt-BR"] = new("Seguro do Carro", "Prêmios de seguro do veículo")
                     }),
-                new("car_maintenance", "🔧", "#FFE082", CategoryType.Expense,
+                new("car_maintenance", "🔧", "#FFE082",
                     new()
                     {
                         ["en"] = new("Car Maintenance", "Vehicle repairs and service"),
                         ["pt-BR"] = new("Manutenção do Carro", "Reparos e serviços do veículo")
                     }),
-                new("public_transit", "🚌", "#FFECB3", CategoryType.Expense,
+                new("public_transit", "🚌", "#FFECB3",
                     new()
                     {
                         ["en"] = new("Public Transit", "Bus, train, subway fares"),
                         ["pt-BR"] = new("Transporte Público", "Passagens de ônibus, trem e metrô")
                     }),
-                new("rideshare", "🚕", "#FFF3E0", CategoryType.Expense,
+                new("rideshare", "🚕", "#FFF3E0",
                     new()
                     {
                         ["en"] = new("Rideshare", "Uber, Lyft, taxi costs"),
                         ["pt-BR"] = new("Transporte por App", "Custos de Uber, 99, táxi")
                     }),
-                new("parking", "🅿️", "#FFF8E1", CategoryType.Expense,
+                new("parking", "🅿️", "#FFF8E1",
                     new()
                     {
                         ["en"] = new("Parking", "Parking fees and permits"),
                         ["pt-BR"] = new("Estacionamento", "Taxas e licenças de estacionamento")
                     }),
-                new("vehicle_registration", "📋", "#FFFDE7", CategoryType.Expense,
+                new("vehicle_registration", "📋", "#FFFDE7",
                     new()
                     {
                         ["en"] = new("Vehicle Registration", "DMV fees and registration"),
@@ -250,7 +248,7 @@ public class CategorySeedingService : ICategorySeedingService
         // =================================================================
         // FOOD & DINING
         // =================================================================
-        new("food_dining", "🍽️", "#4CAF50", CategoryType.Expense,
+        new("food_dining", "🍽️", "#4CAF50",
             new()
             {
                 ["en"] = new("Food & Dining", "Food and restaurant expenses"),
@@ -258,43 +256,43 @@ public class CategorySeedingService : ICategorySeedingService
             },
             new()
             {
-                new("groceries", "🛒", "#66BB6A", CategoryType.Expense,
+                new("groceries", "🛒", "#66BB6A",
                     new()
                     {
                         ["en"] = new("Groceries", "Supermarket and food shopping"),
                         ["pt-BR"] = new("Supermercado", "Compras de supermercado e alimentos")
                     }),
-                new("restaurants", "🍴", "#81C784", CategoryType.Expense,
+                new("restaurants", "🍴", "#81C784",
                     new()
                     {
                         ["en"] = new("Restaurants", "Dining out and takeout"),
                         ["pt-BR"] = new("Restaurantes", "Refeições fora e delivery")
                     }),
-                new("fast_food", "🍔", "#A5D6A7", CategoryType.Expense,
+                new("fast_food", "🍔", "#A5D6A7",
                     new()
                     {
                         ["en"] = new("Fast Food", "Quick service restaurants"),
                         ["pt-BR"] = new("Fast Food", "Restaurantes de serviço rápido")
                     }),
-                new("coffee_shops", "☕", "#C8E6C9", CategoryType.Expense,
+                new("coffee_shops", "☕", "#C8E6C9",
                     new()
                     {
                         ["en"] = new("Coffee Shops", "Coffee and café purchases"),
                         ["pt-BR"] = new("Cafeterias", "Compras em cafeterias e padarias")
                     }),
-                new("delivery", "🚚", "#E8F5E8", CategoryType.Expense,
+                new("delivery", "🚚", "#E8F5E8",
                     new()
                     {
                         ["en"] = new("Delivery", "Food delivery services"),
                         ["pt-BR"] = new("Delivery", "Serviços de entrega de comida")
                     }),
-                new("meal_kits", "📦", "#F1F8E9", CategoryType.Expense,
+                new("meal_kits", "📦", "#F1F8E9",
                     new()
                     {
                         ["en"] = new("Meal Kits", "Subscription meal services"),
                         ["pt-BR"] = new("Kits de Refeição", "Serviços de assinatura de refeições")
                     }),
-                new("work_lunches", "🥪", "#F9FBE7", CategoryType.Expense,
+                new("work_lunches", "🥪", "#F9FBE7",
                     new()
                     {
                         ["en"] = new("Work Lunches", "Meals during work hours"),
@@ -305,7 +303,7 @@ public class CategorySeedingService : ICategorySeedingService
         // =================================================================
         // HEALTH & MEDICAL
         // =================================================================
-        new("health_medical", "🏥", "#E91E63", CategoryType.Expense,
+        new("health_medical", "🏥", "#E91E63",
             new()
             {
                 ["en"] = new("Health & Medical", "Healthcare and medical expenses"),
@@ -313,49 +311,49 @@ public class CategorySeedingService : ICategorySeedingService
             },
             new()
             {
-                new("doctor_visits", "👨‍⚕️", "#F06292", CategoryType.Expense,
+                new("doctor_visits", "👨‍⚕️", "#F06292",
                     new()
                     {
                         ["en"] = new("Doctor Visits", "Medical appointments and checkups"),
                         ["pt-BR"] = new("Consultas Médicas", "Consultas e exames médicos")
                     }),
-                new("dental_care", "🦷", "#F48FB1", CategoryType.Expense,
+                new("dental_care", "🦷", "#F48FB1",
                     new()
                     {
                         ["en"] = new("Dental Care", "Dental appointments and procedures"),
                         ["pt-BR"] = new("Dentista", "Consultas e procedimentos dentários")
                     }),
-                new("prescriptions", "💊", "#F8BBD9", CategoryType.Expense,
+                new("prescriptions", "💊", "#F8BBD9",
                     new()
                     {
                         ["en"] = new("Prescriptions", "Prescription medications"),
                         ["pt-BR"] = new("Medicamentos", "Medicamentos com receita")
                     }),
-                new("health_insurance", "🛡️", "#FCE4EC", CategoryType.Expense,
+                new("health_insurance", "🛡️", "#FCE4EC",
                     new()
                     {
                         ["en"] = new("Health Insurance", "Medical insurance premiums"),
                         ["pt-BR"] = new("Plano de Saúde", "Mensalidades do plano de saúde")
                     }),
-                new("vision_care", "👓", "#FDF2F8", CategoryType.Expense,
+                new("vision_care", "👓", "#FDF2F8",
                     new()
                     {
                         ["en"] = new("Vision Care", "Eye exams and glasses/contacts"),
                         ["pt-BR"] = new("Oftalmologia", "Exames e óculos/lentes de contato")
                     }),
-                new("mental_health", "🧠", "#F3E5F5", CategoryType.Expense,
+                new("mental_health", "🧠", "#F3E5F5",
                     new()
                     {
                         ["en"] = new("Mental Health", "Therapy and counseling services"),
                         ["pt-BR"] = new("Saúde Mental", "Terapia e serviços de aconselhamento")
                     }),
-                new("fitness", "💪", "#E8EAF6", CategoryType.Expense,
+                new("fitness", "💪", "#E8EAF6",
                     new()
                     {
                         ["en"] = new("Fitness", "Gym memberships and fitness"),
                         ["pt-BR"] = new("Academia", "Mensalidades de academia e fitness")
                     }),
-                new("alternative_medicine", "🌿", "#C5CAE9", CategoryType.Expense,
+                new("alternative_medicine", "🌿", "#C5CAE9",
                     new()
                     {
                         ["en"] = new("Alternative Medicine", "Chiropractic, acupuncture, etc."),
@@ -366,7 +364,7 @@ public class CategorySeedingService : ICategorySeedingService
         // =================================================================
         // PERSONAL CARE
         // =================================================================
-        new("personal_care", "💄", "#9C27B0", CategoryType.Expense,
+        new("personal_care", "💄", "#9C27B0",
             new()
             {
                 ["en"] = new("Personal Care", "Personal grooming and care"),
@@ -374,37 +372,37 @@ public class CategorySeedingService : ICategorySeedingService
             },
             new()
             {
-                new("haircuts_styling", "💇", "#BA68C8", CategoryType.Expense,
+                new("haircuts_styling", "💇", "#BA68C8",
                     new()
                     {
                         ["en"] = new("Haircuts & Styling", "Hair salon and barber visits"),
                         ["pt-BR"] = new("Cortes & Penteados", "Visitas ao salão e barbearia")
                     }),
-                new("skincare_cosmetics", "💅", "#CE93D8", CategoryType.Expense,
+                new("skincare_cosmetics", "💅", "#CE93D8",
                     new()
                     {
                         ["en"] = new("Skincare & Cosmetics", "Beauty products and treatments"),
                         ["pt-BR"] = new("Cosméticos & Beleza", "Produtos de beleza e tratamentos")
                     }),
-                new("clothing", "👕", "#E1BEE7", CategoryType.Expense,
+                new("clothing", "👕", "#E1BEE7",
                     new()
                     {
                         ["en"] = new("Clothing", "Apparel and accessories"),
                         ["pt-BR"] = new("Roupas", "Vestuário e acessórios")
                     }),
-                new("dry_cleaning", "🧥", "#F3E5F5", CategoryType.Expense,
+                new("dry_cleaning", "🧥", "#F3E5F5",
                     new()
                     {
                         ["en"] = new("Dry Cleaning", "Laundry and dry cleaning services"),
                         ["pt-BR"] = new("Lavanderia", "Serviços de lavanderia e lavagem a seco")
                     }),
-                new("personal_hygiene", "🧴", "#F8BBD9", CategoryType.Expense,
+                new("personal_hygiene", "🧴", "#F8BBD9",
                     new()
                     {
                         ["en"] = new("Personal Hygiene", "Toiletries and hygiene products"),
                         ["pt-BR"] = new("Higiene Pessoal", "Produtos de higiene pessoal")
                     }),
-                new("spa_wellness", "🧖", "#FCE4EC", CategoryType.Expense,
+                new("spa_wellness", "🧖", "#FCE4EC",
                     new()
                     {
                         ["en"] = new("Spa & Wellness", "Massage and wellness treatments"),
@@ -415,7 +413,7 @@ public class CategorySeedingService : ICategorySeedingService
         // =================================================================
         // ENTERTAINMENT
         // =================================================================
-        new("entertainment", "🎬", "#673AB7", CategoryType.Expense,
+        new("entertainment", "🎬", "#673AB7",
             new()
             {
                 ["en"] = new("Entertainment", "Entertainment and leisure activities"),
@@ -423,43 +421,43 @@ public class CategorySeedingService : ICategorySeedingService
             },
             new()
             {
-                new("streaming_services", "📺", "#9575CD", CategoryType.Expense,
+                new("streaming_services", "📺", "#9575CD",
                     new()
                     {
                         ["en"] = new("Streaming Services", "Netflix, Spotify, gaming subscriptions"),
                         ["pt-BR"] = new("Serviços de Streaming", "Assinaturas de Netflix, Spotify, jogos")
                     }),
-                new("movies_theater", "🎭", "#B39DDB", CategoryType.Expense,
+                new("movies_theater", "🎭", "#B39DDB",
                     new()
                     {
                         ["en"] = new("Movies & Theater", "Cinema tickets and live shows"),
                         ["pt-BR"] = new("Cinema & Teatro", "Ingressos de cinema e shows ao vivo")
                     }),
-                new("concerts_events", "🎵", "#D1C4E9", CategoryType.Expense,
+                new("concerts_events", "🎵", "#D1C4E9",
                     new()
                     {
                         ["en"] = new("Concerts & Events", "Live music and entertainment events"),
                         ["pt-BR"] = new("Shows & Eventos", "Shows ao vivo e eventos de entretenimento")
                     }),
-                new("gaming", "🎮", "#EDE7F6", CategoryType.Expense,
+                new("gaming", "🎮", "#EDE7F6",
                     new()
                     {
                         ["en"] = new("Gaming", "Video games and gaming equipment"),
                         ["pt-BR"] = new("Jogos", "Videogames e equipamentos de jogos")
                     }),
-                new("books_media", "📚", "#F3E5F5", CategoryType.Expense,
+                new("books_media", "📚", "#F3E5F5",
                     new()
                     {
                         ["en"] = new("Books & Media", "Books, audiobooks, magazines"),
                         ["pt-BR"] = new("Livros & Mídia", "Livros, audiolivros, revistas")
                     }),
-                new("hobbies", "🎨", "#E8EAF6", CategoryType.Expense,
+                new("hobbies", "🎨", "#E8EAF6",
                     new()
                     {
                         ["en"] = new("Hobbies", "Craft supplies and hobby equipment"),
                         ["pt-BR"] = new("Hobbies", "Materiais de artesanato e equipamentos de hobby")
                     }),
-                new("sports_recreation", "⚽", "#C5CAE9", CategoryType.Expense,
+                new("sports_recreation", "⚽", "#C5CAE9",
                     new()
                     {
                         ["en"] = new("Sports & Recreation", "Sports equipment and activities"),
@@ -470,7 +468,7 @@ public class CategorySeedingService : ICategorySeedingService
         // =================================================================
         // TRAVEL & VACATION
         // =================================================================
-        new("travel_vacation", "✈️", "#00BCD4", CategoryType.Expense,
+        new("travel_vacation", "✈️", "#00BCD4",
             new()
             {
                 ["en"] = new("Travel & Vacation", "Travel and vacation expenses"),
@@ -478,43 +476,43 @@ public class CategorySeedingService : ICategorySeedingService
             },
             new()
             {
-                new("flights", "🛫", "#26C6DA", CategoryType.Expense,
+                new("flights", "🛫", "#26C6DA",
                     new()
                     {
                         ["en"] = new("Flights", "Airline tickets and airfare"),
                         ["pt-BR"] = new("Passagens Aéreas", "Bilhetes e tarifas aéreas")
                     }),
-                new("hotels_lodging", "🏨", "#4DD0E1", CategoryType.Expense,
+                new("hotels_lodging", "🏨", "#4DD0E1",
                     new()
                     {
                         ["en"] = new("Hotels & Lodging", "Accommodation expenses"),
                         ["pt-BR"] = new("Hotéis & Hospedagem", "Despesas com hospedagem")
                     }),
-                new("car_rentals", "🚗", "#80DEEA", CategoryType.Expense,
+                new("car_rentals", "🚗", "#80DEEA",
                     new()
                     {
                         ["en"] = new("Car Rentals", "Vehicle rental costs"),
                         ["pt-BR"] = new("Aluguel de Carros", "Custos de aluguel de veículos")
                     }),
-                new("travel_food", "🍽️", "#B2EBF2", CategoryType.Expense,
+                new("travel_food", "🍽️", "#B2EBF2",
                     new()
                     {
                         ["en"] = new("Travel Food", "Meals and dining while traveling"),
                         ["pt-BR"] = new("Alimentação em Viagem", "Refeições durante viagens")
                     }),
-                new("activities_tours", "🗺️", "#E0F2F1", CategoryType.Expense,
+                new("activities_tours", "🗺️", "#E0F2F1",
                     new()
                     {
                         ["en"] = new("Activities & Tours", "Tourist activities and guided tours"),
                         ["pt-BR"] = new("Atividades & Passeios", "Atividades turísticas e passeios guiados")
                     }),
-                new("travel_insurance", "🛡️", "#F1F8E9", CategoryType.Expense,
+                new("travel_insurance", "🛡️", "#F1F8E9",
                     new()
                     {
                         ["en"] = new("Travel Insurance", "Trip and travel insurance"),
                         ["pt-BR"] = new("Seguro Viagem", "Seguro de viagem")
                     }),
-                new("souvenirs", "🎁", "#E8F5E8", CategoryType.Expense,
+                new("souvenirs", "🎁", "#E8F5E8",
                     new()
                     {
                         ["en"] = new("Souvenirs", "Travel mementos and gifts"),
@@ -525,7 +523,7 @@ public class CategorySeedingService : ICategorySeedingService
         // =================================================================
         // FINANCIAL SERVICES
         // =================================================================
-        new("financial_services", "🏦", "#795548", CategoryType.Expense,
+        new("financial_services", "🏦", "#795548",
             new()
             {
                 ["en"] = new("Financial Services", "Banking and financial service fees"),
@@ -533,43 +531,43 @@ public class CategorySeedingService : ICategorySeedingService
             },
             new()
             {
-                new("bank_fees", "💳", "#A1887F", CategoryType.Expense,
+                new("bank_fees", "💳", "#A1887F",
                     new()
                     {
                         ["en"] = new("Bank Fees", "Account maintenance and ATM fees"),
                         ["pt-BR"] = new("Taxas Bancárias", "Tarifas de manutenção de conta e caixas eletrônicos")
                     }),
-                new("investment_fees", "📊", "#BCAAA4", CategoryType.Expense,
+                new("investment_fees", "📊", "#BCAAA4",
                     new()
                     {
                         ["en"] = new("Investment Fees", "Brokerage and investment costs"),
                         ["pt-BR"] = new("Taxas de Investimento", "Custos de corretagem e investimentos")
                     }),
-                new("credit_card_fees", "💳", "#D7CCC8", CategoryType.Expense,
+                new("credit_card_fees", "💳", "#D7CCC8",
                     new()
                     {
                         ["en"] = new("Credit Card Fees", "Annual fees and interest charges"),
                         ["pt-BR"] = new("Taxas de Cartão", "Anuidade e encargos de juros")
                     }),
-                new("tax_preparation", "📋", "#EFEBE9", CategoryType.Expense,
+                new("tax_preparation", "📋", "#EFEBE9",
                     new()
                     {
                         ["en"] = new("Tax Preparation", "Tax filing and preparation services"),
                         ["pt-BR"] = new("Declaração de Impostos", "Serviços de declaração e preparação de impostos")
                     }),
-                new("financial_planning", "📈", "#F5F5F5", CategoryType.Expense,
+                new("financial_planning", "📈", "#F5F5F5",
                     new()
                     {
                         ["en"] = new("Financial Planning", "Financial advisor and planning fees"),
                         ["pt-BR"] = new("Planejamento Financeiro", "Taxas de consultoria e planejamento financeiro")
                     }),
-                new("insurance_premiums", "🛡️", "#FAFAFA", CategoryType.Expense,
+                new("insurance_premiums", "🛡️", "#FAFAFA",
                     new()
                     {
                         ["en"] = new("Insurance Premiums", "Life and other insurance payments"),
                         ["pt-BR"] = new("Prêmios de Seguro", "Pagamentos de seguro de vida e outros")
                     }),
-                new("legal_services", "⚖️", "#ECEFF1", CategoryType.Expense,
+                new("legal_services", "⚖️", "#ECEFF1",
                     new()
                     {
                         ["en"] = new("Legal Services", "Attorney and legal consultation fees"),
@@ -580,7 +578,7 @@ public class CategorySeedingService : ICategorySeedingService
         // =================================================================
         // DEBT PAYMENTS
         // =================================================================
-        new("debt_payments", "💳", "#F44336", CategoryType.Expense,
+        new("debt_payments", "💳", "#F44336",
             new()
             {
                 ["en"] = new("Debt Payments", "Debt service and loan payments"),
@@ -588,25 +586,25 @@ public class CategorySeedingService : ICategorySeedingService
             },
             new()
             {
-                new("credit_card_payments", "💳", "#EF5350", CategoryType.Expense,
+                new("credit_card_payments", "💳", "#EF5350",
                     new()
                     {
                         ["en"] = new("Credit Card Payments", "Credit card minimum and extra payments"),
                         ["pt-BR"] = new("Pagamento de Cartão", "Pagamentos mínimos e extras do cartão de crédito")
                     }),
-                new("student_loans", "🎓", "#E57373", CategoryType.Expense,
+                new("student_loans", "🎓", "#E57373",
                     new()
                     {
                         ["en"] = new("Student Loans", "Education loan payments"),
                         ["pt-BR"] = new("Empréstimo Estudantil", "Pagamentos de empréstimos educacionais")
                     }),
-                new("personal_loans", "💰", "#EF9A9A", CategoryType.Expense,
+                new("personal_loans", "💰", "#EF9A9A",
                     new()
                     {
                         ["en"] = new("Personal Loans", "Personal and signature loan payments"),
                         ["pt-BR"] = new("Empréstimos Pessoais", "Pagamentos de empréstimos pessoais")
                     }),
-                new("other_debt", "📋", "#FFCDD2", CategoryType.Expense,
+                new("other_debt", "📋", "#FFCDD2",
                     new()
                     {
                         ["en"] = new("Other Debt", "Miscellaneous debt payments"),
@@ -617,7 +615,7 @@ public class CategorySeedingService : ICategorySeedingService
         // =================================================================
         // TECHNOLOGY
         // =================================================================
-        new("technology", "📱", "#607D8B", CategoryType.Expense,
+        new("technology", "📱", "#607D8B",
             new()
             {
                 ["en"] = new("Technology", "Technology and communication expenses"),
@@ -625,37 +623,37 @@ public class CategorySeedingService : ICategorySeedingService
             },
             new()
             {
-                new("phone_bill", "📞", "#78909C", CategoryType.Expense,
+                new("phone_bill", "📞", "#78909C",
                     new()
                     {
                         ["en"] = new("Phone Bill", "Mobile and landline phone services"),
                         ["pt-BR"] = new("Conta de Telefone", "Serviços de telefone celular e fixo")
                     }),
-                new("software_subscriptions", "💻", "#90A4AE", CategoryType.Expense,
+                new("software_subscriptions", "💻", "#90A4AE",
                     new()
                     {
                         ["en"] = new("Software Subscriptions", "Apps and software licenses"),
                         ["pt-BR"] = new("Assinaturas de Software", "Aplicativos e licenças de software")
                     }),
-                new("electronics", "🖥️", "#B0BEC5", CategoryType.Expense,
+                new("electronics", "🖥️", "#B0BEC5",
                     new()
                     {
                         ["en"] = new("Electronics", "Computers, phones, gadgets"),
                         ["pt-BR"] = new("Eletrônicos", "Computadores, celulares, gadgets")
                     }),
-                new("cloud_storage", "☁️", "#CFD8DC", CategoryType.Expense,
+                new("cloud_storage", "☁️", "#CFD8DC",
                     new()
                     {
                         ["en"] = new("Cloud Storage", "Online storage and backup services"),
                         ["pt-BR"] = new("Armazenamento em Nuvem", "Serviços de armazenamento e backup online")
                     }),
-                new("tech_support", "🔧", "#ECEFF1", CategoryType.Expense,
+                new("tech_support", "🔧", "#ECEFF1",
                     new()
                     {
                         ["en"] = new("Tech Support", "Computer repair and tech services"),
                         ["pt-BR"] = new("Suporte Técnico", "Reparos de computador e serviços de tecnologia")
                     }),
-                new("domain_hosting", "🌐", "#F5F5F5", CategoryType.Expense,
+                new("domain_hosting", "🌐", "#F5F5F5",
                     new()
                     {
                         ["en"] = new("Domain & Hosting", "Website and domain costs"),
@@ -666,7 +664,7 @@ public class CategorySeedingService : ICategorySeedingService
         // =================================================================
         // FAMILY & CHILDREN
         // =================================================================
-        new("family_children", "👨‍👩‍👧‍👦", "#8BC34A", CategoryType.Expense,
+        new("family_children", "👨‍👩‍👧‍👦", "#8BC34A",
             new()
             {
                 ["en"] = new("Family & Children", "Family and childcare expenses"),
@@ -674,43 +672,43 @@ public class CategorySeedingService : ICategorySeedingService
             },
             new()
             {
-                new("childcare", "👶", "#9CCC65", CategoryType.Expense,
+                new("childcare", "👶", "#9CCC65",
                     new()
                     {
                         ["en"] = new("Childcare", "Daycare and babysitting costs"),
                         ["pt-BR"] = new("Cuidados Infantis", "Custos de creche e babá")
                     }),
-                new("school_supplies", "📚", "#AED581", CategoryType.Expense,
+                new("school_supplies", "📚", "#AED581",
                     new()
                     {
                         ["en"] = new("School Supplies", "Educational materials and supplies"),
                         ["pt-BR"] = new("Material Escolar", "Materiais educacionais e suprimentos")
                     }),
-                new("childrens_clothing", "👕", "#C5E1A5", CategoryType.Expense,
+                new("childrens_clothing", "👕", "#C5E1A5",
                     new()
                     {
                         ["en"] = new("Children's Clothing", "Kids' apparel and shoes"),
                         ["pt-BR"] = new("Roupas Infantis", "Vestuário e calçados infantis")
                     }),
-                new("toys_games", "🧸", "#DCEDC8", CategoryType.Expense,
+                new("toys_games", "🧸", "#DCEDC8",
                     new()
                     {
                         ["en"] = new("Toys & Games", "Children's toys and entertainment"),
                         ["pt-BR"] = new("Brinquedos & Jogos", "Brinquedos e entretenimento infantil")
                     }),
-                new("childrens_activities", "⚽", "#E6EE9C", CategoryType.Expense,
+                new("childrens_activities", "⚽", "#E6EE9C",
                     new()
                     {
                         ["en"] = new("Children's Activities", "Sports, lessons, and extracurriculars"),
                         ["pt-BR"] = new("Atividades Infantis", "Esportes, aulas e atividades extracurriculares")
                     }),
-                new("baby_supplies", "🍼", "#F0F4C3", CategoryType.Expense,
+                new("baby_supplies", "🍼", "#F0F4C3",
                     new()
                     {
                         ["en"] = new("Baby Supplies", "Diapers, formula, baby care items"),
                         ["pt-BR"] = new("Produtos para Bebê", "Fraldas, fórmula, itens de cuidados para bebê")
                     }),
-                new("pet_care", "🐕", "#F9FBE7", CategoryType.Expense,
+                new("pet_care", "🐕", "#F9FBE7",
                     new()
                     {
                         ["en"] = new("Pet Care", "Veterinary and pet supplies"),
@@ -721,7 +719,7 @@ public class CategorySeedingService : ICategorySeedingService
         // =================================================================
         // GIFTS & DONATIONS
         // =================================================================
-        new("gifts_donations", "🎁", "#FF5722", CategoryType.Expense,
+        new("gifts_donations", "🎁", "#FF5722",
             new()
             {
                 ["en"] = new("Gifts & Donations", "Gifts and charitable giving"),
@@ -729,37 +727,37 @@ public class CategorySeedingService : ICategorySeedingService
             },
             new()
             {
-                new("birthday_gifts", "🎂", "#FF7043", CategoryType.Expense,
+                new("birthday_gifts", "🎂", "#FF7043",
                     new()
                     {
                         ["en"] = new("Birthday Gifts", "Birthday presents and celebrations"),
                         ["pt-BR"] = new("Presentes de Aniversário", "Presentes e comemorações de aniversário")
                     }),
-                new("holiday_gifts", "🎄", "#FF8A65", CategoryType.Expense,
+                new("holiday_gifts", "🎄", "#FF8A65",
                     new()
                     {
                         ["en"] = new("Holiday Gifts", "Christmas, holiday presents"),
                         ["pt-BR"] = new("Presentes de Natal", "Presentes de Natal e festas")
                     }),
-                new("wedding_gifts", "💒", "#FFAB91", CategoryType.Expense,
+                new("wedding_gifts", "💒", "#FFAB91",
                     new()
                     {
                         ["en"] = new("Wedding Gifts", "Wedding and special occasion gifts"),
                         ["pt-BR"] = new("Presentes de Casamento", "Presentes de casamento e ocasiões especiais")
                     }),
-                new("charitable_donations", "❤️", "#FFCCBC", CategoryType.Expense,
+                new("charitable_donations", "❤️", "#FFCCBC",
                     new()
                     {
                         ["en"] = new("Charitable Donations", "Donations to charities and causes"),
                         ["pt-BR"] = new("Doações Beneficentes", "Doações para instituições de caridade")
                     }),
-                new("religious_donations", "⛪", "#FBE9E7", CategoryType.Expense,
+                new("religious_donations", "⛪", "#FBE9E7",
                     new()
                     {
                         ["en"] = new("Religious Donations", "Tithing and religious contributions"),
                         ["pt-BR"] = new("Doações Religiosas", "Dízimos e contribuições religiosas")
                     }),
-                new("political_donations", "🗳️", "#FFCCBC", CategoryType.Expense,
+                new("political_donations", "🗳️", "#FFCCBC",
                     new()
                     {
                         ["en"] = new("Political Donations", "Political campaign contributions"),
@@ -770,7 +768,7 @@ public class CategorySeedingService : ICategorySeedingService
         // =================================================================
         // MISCELLANEOUS
         // =================================================================
-        new("miscellaneous", "❓", "#9E9E9E", CategoryType.Expense,
+        new("miscellaneous", "❓", "#9E9E9E",
             new()
             {
                 ["en"] = new("Miscellaneous", "Miscellaneous and uncategorized expenses"),
@@ -778,25 +776,25 @@ public class CategorySeedingService : ICategorySeedingService
             },
             new()
             {
-                new("atm_withdrawals", "🏧", "#BDBDBD", CategoryType.Expense,
+                new("atm_withdrawals", "🏧", "#BDBDBD",
                     new()
                     {
                         ["en"] = new("ATM Withdrawals", "Cash withdrawals and ATM fees"),
                         ["pt-BR"] = new("Saques em Caixa", "Saques em dinheiro e taxas de caixa eletrônico")
                     }),
-                new("postage_shipping", "📮", "#E0E0E0", CategoryType.Expense,
+                new("postage_shipping", "📮", "#E0E0E0",
                     new()
                     {
                         ["en"] = new("Postage & Shipping", "Mailing and shipping costs"),
                         ["pt-BR"] = new("Correios & Envios", "Custos de correios e envios")
                     }),
-                new("office_supplies", "📎", "#EEEEEE", CategoryType.Expense,
+                new("office_supplies", "📎", "#EEEEEE",
                     new()
                     {
                         ["en"] = new("Office Supplies", "Work-related supplies and equipment"),
                         ["pt-BR"] = new("Material de Escritório", "Suprimentos e equipamentos de trabalho")
                     }),
-                new("uncategorized", "🤷", "#F5F5F5", CategoryType.Expense,
+                new("uncategorized", "🤷", "#F5F5F5",
                     new()
                     {
                         ["en"] = new("Uncategorized", "Expenses that need categorization"),
@@ -826,7 +824,6 @@ public class CategorySeedingService : ICategorySeedingService
             {
                 Name = text.Name,
                 Description = text.Description,
-                Type = parentSeed.Type,
                 UserId = userId,
                 SortOrder = sortOrder++,
                 Icon = parentSeed.Icon,
@@ -847,7 +844,6 @@ public class CategorySeedingService : ICategorySeedingService
                     {
                         Name = childText.Name,
                         Description = childText.Description,
-                        Type = childSeed.Type,
                         UserId = userId,
                         ParentCategory = parent,
                         SortOrder = sortOrder++,

@@ -90,7 +90,6 @@ public class GetFilteredCategoriesQueryHandler : IRequestHandler<GetFilteredCate
                 Description = c.Description,
                 Color = c.Color,
                 Icon = c.Icon,
-                Type = c.Type,
                 IsSystemCategory = c.IsSystemCategory,
                 IsActive = c.IsActive,
                 SortOrder = c.SortOrder,

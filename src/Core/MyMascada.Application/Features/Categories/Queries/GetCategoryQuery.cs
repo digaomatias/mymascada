@@ -38,7 +38,6 @@ public class GetCategoryQueryHandler : IRequestHandler<GetCategoryQuery, Categor
             Description = category.Description,
             Color = category.Color,
             Icon = category.Icon,
-            Type = category.Type,
             IsSystemCategory = category.IsSystemCategory,
             IsActive = category.IsActive,
             SortOrder = category.SortOrder,

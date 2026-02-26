@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Domain.Entities;
-using MyMascada.Domain.Enums;
 using System.Text.Json;
 
 namespace MyMascada.Infrastructure.Services;
@@ -354,7 +353,6 @@ public class BankCategoryMappingService : IBankCategoryMappingService
                     Name = suggestedName,
                     UserId = userId,
                     ParentCategoryId = aiMapping.SuggestedParentId,
-                    Type = CategoryType.Expense, // Default to expense
                     IsActive = true,
                     IsSystemCategory = false
                 };
@@ -420,7 +418,6 @@ public class BankCategoryMappingService : IBankCategoryMappingService
             id = c.Id,
             name = c.Name,
             fullPath = c.GetFullPath(),
-            type = c.Type.ToString(),
             parentId = c.ParentCategoryId
         }).ToList();
 

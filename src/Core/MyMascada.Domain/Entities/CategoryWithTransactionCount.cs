@@ -1,4 +1,3 @@
-using MyMascada.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace MyMascada.Domain.Entities;
@@ -39,11 +38,6 @@ public class CategoryWithTransactionCount
     /// </summary>
     [MaxLength(50)]
     public string? Icon { get; set; }
-
-    /// <summary>
-    /// Type of category (Income, Expense, Transfer)
-    /// </summary>
-    public CategoryType Type { get; set; } = CategoryType.Expense;
 
     /// <summary>
     /// Whether this is a built-in system category or user-created
@@ -122,7 +116,6 @@ public class CategoryWithTransactionCount
             Description = category.Description,
             Color = category.Color,
             Icon = category.Icon,
-            Type = category.Type,
             IsSystemCategory = category.IsSystemCategory,
             IsActive = category.IsActive,
             SortOrder = category.SortOrder,

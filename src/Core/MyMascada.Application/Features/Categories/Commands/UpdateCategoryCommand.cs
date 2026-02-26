@@ -1,7 +1,6 @@
 using MediatR;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Categories.DTOs;
-using MyMascada.Domain.Enums;
 
 namespace MyMascada.Application.Features.Categories.Commands;
 
@@ -12,7 +11,6 @@ public class UpdateCategoryCommand : IRequest<CategoryDto>
     public string? Description { get; set; }
     public string? Color { get; set; }
     public string? Icon { get; set; }
-    public CategoryType Type { get; set; }
     public int? ParentCategoryId { get; set; }
     public int SortOrder { get; set; }
     public bool IsActive { get; set; } = true;
@@ -72,7 +70,6 @@ public class UpdateCategoryCommandHandler : IRequestHandler<UpdateCategoryComman
         category.Description = request.Description?.Trim();
         category.Color = request.Color?.Trim();
         category.Icon = request.Icon?.Trim();
-        category.Type = request.Type;
         category.ParentCategoryId = request.ParentCategoryId;
         category.SortOrder = request.SortOrder;
         category.IsActive = request.IsActive;
@@ -88,7 +85,6 @@ public class UpdateCategoryCommandHandler : IRequestHandler<UpdateCategoryComman
             Description = category.Description,
             Color = category.Color,
             Icon = category.Icon,
-            Type = category.Type,
             IsSystemCategory = category.IsSystemCategory,
             IsActive = category.IsActive,
             SortOrder = category.SortOrder,

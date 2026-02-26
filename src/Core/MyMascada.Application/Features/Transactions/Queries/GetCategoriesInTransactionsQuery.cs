@@ -27,7 +27,6 @@ public class CategoryWithCountDto
     public string Name { get; set; } = string.Empty;
     public string? FullPath { get; set; }
     public int TransactionCount { get; set; }
-    public int Type { get; set; }
     public int? ParentId { get; set; }
 }
 
@@ -63,7 +62,6 @@ public class GetCategoriesInTransactionsQueryHandler : IRequestHandler<GetCatego
             Name = c.Name,
             FullPath = c.FullPath,
             TransactionCount = c.TransactionCount,
-            Type = (int)c.Type,
             ParentId = c.ParentCategoryId
         });
     }

@@ -524,38 +524,27 @@ public class FinancialDataPlugin
             sb.AppendLine("Available categories:");
             sb.AppendLine();
 
-            var grouped = allCategories
-                .GroupBy(c => c.Type)
-                .OrderBy(g => g.Key);
+            var parents = allCategories.Where(c => c.ParentCategoryId == null).OrderBy(c => c.Name);
+            var childrenLookup = allCategories.Where(c => c.ParentCategoryId != null).ToLookup(c => c.ParentCategoryId);
 
-            foreach (var group in grouped)
+            foreach (var parent in parents)
             {
-                sb.AppendLine($"  {group.Key}:");
+                var systemTag = parent.IsSystemCategory ? " [System]" : "";
+                sb.AppendLine($"  [ID:{parent.Id}] {parent.Name}{systemTag}");
 
-                var parents = group.Where(c => c.ParentCategoryId == null).OrderBy(c => c.Name);
-                var children = group.Where(c => c.ParentCategoryId != null).ToLookup(c => c.ParentCategoryId);
-
-                foreach (var parent in parents)
+                foreach (var child in childrenLookup[parent.Id].OrderBy(c => c.Name))
                 {
-                    var systemTag = parent.IsSystemCategory ? " [System]" : "";
-                    sb.AppendLine($"    [ID:{parent.Id}] {parent.Name}{systemTag}");
-
-                    foreach (var child in children[parent.Id].OrderBy(c => c.Name))
-                    {
-                        var childSystemTag = child.IsSystemCategory ? " [System]" : "";
-                        sb.AppendLine($"      [ID:{child.Id}] {parent.Name} > {child.Name}{childSystemTag}");
-                    }
+                    var childSystemTag = child.IsSystemCategory ? " [System]" : "";
+                    sb.AppendLine($"    [ID:{child.Id}] {parent.Name} > {child.Name}{childSystemTag}");
                 }
+            }
 
-                // Orphaned children (parent not in this group)
-                var parentIds = parents.Select(p => p.Id).ToHashSet();
-                foreach (var child in group.Where(c => c.ParentCategoryId != null && !parentIds.Contains(c.ParentCategoryId.Value)).OrderBy(c => c.Name))
-                {
-                    var systemTag = child.IsSystemCategory ? " [System]" : "";
-                    sb.AppendLine($"    [ID:{child.Id}] {child.Name}{systemTag}");
-                }
-
-                sb.AppendLine();
+            // Orphaned children (parent not in the list)
+            var parentIds = parents.Select(p => p.Id).ToHashSet();
+            foreach (var child in allCategories.Where(c => c.ParentCategoryId != null && !parentIds.Contains(c.ParentCategoryId!.Value)).OrderBy(c => c.Name))
+            {
+                var systemTag = child.IsSystemCategory ? " [System]" : "";
+                sb.AppendLine($"  [ID:{child.Id}] {child.Name}{systemTag}");
             }
 
             return sb.ToString();

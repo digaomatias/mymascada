@@ -52,7 +52,6 @@ public class GetCategoriesQueryHandler : IRequestHandler<GetCategoriesQuery, IEn
             Description = c.Description,
             Color = c.Color,
             Icon = c.Icon,
-            Type = c.Type,
             IsSystemCategory = c.IsSystemCategory,
             IsActive = c.IsActive,
             SortOrder = c.SortOrder,
