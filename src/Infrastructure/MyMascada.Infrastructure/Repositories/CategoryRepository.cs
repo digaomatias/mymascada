@@ -179,7 +179,8 @@ public class CategoryRepository : ICategoryRepository
                 Color = g.Key.Color,
                 Icon = g.Key.Icon,
                 IsSystemCategory = g.Key.IsSystemCategory,
-                TransactionCount = g.Count()
+                TransactionCount = g.Count(),
+                TotalAmount = g.Sum(t => t.Amount)
             })
             .ToListAsync();
 
@@ -204,6 +205,7 @@ public class CategoryRepository : ICategoryRepository
             Icon = g.Icon,
             IsSystemCategory = g.IsSystemCategory,
             TransactionCount = g.TransactionCount,
+            TotalAmount = g.TotalAmount,
             ParentCategoryName = g.ParentCategoryId.HasValue && parentCategories.ContainsKey(g.ParentCategoryId.Value) 
                 ? parentCategories[g.ParentCategoryId.Value] : null,
             FullPath = g.ParentCategoryId.HasValue && parentCategories.ContainsKey(g.ParentCategoryId.Value)

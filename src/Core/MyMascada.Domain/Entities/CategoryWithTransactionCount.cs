@@ -90,6 +90,11 @@ public class CategoryWithTransactionCount
     public int TransactionCount { get; set; }
 
     /// <summary>
+    /// Total amount (sum) of transactions in this category for the applied filters
+    /// </summary>
+    public decimal TotalAmount { get; set; }
+
+    /// <summary>
     /// Display name combining category name and transaction count
     /// (e.g., "Food & Dining (12)")
     /// </summary>

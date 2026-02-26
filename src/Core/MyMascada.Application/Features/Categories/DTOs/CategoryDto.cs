@@ -66,6 +66,7 @@ public class CategoryWithTransactionCountDto
     
     // Transaction count for filtered results
     public int TransactionCount { get; set; }
+    public decimal TotalAmount { get; set; }
     public string DisplayName { get; set; } = string.Empty; // e.g., "Food & Dining (12)"
 }
 

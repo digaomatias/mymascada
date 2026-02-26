@@ -54,7 +54,7 @@ public class GetFilteredCategoriesQueryHandler : IRequestHandler<GetFilteredCate
             request.OnlyTransfers,
             null)).ToList(); // TransferId
 
-        var categoryStats = categoryStatsList.ToDictionary(c => c.Id, c => c.TransactionCount);
+        var categoryStats = categoryStatsList.ToDictionary(c => c.Id, c => c);
         
         // Get all available categories for the user
         var categories = new List<Category>();
@@ -97,8 +97,9 @@ public class GetFilteredCategoriesQueryHandler : IRequestHandler<GetFilteredCate
                 FullPath = BuildFullPath(c.Id, categoryMap, " → "),
                 CreatedAt = c.CreatedAt,
                 UpdatedAt = c.UpdatedAt,
-                TransactionCount = categoryStats[c.Id],
-                DisplayName = $"{BuildFullPath(c.Id, categoryMap, " → ")} ({categoryStats[c.Id]})"
+                TransactionCount = categoryStats[c.Id].TransactionCount,
+                TotalAmount = categoryStats[c.Id].TotalAmount,
+                DisplayName = $"{BuildFullPath(c.Id, categoryMap, " → ")} ({categoryStats[c.Id].TransactionCount})"
             })
             .OrderByDescending(c => c.TransactionCount) // Most used categories first
             .ThenBy(c => c.FullPath)
