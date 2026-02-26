@@ -78,8 +78,8 @@ export function CategoryTrendChart({ categories, selectedCategoryIds }: Category
       const total = payload.reduce((sum: number, entry: any) => sum + (entry.value || 0), 0);
 
       return (
-        <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200 max-w-xs">
-          <p className="font-semibold text-gray-900 mb-2">{label}</p>
+        <div className="rounded-xl border border-violet-100/60 bg-white p-4 shadow-lg shadow-violet-200/20 max-w-xs">
+          <p className="font-[var(--font-dash-sans)] font-semibold text-slate-900 mb-2">{label}</p>
           {payload.map((entry: any, index: number) => {
             const percentage = total > 0 ? ((entry.value / total) * 100).toFixed(1) : 0;
             return (
@@ -92,18 +92,18 @@ export function CategoryTrendChart({ categories, selectedCategoryIds }: Category
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: entry.color }}
                   />
-                  <span className="text-gray-700 truncate max-w-[120px]">{entry.name}</span>
+                  <span className="text-slate-700 truncate max-w-[120px]">{entry.name}</span>
                 </div>
                 <div className="text-right">
-                  <span className="font-medium text-gray-900">{formatCurrency(entry.value)}</span>
-                  <span className="text-gray-500 ml-1">({percentage}%)</span>
+                  <span className="font-[var(--font-dash-mono)] font-medium text-slate-900">{formatCurrency(entry.value)}</span>
+                  <span className="text-slate-500 ml-1">({percentage}%)</span>
                 </div>
               </div>
             );
           })}
-          <div className="mt-2 pt-2 border-t border-gray-200 flex justify-between items-center text-sm">
-            <span className="font-medium text-gray-700">{t('total')}</span>
-            <span className="font-bold text-gray-900">{formatCurrency(total)}</span>
+          <div className="mt-2 pt-2 border-t border-slate-200 flex justify-between items-center text-sm">
+            <span className="font-medium text-slate-700">{t('total')}</span>
+            <span className="font-[var(--font-dash-mono)] font-bold text-slate-900">{formatCurrency(total)}</span>
           </div>
         </div>
       );
@@ -113,7 +113,7 @@ export function CategoryTrendChart({ categories, selectedCategoryIds }: Category
 
   if (displayCategories.length === 0) {
     return (
-      <div className="h-[500px] flex items-center justify-center text-gray-500">
+      <div className="h-[500px] flex items-center justify-center text-slate-500">
         <p>{t('selectToViewTrends')}</p>
       </div>
     );
