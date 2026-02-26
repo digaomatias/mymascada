@@ -359,7 +359,6 @@ public class BankCategoryHandlerTests
             {
                 Id = categoryId,
                 Name = "Test Category",
-                Type = CategoryType.Expense,
                 UserId = _userId
             }
         };

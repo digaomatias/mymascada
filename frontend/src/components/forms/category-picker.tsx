@@ -42,7 +42,6 @@ interface Category {
   id: number;
   name: string;
   canonicalKey?: string;
-  type: number;
   parentId: number | null;
   color?: string;
   icon?: string;

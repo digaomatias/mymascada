@@ -86,7 +86,6 @@ public class TransactionRepositoryTests : IDisposable
         {
             Id = 1,
             Name = "Groceries",
-            Type = CategoryType.Expense,
             IsSystemCategory = false,
             IsActive = true,
             SortOrder = 1,
@@ -97,7 +96,6 @@ public class TransactionRepositoryTests : IDisposable
         {
             Id = 2,
             Name = "Salary",
-            Type = CategoryType.Income,
             IsSystemCategory = false,
             IsActive = true,
             SortOrder = 2,

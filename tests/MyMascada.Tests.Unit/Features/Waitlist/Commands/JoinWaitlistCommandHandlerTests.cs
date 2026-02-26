@@ -1,3 +1,4 @@
+using MyMascada.Domain.Enums;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
@@ -6,7 +7,6 @@ using MyMascada.Application.Features.Email.DTOs;
 using MyMascada.Application.Features.Waitlist.Commands;
 using MyMascada.Application.Features.Waitlist.DTOs;
 using MyMascada.Domain.Entities;
-using MyMascada.Domain.Enums;
 using NSubstitute.ExceptionExtensions;
 
 namespace MyMascada.Tests.Unit.Features.Waitlist.Commands;

@@ -78,7 +78,7 @@ public class CategoryStatsWorkflowTests : IDisposable
         {
             Id = 1,
             Name = "Groceries",
-            Type = CategoryType.Expense, // Type 2
+            // Type 2
             Color = "#FF5722",
             IsSystemCategory = false,
             IsActive = true,
@@ -91,7 +91,7 @@ public class CategoryStatsWorkflowTests : IDisposable
         {
             Id = 2,
             Name = "Salary",
-            Type = CategoryType.Income, // Type 1
+            // Type 1
             Color = "#4CAF50",
             IsSystemCategory = false,
             IsActive = true,
@@ -188,7 +188,6 @@ public class CategoryStatsWorkflowTests : IDisposable
             TransactionCount = transactionList.Count,
             TotalAmount = Math.Abs(totalAmount), // Frontend shows absolute value
             AverageAmount = transactionList.Count > 0 ? Math.Abs(totalAmount) / transactionList.Count : 0,
-            CategoryType = 2 // Expense category type
         };
 
         // Assert - Verify the complete workflow
@@ -226,7 +225,6 @@ public class CategoryStatsWorkflowTests : IDisposable
             TransactionCount = transactionList.Count,
             TotalAmount = Math.Abs(totalAmount), // Frontend uses absolute value consistently
             AverageAmount = transactionList.Count > 0 ? Math.Abs(totalAmount) / transactionList.Count : 0,
-            CategoryType = 1 // Income category type
         };
 
         // Assert - Income amounts are already positive, so abs() doesn't change them

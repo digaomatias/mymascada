@@ -76,7 +76,6 @@ public class CategorizationCandidatesRepositoryTests : IDisposable
         {
             Id = 1,
             Name = "Groceries",
-            Type = CategoryType.Expense,
             Color = "#FF0000",
             UserId = _userId
         };
@@ -85,7 +84,6 @@ public class CategorizationCandidatesRepositoryTests : IDisposable
         {
             Id = 2,
             Name = "Dining",
-            Type = CategoryType.Expense,
             Color = "#00FF00",
             UserId = _userId
         };

@@ -7,7 +7,6 @@ using MyMascada.Application.Features.CsvImport.Commands;
 using MyMascada.Application.Features.CsvImport.DTOs;
 using MyMascada.Application.Features.CsvImport.Queries;
 using MyMascada.Application.Features.Transactions.DTOs;
-using MyMascada.Domain.Enums;
 using MyMascada.WebAPI.Controllers;
 using MyMascada.Application.Common.Interfaces;
 

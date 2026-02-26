@@ -1,9 +1,9 @@
+using MyMascada.Domain.Enums;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Budgets.Commands;
 using MyMascada.Application.Features.Budgets.DTOs;
 using MyMascada.Application.Features.Budgets.Services;
 using MyMascada.Domain.Entities;
-using MyMascada.Domain.Enums;
 using NSubstitute;
 
 namespace MyMascada.Tests.Unit.Commands;
@@ -371,7 +371,6 @@ public class ProcessBudgetRolloversCommandTests
         {
             Id = 1,
             Name = "Groceries",
-            Type = CategoryType.Expense,
             UserId = _userId
         };
 
@@ -406,7 +405,6 @@ public class ProcessBudgetRolloversCommandTests
         {
             Id = 1,
             Name = "Groceries",
-            Type = CategoryType.Expense,
             UserId = _userId
         };
 
@@ -414,7 +412,6 @@ public class ProcessBudgetRolloversCommandTests
         {
             Id = 2,
             Name = "Entertainment",
-            Type = CategoryType.Expense,
             UserId = _userId
         };
 

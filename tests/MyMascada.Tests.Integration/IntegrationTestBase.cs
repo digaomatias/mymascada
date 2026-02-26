@@ -1,3 +1,4 @@
+using MyMascada.Domain.Enums;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
 using System.Security.Claims;

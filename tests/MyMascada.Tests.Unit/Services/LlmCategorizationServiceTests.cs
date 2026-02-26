@@ -2,7 +2,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Domain.Entities;
-using MyMascada.Domain.Enums;
 using MyMascada.Infrastructure.Services;
 using NSubstitute;
 using Xunit;
@@ -39,7 +38,7 @@ public class LlmCategorizationServiceTests
         };
         var categories = new List<Category>
         {
-            new Category { Id = 1, Name = "Test", Type = CategoryType.Expense }
+            new Category { Id = 1, Name = "Test" }
         };
 
         // Act

@@ -1,6 +1,5 @@
 using System.Text;
 using MyMascada.Application.Features.CsvImport.DTOs;
-using MyMascada.Domain.Enums;
 using MyMascada.Infrastructure.Services.CsvImport;
 
 namespace MyMascada.Tests.Unit.Services;
