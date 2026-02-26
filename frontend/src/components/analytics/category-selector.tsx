@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import { CategoryTrendData } from '@/lib/api-client';
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useTranslations } from 'next-intl';
@@ -70,28 +70,28 @@ export function CategorySelector({
   const hasMore = sortedCategories.length > 8;
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4">
+    <div className="rounded-[26px] border border-violet-100/60 bg-white/90 p-4 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-gray-900">{t('selectCategories')}</h3>
-        <span className="text-sm text-gray-500">
+        <h3 className="font-[var(--font-dash-sans)] font-semibold text-slate-900">{t('selectCategories')}</h3>
+        <span className="text-xs text-slate-500">
           {t('nOfMaxSelected', { count: selectedCategoryIds.length, max: maxSelections })}
         </span>
       </div>
 
       {/* Search input */}
       <div className="relative mb-3">
-        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <input
           type="text"
           placeholder={t('searchCategories')}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-9 pr-8 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          className="w-full pl-9 pr-8 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
         />
         {searchTerm && (
           <button
             onClick={() => setSearchTerm('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
           >
             <XMarkIcon className="w-4 h-4" />
           </button>
@@ -144,15 +144,12 @@ export function CategorySelector({
               key={category.categoryId}
               onClick={() => !isDisabled && toggleCategory(category.categoryId)}
               disabled={isDisabled}
-              className={`
-                w-full flex items-center justify-between p-2 rounded-lg transition-colors
-                ${isSelected
-                  ? 'bg-primary-50 border border-primary-200'
-                  : isDisabled
-                    ? 'bg-gray-50 opacity-50 cursor-not-allowed'
-                    : 'hover:bg-gray-50 border border-transparent'
-                }
-              `}
+              className={cn(
+                'w-full flex items-center justify-between p-2 rounded-lg transition-colors',
+                isSelected && 'bg-violet-50 border border-violet-200',
+                isDisabled && 'bg-slate-50 opacity-50 cursor-not-allowed',
+                !isSelected && !isDisabled && 'hover:bg-slate-50 border border-transparent'
+              )}
             >
               <div className="flex items-center gap-2">
                 <input
@@ -160,17 +157,17 @@ export function CategorySelector({
                   checked={isSelected}
                   onChange={() => {}}
                   disabled={isDisabled}
-                  className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                  className="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
                 />
                 <div
                   className="w-3 h-3 rounded-full"
                   style={{ backgroundColor: category.categoryColor || '#8B5CF6' }}
                 />
-                <span className="text-sm font-medium text-gray-900 truncate max-w-[150px]">
+                <span className="text-sm font-medium text-slate-900 truncate max-w-[150px]">
                   {category.categoryName}
                 </span>
               </div>
-              <span className="text-sm text-gray-500">
+              <span className="font-[var(--font-dash-mono)] text-sm text-slate-500">
                 {formatCurrency(category.totalSpent)}
               </span>
             </button>
@@ -182,14 +179,14 @@ export function CategorySelector({
       {hasMore && !searchTerm && (
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="mt-2 text-sm text-primary-600 hover:text-primary-700 font-medium"
+          className="mt-2 text-sm text-violet-600 hover:text-violet-700 font-medium"
         >
           {isExpanded ? t('showLess') : t('showMore', { count: sortedCategories.length - 8 })}
         </button>
       )}
 
       {filteredCategories.length === 0 && (
-        <p className="text-center text-gray-500 text-sm py-4">
+        <p className="text-center text-slate-500 text-sm py-4">
           {t('noMatchingCategories')}
         </p>
       )}
