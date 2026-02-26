@@ -97,7 +97,7 @@ const ACCOUNT_TYPES = [
 export function RuleBuilderWizard() {
   const router = useRouter();
   const t = useTranslations('rules');
-  const tCategories = useTranslations('categories');
+
   const [currentStep, setCurrentStep] = useState(1);
   const [categories, setCategories] = useState<Category[]>([]);
   const [testResults, setTestResults] = useState<TestTransaction[]>([]);
