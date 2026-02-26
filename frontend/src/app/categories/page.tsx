@@ -19,11 +19,9 @@ import {
   EllipsisVerticalIcon,
   PencilIcon,
   TrashIcon,
-  FunnelIcon,
   SparklesIcon,
   EyeIcon,
   ArrowPathIcon,
-  ChevronDownIcon,
 } from '@heroicons/react/24/outline';
 
 // Dynamic import for BankCategoryMappings to avoid SSR issues
@@ -70,12 +68,6 @@ interface Category {
   updatedAt: string;
 }
 
-const categoryTypeBadgeColors: Record<number, string> = {
-  1: 'bg-emerald-100 text-emerald-700',
-  2: 'bg-red-100 text-red-700',
-  3: 'bg-blue-100 text-blue-700',
-};
-
 export default function CategoriesPage() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
@@ -84,22 +76,10 @@ export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
-  const [selectedType, setSelectedType] = useState<number | ''>('');
   const [initializingCategories, setInitializingCategories] = useState(false);
   const [activeTab, setActiveTab] = useState<'categories' | 'bank-mappings'>('categories');
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<number>>(new Set());
   const [showAll, setShowAll] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState('');
-
-  const getCategoryTypeLabel = (type: number) => {
-    switch (type) {
-      case 1: return t('types.income');
-      case 2: return t('types.expense');
-      case 3: return t('types.transfer');
-      default: return '';
-    }
-  };
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -180,16 +160,10 @@ export default function CategoriesPage() {
   const TOP_COUNT = 30;
   const viewMode: 'top' | 'all' | 'search' = debouncedSearch ? 'search' : showAll ? 'all' : 'top';
 
-  // Categories after type filter only (before view mode logic)
-  const typeFilteredCategories = useMemo(() => {
-    if (selectedType === '') return categories;
-    return categories.filter(c => c.type === selectedType);
-  }, [categories, selectedType]);
-
   const displayCategories = useMemo(() => {
     if (viewMode === 'search') {
       const term = debouncedSearch.toLowerCase();
-      return typeFilteredCategories.filter(c =>
+      return categories.filter(c =>
         c.name.toLowerCase().includes(term) ||
         c.description?.toLowerCase().includes(term) ||
         c.fullPath.toLowerCase().includes(term)
@@ -197,78 +171,52 @@ export default function CategoriesPage() {
     }
 
     if (viewMode === 'all') {
-      return typeFilteredCategories;
+      return categories;
     }
 
     // Top mode: sort by transaction count desc, take top N
-    return [...typeFilteredCategories]
+    return [...categories]
       .sort((a, b) => b.transactionCount - a.transactionCount)
       .slice(0, TOP_COUNT);
-  }, [typeFilteredCategories, debouncedSearch, viewMode]);
+  }, [categories, debouncedSearch, viewMode]);
 
   // Whether there are hidden categories in top mode
-  const hasMoreCategories = viewMode === 'top' && typeFilteredCategories.length > displayCategories.length;
+  const hasMoreCategories = viewMode === 'top' && categories.length > displayCategories.length;
 
-  // Group categories by type, then sort by hierarchy (parents first, children indented)
-  const groupedByType = useMemo(() => {
-    const typeOrder = [2, 1, 3]; // Expense, Income, Transfer
-    const groups: { type: number; label: string; categories: Category[] }[] = [];
-
-    for (const type of typeOrder) {
-      const typeCats = displayCategories.filter(c => c.type === type);
-      if (typeCats.length === 0) continue;
-
-      // Separate parents and children
-      const parents = typeCats.filter(c => !c.parentCategoryId).sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
-      const childrenMap = new Map<number, Category[]>();
-      for (const c of typeCats.filter(c => c.parentCategoryId)) {
-        const existing = childrenMap.get(c.parentCategoryId!) || [];
-        existing.push(c);
-        childrenMap.set(c.parentCategoryId!, existing);
-      }
-      // Sort children within each parent
-      for (const [, children] of childrenMap) {
-        children.sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
-      }
-
-      // Build flat list: parent → children → parent → children ...
-      const sorted: Category[] = [];
-      for (const parent of parents) {
-        sorted.push(parent);
-        const children = childrenMap.get(parent.id);
-        if (children) {
-          sorted.push(...children);
-        }
-      }
-      // Also add any orphaned children (whose parent might be filtered out)
-      const addedIds = new Set(sorted.map(c => c.id));
-      for (const c of typeCats) {
-        if (!addedIds.has(c.id)) {
-          sorted.push(c);
-        }
-      }
-
-      groups.push({
-        type,
-        label: getCategoryTypeLabel(type),
-        categories: sorted,
-      });
+  // Sort by hierarchy (parents first, children indented) in a single flat list
+  const sortedCategories = useMemo(() => {
+    // Separate parents and children
+    const parents = displayCategories.filter(c => !c.parentCategoryId).sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
+    const childrenMap = new Map<number, Category[]>();
+    for (const c of displayCategories.filter(c => c.parentCategoryId)) {
+      const existing = childrenMap.get(c.parentCategoryId!) || [];
+      existing.push(c);
+      childrenMap.set(c.parentCategoryId!, existing);
+    }
+    // Sort children within each parent
+    for (const [, children] of childrenMap) {
+      children.sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
     }
 
-    return groups;
-  }, [displayCategories]);
-
-  const toggleGroup = (type: number) => {
-    setCollapsedGroups(prev => {
-      const next = new Set(prev);
-      if (next.has(type)) {
-        next.delete(type);
-      } else {
-        next.add(type);
+    // Build flat list: parent → children → parent → children ...
+    const sorted: Category[] = [];
+    for (const parent of parents) {
+      sorted.push(parent);
+      const children = childrenMap.get(parent.id);
+      if (children) {
+        sorted.push(...children);
       }
-      return next;
-    });
-  };
+    }
+    // Also add any orphaned children (whose parent might be filtered out)
+    const addedIds = new Set(sorted.map(c => c.id));
+    for (const c of displayCategories) {
+      if (!addedIds.has(c.id)) {
+        sorted.push(c);
+      }
+    }
+
+    return sorted;
+  }, [displayCategories]);
 
   if (isLoading) {
     return (
@@ -302,25 +250,13 @@ export default function CategoriesPage() {
             </div>
 
             {activeTab === 'categories' && (
-              <div className="flex gap-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="flex items-center gap-2"
-                >
-                  <FunnelIcon className="w-4 h-4" />
-                  <span className="hidden sm:inline">{tCommon('filters')}</span>
+              <Link href="/categories/new">
+                <Button size="sm" className="flex items-center gap-2">
+                  <PlusIcon className="w-4 h-4" />
+                  <span className="hidden sm:inline">{t('addCategory')}</span>
+                  <span className="sm:hidden">{tCommon('add')}</span>
                 </Button>
-
-                <Link href="/categories/new">
-                  <Button size="sm" className="flex items-center gap-2">
-                    <PlusIcon className="w-4 h-4" />
-                    <span className="hidden sm:inline">{t('addCategory')}</span>
-                    <span className="sm:hidden">{tCommon('add')}</span>
-                  </Button>
-                </Link>
-              </div>
+              </Link>
             )}
           </div>
 
@@ -368,47 +304,6 @@ export default function CategoriesPage() {
             </div>
           )}
 
-          {/* Filters */}
-          {activeTab === 'categories' && showFilters && (
-            <Card className="mt-4 rounded-[26px] border border-violet-100/80 bg-white/90 shadow-[0_20px_44px_-32px_rgba(76,29,149,0.48)]">
-              <CardContent className="p-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      {t('categoryType')}
-                    </label>
-                    <select
-                      value={selectedType}
-                      onChange={(e) => setSelectedType(e.target.value === '' ? '' : parseInt(e.target.value))}
-                      className="select text-sm w-full"
-                    >
-                      <option value="">{t('allTypes')}</option>
-                      <option value="1">{t('types.income')}</option>
-                      <option value="2">{t('types.expense')}</option>
-                      <option value="3">{t('types.transfer')}</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="flex justify-end mt-4 gap-2">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => {
-                      setSelectedType('');
-                      setSearchTerm('');
-                      setShowAll(false);
-                    }}
-                  >
-                    {tCommon('clear')}
-                  </Button>
-                  <Button size="sm" onClick={() => setShowFilters(false)}>
-                    {t('applyFilters')}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </div>
 
         {/* Bank Mappings Tab */}
@@ -481,157 +376,118 @@ export default function CategoriesPage() {
               </div>
             ) : (
               <div>
-                {groupedByType.map((group) => {
-                  const isCollapsed = collapsedGroups.has(group.type);
+                {sortedCategories.map((category) => {
+                  const isChild = !!category.parentCategoryId;
+
                   return (
-                    <div key={group.type}>
-                      {/* Group Header */}
-                      <button
-                        onClick={() => toggleGroup(group.type)}
-                        className="w-full flex items-center justify-between px-5 py-3 bg-slate-50/80 border-b border-slate-100 hover:bg-slate-100/80 transition-colors cursor-pointer"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className={cn(
-                            'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold',
-                            categoryTypeBadgeColors[group.type]
-                          )}>
-                            {group.label}
-                          </span>
-                          <span className="text-sm text-slate-500">
-                            {t('groupCount', { count: group.categories.length })}
-                          </span>
+                    <div
+                      key={category.id}
+                      className={cn(
+                        'relative group border-b border-slate-100 last:border-b-0 hover:bg-slate-50 transition-colors',
+                        isChild && 'bg-slate-50/40'
+                      )}
+                    >
+                      <Link href={`/categories/${category.id}`} className="block">
+                        <div className={cn(
+                          'flex items-center gap-3 py-3 pr-12',
+                          isChild ? 'pl-12' : 'pl-5'
+                        )}>
+                          {/* Color indicator */}
+                          <div
+                            className={cn(
+                              'flex-shrink-0 rounded-full',
+                              isChild ? 'w-2 h-2' : 'w-3 h-3'
+                            )}
+                            style={{ backgroundColor: category.color || '#94a3b8' }}
+                          />
+
+                          {/* Category info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className={cn(
+                                'text-slate-900 truncate',
+                                isChild
+                                  ? 'text-sm font-medium'
+                                  : 'text-base font-semibold'
+                              )}>
+                                {category.name}
+                              </h4>
+                              {category.isSystemCategory && (
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-500">
+                                  {t('system')}
+                                </span>
+                              )}
+                            </div>
+                            {category.description && (
+                              <p className="text-sm text-slate-500 truncate mt-0.5">
+                                {category.description}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Quick stats */}
+                          <div className="flex-shrink-0 text-right">
+                            {category.transactionCount > 0 ? (
+                              <>
+                                <p className="font-[var(--font-dash-mono)] text-sm font-semibold text-slate-700">
+                                  {formatCurrency(Math.abs(category.totalAmount))}
+                                </p>
+                                <p className="text-xs text-slate-400">
+                                  {t('transactions', { count: category.transactionCount })}
+                                </p>
+                              </>
+                            ) : (
+                              <p className="text-xs text-slate-400">
+                                {t('noTransactions')}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                        <ChevronDownIcon className={cn(
-                          'w-4 h-4 text-slate-400 transition-transform',
-                          isCollapsed && '-rotate-90'
-                        )} />
-                      </button>
+                      </Link>
 
-                      {/* Group Content */}
-                      {!isCollapsed && (
-                        <div>
-                          {group.categories.map((category) => {
-                            const isChild = !!category.parentCategoryId;
-                            const isExpense = category.type === 2;
-                            const isIncome = category.type === 1;
-
-                            return (
-                              <div
-                                key={category.id}
-                                className={cn(
-                                  'relative group border-b border-slate-100 last:border-b-0 hover:bg-slate-50 transition-colors',
-                                  isChild && 'bg-slate-50/40'
-                                )}
+                      {/* Actions dropdown */}
+                      {!category.isSystemCategory && (
+                        <div className="absolute top-3 right-3 z-10">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="w-8 h-8 p-0 bg-white shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={(e) => e.preventDefault()}
                               >
-                                <Link href={`/categories/${category.id}`} className="block">
-                                  <div className={cn(
-                                    'flex items-center gap-3 py-3 pr-12',
-                                    isChild ? 'pl-12' : 'pl-5'
-                                  )}>
-                                    {/* Color indicator */}
-                                    <div
-                                      className={cn(
-                                        'flex-shrink-0 rounded-full',
-                                        isChild ? 'w-2 h-2' : 'w-3 h-3'
-                                      )}
-                                      style={{ backgroundColor: category.color || '#94a3b8' }}
-                                    />
-
-                                    {/* Category info */}
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-center gap-2 flex-wrap">
-                                        <h4 className={cn(
-                                          'text-slate-900 truncate',
-                                          isChild
-                                            ? 'text-sm font-medium'
-                                            : 'text-base font-semibold'
-                                        )}>
-                                          {category.name}
-                                        </h4>
-                                        {category.isSystemCategory && (
-                                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-500">
-                                            {t('system')}
-                                          </span>
-                                        )}
-                                      </div>
-                                      {category.description && (
-                                        <p className="text-sm text-slate-500 truncate mt-0.5">
-                                          {category.description}
-                                        </p>
-                                      )}
-                                    </div>
-
-                                    {/* Quick stats */}
-                                    <div className="flex-shrink-0 text-right">
-                                      {category.transactionCount > 0 ? (
-                                        <>
-                                          <p className={cn(
-                                            'font-[var(--font-dash-mono)] text-sm font-semibold',
-                                            isIncome ? 'text-emerald-600' : isExpense ? 'text-red-600' : 'text-blue-600'
-                                          )}>
-                                            {formatCurrency(Math.abs(category.totalAmount))}
-                                          </p>
-                                          <p className="text-xs text-slate-400">
-                                            {t('transactions', { count: category.transactionCount })}
-                                          </p>
-                                        </>
-                                      ) : (
-                                        <p className="text-xs text-slate-400">
-                                          {t('noTransactions')}
-                                        </p>
-                                      )}
-                                    </div>
-                                  </div>
+                                <EllipsisVerticalIcon className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48 bg-white border border-slate-200 shadow-lg z-50">
+                              <DropdownMenuItem asChild>
+                                <Link
+                                  href={`/categories/${category.id}`}
+                                  className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-sm"
+                                >
+                                  <EyeIcon className="w-4 h-4" />
+                                  {t('viewDetails')}
                                 </Link>
-
-                                {/* Actions dropdown */}
-                                {!category.isSystemCategory && (
-                                  <div className="absolute top-3 right-3 z-10">
-                                    <DropdownMenu>
-                                      <DropdownMenuTrigger asChild>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="w-8 h-8 p-0 bg-white shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
-                                          onClick={(e) => e.preventDefault()}
-                                        >
-                                          <EllipsisVerticalIcon className="w-4 h-4" />
-                                        </Button>
-                                      </DropdownMenuTrigger>
-                                      <DropdownMenuContent align="end" className="w-48 bg-white border border-slate-200 shadow-lg z-50">
-                                        <DropdownMenuItem asChild>
-                                          <Link
-                                            href={`/categories/${category.id}`}
-                                            className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-sm"
-                                          >
-                                            <EyeIcon className="w-4 h-4" />
-                                            {t('viewDetails')}
-                                          </Link>
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem asChild>
-                                          <Link
-                                            href={`/categories/${category.id}/edit`}
-                                            className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-sm"
-                                          >
-                                            <PencilIcon className="w-4 h-4" />
-                                            {t('editCategory')}
-                                          </Link>
-                                        </DropdownMenuItem>
-                                        <DropdownMenuSeparator className="my-1 bg-slate-200" />
-                                        <DropdownMenuItem
-                                          onClick={() => handleDeleteCategory(category.id, category.name)}
-                                          className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-sm cursor-pointer"
-                                        >
-                                          <TrashIcon className="w-4 h-4" />
-                                          {t('deleteCategory')}
-                                        </DropdownMenuItem>
-                                      </DropdownMenuContent>
-                                    </DropdownMenu>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link
+                                  href={`/categories/${category.id}/edit`}
+                                  className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-sm"
+                                >
+                                  <PencilIcon className="w-4 h-4" />
+                                  {t('editCategory')}
+                                </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator className="my-1 bg-slate-200" />
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteCategory(category.id, category.name)}
+                                className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-sm cursor-pointer"
+                              >
+                                <TrashIcon className="w-4 h-4" />
+                                {t('deleteCategory')}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       )}
                     </div>
@@ -649,7 +505,7 @@ export default function CategoriesPage() {
                     >
                       {showAll
                         ? t('showTopCategories')
-                        : t('showAllCategories', { count: typeFilteredCategories.length })}
+                        : t('showAllCategories', { count: categories.length })}
                     </Button>
                   </div>
                 )}

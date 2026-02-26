@@ -58,12 +58,6 @@ interface CategoryStats {
 
 type DateFilter = 'thisMonth' | 'last7' | 'last30' | 'last3Months' | 'all';
 
-const typeColorMap: Record<number, { badge: string; stat: string }> = {
-  1: { badge: 'bg-emerald-100 text-emerald-700', stat: 'text-emerald-600' },
-  2: { badge: 'bg-red-100 text-red-700', stat: 'text-red-600' },
-  3: { badge: 'bg-blue-100 text-blue-700', stat: 'text-blue-600' },
-};
-
 export default function CategoryDetailsPage() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
@@ -72,15 +66,6 @@ export default function CategoryDetailsPage() {
   const t = useTranslations('categories');
   const tCommon = useTranslations('common');
   const tToasts = useTranslations('toasts');
-
-  const getCategoryTypeLabel = (type: number) => {
-    switch (type) {
-      case 1: return t('types.income');
-      case 2: return t('types.expense');
-      case 3: return t('types.transfer');
-      default: return '';
-    }
-  };
 
   const getDateFilterLabel = (filterType: string) => {
     switch (filterType) {
@@ -232,7 +217,6 @@ export default function CategoryDetailsPage() {
     return null;
   }
 
-  const colors = typeColorMap[category.type] || typeColorMap[2];
   const dateFilters: DateFilter[] = ['thisMonth', 'last7', 'last30', 'last3Months', 'all'];
 
   return (
@@ -285,16 +269,13 @@ export default function CategoryDetailsPage() {
                   <h1 className="font-[var(--font-dash-sans)] text-2xl sm:text-3xl font-semibold tracking-[-0.03em] text-slate-900 truncate">
                     {category.name}
                   </h1>
-                  <div className="mt-0.5 flex flex-wrap items-center gap-2">
-                    <span className={cn('inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold', colors.badge)}>
-                      {getCategoryTypeLabel(category.type)}
-                    </span>
-                    {category.isSystemCategory && (
+                  {category.isSystemCategory && (
+                    <div className="mt-0.5">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">
                         {t('details.systemCategory')}
                       </span>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -308,9 +289,9 @@ export default function CategoryDetailsPage() {
               {/* Total Spent/Earned */}
               <div className="text-left lg:text-right">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                  {category.type === 1 ? t('totalEarned') : t('details.totalAmount')}
+                  {t('details.totalAmount')}
                 </p>
-                <p className={cn('mt-1 font-[var(--font-dash-mono)] text-xl font-semibold', colors.stat)}>
+                <p className={'mt-1 font-[var(--font-dash-mono)] text-xl font-semibold text-violet-600'}>
                   {formatCurrency(category.totalAmount ? Math.abs(category.totalAmount) : 0)}
                 </p>
               </div>
@@ -334,7 +315,7 @@ export default function CategoryDetailsPage() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                   {t('details.averagePerTransaction')}
                 </p>
-                <p className={cn('mt-1 font-[var(--font-dash-mono)] text-xl font-semibold', colors.stat)}>
+                <p className={'mt-1 font-[var(--font-dash-mono)] text-xl font-semibold text-violet-600'}>
                   {formatCurrency(
                     category.transactionCount > 0
                       ? Math.abs(category.totalAmount) / category.transactionCount
@@ -383,7 +364,7 @@ export default function CategoryDetailsPage() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                   {t('details.totalAmount')}
                 </p>
-                <p className={cn('mt-1 font-[var(--font-dash-mono)] text-2xl font-semibold', colors.stat)}>
+                <p className={'mt-1 font-[var(--font-dash-mono)] text-2xl font-semibold text-violet-600'}>
                   {formatCurrency(categoryStats.totalAmount)}
                 </p>
               </div>

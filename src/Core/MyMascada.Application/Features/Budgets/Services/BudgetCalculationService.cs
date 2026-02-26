@@ -287,7 +287,7 @@ public class BudgetCalculationService : IBudgetCalculationService
 
         // Get all expense categories for the user
         var categories = (await _categoryRepository.GetByUserIdAsync(userId))
-            .Where(c => c.Type == Domain.Enums.CategoryType.Expense && !c.IsDeleted)
+            .Where(c => c.Type != Domain.Enums.CategoryType.Transfer && !c.IsDeleted)
             .ToList();
 
         // Build category lookup for parent names

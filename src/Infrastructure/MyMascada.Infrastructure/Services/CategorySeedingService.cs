@@ -804,42 +804,6 @@ public class CategorySeedingService : ICategorySeedingService
                     })
             }),
 
-        // =================================================================
-        // TRANSFERS
-        // =================================================================
-        new("transfers", "🔄", "#607D8B", CategoryType.Transfer,
-            new()
-            {
-                ["en"] = new("Transfers", "Money transfers between accounts"),
-                ["pt-BR"] = new("Transferências", "Transferências de dinheiro entre contas")
-            },
-            new()
-            {
-                new("account_transfers", "↔️", "#78909C", CategoryType.Transfer,
-                    new()
-                    {
-                        ["en"] = new("Account Transfers", "Transfers between your accounts"),
-                        ["pt-BR"] = new("Transferências entre Contas", "Transferências entre suas contas")
-                    }),
-                new("savings_transfer", "🏦", "#90A4AE", CategoryType.Transfer,
-                    new()
-                    {
-                        ["en"] = new("Savings Transfer", "Transfers to savings accounts"),
-                        ["pt-BR"] = new("Transferência para Poupança", "Transferências para contas de poupança")
-                    }),
-                new("investment_transfer", "📈", "#B0BEC5", CategoryType.Transfer,
-                    new()
-                    {
-                        ["en"] = new("Investment Transfer", "Transfers to investment accounts"),
-                        ["pt-BR"] = new("Transferência para Investimentos", "Transferências para contas de investimento")
-                    }),
-                new("payment_to_others", "👥", "#CFD8DC", CategoryType.Transfer,
-                    new()
-                    {
-                        ["en"] = new("Payment to Others", "Transfers to other people"),
-                        ["pt-BR"] = new("Pagamento a Terceiros", "Transferências para outras pessoas")
-                    })
-            })
     };
 
     // =====================================================================
