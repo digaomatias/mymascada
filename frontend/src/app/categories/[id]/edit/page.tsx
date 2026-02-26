@@ -41,7 +41,6 @@ interface FormData {
   name: string;
   description: string;
   color: string;
-  type: number;
   parentCategoryId: number | null;
 }
 
@@ -61,15 +60,6 @@ export default function EditCategoryPage() {
   const tCommon = useTranslations('common');
   const tToasts = useTranslations('toasts');
 
-  const getCategoryTypeLabel = (type: number) => {
-    switch (type) {
-      case 1: return t('types.income');
-      case 2: return t('types.expense');
-      case 3: return t('types.transfer');
-      default: return '';
-    }
-  };
-
   const [category, setCategory] = useState<Category | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,7 +68,6 @@ export default function EditCategoryPage() {
     name: '',
     description: '',
     color: '#6B7280',
-    type: 2,
     parentCategoryId: null
   });
   const [errors, setErrors] = useState<{[K in keyof FormData]?: string}>({});
@@ -98,7 +87,6 @@ export default function EditCategoryPage() {
         name: categoryData.name,
         description: categoryData.description || '',
         color: categoryData.color || '#6B7280',
-        type: categoryData.type,
         parentCategoryId: categoryData.parentCategoryId || null
       });
     } catch (error) {
@@ -168,7 +156,6 @@ export default function EditCategoryPage() {
         description: formData.description.trim() || undefined,
         color: formData.color,
         icon: category.icon,
-        type: formData.type,
         parentCategoryId: formData.parentCategoryId || undefined,
         sortOrder: category.sortOrder,
         isActive: category.isActive
@@ -302,22 +289,6 @@ export default function EditCategoryPage() {
                     onChange={(e) => handleInputChange('description', e.target.value)}
                     placeholder={t('edit.descriptionPlaceholder')}
                   />
-                </div>
-
-                {/* Category Type */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('edit.categoryType')}
-                  </label>
-                  <select
-                    value={formData.type}
-                    onChange={(e) => handleInputChange('type', parseInt(e.target.value))}
-                    className="select"
-                  >
-                    <option value={1}>{getCategoryTypeLabel(1)}</option>
-                    <option value={2}>{getCategoryTypeLabel(2)}</option>
-                    <option value={3}>{getCategoryTypeLabel(3)}</option>
-                  </select>
                 </div>
 
                 {/* Parent Category */}

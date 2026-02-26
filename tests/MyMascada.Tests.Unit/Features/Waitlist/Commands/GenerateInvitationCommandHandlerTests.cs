@@ -1,9 +1,9 @@
+using MyMascada.Domain.Enums;
 using Microsoft.Extensions.Logging;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Email.DTOs;
 using MyMascada.Application.Features.Waitlist.Commands;
 using MyMascada.Domain.Entities;
-using MyMascada.Domain.Enums;
 
 namespace MyMascada.Tests.Unit.Features.Waitlist.Commands;
 

@@ -296,7 +296,6 @@ public class RulesHandlerTests
         {
             Id = id,
             Name = name,
-            Type = CategoryType.Expense,
             Color = "#FF0000",
             UserId = _userId
         };

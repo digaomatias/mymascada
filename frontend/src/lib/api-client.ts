@@ -644,7 +644,6 @@ class ApiClient {
     description?: string;
     color?: string;
     icon?: string;
-    type: number;
     parentCategoryId?: number;
     sortOrder: number;
   }): Promise<unknown> {
@@ -660,7 +659,6 @@ class ApiClient {
     description?: string;
     color?: string;
     icon?: string;
-    type: number;
     parentCategoryId?: number;
     sortOrder: number;
     isActive: boolean;

@@ -125,7 +125,7 @@ public class BudgetCalculationServiceTests
             Name = "Groceries",
             Color = "#00FF00",
             UserId = _userId,
-            Type = CategoryType.Expense
+            
         };
 
         var transactions = new List<Transaction>
@@ -167,7 +167,7 @@ public class BudgetCalculationServiceTests
             Name = "Fast Food",
             ParentCategoryId = parentCategoryId,
             UserId = _userId,
-            Type = CategoryType.Expense
+            
         };
 
         var parentCategory = new Category
@@ -175,7 +175,6 @@ public class BudgetCalculationServiceTests
             Id = parentCategoryId,
             Name = "Food",
             UserId = _userId,
-            Type = CategoryType.Expense,
             SubCategories = new List<Category> { childCategory }
         };
 
@@ -215,7 +214,7 @@ public class BudgetCalculationServiceTests
             Name = "Fast Food",
             ParentCategoryId = parentCategoryId,
             UserId = _userId,
-            Type = CategoryType.Expense
+            
         };
 
         var parentCategory = new Category
@@ -223,7 +222,6 @@ public class BudgetCalculationServiceTests
             Id = parentCategoryId,
             Name = "Food",
             UserId = _userId,
-            Type = CategoryType.Expense,
             SubCategories = new List<Category> { childCategory }
         };
 
@@ -260,7 +258,7 @@ public class BudgetCalculationServiceTests
             Id = categoryId,
             Name = "Groceries",
             UserId = _userId,
-            Type = CategoryType.Expense
+            
         };
 
         var transactions = new List<Transaction>
@@ -313,8 +311,8 @@ public class BudgetCalculationServiceTests
 
         var categories = new List<Category>
         {
-            new() { Id = groceryId, Name = "Groceries", UserId = _userId, Type = CategoryType.Expense },
-            new() { Id = utilitiesId, Name = "Utilities", UserId = _userId, Type = CategoryType.Expense }
+            new() { Id = groceryId, Name = "Groceries", UserId = _userId },
+            new() { Id = utilitiesId, Name = "Utilities", UserId = _userId }
         };
 
         var transactions = new List<Transaction>
@@ -363,7 +361,7 @@ public class BudgetCalculationServiceTests
         // Arrange
         var categories = new List<Category>
         {
-            new() { Id = 1, Name = "Groceries", UserId = _userId, Type = CategoryType.Expense }
+            new() { Id = 1, Name = "Groceries", UserId = _userId }
         };
 
         _categoryRepository.GetByUserIdAsync(_userId).Returns(categories);
@@ -384,7 +382,7 @@ public class BudgetCalculationServiceTests
         int categoryId = 1;
         var categories = new List<Category>
         {
-            new() { Id = categoryId, Name = "Groceries", UserId = _userId, Type = CategoryType.Expense, Color = "#00FF00", Icon = "cart" }
+            new() { Id = categoryId, Name = "Groceries", UserId = _userId, Color = "#00FF00", Icon = "cart" }
         };
 
         // Consistent spending: $400-$410 per month for 3 months
@@ -423,7 +421,7 @@ public class BudgetCalculationServiceTests
         int categoryId = 1;
         var categories = new List<Category>
         {
-            new() { Id = categoryId, Name = "Entertainment", UserId = _userId, Type = CategoryType.Expense }
+            new() { Id = categoryId, Name = "Entertainment", UserId = _userId }
         };
 
         // Highly variable spending: $100, $500, $50 per month
@@ -454,7 +452,7 @@ public class BudgetCalculationServiceTests
         int categoryId = 1;
         var categories = new List<Category>
         {
-            new() { Id = categoryId, Name = "Groceries", UserId = _userId, Type = CategoryType.Expense }
+            new() { Id = categoryId, Name = "Groceries", UserId = _userId }
         };
 
         // Average will be ~$147
@@ -484,8 +482,8 @@ public class BudgetCalculationServiceTests
         // Arrange
         var categories = new List<Category>
         {
-            new() { Id = 1, Name = "Salary", UserId = _userId, Type = CategoryType.Income },
-            new() { Id = 2, Name = "Groceries", UserId = _userId, Type = CategoryType.Expense }
+            new() { Id = 1, Name = "Salary", UserId = _userId },
+            new() { Id = 2, Name = "Groceries", UserId = _userId }
         };
 
         var transactions = new List<Transaction>
@@ -512,9 +510,9 @@ public class BudgetCalculationServiceTests
         // Arrange
         var categories = new List<Category>
         {
-            new() { Id = 1, Name = "Low", UserId = _userId, Type = CategoryType.Expense },
-            new() { Id = 2, Name = "High", UserId = _userId, Type = CategoryType.Expense },
-            new() { Id = 3, Name = "Medium", UserId = _userId, Type = CategoryType.Expense }
+            new() { Id = 1, Name = "Low", UserId = _userId },
+            new() { Id = 2, Name = "High", UserId = _userId },
+            new() { Id = 3, Name = "Medium", UserId = _userId }
         };
 
         var transactions = new List<Transaction>
@@ -581,7 +579,7 @@ public class BudgetCalculationServiceTests
             Name = "Groceries",
             Color = "#00FF00",
             UserId = _userId,
-            Type = CategoryType.Expense
+            
         };
 
         var budget = new Budget
@@ -644,7 +642,7 @@ public class BudgetCalculationServiceTests
             Id = categoryId,
             Name = "Entertainment",
             UserId = _userId,
-            Type = CategoryType.Expense
+            
         };
 
         var budget = new Budget
@@ -695,9 +693,9 @@ public class BudgetCalculationServiceTests
     public async Task CalculateBudgetProgressAsync_ShouldSortByUsedPercentageDescending()
     {
         // Arrange
-        var cat1 = new Category { Id = 1, Name = "Low", UserId = _userId, Type = CategoryType.Expense };
-        var cat2 = new Category { Id = 2, Name = "High", UserId = _userId, Type = CategoryType.Expense };
-        var cat3 = new Category { Id = 3, Name = "Medium", UserId = _userId, Type = CategoryType.Expense };
+        var cat1 = new Category { Id = 1, Name = "Low", UserId = _userId };
+        var cat2 = new Category { Id = 2, Name = "High", UserId = _userId };
+        var cat3 = new Category { Id = 3, Name = "Medium", UserId = _userId };
 
         var budget = new Budget
         {
@@ -745,7 +743,7 @@ public class BudgetCalculationServiceTests
             Id = categoryId,
             Name = "Groceries",
             UserId = _userId,
-            Type = CategoryType.Expense
+            
         };
 
         var budget = new Budget
@@ -806,7 +804,7 @@ public class BudgetCalculationServiceTests
             Id = categoryId,
             Name = "Groceries",
             UserId = _userId,
-            Type = CategoryType.Expense
+            
         };
 
         var budget = new Budget

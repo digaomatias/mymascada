@@ -42,7 +42,6 @@ interface Category {
   id: number;
   name: string;
   canonicalKey?: string;
-  type: number;
   parentId: number | null;
   color?: string;
   icon?: string;
@@ -96,27 +95,7 @@ const sortSuggestionsByPriority = (suggestions: AiSuggestion[]): AiSuggestion[] 
   });
 };
 
-// Helper function to convert category type number to readable string
-// const getCategoryTypeLabel = (type: number): string => {
-//   switch (type) {
-//     case 1: return 'Income';
-//     case 2: return 'Expense';
-//     case 3: return 'Transfer';
-//     default: return 'Unknown';
-//   }
-// };
 
-// Helper function to get category type color
-// const getCategoryTypeColor = (type: number): string => {
-//   switch (type) {
-//     case 1: return 'bg-green-100 text-green-700'; // Income - green
-//     case 2: return 'bg-red-100 text-red-700';     // Expense - red
-//     case 3: return 'bg-blue-100 text-blue-700';   // Transfer - blue
-//     default: return 'bg-gray-100 text-gray-700';  // Unknown - gray
-//   }
-// };
-
-// AI Suggestion types imported from context
 
 interface CategoryPickerProps {
   value?: string | number;

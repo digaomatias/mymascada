@@ -152,7 +152,6 @@ public class CategoriesController : ControllerBase
                 Description = request.Description,
                 Color = request.Color,
                 Icon = request.Icon,
-                Type = request.Type,
                 ParentCategoryId = request.ParentCategoryId,
                 SortOrder = request.SortOrder,
                 UserId = _currentUserService.GetUserId()
@@ -200,7 +199,6 @@ public class CategoriesController : ControllerBase
                 Description = request.Description,
                 Color = request.Color,
                 Icon = request.Icon,
-                Type = request.Type,
                 ParentCategoryId = request.ParentCategoryId,
                 SortOrder = request.SortOrder,
                 IsActive = request.IsActive,

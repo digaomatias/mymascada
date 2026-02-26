@@ -1,3 +1,4 @@
+using MyMascada.Domain.Enums;
 using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -6,7 +7,6 @@ using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Transactions.Commands;
 using MyMascada.Application.Features.Transactions.DTOs;
 using MyMascada.Application.Features.Transactions.Queries;
-using MyMascada.Domain.Enums;
 using MyMascada.WebAPI.Controllers;
 
 namespace MyMascada.Tests.Unit.Controllers;

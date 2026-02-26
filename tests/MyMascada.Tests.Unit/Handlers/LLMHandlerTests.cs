@@ -292,7 +292,6 @@ public class LLMHandlerTests
             {
                 Id = categoryId,
                 Name = $"Category {categoryId}",
-                Type = CategoryType.Expense,
                 Color = "#FF0000"
             }
         };

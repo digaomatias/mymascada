@@ -273,7 +273,6 @@ Note: Rule generation and matching is handled by the Rules Handler in the catego
                 id = c.Id,
                 name = c.Name,
                 fullPath = GetCategoryPath(c, categories),
-                type = c.Type.ToString(),
                 parentId = c.ParentCategoryId,
                 color = c.Color,
                 keywords = ExtractKeywords(c.Name)

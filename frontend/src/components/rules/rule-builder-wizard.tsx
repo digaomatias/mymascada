@@ -93,19 +93,11 @@ const ACCOUNT_TYPES = [
 ];
 
 // Helper function to get category type color class
-const getCategoryTypeColor = (type: number): string => {
-  switch (type) {
-    case 1: return 'bg-green-100 text-green-700 border-green-200'; // Income - green
-    case 2: return 'bg-red-100 text-red-700 border-red-200';       // Expense - red
-    case 3: return 'bg-blue-100 text-blue-700 border-blue-200';    // Transfer - blue
-    default: return 'bg-gray-100 text-gray-700 border-gray-200';   // Unknown - gray
-  }
-};
 
 export function RuleBuilderWizard() {
   const router = useRouter();
   const t = useTranslations('rules');
-  const tCategories = useTranslations('categories');
+
   const [currentStep, setCurrentStep] = useState(1);
   const [categories, setCategories] = useState<Category[]>([]);
   const [testResults, setTestResults] = useState<TestTransaction[]>([]);
@@ -129,15 +121,6 @@ export function RuleBuilderWizard() {
     conditions: [] as RuleCondition[]
   });
 
-  // Helper function to convert category type number to readable string
-  const getCategoryTypeLabel = (type: number): string => {
-    switch (type) {
-      case 1: return tCategories('types.income');
-      case 2: return tCategories('types.expense');
-      case 3: return tCategories('types.transfer');
-      default: return '';
-    }
-  };
 
   const steps = [
     { number: 1, title: t('builder.steps.basicInfo'), description: t('builder.steps.basicInfoDesc') },
@@ -446,12 +429,6 @@ export function RuleBuilderWizard() {
                 <div className="p-4 bg-blue-50 rounded-lg">
                   <h4 className="font-medium text-blue-900">{t('builder.form.selectedCategory')}</h4>
                   <p className="text-blue-700">{selectedCategory.name}</p>
-                  <Badge
-                    variant="secondary"
-                    className={`mt-2 border ${getCategoryTypeColor(selectedCategory.type)}`}
-                  >
-                    {getCategoryTypeLabel(selectedCategory.type)}
-                  </Badge>
                 </div>
               )}
             </div>

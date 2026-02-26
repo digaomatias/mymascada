@@ -1,6 +1,6 @@
+using MyMascada.Domain.Enums;
 using MyMascada.Domain.Common;
 using MyMascada.Domain.Entities;
-using MyMascada.Domain.Enums;
 
 namespace MyMascada.Tests.Unit.Domain;
 

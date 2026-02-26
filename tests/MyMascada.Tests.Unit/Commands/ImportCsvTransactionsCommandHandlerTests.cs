@@ -1,3 +1,4 @@
+using MyMascada.Domain.Enums;
 using System.Text;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.CsvImport.Commands;
@@ -5,7 +6,6 @@ using MyMascada.Application.Features.CsvImport.DTOs;
 using MyMascada.Application.Features.Transactions.Services;
 using MyMascada.Application.Features.Categorization.Services;
 using MyMascada.Domain.Entities;
-using MyMascada.Domain.Enums;
 
 namespace MyMascada.Tests.Unit.Commands;
 

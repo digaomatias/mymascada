@@ -164,10 +164,9 @@ public class CategoryRepository : ICategoryRepository
 
         // Group by category and get counts
         var categoryGroups = await query
-            .GroupBy(t => new { 
-                t.CategoryId, 
-                t.Category!.Name, 
-                t.Category.Type,
+            .GroupBy(t => new {
+                t.CategoryId,
+                t.Category!.Name,
                 t.Category.ParentCategoryId,
                 t.Category.Color,
                 t.Category.Icon,
@@ -176,7 +175,6 @@ public class CategoryRepository : ICategoryRepository
             .Select(g => new {
                 CategoryId = g.Key.CategoryId!.Value,
                 Name = g.Key.Name,
-                Type = g.Key.Type,
                 ParentCategoryId = g.Key.ParentCategoryId,
                 Color = g.Key.Color,
                 Icon = g.Key.Icon,
@@ -201,7 +199,6 @@ public class CategoryRepository : ICategoryRepository
         {
             Id = g.CategoryId,
             Name = g.Name,
-            Type = g.Type,
             ParentCategoryId = g.ParentCategoryId,
             Color = g.Color,
             Icon = g.Icon,

@@ -1,6 +1,6 @@
+using MyMascada.Domain.Enums;
 using FluentAssertions;
 using MyMascada.Domain.Entities;
-using MyMascada.Domain.Enums;
 
 namespace MyMascada.Tests.Unit.Domain;
 

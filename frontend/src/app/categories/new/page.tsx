@@ -21,7 +21,7 @@ interface Category {
   id: number;
   name: string;
   color?: string;
-  type?: number;
+
   isSystemCategory?: boolean;
   fullPath?: string;
 }
@@ -42,15 +42,9 @@ export default function NewCategoryPage() {
     name: '',
     description: '',
     color: '#6B7280',
-    type: 2, // Default to Expense
+
     parentCategoryId: '',
   });
-
-  const categoryTypes = [
-    { value: 1, label: t('types.income'), color: 'text-green-600' },
-    { value: 2, label: t('types.expense'), color: 'text-red-600' },
-    { value: 3, label: t('types.transfer'), color: 'text-blue-600' },
-  ];
 
   const colorOptions = [
     '#6B7280', '#EF4444', '#F59E0B', '#10B981', '#3B82F6', 
@@ -105,7 +99,7 @@ export default function NewCategoryPage() {
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
         color: formData.color,
-        type: formData.type,
+
         parentCategoryId: formData.parentCategoryId ? parseInt(formData.parentCategoryId) : undefined,
         sortOrder: 999,
       };
@@ -240,28 +234,6 @@ export default function NewCategoryPage() {
                   {errors.name && (
                     <p className="mt-1 text-sm text-red-600">{errors.name}</p>
                   )}
-                </div>
-
-                {/* Type Field */}
-                <div>
-                  <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('edit.categoryType')}
-                  </label>
-                  <select
-                    id="type"
-                    value={formData.type}
-                    onChange={(e) => handleInputChange('type', parseInt(e.target.value))}
-                    className="select"
-                  >
-                    {categoryTypes.map((type) => (
-                      <option key={type.value} value={type.value}>
-                        {type.label}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="mt-1 text-xs text-gray-500">
-                    {t('new.typeHelp')}
-                  </p>
                 </div>
 
                 {/* Parent Category Field */}

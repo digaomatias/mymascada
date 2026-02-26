@@ -1,9 +1,9 @@
+using MyMascada.Domain.Enums;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MyMascada.Application.Common.Configuration;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Domain.Entities;
-using MyMascada.Domain.Enums;
 using MyMascada.Infrastructure.Services;
 
 namespace MyMascada.Tests.Unit.Services;

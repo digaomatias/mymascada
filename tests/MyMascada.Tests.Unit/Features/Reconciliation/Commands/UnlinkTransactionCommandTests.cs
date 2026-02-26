@@ -1,9 +1,9 @@
+using MyMascada.Domain.Enums;
 using FluentAssertions;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Reconciliation.Commands;
 using MyMascada.Application.Features.Reconciliation.DTOs;
 using MyMascada.Domain.Entities;
-using MyMascada.Domain.Enums;
 using NSubstitute;
 using Xunit;
 

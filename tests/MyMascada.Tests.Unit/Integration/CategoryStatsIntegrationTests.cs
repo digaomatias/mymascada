@@ -79,7 +79,6 @@ public class CategoryStatsIntegrationTests : IDisposable
         {
             Id = 1,
             Name = "Groceries",
-            Type = CategoryType.Expense,
             Color = "#FF5722",
             IsSystemCategory = false,
             IsActive = true,
@@ -91,7 +90,6 @@ public class CategoryStatsIntegrationTests : IDisposable
         {
             Id = 2,
             Name = "Restaurants",
-            Type = CategoryType.Expense,
             Color = "#FFC107",
             IsSystemCategory = false,
             IsActive = true,

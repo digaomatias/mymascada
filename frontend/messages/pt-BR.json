@@ -1387,6 +1387,14 @@
       "categories": "Suas Categorias",
       "bankMappings": "Mapeamentos Bancários"
     },
+    "groupCount": "{count} categorias",
+    "transactions": "{count} transações",
+    "noTransactions": "Sem transações",
+    "showingTopByUsage": "Mostrando as {count} principais por uso",
+    "showingAllCount": "Mostrando todas as {count} categorias",
+    "searchResultsCount": "{count, plural, one {# resultado} other {# resultados}} para \"{term}\"",
+    "showAllCategories": "Mostrar todas as {count} categorias",
+    "showTopCategories": "Mostrar principais categorias",
     "errors": {
       "deleteFailed": "Falha ao excluir categoria. Tente novamente.",
       "hasTransactions": "Esta categoria não pode ser excluída porque possui transações. Reatribua ou exclua todas as transações desta categoria primeiro.",
@@ -1439,6 +1447,8 @@
       "failedToLoadStats": "Falha ao carregar estatísticas",
       "fullPath": "Caminho Completo",
       "created": "Criada em",
+      "lastUpdated": "Última Atualização",
+      "averagePerTransaction": "Média / Transação",
       "recentTransactions": "Transações Recentes",
       "viewAll": "Ver Todas",
       "noTransactionsYet": "Nenhuma transação ainda",

@@ -2,7 +2,6 @@ using MediatR;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Categories.DTOs;
 using MyMascada.Domain.Entities;
-using MyMascada.Domain.Enums;
 
 namespace MyMascada.Application.Features.Categories.Commands;
 
@@ -12,7 +11,6 @@ public class CreateCategoryCommand : IRequest<CategoryDto>
     public string? Description { get; set; }
     public string? Color { get; set; }
     public string? Icon { get; set; }
-    public CategoryType Type { get; set; } = CategoryType.Expense;
     public int? ParentCategoryId { get; set; }
     public int SortOrder { get; set; }
     public Guid UserId { get; set; }
@@ -45,7 +43,6 @@ public class CreateCategoryCommandHandler : IRequestHandler<CreateCategoryComman
             Description = request.Description?.Trim(),
             Color = request.Color?.Trim(),
             Icon = request.Icon?.Trim(),
-            Type = request.Type,
             ParentCategoryId = request.ParentCategoryId,
             SortOrder = request.SortOrder,
             UserId = request.UserId,
@@ -65,7 +62,6 @@ public class CreateCategoryCommandHandler : IRequestHandler<CreateCategoryComman
             Description = createdCategory.Description,
             Color = createdCategory.Color,
             Icon = createdCategory.Icon,
-            Type = createdCategory.Type,
             IsSystemCategory = createdCategory.IsSystemCategory,
             IsActive = createdCategory.IsActive,
             SortOrder = createdCategory.SortOrder,

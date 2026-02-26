@@ -1388,6 +1388,14 @@
       "categories": "Your Categories",
       "bankMappings": "Bank Mappings"
     },
+    "groupCount": "{count} categories",
+    "transactions": "{count} transactions",
+    "noTransactions": "No transactions",
+    "showingTopByUsage": "Showing top {count} by usage",
+    "showingAllCount": "Showing all {count} categories",
+    "searchResultsCount": "{count, plural, one {# result} other {# results}} for \"{term}\"",
+    "showAllCategories": "Show all {count} categories",
+    "showTopCategories": "Show top categories",
     "errors": {
       "deleteFailed": "Failed to delete category. Please try again.",
       "hasTransactions": "This category cannot be deleted because it has transactions. Please reassign or delete all transactions in this category first.",
@@ -1440,6 +1448,8 @@
       "failedToLoadStats": "Failed to load stats",
       "fullPath": "Full Path",
       "created": "Created",
+      "lastUpdated": "Last Updated",
+      "averagePerTransaction": "Avg / Transaction",
       "recentTransactions": "Recent Transactions",
       "viewAll": "View All",
       "noTransactionsYet": "No transactions yet",

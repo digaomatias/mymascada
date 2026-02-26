@@ -1,7 +1,6 @@
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.BankCategoryMappings.Commands;
 using MyMascada.Domain.Entities;
-using MyMascada.Domain.Enums;
 using NSubstitute;
 using Xunit;
 using FluentAssertions;
@@ -259,7 +258,6 @@ public class SetBankCategoryExclusionCommandTests
             {
                 Id = categoryId,
                 Name = "Test Category",
-                Type = CategoryType.Expense,
                 UserId = _userId
             }
         };
@@ -297,7 +295,6 @@ public class SetBankCategoryExclusionCommandTests
             {
                 Id = categoryId,
                 Name = categoryName,
-                Type = CategoryType.Expense,
                 UserId = _userId
             }
         };
