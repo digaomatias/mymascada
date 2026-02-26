@@ -109,9 +109,17 @@ export default function CategoryTrendsPage() {
     return (
       <AppLayout>
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-300 rounded w-1/3 mb-8"></div>
-          <div className="h-[500px] bg-gray-200 rounded mb-6"></div>
-          <div className="h-48 bg-gray-200 rounded"></div>
+          <div className="h-8 bg-slate-200 rounded w-1/3 mb-8"></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="rounded-[26px] border border-violet-100/60 bg-white/90 p-4 shadow-lg shadow-violet-200/20">
+                <div className="h-4 bg-slate-200 rounded w-2/3 mb-3"></div>
+                <div className="h-6 bg-slate-100 rounded w-1/2"></div>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-[26px] border border-violet-100/60 bg-white/90 p-6 shadow-lg shadow-violet-200/20 h-[500px] mb-6"></div>
+          <div className="rounded-[26px] border border-violet-100/60 bg-white/90 p-6 shadow-lg shadow-violet-200/20 h-48"></div>
         </div>
       </AppLayout>
     );
@@ -121,7 +129,7 @@ export default function CategoryTrendsPage() {
     return (
       <AppLayout>
         <div className="text-center py-12">
-          <p className="text-red-600 mb-4">{error}</p>
+          <p className="text-red-600 mb-4 font-medium">{error}</p>
           <Button variant="primary" onClick={loadCategoryTrends}>
             {t('categoryTrends.tryAgain')}
           </Button>
@@ -133,13 +141,13 @@ export default function CategoryTrendsPage() {
   return (
     <AppLayout>
       {/* Header with back link */}
-        <div className="mb-6">
-          <Link href="/analytics" className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 mb-4">
+        <div className="mb-5">
+          <Link href="/analytics" className="inline-flex items-center gap-2 text-violet-600 hover:text-violet-700 text-sm font-medium mb-4">
             <ArrowLeftIcon className="w-4 h-4" />
             <span>{t('categoryTrends.backToAnalytics')}</span>
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('categoryTrends.title')}</h1>
-          <p className="text-gray-600">
+          <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">{t('categoryTrends.title')}</h1>
+          <p className="text-[15px] text-slate-500 mt-1.5">
             {t('categoryTrends.subtitle')}
           </p>
         </div>
@@ -147,15 +155,15 @@ export default function CategoryTrendsPage() {
         {/* Summary Stats */}
         {stats && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+            <Card className="rounded-[26px] border border-violet-100/60 bg-white/90 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <BanknotesIcon className="w-5 h-5 text-purple-600" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50">
+                    <BanknotesIcon className="w-5 h-5 text-violet-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">{t('stats.totalSpending')}</p>
-                    <p className="text-xl font-bold text-gray-900">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{t('stats.totalSpending')}</p>
+                    <p className="mt-0.5 font-[var(--font-dash-mono)] text-xl font-semibold text-slate-900">
                       {formatCurrency(stats.totalSpending)}
                     </p>
                   </div>
@@ -163,15 +171,15 @@ export default function CategoryTrendsPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+            <Card className="rounded-[26px] border border-violet-100/60 bg-white/90 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <CalendarIcon className="w-5 h-5 text-blue-600" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50">
+                    <CalendarIcon className="w-5 h-5 text-violet-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">{t('stats.avgMonthly')}</p>
-                    <p className="text-xl font-bold text-gray-900">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{t('stats.avgMonthly')}</p>
+                    <p className="mt-0.5 font-[var(--font-dash-mono)] text-xl font-semibold text-slate-900">
                       {formatCurrency(stats.avgMonthlySpending)}
                     </p>
                   </div>
@@ -179,35 +187,35 @@ export default function CategoryTrendsPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+            <Card className="rounded-[26px] border border-violet-100/60 bg-white/90 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-red-100 rounded-lg">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50">
                     <ChartBarIcon className="w-5 h-5 text-red-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">{t('stats.highestMonth')}</p>
-                    <p className="text-lg font-bold text-gray-900">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{t('stats.highestMonth')}</p>
+                    <p className="mt-0.5 font-[var(--font-dash-mono)] text-lg font-semibold text-slate-900">
                       {formatCurrency(stats.highestMonth.totalSpent)}
                     </p>
-                    <p className="text-xs text-gray-500">{stats.highestMonth.periodLabel}</p>
+                    <p className="text-xs text-slate-500">{stats.highestMonth.periodLabel}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+            <Card className="rounded-[26px] border border-violet-100/60 bg-white/90 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <ChartBarIcon className="w-5 h-5 text-green-600" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50">
+                    <ChartBarIcon className="w-5 h-5 text-emerald-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">{t('stats.lowestMonth')}</p>
-                    <p className="text-lg font-bold text-gray-900">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{t('stats.lowestMonth')}</p>
+                    <p className="mt-0.5 font-[var(--font-dash-mono)] text-lg font-semibold text-slate-900">
                       {formatCurrency(stats.lowestMonth.totalSpent)}
                     </p>
-                    <p className="text-xs text-gray-500">{stats.lowestMonth.periodLabel}</p>
+                    <p className="text-xs text-slate-500">{stats.lowestMonth.periodLabel}</p>
                   </div>
                 </div>
               </CardContent>
@@ -229,10 +237,10 @@ export default function CategoryTrendsPage() {
 
           {/* Main Chart */}
           <div className="lg:col-span-3 order-1 lg:order-2">
-            <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+            <Card className="rounded-[26px] border border-violet-100/60 bg-white/90 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ChartBarIcon className="w-5 h-5" />
+                <CardTitle className="font-[var(--font-dash-sans)] flex items-center gap-2 text-slate-900">
+                  <ChartBarIcon className="w-5 h-5 text-violet-500" />
                   {t('categoryTrends.spendingOverTime')}
                 </CardTitle>
               </CardHeader>
@@ -247,9 +255,9 @@ export default function CategoryTrendsPage() {
         </div>
 
         {/* Category Comparison Table */}
-        <Card className="mt-6 bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+        <Card className="mt-6 rounded-[26px] border border-violet-100/60 bg-white/90 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
           <CardHeader>
-            <CardTitle>{t('categoryTrends.categoryComparison')}</CardTitle>
+            <CardTitle className="font-[var(--font-dash-sans)] text-slate-900">{t('categoryTrends.categoryComparison')}</CardTitle>
           </CardHeader>
           <CardContent>
             <TrendSummaryTable
