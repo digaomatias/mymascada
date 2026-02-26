@@ -121,7 +121,7 @@ export function PeriodSelector({
   const showNavigation = period !== 'all';
 
   return (
-    <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white/80 backdrop-blur-sm rounded-lg p-3 shadow-sm">
+    <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-[26px] border border-violet-100/60 bg-white/90 p-4 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
       {/* Period Type Selector */}
       <div className="flex gap-2">
         <Button
@@ -167,7 +167,7 @@ export function PeriodSelector({
             <ChevronLeftIcon className="w-5 h-5" />
           </Button>
 
-          <span className="min-w-[140px] text-center font-semibold text-gray-900">
+          <span className="min-w-[140px] text-center font-[var(--font-dash-sans)] font-semibold text-slate-900">
             {getPeriodLabel()}
           </span>
 
@@ -186,7 +186,7 @@ export function PeriodSelector({
 
       {/* Show static label for All Time */}
       {!showNavigation && (
-        <span className="font-semibold text-gray-900">{getPeriodLabel()}</span>
+        <span className="font-[var(--font-dash-sans)] font-semibold text-slate-900">{getPeriodLabel()}</span>
       )}
     </div>
   );

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { CategorySpendingChart } from '@/components/charts/category-spending-chart';
 import { PeriodSelector, PeriodType } from '@/components/analytics/period-selector';
 import { apiClient } from '@/lib/api-client';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/auth-context';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -192,10 +192,10 @@ export default function AnalyticsPage() {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload[0]) {
       return (
-        <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-          <p className="font-semibold text-gray-900">{label}</p>
+        <div className="rounded-xl border border-violet-100/60 bg-white p-3 shadow-lg shadow-violet-200/20">
+          <p className="font-[var(--font-dash-sans)] font-semibold text-slate-900">{label}</p>
           {payload.map((entry: any, index: number) => (
-            <p key={index} className="text-sm" style={{ color: entry.color }}>
+            <p key={index} className="font-[var(--font-dash-mono)] text-sm" style={{ color: entry.color }}>
               {entry.name}: {formatCurrency(entry.value)}
             </p>
           ))}
@@ -209,17 +209,21 @@ export default function AnalyticsPage() {
     return (
       <AppLayout>
           <div className="animate-pulse">
-            <div className="h-8 bg-gray-300 rounded w-1/3 mb-8"></div>
+            <div className="h-8 bg-slate-200 rounded w-1/3 mb-8"></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={`stat-${i}`} className="rounded-[26px] border border-violet-100/60 bg-white/90 p-6 shadow-lg shadow-violet-200/20">
+                  <div className="h-4 bg-slate-200 rounded w-2/3 mb-3"></div>
+                  <div className="h-7 bg-slate-100 rounded w-1/2"></div>
+                </div>
+              ))}
+            </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {Array.from({ length: 4 }).map((_, i) => (
-                <Card key={i} className="bg-white/90">
-                  <CardHeader>
-                    <div className="h-6 bg-gray-300 rounded w-1/2"></div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-64 bg-gray-200 rounded"></div>
-                  </CardContent>
-                </Card>
+                <div key={`chart-${i}`} className="rounded-[26px] border border-violet-100/60 bg-white/90 p-6 shadow-lg shadow-violet-200/20">
+                  <div className="h-6 bg-slate-200 rounded w-1/2 mb-6"></div>
+                  <div className="h-64 bg-slate-100 rounded-xl"></div>
+                </div>
               ))}
             </div>
           </div>
@@ -235,9 +239,9 @@ export default function AnalyticsPage() {
   return (
     <AppLayout>
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('title')}</h1>
-          <p className="text-gray-600">{t('subtitle')}</p>
+        <div className="mb-5">
+          <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">{t('title')}</h1>
+          <p className="text-[15px] text-slate-500 mt-1.5">{t('subtitle')}</p>
         </div>
 
         {/* Period Selector */}
@@ -252,54 +256,65 @@ export default function AnalyticsPage() {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+          <Card className="rounded-[26px] border border-violet-100/60 bg-white/90 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">{t('summary.avgMonthlyIncome')}</p>
-                  <p className="text-2xl font-bold text-green-600">{formatCurrency(avgMonthlyIncome)}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{t('summary.avgMonthlyIncome')}</p>
+                  <p className="mt-1 font-[var(--font-dash-mono)] text-2xl font-semibold text-emerald-600">{formatCurrency(avgMonthlyIncome)}</p>
                 </div>
-                <ArrowTrendingUpIcon className="w-8 h-8 text-green-500" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50">
+                  <ArrowTrendingUpIcon className="w-5 h-5 text-emerald-600" />
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+          <Card className="rounded-[26px] border border-violet-100/60 bg-white/90 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">{t('summary.avgMonthlyExpenses')}</p>
-                  <p className="text-2xl font-bold text-red-600">{formatCurrency(avgMonthlyExpenses)}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{t('summary.avgMonthlyExpenses')}</p>
+                  <p className="mt-1 font-[var(--font-dash-mono)] text-2xl font-semibold text-red-600">{formatCurrency(avgMonthlyExpenses)}</p>
                 </div>
-                <ArrowTrendingDownIcon className="w-8 h-8 text-red-500" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50">
+                  <ArrowTrendingDownIcon className="w-5 h-5 text-red-600" />
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+          <Card className="rounded-[26px] border border-violet-100/60 bg-white/90 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">{t('summary.totalSaved')}</p>
-                  <p className="text-2xl font-bold text-blue-600">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{t('summary.totalSaved')}</p>
+                  <p className={cn(
+                    'mt-1 font-[var(--font-dash-mono)] text-2xl font-semibold',
+                    (totalIncome - totalExpenses) >= 0 ? 'text-emerald-600' : 'text-red-600'
+                  )}>
                     {formatCurrency(totalIncome - totalExpenses)}
                   </p>
                 </div>
-                <BanknotesIcon className="w-8 h-8 text-blue-500" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50">
+                  <BanknotesIcon className="w-5 h-5 text-violet-600" />
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+          <Card className="rounded-[26px] border border-violet-100/60 bg-white/90 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">{t('summary.savingsRate')}</p>
-                  <p className="text-2xl font-bold text-purple-600">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{t('summary.savingsRate')}</p>
+                  <p className="mt-1 font-[var(--font-dash-mono)] text-2xl font-semibold text-violet-600">
                     {totalIncome > 0 ? ((totalIncome - totalExpenses) / totalIncome * 100).toFixed(1) : 0}%
                   </p>
                 </div>
-                <CurrencyDollarIcon className="w-8 h-8 text-purple-500" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50">
+                  <CurrencyDollarIcon className="w-5 h-5 text-violet-600" />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -308,17 +323,17 @@ export default function AnalyticsPage() {
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Income vs Expenses Trend */}
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+          <Card className="rounded-[26px] border border-violet-100/60 bg-white/90 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ChartBarIcon className="w-5 h-5" />
+              <CardTitle className="font-[var(--font-dash-sans)] flex items-center gap-2 text-slate-900">
+                <ChartBarIcon className="w-5 h-5 text-violet-500" />
                 {t('charts.incomeVsExpenses')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
                 <AreaChart data={monthlyTrends}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                   <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} tick={{ fontSize: 12 }} />
                   <Tooltip content={<CustomTooltip />} />
@@ -347,17 +362,17 @@ export default function AnalyticsPage() {
           </Card>
 
           {/* Net Income Trend */}
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+          <Card className="rounded-[26px] border border-violet-100/60 bg-white/90 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CalendarIcon className="w-5 h-5" />
+              <CardTitle className="font-[var(--font-dash-sans)] flex items-center gap-2 text-slate-900">
+                <CalendarIcon className="w-5 h-5 text-violet-500" />
                 {t('charts.netIncomeTrend')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={monthlyTrends}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                   <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} tick={{ fontSize: 12 }} />
                   <Tooltip content={<CustomTooltip />} />
@@ -376,15 +391,15 @@ export default function AnalyticsPage() {
           </Card>
 
           {/* Category Spending Chart */}
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+          <Card className="rounded-[26px] border border-violet-100/60 bg-white/90 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
             <CardHeader>
-              <CardTitle>{t('charts.spendingByCategory')}</CardTitle>
+              <CardTitle className="font-[var(--font-dash-sans)] text-slate-900">{t('charts.spendingByCategory')}</CardTitle>
             </CardHeader>
             <CardContent>
               {categoryData.length > 0 ? (
                 <CategorySpendingChart data={categoryData} title="" />
               ) : (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-slate-500">
                   {t('charts.noCategoryData')}
                 </div>
               )}
@@ -392,14 +407,14 @@ export default function AnalyticsPage() {
           </Card>
 
           {/* Yearly Comparison */}
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+          <Card className="rounded-[26px] border border-violet-100/60 bg-white/90 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
             <CardHeader>
-              <CardTitle>{t('charts.yearlyComparison')}</CardTitle>
+              <CardTitle className="font-[var(--font-dash-sans)] text-slate-900">{t('charts.yearlyComparison')}</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={yearlyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis dataKey="year" tick={{ fontSize: 12 }} />
                   <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} tick={{ fontSize: 12 }} />
                   <Tooltip content={<CustomTooltip />} />
@@ -413,13 +428,13 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Category Trends Link */}
-        <div className="mt-8">
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+        <div className="mt-6">
+          <Card className="rounded-[26px] border border-violet-100/60 bg-white/90 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{t('categoryTrends.title')}</h3>
-                  <p className="text-sm text-gray-600">{t('categoryTrends.subtitle')}</p>
+                  <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900">{t('categoryTrends.title')}</h3>
+                  <p className="text-sm text-slate-500">{t('categoryTrends.subtitle')}</p>
                 </div>
                 <Link href="/analytics/trends">
                   <Button variant="primary" className="flex items-center gap-2">
