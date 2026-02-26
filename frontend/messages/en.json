@@ -1443,6 +1443,8 @@
       "failedToLoadStats": "Failed to load stats",
       "fullPath": "Full Path",
       "created": "Created",
+      "lastUpdated": "Last Updated",
+      "averagePerTransaction": "Avg / Transaction",
       "recentTransactions": "Recent Transactions",
       "viewAll": "View All",
       "noTransactionsYet": "No transactions yet",

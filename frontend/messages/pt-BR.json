@@ -1442,6 +1442,8 @@
       "failedToLoadStats": "Falha ao carregar estatísticas",
       "fullPath": "Caminho Completo",
       "created": "Criada em",
+      "lastUpdated": "Última Atualização",
+      "averagePerTransaction": "Média / Transação",
       "recentTransactions": "Transações Recentes",
       "viewAll": "Ver Todas",
       "noTransactionsYet": "Nenhuma transação ainda",
