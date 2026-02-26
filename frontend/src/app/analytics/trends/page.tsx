@@ -27,6 +27,10 @@ const PANEL_CLASS =
 const METRIC_CARD_CLASS =
   'rounded-2xl border border-violet-100/80 bg-white/92 p-4 shadow-[0_16px_34px_-26px_rgba(76,29,149,0.4)]';
 
+const SKELETON_BANNER_CLASS = 'h-20 rounded-[24px] border border-violet-100/80 bg-white/85';
+const SKELETON_METRIC_CARD_CLASS = 'h-28 rounded-2xl border border-violet-100/80 bg-white/85';
+const SKELETON_PANEL_CLASS = 'rounded-[26px] border border-violet-100/80 bg-white/85';
+
 interface TrendStats {
   totalSpending: number;
   avgMonthlySpending: number;
@@ -120,17 +124,17 @@ export default function CategoryTrendsPage() {
       <AppLayout>
         <div className="animate-pulse space-y-5">
           <div className="h-9 w-64 rounded-xl bg-slate-200" />
-          <div className="h-20 rounded-[24px] border border-violet-100/80 bg-white/85" />
+          <div className={SKELETON_BANNER_CLASS} />
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-28 rounded-2xl border border-violet-100/80 bg-white/85" />
+              <div key={i} className={SKELETON_METRIC_CARD_CLASS} />
             ))}
           </div>
           <div className="grid gap-6 xl:grid-cols-[310px_minmax(0,1fr)]">
-            <div className="h-[620px] rounded-[26px] border border-violet-100/80 bg-white/85" />
+            <div className={SKELETON_PANEL_CLASS + ' h-[620px]'} />
             <div className="space-y-6">
-              <div className="h-[520px] rounded-[26px] border border-violet-100/80 bg-white/85" />
-              <div className="h-[360px] rounded-[26px] border border-violet-100/80 bg-white/85" />
+              <div className={SKELETON_PANEL_CLASS + ' h-[520px]'} />
+              <div className={SKELETON_PANEL_CLASS + ' h-[360px]'} />
             </div>
           </div>
         </div>

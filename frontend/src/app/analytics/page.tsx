@@ -56,6 +56,10 @@ const PANEL_CLASS =
 const STAT_CARD_CLASS =
   'rounded-2xl border border-violet-100/80 bg-white/92 p-4 shadow-[0_16px_34px_-26px_rgba(76,29,149,0.4)]';
 
+const SKELETON_BANNER_CLASS = 'h-20 rounded-[24px] border border-violet-100/80 bg-white/85';
+const SKELETON_STAT_CARD_CLASS = 'h-32 rounded-2xl border border-violet-100/80 bg-white/85';
+const SKELETON_PANEL_CLASS = 'rounded-[26px] border border-violet-100/80 bg-white/85';
+
 interface StatCardProps {
   label: string;
   value: string;
@@ -260,20 +264,17 @@ export default function AnalyticsPage() {
       <AppLayout>
         <div className="animate-pulse space-y-5">
           <div className="h-10 w-64 rounded-xl bg-slate-200" />
-          <div className="h-20 rounded-[24px] border border-violet-100/80 bg-white/85" />
+          <div className={SKELETON_BANNER_CLASS} />
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={`metric-${i}`}
-                className="h-32 rounded-2xl border border-violet-100/80 bg-white/85"
-              />
+              <div key={`metric-${i}`} className={SKELETON_STAT_CARD_CLASS} />
             ))}
           </div>
           <div className="grid gap-6 xl:grid-cols-3">
-            <div className="h-[390px] rounded-[26px] border border-violet-100/80 bg-white/85 xl:col-span-2" />
-            <div className="h-[390px] rounded-[26px] border border-violet-100/80 bg-white/85" />
-            <div className="h-[390px] rounded-[26px] border border-violet-100/80 bg-white/85 xl:col-span-2" />
-            <div className="h-[390px] rounded-[26px] border border-violet-100/80 bg-white/85" />
+            <div className={cn('h-[390px] xl:col-span-2', SKELETON_PANEL_CLASS)} />
+            <div className={cn('h-[390px]', SKELETON_PANEL_CLASS)} />
+            <div className={cn('h-[390px] xl:col-span-2', SKELETON_PANEL_CLASS)} />
+            <div className={cn('h-[390px]', SKELETON_PANEL_CLASS)} />
           </div>
         </div>
       </AppLayout>
