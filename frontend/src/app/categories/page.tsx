@@ -104,12 +104,30 @@ export default function CategoriesPage() {
   const loadCategories = async () => {
     try {
       setLoading(true);
-      const categoriesData = await apiClient.getCategories({
-        includeSystemCategories: true,
-        includeInactive: false,
-        includeHierarchy: false
-      }) as Category[];
-      setCategories(categoriesData || []);
+      // Fetch both: all categories + filtered (with transaction counts)
+      const [allCats, filteredCats] = await Promise.all([
+        apiClient.getCategories({
+          includeSystemCategories: true,
+          includeInactive: false,
+          includeHierarchy: false
+        }) as Promise<Category[]>,
+        apiClient.getFilteredCategories({}) as Promise<Category[]>
+      ]);
+
+      // Build a map of transaction counts from filtered results
+      const countMap = new Map<number, { transactionCount: number; totalAmount: number }>();
+      for (const cat of (filteredCats || [])) {
+        countMap.set(cat.id, { transactionCount: cat.transactionCount, totalAmount: cat.totalAmount });
+      }
+
+      // Merge: use all categories but overlay transaction counts from filtered
+      const merged = (allCats || []).map(cat => ({
+        ...cat,
+        transactionCount: countMap.get(cat.id)?.transactionCount ?? 0,
+        totalAmount: countMap.get(cat.id)?.totalAmount ?? 0
+      }));
+
+      setCategories(merged);
     } catch (error) {
       console.error('Failed to load categories:', error);
       setCategories([]);
