@@ -83,11 +83,11 @@ export function TrendSummaryTable({ categories, selectedCategoryIds }: TrendSumm
   const TrendIcon = ({ trend }: { trend: 'up' | 'down' | 'stable' }) => {
     switch (trend) {
       case 'up':
-        return <ArrowTrendingUpIcon className="w-4 h-4 text-red-500" />;
+        return <ArrowTrendingUpIcon className="h-4 w-4 text-rose-500" />;
       case 'down':
-        return <ArrowTrendingDownIcon className="w-4 h-4 text-emerald-500" />;
+        return <ArrowTrendingDownIcon className="h-4 w-4 text-emerald-500" />;
       default:
-        return <MinusIcon className="w-4 h-4 text-slate-400" />;
+        return <MinusIcon className="h-4 w-4 text-slate-400" />;
     }
   };
 
@@ -100,33 +100,33 @@ export function TrendSummaryTable({ categories, selectedCategoryIds }: TrendSumm
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto rounded-2xl border border-violet-100/70 bg-white/95">
       <table className="min-w-full divide-y divide-slate-200">
-        <thead className="bg-slate-50/80">
+        <thead className="bg-violet-50/45">
           <tr>
-            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
               {t('category')}
             </th>
-            <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
               {t('avgMonthly')}
             </th>
-            <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <th className="px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
               {t('trend')}
             </th>
-            <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
               {t('highestMonth')}
             </th>
-            <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
               {t('lowestMonth')}
             </th>
-            <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
               {t('total')}
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody className="divide-y divide-slate-100 bg-white">
           {categoriesWithTrend.map((cat) => (
-            <tr key={cat.categoryId} className="hover:bg-slate-50/60 transition-colors">
+            <tr key={cat.categoryId} className="transition-colors hover:bg-violet-50/45">
               <td className="px-4 py-3 whitespace-nowrap">
                 <div className="flex items-center gap-2">
                   <div
@@ -147,7 +147,7 @@ export function TrendSummaryTable({ categories, selectedCategoryIds }: TrendSumm
                   <span
                     className={cn(
                       'text-sm font-medium',
-                      cat.trend === 'up' && 'text-red-600',
+                      cat.trend === 'up' && 'text-rose-600',
                       cat.trend === 'down' && 'text-emerald-600',
                       cat.trend === 'stable' && 'text-slate-500'
                     )}

@@ -2524,6 +2524,12 @@
     "topExpenses": "Principais Despesas",
     "incomeSourcesTitle": "Fontes de Renda",
     "savingsGoal": "Meta de Economia",
+    "periods": {
+      "month": "Mês",
+      "quarter": "Trimestre",
+      "year": "Ano",
+      "allTime": "Todo Período"
+    },
     "onTrack": "No Caminho Certo",
     "behindSchedule": "Atrasado",
     "summary": {

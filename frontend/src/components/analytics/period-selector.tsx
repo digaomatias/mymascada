@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { useTranslations } from 'next-intl';
 
@@ -28,6 +29,7 @@ export function PeriodSelector({
   const now = new Date();
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth() + 1;
+  const periodOptions: PeriodType[] = ['month', 'quarter', 'year', 'all'];
 
   // Get the current quarter (1-4)
   const getQuarter = (month: number) => Math.ceil(month / 3);
@@ -47,7 +49,7 @@ export function PeriodSelector({
       case 'year':
         return `${selectedYear}`;
       case 'all':
-        return 'All Time';
+        return t('periods.allTime');
     }
   };
 
@@ -121,73 +123,72 @@ export function PeriodSelector({
   const showNavigation = period !== 'all';
 
   return (
-    <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-[26px] border border-violet-100/60 bg-white/90 p-4 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
-      {/* Period Type Selector */}
-      <div className="flex gap-2">
-        <Button
-          variant={period === 'month' ? 'primary' : 'secondary'}
-          size="sm"
-          onClick={() => onPeriodChange('month')}
-        >
-          Month
-        </Button>
-        <Button
-          variant={period === 'quarter' ? 'primary' : 'secondary'}
-          size="sm"
-          onClick={() => onPeriodChange('quarter')}
-        >
-          Quarter
-        </Button>
-        <Button
-          variant={period === 'year' ? 'primary' : 'secondary'}
-          size="sm"
-          onClick={() => onPeriodChange('year')}
-        >
-          Year
-        </Button>
-        <Button
-          variant={period === 'all' ? 'primary' : 'secondary'}
-          size="sm"
-          onClick={() => onPeriodChange('all')}
-        >
-          All Time
-        </Button>
-      </div>
+    <div className="mb-6 rounded-[24px] border border-violet-100/80 bg-white/92 p-4 shadow-[0_18px_40px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="inline-flex w-full flex-wrap items-center gap-1 rounded-xl border border-violet-100 bg-violet-50/55 p-1 lg:w-auto">
+          {periodOptions.map((option) => {
+            const isActive = option === period;
+            const label =
+              option === 'month'
+                ? t('periods.month')
+                : option === 'quarter'
+                  ? t('periods.quarter')
+                  : option === 'year'
+                    ? t('periods.year')
+                    : t('periods.allTime');
 
-      {/* Period Navigation */}
-      {showNavigation && (
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={navigatePrevious}
-            className="p-2"
-            aria-label={t('previousPeriod')}
-          >
-            <ChevronLeftIcon className="w-5 h-5" />
-          </Button>
-
-          <span className="min-w-[140px] text-center font-[var(--font-dash-sans)] font-semibold text-slate-900">
-            {getPeriodLabel()}
-          </span>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={navigateNext}
-            disabled={!canNavigateForward()}
-            className="p-2"
-            aria-label={t('nextPeriod')}
-          >
-            <ChevronRightIcon className="w-5 h-5" />
-          </Button>
+            return (
+              <button
+                key={option}
+                type="button"
+                onClick={() => onPeriodChange(option)}
+                className={cn(
+                  'flex-1 rounded-lg px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] transition-all lg:flex-none',
+                  isActive
+                    ? 'bg-white text-violet-700 shadow-[0_10px_24px_-16px_rgba(76,29,149,0.65)]'
+                    : 'text-slate-500 hover:text-violet-700',
+                )}
+                aria-pressed={isActive}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
-      )}
 
-      {/* Show static label for All Time */}
-      {!showNavigation && (
-        <span className="font-[var(--font-dash-sans)] font-semibold text-slate-900">{getPeriodLabel()}</span>
-      )}
+        {showNavigation ? (
+          <div className="flex w-full items-center justify-between gap-2 rounded-xl border border-violet-100/80 bg-white/95 px-2 py-1.5 lg:w-auto lg:justify-start">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={navigatePrevious}
+              className="h-8 w-8 rounded-lg text-slate-500 hover:text-violet-700"
+              aria-label={t('previousPeriod')}
+            >
+              <ChevronLeftIcon className="h-4 w-4" />
+            </Button>
+
+            <span className="min-w-[150px] text-center font-[var(--font-dash-sans)] text-sm font-semibold tracking-[-0.01em] text-slate-900">
+              {getPeriodLabel()}
+            </span>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={navigateNext}
+              disabled={!canNavigateForward()}
+              className="h-8 w-8 rounded-lg text-slate-500 hover:text-violet-700"
+              aria-label={t('nextPeriod')}
+            >
+              <ChevronRightIcon className="h-4 w-4" />
+            </Button>
+          </div>
+        ) : (
+          <div className="inline-flex items-center rounded-xl border border-violet-100/80 bg-white/95 px-3 py-2 text-sm font-semibold text-slate-700">
+            {getPeriodLabel()}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
