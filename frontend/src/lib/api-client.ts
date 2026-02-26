@@ -630,7 +630,7 @@ class ApiClient {
     if (params?.transferId) queryParams.append('transferId', params.transferId);
     
     const queryString = queryParams.toString();
-    const endpoint = `/api/transactions/categories${queryString ? `?${queryString}` : ''}`;
+    const endpoint = `/api/categories/filtered${queryString ? `?${queryString}` : ''}`;
     
     return this.request(endpoint);
   }

@@ -30,6 +30,10 @@ public class GetCategoryQueryHandler : IRequestHandler<GetCategoryQuery, Categor
         if (!category.IsSystemCategory && category.UserId != request.UserId)
             return null;
 
+        // Get transaction statistics for this category
+        var categoryStats = await _categoryRepository.GetCategoriesWithTransactionCountsAsync(request.UserId);
+        var stats = categoryStats.FirstOrDefault(c => c.Id == category.Id);
+
         return new CategoryDto
         {
             Id = category.Id,
@@ -44,7 +48,9 @@ public class GetCategoryQueryHandler : IRequestHandler<GetCategoryQuery, Categor
             ParentCategoryId = category.ParentCategoryId,
             FullPath = category.GetFullPath(),
             CreatedAt = category.CreatedAt,
-            UpdatedAt = category.UpdatedAt
+            UpdatedAt = category.UpdatedAt,
+            TransactionCount = stats?.TransactionCount ?? 0,
+            TotalAmount = stats?.TotalAmount ?? 0
         };
     }
 }
