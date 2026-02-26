@@ -1388,6 +1388,9 @@
       "categories": "Your Categories",
       "bankMappings": "Bank Mappings"
     },
+    "groupCount": "{count} categories",
+    "transactions": "{count} transactions",
+    "noTransactions": "No transactions",
     "errors": {
       "deleteFailed": "Failed to delete category. Please try again.",
       "hasTransactions": "This category cannot be deleted because it has transactions. Please reassign or delete all transactions in this category first.",

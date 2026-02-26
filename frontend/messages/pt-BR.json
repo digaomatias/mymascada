@@ -1387,6 +1387,9 @@
       "categories": "Suas Categorias",
       "bankMappings": "Mapeamentos Bancários"
     },
+    "groupCount": "{count} categorias",
+    "transactions": "{count} transações",
+    "noTransactions": "Sem transações",
     "errors": {
       "deleteFailed": "Falha ao excluir categoria. Tente novamente.",
       "hasTransactions": "Esta categoria não pode ser excluída porque possui transações. Reatribua ou exclua todas as transações desta categoria primeiro.",
