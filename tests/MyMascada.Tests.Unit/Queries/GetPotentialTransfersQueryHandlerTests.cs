@@ -69,7 +69,7 @@ public class GetPotentialTransfersQueryHandlerTests
             AccountName = "Savings Account"
         };
 
-        _transactionRepository.GetUserTransactionsAsync(userId, false, false, false)
+        _transactionRepository.GetUserTransactionsAsync(userId, false, false, false, Arg.Any<DateTime?>())
             .Returns(transactions);
         
         _mapper.Map<TransactionDto>(outgoingTransaction).Returns(outgoingDto);
@@ -142,7 +142,7 @@ public class GetPotentialTransfersQueryHandlerTests
             AccountName = "Account B"
         };
 
-        _transactionRepository.GetUserTransactionsAsync(userId, false, true, false)
+        _transactionRepository.GetUserTransactionsAsync(userId, false, true, false, Arg.Any<DateTime?>())
             .Returns(transactions);
 
         _mapper.Map<TransactionDto>(outgoingTransaction).Returns(outgoingDto);
@@ -207,7 +207,7 @@ public class GetPotentialTransfersQueryHandlerTests
             Description = "Another purchase"
         };
 
-        _transactionRepository.GetUserTransactionsAsync(userId, false, true, false)
+        _transactionRepository.GetUserTransactionsAsync(userId, false, true, false, Arg.Any<DateTime?>())
             .Returns(transactions);
 
         _mapper.Map<TransactionDto>(transaction1).Returns(dto1);
@@ -265,7 +265,7 @@ public class GetPotentialTransfersQueryHandlerTests
             Description = "Another deposit"
         };
 
-        _transactionRepository.GetUserTransactionsAsync(userId, false, true, false)
+        _transactionRepository.GetUserTransactionsAsync(userId, false, true, false, Arg.Any<DateTime?>())
             .Returns(transactions);
 
         _mapper.Map<TransactionDto>(transaction1).Returns(dto1);
@@ -305,7 +305,7 @@ public class GetPotentialTransfersQueryHandlerTests
             Description = t.Description
         }).ToList();
 
-        _transactionRepository.GetUserTransactionsAsync(userId, false, true, false)
+        _transactionRepository.GetUserTransactionsAsync(userId, false, true, false, Arg.Any<DateTime?>())
             .Returns(transactions);
 
         foreach (var (transaction, dto) in transactions.Zip(dtos))
@@ -383,7 +383,7 @@ public class GetPotentialTransfersQueryHandlerTests
             AccountName = "ANZ Savings"
         };
 
-        _transactionRepository.GetUserTransactionsAsync(userId, false, true, false)
+        _transactionRepository.GetUserTransactionsAsync(userId, false, true, false, Arg.Any<DateTime?>())
             .Returns(transactions);
 
         _mapper.Map<TransactionDto>(transaction1).Returns(dto1);
@@ -442,7 +442,7 @@ public class GetPotentialTransfersQueryHandlerTests
             Description = "Transfer"
         };
 
-        _transactionRepository.GetUserTransactionsAsync(userId, false, true, false)
+        _transactionRepository.GetUserTransactionsAsync(userId, false, true, false, Arg.Any<DateTime?>())
             .Returns(transactions);
 
         _mapper.Map<TransactionDto>(transaction1).Returns(dto1);
@@ -500,7 +500,7 @@ public class GetPotentialTransfersQueryHandlerTests
             Description = "Transfer"
         };
 
-        _transactionRepository.GetUserTransactionsAsync(userId, false, true, false)
+        _transactionRepository.GetUserTransactionsAsync(userId, false, true, false, Arg.Any<DateTime?>())
             .Returns(transactions);
 
         _mapper.Map<TransactionDto>(transaction1).Returns(dto1);
