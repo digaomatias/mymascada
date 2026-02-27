@@ -21,7 +21,8 @@ import {
   Bars3Icon,
   ArrowUpIcon,
   ArrowDownIcon,
-  ArrowsUpDownIcon
+  ArrowsUpDownIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
@@ -959,6 +960,7 @@ export default function RulesPage() {
                             onClick={() => toggleRuleStatus(rule.id, rule.isActive)}
                             className="w-8 h-8 p-0"
                             disabled={isReorderMode || isBulkUpdating}
+                            title={rule.isActive ? t('bulk.deactivate') : t('bulk.activate')}
                           >
                             {rule.isActive ? (
                               <PauseIcon className="w-4 h-4" />
@@ -968,7 +970,13 @@ export default function RulesPage() {
                           </Button>
 
                           <Link href={`/rules/${rule.id}/edit`}>
-                            <Button variant="secondary" size="sm" className="w-8 h-8 p-0" disabled={isReorderMode || isBulkUpdating}>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              className="w-8 h-8 p-0"
+                              disabled={isReorderMode || isBulkUpdating}
+                              title={t('editRule')}
+                            >
                               <PencilIcon className="w-4 h-4" />
                             </Button>
                           </Link>
@@ -979,6 +987,7 @@ export default function RulesPage() {
                             onClick={() => deleteRule(rule.id, rule.name)}
                             className="w-8 h-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                             disabled={isReorderMode || isBulkUpdating}
+                            title={t('deleteRule')}
                           >
                             <TrashIcon className="w-4 h-4" />
                           </Button>
@@ -1015,9 +1024,7 @@ export default function RulesPage() {
                   className="text-slate-400 hover:text-slate-600 transition-colors"
                 >
                   <span className="sr-only">{tCommon('close')}</span>
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <XMarkIcon className="w-6 h-6" />
                 </button>
               </div>
             </div>
