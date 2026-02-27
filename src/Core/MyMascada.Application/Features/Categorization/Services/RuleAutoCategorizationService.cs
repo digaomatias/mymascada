@@ -742,7 +742,7 @@ public class RuleAutoCategorizationService : IRuleAutoCategorizationService
             {
                 var candidateIds = existingCandidates.Select(c => c.CandidateId!.Value).ToList();
                 var batchResult = await _candidatesService.ApplyCandidatesBatchAsync(
-                    candidateIds, $"RuleAutoCategorizationService-{userId}", cancellationToken);
+                    candidateIds, $"RuleAutoCategorizationService-{userId}", userId, cancellationToken);
                 
                 appliedCount += batchResult.SuccessfulCount;
                 errors.AddRange(batchResult.Errors);

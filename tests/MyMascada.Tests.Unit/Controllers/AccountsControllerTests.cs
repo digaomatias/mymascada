@@ -416,16 +416,11 @@ public class AccountsControllerTests
             UserId = _userId
         };
 
-        var transactions = new List<Transaction>
-        {
-            new() { Id = 1, AccountId = accountId }
-        };
-
         _accountRepository.GetByIdAsync(accountId, _userId)
             .Returns(account);
-        
-        _transactionRepository.GetByAccountIdAsync(accountId, _userId)
-            .Returns(transactions);
+
+        _transactionRepository.HasTransactionsAsync(accountId, _userId)
+            .Returns(true);
 
         // Act
         var result = await _controller.ArchiveAccount(accountId);
@@ -464,16 +459,12 @@ public class AccountsControllerTests
         // Arrange
         var accountId = 1;
         var account = new Account { Id = accountId, UserId = _userId };
-        var transactions = new List<Transaction>
-        {
-            new() { Id = 1, AccountId = accountId }
-        };
 
         _accountRepository.GetByIdAsync(accountId, _userId)
             .Returns(account);
-        
-        _transactionRepository.GetByAccountIdAsync(accountId, _userId)
-            .Returns(transactions);
+
+        _transactionRepository.HasTransactionsAsync(accountId, _userId)
+            .Returns(true);
 
         // Act
         var result = await _controller.HasTransactions(accountId);

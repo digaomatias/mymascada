@@ -14,36 +14,36 @@ public class CsvImportService : ICsvImportService
     public async Task<CsvParseResult> ParseCsvAsync(Stream csvStream, CsvFieldMapping mapping, bool hasHeader = true)
     {
         var result = new CsvParseResult();
-        
+
         try
         {
             csvStream.Position = 0;
             using var reader = new StreamReader(csvStream);
             using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
-            
-            var records = new List<string[]>();
-            
-            // Read all records first
+
+            int rowNumber = 1;
+            bool headerSkipped = !hasHeader;
+
+            // Stream records one at a time instead of loading all into memory
             while (await csv.ReadAsync())
             {
+                result.TotalRows++;
+
+                // Skip header row
+                if (!headerSkipped)
+                {
+                    headerSkipped = true;
+                    rowNumber++;
+                    continue;
+                }
+
                 var fieldCount = csv.Parser.Count;
                 var record = new string[fieldCount];
                 for (int i = 0; i < fieldCount; i++)
                 {
                     record[i] = csv.GetField(i) ?? string.Empty;
                 }
-                records.Add(record);
-            }
-            
-            result.TotalRows = records.Count;
-            
-            // Skip header if present
-            var dataRows = hasHeader ? records.Skip(1) : records;
-            
-            int rowNumber = hasHeader ? 2 : 1; // Start from 2 if header exists, 1 otherwise
-            
-            foreach (var record in dataRows)
-            {
+
                 try
                 {
                     var transaction = ParseRow(record, mapping, rowNumber);
@@ -57,10 +57,10 @@ public class CsvImportService : ICsvImportService
                 {
                     result.Errors.Add($"Row {rowNumber}: {ex.Message}");
                 }
-                
+
                 rowNumber++;
             }
-            
+
             result.IsSuccess = result.Errors.Count == 0 || result.ValidRows > 0;
         }
         catch (Exception ex)
@@ -68,7 +68,7 @@ public class CsvImportService : ICsvImportService
             result.Errors.Add($"Failed to parse CSV: {ex.Message}");
             result.IsSuccess = false;
         }
-        
+
         return result;
     }
 
