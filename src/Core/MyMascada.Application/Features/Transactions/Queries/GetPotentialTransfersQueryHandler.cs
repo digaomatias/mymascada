@@ -27,12 +27,14 @@ public class GetPotentialTransfersQueryHandler : IRequestHandler<GetPotentialTra
 
     public async Task<PotentialTransfersResponse> Handle(GetPotentialTransfersQuery request, CancellationToken cancellationToken)
     {
-        // Get all user transactions that could be part of transfers
+        // Get user transactions within a 90-day window to avoid unbounded queries
+        var cutoffDate = DateTime.UtcNow.AddDays(-90);
         var transactions = await _transactionRepository.GetUserTransactionsAsync(
-            request.UserId, 
+            request.UserId,
             includeDeleted: false,
             includeReviewed: request.IncludeReviewed,
-            includeTransfers: request.IncludeExistingTransfers);
+            includeTransfers: request.IncludeExistingTransfers,
+            sinceDate: cutoffDate);
 
         var transactionDtos = transactions.Select(t => _mapper.Map<TransactionDto>(t)).ToList();
         var response = new PotentialTransfersResponse();

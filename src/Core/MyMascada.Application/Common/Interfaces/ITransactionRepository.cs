@@ -10,6 +10,7 @@ public interface ITransactionRepository
     Task<Transaction?> GetByIdAsync(int id, Guid userId);
     Task<Transaction?> GetByIdAsync(int id);
     Task<IEnumerable<Transaction>> GetByAccountIdAsync(int accountId, Guid userId);
+    Task<bool> HasTransactionsAsync(int accountId, Guid userId);
     Task<IEnumerable<Transaction>> GetByCategoryIdAsync(int categoryId, Guid userId);
     Task<(IEnumerable<Transaction> transactions, int totalCount)> GetFilteredAsync(GetTransactionsQuery query);
     Task<TransactionSummaryDto> GetSummaryAsync(GetTransactionsQuery query);
@@ -50,10 +51,10 @@ public interface ITransactionRepository
     Task HardDeleteTransactionsByAccountIdAsync(int accountId, Guid userId);
     
     // Duplicate detection
-    Task<List<Transaction>> GetAllForDuplicateDetectionAsync(Guid userId, bool includeReviewed = false);
-    
+    Task<List<Transaction>> GetAllForDuplicateDetectionAsync(Guid userId, bool includeReviewed = false, DateTime? sinceDate = null);
+
     // Transfer detection
-    Task<List<Transaction>> GetUserTransactionsAsync(Guid userId, bool includeDeleted = false, bool includeReviewed = true, bool includeTransfers = true);
+    Task<List<Transaction>> GetUserTransactionsAsync(Guid userId, bool includeDeleted = false, bool includeReviewed = true, bool includeTransfers = true, DateTime? sinceDate = null);
     Task<List<Transaction>> GetByTransferIdAsync(Guid transferId, Guid userId);
     
     // Amount normalization

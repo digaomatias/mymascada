@@ -47,6 +47,15 @@ public class TransactionRepository : ITransactionRepository
             .ToListAsync();
     }
 
+    public async Task<bool> HasTransactionsAsync(int accountId, Guid userId)
+    {
+        if (!await _accountAccess.CanAccessAccountAsync(userId, accountId))
+            return false;
+
+        return await _context.Transactions
+            .AnyAsync(t => t.AccountId == accountId && !t.IsDeleted);
+    }
+
     public async Task<IEnumerable<Transaction>> GetByCategoryIdAsync(int categoryId, Guid userId)
     {
         var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
@@ -518,15 +527,18 @@ public class TransactionRepository : ITransactionRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<List<Transaction>> GetAllForDuplicateDetectionAsync(Guid userId, bool includeReviewed = false)
+    public async Task<List<Transaction>> GetAllForDuplicateDetectionAsync(Guid userId, bool includeReviewed = false, DateTime? sinceDate = null)
     {
         var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
+        var cutoff = sinceDate ?? DateTime.UtcNow.AddDays(-180);
+
         var query = _context.Transactions
             .Include(t => t.Account)
             .Include(t => t.Category)
             .Where(t => accessibleIds.Contains(t.AccountId) &&
                        !t.IsDeleted &&
-                       t.TransferId == null); // Exclude transfer transactions
+                       t.TransferId == null && // Exclude transfer transactions
+                       t.TransactionDate >= cutoff);
 
         if (!includeReviewed)
         {
@@ -539,7 +551,7 @@ public class TransactionRepository : ITransactionRepository
             .ToListAsync();
     }
 
-    public async Task<List<Transaction>> GetUserTransactionsAsync(Guid userId, bool includeDeleted = false, bool includeReviewed = true, bool includeTransfers = true)
+    public async Task<List<Transaction>> GetUserTransactionsAsync(Guid userId, bool includeDeleted = false, bool includeReviewed = true, bool includeTransfers = true, DateTime? sinceDate = null)
     {
         var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
         var query = _context.Transactions
@@ -560,6 +572,11 @@ public class TransactionRepository : ITransactionRepository
         if (!includeTransfers)
         {
             query = query.Where(t => t.TransferId == null && t.Type != MyMascada.Domain.Enums.TransactionType.TransferComponent);
+        }
+
+        if (sinceDate.HasValue)
+        {
+            query = query.Where(t => t.TransactionDate >= sinceDate.Value);
         }
 
         return await query
@@ -668,7 +685,6 @@ public class TransactionRepository : ITransactionRepository
             return;
 
         // Use reflection to extract values from the anonymous objects
-        var transactionIds = new List<int>();
         var updateData = new Dictionary<int, (int CategoryId, string Method, decimal Confidence, string By, DateTime At, bool Reviewed)>();
 
         foreach (var update in updateList)
@@ -682,20 +698,24 @@ public class TransactionRepository : ITransactionRepository
             var at = (DateTime)properties.First(p => p.Name == "AutoCategorizedAt").GetValue(update)!;
             var reviewed = (bool)properties.First(p => p.Name == "IsReviewed").GetValue(update)!;
 
-            transactionIds.Add(transactionId);
             updateData[transactionId] = (categoryId, method, confidence, by, at, reviewed);
         }
 
-        foreach (var kvp in updateData)
-        {
-            var transactionId = kvp.Key;
-            var (categoryId, method, confidence, by, at, reviewed) = kvp.Value;
+        // Group by categoryId to issue one batch UPDATE per category instead of one per transaction
+        var byCategoryId = updateData.GroupBy(kvp => kvp.Value.CategoryId);
 
-            // Truncate UpdatedBy to fit potential database constraints
+        foreach (var group in byCategoryId)
+        {
+            var categoryId = group.Key;
+            var transactionIds = group.Select(g => g.Key).ToList();
+
+            // All transactions in the same category share the same batch-level values;
+            // take them from the first entry in the group.
+            var (_, method, confidence, by, at, reviewed) = group.First().Value;
             var truncatedBy = by?.Length > 50 ? by.Substring(0, 50) : by;
 
             await _context.Transactions
-                .Where(t => t.Id == transactionId)
+                .Where(t => transactionIds.Contains(t.Id))
                 .ExecuteUpdateAsync(setters => setters
                     .SetProperty(t => t.CategoryId, categoryId)
                     .SetProperty(t => t.IsAutoCategorized, true)

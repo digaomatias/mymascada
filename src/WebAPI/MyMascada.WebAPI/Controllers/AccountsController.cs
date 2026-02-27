@@ -157,7 +157,7 @@ public class AccountsController : ControllerBase
         }
 
         // Check if account has transactions
-        var hasTransactions = (await _transactionRepository.GetByAccountIdAsync(id, userId)).Any();
+        var hasTransactions = await _transactionRepository.HasTransactionsAsync(id, userId);
         if (hasTransactions)
         {
             return BadRequest(new
@@ -184,7 +184,7 @@ public class AccountsController : ControllerBase
             return NotFound();
         }
 
-        var hasTransactions = (await _transactionRepository.GetByAccountIdAsync(id, _currentUserService.GetUserId())).Any();
+        var hasTransactions = await _transactionRepository.HasTransactionsAsync(id, _currentUserService.GetUserId());
         return Ok(new { hasTransactions });
     }
 
