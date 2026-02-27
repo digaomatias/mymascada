@@ -271,7 +271,7 @@ export default function AiSettingsPage() {
           <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <SparklesIcon className="w-8 h-8 text-white" />
           </div>
-          <div className="mt-6 text-gray-700 font-medium">{tCommon('loading')}</div>
+          <div className="mt-6 text-slate-700 font-medium">{tCommon('loading')}</div>
         </div>
       </div>
     );
@@ -288,7 +288,7 @@ export default function AiSettingsPage() {
       {/* Back link */}
         <Link
           href="/settings"
-          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4"
+          className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 mb-4"
         >
           <ArrowLeftIcon className="w-4 h-4" />
           {t('backToSettings')}
@@ -297,27 +297,27 @@ export default function AiSettingsPage() {
         {/* Header */}
         <div className="mb-6 lg:mb-8">
           <div className="flex items-center gap-3 mb-1">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-violet-600 rounded-xl flex items-center justify-center">
               <SparklesIcon className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
+              <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
                 {t('title')}
               </h1>
-              <p className="text-gray-600 mt-0.5">{t('subtitle')}</p>
+              <p className="text-[15px] text-slate-500 mt-0.5">{t('subtitle')}</p>
             </div>
           </div>
         </div>
 
         {/* Tab Switcher */}
         <div className="mb-4">
-          <div className="flex border-b border-gray-200">
+          <div className="flex border-b border-slate-200">
             <button
               onClick={() => handleTabChange('general')}
               className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
                 activePurpose === 'general'
-                  ? 'border-primary-600 text-primary-700'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-violet-600 text-violet-700'
+                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
               }`}
             >
               {t('tabs.general')}
@@ -326,8 +326,8 @@ export default function AiSettingsPage() {
               onClick={() => handleTabChange('chat')}
               className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
                 activePurpose === 'chat'
-                  ? 'border-primary-600 text-primary-700'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-violet-600 text-violet-700'
+                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
               }`}
             >
               {t('tabs.chat')}
@@ -338,34 +338,32 @@ export default function AiSettingsPage() {
         {/* Chat AI Description */}
         {activePurpose === 'chat' && (
           <div className="mb-4">
-            <Card className="bg-blue-50/80 backdrop-blur-xs border-0 shadow-sm">
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <InformationCircleIcon className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-                  <p className="text-sm text-blue-800">{t('chatDescription')}</p>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="rounded-2xl border border-blue-200/60 bg-blue-50/80 backdrop-blur-xs p-4">
+              <div className="flex items-start gap-3">
+                <InformationCircleIcon className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+                <p className="text-sm text-blue-800">{t('chatDescription')}</p>
+              </div>
+            </div>
           </div>
         )}
 
         {isLoadingData ? (
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+          <Card className="rounded-[26px] border border-violet-100/70 bg-white/92 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs">
             <CardContent className="p-6">
               <div className="animate-pulse space-y-4">
-                <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-                <div className="h-10 bg-gray-200 rounded"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                <div className="h-10 bg-gray-200 rounded"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                <div className="h-10 bg-gray-200 rounded"></div>
+                <div className="h-4 bg-slate-200 rounded w-1/3"></div>
+                <div className="h-10 bg-slate-200 rounded"></div>
+                <div className="h-4 bg-slate-200 rounded w-1/4"></div>
+                <div className="h-10 bg-slate-200 rounded"></div>
+                <div className="h-4 bg-slate-200 rounded w-1/4"></div>
+                <div className="h-10 bg-slate-200 rounded"></div>
               </div>
             </CardContent>
           </Card>
         ) : (
           <div className="space-y-4">
             {/* Status Banner */}
-            <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+            <Card className="rounded-[26px] border border-violet-100/70 bg-white/92 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs">
               <CardContent className="p-4">
                 {settings ? (
                   <div className="flex items-start gap-3">
@@ -399,11 +397,11 @@ export default function AiSettingsPage() {
             </Card>
 
             {/* Configuration Form */}
-            <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+            <Card className="rounded-[26px] border border-violet-100/70 bg-white/92 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs">
               <CardContent className="p-6 space-y-5">
                 {/* Provider */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
                     {t('provider.label')}
                   </label>
                   <Select
@@ -425,12 +423,12 @@ export default function AiSettingsPage() {
 
                 {/* API Key */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
                     {t('apiKey.label')}
                   </label>
                   {settings?.hasApiKey && !apiKeyChanged ? (
                     <div className="flex items-center gap-3">
-                      <div className="flex-1 input bg-gray-50 text-gray-500 flex items-center">
+                      <div className="flex-1 input bg-slate-50 text-slate-500 flex items-center">
                         <span>{t('apiKey.current')}: ****{settings.apiKeyLastFour}</span>
                       </div>
                       <Button
@@ -453,12 +451,12 @@ export default function AiSettingsPage() {
                       className="w-full"
                     />
                   )}
-                  <p className="text-xs text-gray-500 mt-1.5">{t('apiKey.hint')}</p>
+                  <p className="text-xs text-slate-500 mt-1.5">{t('apiKey.hint')}</p>
                 </div>
 
                 {/* Model */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
                     {t('model.label')}
                   </label>
                   {selectedProvider && selectedProvider.models.length > 0 ? (
@@ -502,7 +500,7 @@ export default function AiSettingsPage() {
                 {/* Endpoint */}
                 {!isStandardOpenAI && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">
                       {t('endpoint.label')}
                     </label>
                     <Input
@@ -543,7 +541,7 @@ export default function AiSettingsPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex flex-col sm:flex-row gap-3 pt-3 border-t border-gray-100">
+                <div className="flex flex-col sm:flex-row gap-3 pt-3 border-t border-slate-100">
                   <Button
                     variant="primary"
                     onClick={handleSave}

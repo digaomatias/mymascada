@@ -186,10 +186,10 @@ export default function BankConnectionsPage() {
     return (
       <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
+          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-violet-600 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <BuildingLibraryIcon className="w-8 h-8 text-white" />
           </div>
-          <div className="mt-6 text-gray-700 font-medium">{t('loading')}</div>
+          <div className="mt-6 text-slate-700 font-medium">{t('loading')}</div>
         </div>
       </div>
     );
@@ -210,17 +210,17 @@ export default function BankConnectionsPage() {
               href="/settings"
               className="p-1 hover:bg-white/50 rounded-lg transition-colors"
             >
-              <ArrowLeftIcon className="w-5 h-5 text-gray-600" />
+              <ArrowLeftIcon className="w-5 h-5 text-slate-600" />
             </Link>
-            <span className="text-sm text-gray-500">{tNav('settings')}</span>
+            <span className="text-sm text-slate-500">{tNav('settings')}</span>
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
+              <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
                 {t('title')}
               </h1>
-              <p className="text-gray-600 mt-1">
+              <p className="text-[15px] text-slate-500 mt-1.5">
                 {t('subtitle')}
               </p>
             </div>
@@ -251,25 +251,23 @@ export default function BankConnectionsPage() {
         </div>
 
         {/* Info Banner */}
-        <Card className="bg-blue-50 border-blue-200 mb-6">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <InformationCircleIcon className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-              <div className="text-sm text-blue-800">
-                <p className="font-medium">{t('aboutTitle')}</p>
-                <p className="mt-1 text-blue-700">
-                  {t('aboutDescription')}
-                </p>
-              </div>
+        <div className="rounded-2xl border border-blue-200/60 bg-blue-50/80 backdrop-blur-xs p-4 mb-6">
+          <div className="flex items-start gap-3">
+            <InformationCircleIcon className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+            <div className="text-sm text-blue-800">
+              <p className="font-medium">{t('aboutTitle')}</p>
+              <p className="mt-1 text-blue-700">
+                {t('aboutDescription')}
+              </p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Connections List */}
-        <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+        <Card className="rounded-[26px] border border-violet-100/70 bg-white/92 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <BuildingLibraryIcon className="w-6 h-6 text-primary-600" />
+              <BuildingLibraryIcon className="w-6 h-6 text-violet-600" />
               {t('connectedAccounts')}
             </CardTitle>
           </CardHeader>
