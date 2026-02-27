@@ -60,8 +60,9 @@ public class CsvImportControllerTests
         var formFile = Substitute.For<IFormFile>();
         formFile.FileName.Returns(fileName);
         formFile.Length.Returns(bytes.Length);
+        formFile.ContentType.Returns("text/csv");
         formFile.OpenReadStream().Returns(stream);
-        
+
         return formFile;
     }
 

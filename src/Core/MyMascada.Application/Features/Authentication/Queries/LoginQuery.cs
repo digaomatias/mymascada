@@ -117,6 +117,12 @@ public class LoginQueryHandler : IRequestHandler<LoginQuery, AuthenticationRespo
             user.LockoutEnd = null;
         }
 
+        // Rehash password if stored with legacy iteration count
+        if (_authenticationService.NeedsRehash(user.PasswordHash))
+        {
+            user.PasswordHash = await _authenticationService.HashPasswordAsync(request.Password);
+        }
+
         // Update last login
         user.LastLoginAt = DateTime.UtcNow;
         await _userRepository.UpdateAsync(user);

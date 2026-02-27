@@ -631,10 +631,11 @@ public class TransactionRepository : ITransactionRepository
         return (currentMonthSpending, previousMonthSpending);
     }
 
-    public async Task<IEnumerable<Transaction>> GetAllTransactionsForNormalizationAsync()
+    public async Task<IEnumerable<Transaction>> GetAllTransactionsForNormalizationAsync(Guid userId)
     {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
         return await _context.Transactions
-            .Where(t => !t.IsDeleted)
+            .Where(t => !t.IsDeleted && accessibleIds.Contains(t.AccountId))
             .ToListAsync();
     }
 

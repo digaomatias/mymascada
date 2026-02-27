@@ -20,6 +20,26 @@ public class CsvImportController : ControllerBase
     private const int MaxFileSizeMB = 10;
     private const int MaxFileSizeBytes = MaxFileSizeMB * 1024 * 1024;
 
+    // Intentionally excludes "text/plain" and "application/octet-stream" — both are too broad
+    // and would allow non-CSV files. The .csv extension check is the primary gate; these MIME
+    // types are a secondary defence. Some browsers do send "application/octet-stream" for CSV
+    // downloads, but we accept that trade-off in favour of tighter security.
+    private static readonly string[] AllowedCsvMimeTypes =
+    [
+        "text/csv",
+        "application/csv",
+        "application/vnd.ms-excel"
+    ];
+
+    private static bool IsAllowedCsvContentType(string? contentType)
+    {
+        if (string.IsNullOrWhiteSpace(contentType))
+            return false;
+        // Strip any parameters (e.g. "text/csv; charset=utf-8")
+        var baseType = contentType.Split(';')[0].Trim().ToLowerInvariant();
+        return Array.IndexOf(AllowedCsvMimeTypes, baseType) >= 0;
+    }
+
     public CsvImportController(IMediator mediator, IAICsvAnalysisService aiAnalysisService, ICurrentUserService currentUserService)
     {
         _mediator = mediator;
@@ -53,6 +73,11 @@ public class CsvImportController : ControllerBase
             if (!file.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
             {
                 return BadRequest(new { message = "Only CSV files are allowed" });
+            }
+
+            if (!IsAllowedCsvContentType(file.ContentType))
+            {
+                return BadRequest(new { message = "Invalid file content type. Only CSV files are allowed." });
             }
 
             // Analyze CSV structure with AI
@@ -193,6 +218,11 @@ public class CsvImportController : ControllerBase
             if (!file.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
             {
                 return BadRequest(new { message = "Only CSV files are allowed" });
+            }
+
+            if (!IsAllowedCsvContentType(file.ContentType))
+            {
+                return BadRequest(new { message = "Invalid file content type. Only CSV files are allowed." });
             }
 
             // Read file data into byte array

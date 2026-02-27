@@ -58,7 +58,7 @@ public interface ITransactionRepository
     Task<List<Transaction>> GetByTransferIdAsync(Guid transferId, Guid userId);
     
     // Amount normalization
-    Task<IEnumerable<Transaction>> GetAllTransactionsForNormalizationAsync();
+    Task<IEnumerable<Transaction>> GetAllTransactionsForNormalizationAsync(Guid userId);
     
     // Categorization status checking
     Task<HashSet<int>> GetCategorizedTransactionIdsAsync(IEnumerable<int> transactionIds);
