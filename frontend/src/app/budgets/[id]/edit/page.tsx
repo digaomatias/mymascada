@@ -508,7 +508,7 @@ export default function EditBudgetPage() {
           </div>
           <div className="flex items-center gap-2">
             <Link href={`${BUDGET_BASE}/${budget.id}`}>
-              <Button variant="outline">{tCommon('cancel')}</Button>
+              <Button variant="secondary">{tCommon('cancel')}</Button>
             </Link>
             <Button onClick={handleSave} disabled={saving || !name.trim()} loading={saving}>
               {tCommon('save')}

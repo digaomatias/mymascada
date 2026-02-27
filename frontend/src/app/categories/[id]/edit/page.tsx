@@ -178,7 +178,7 @@ export default function EditCategoryPage() {
           <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <TagIcon className="w-8 h-8 text-white" />
           </div>
-          <div className="mt-6 text-gray-700 font-medium">{t('details.loadingCategory')}</div>
+          <div className="mt-6 text-slate-700 font-medium">{t('details.loadingCategory')}</div>
         </div>
       </div>
     );
@@ -192,8 +192,8 @@ export default function EditCategoryPage() {
     return (
       <AppLayout>
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('edit.cannotEditSystem')}</h1>
-            <p className="text-gray-600 mb-6">{t('edit.systemCategoriesCannotBeModified')}</p>
+            <h1 className="font-[var(--font-dash-sans)] text-2xl font-semibold text-slate-900 mb-4">{t('edit.cannotEditSystem')}</h1>
+            <p className="text-slate-600 mb-6">{t('edit.systemCategoriesCannotBeModified')}</p>
             <Link href={`/categories/${categoryId}`}>
               <Button>{t('edit.backToCategory')}</Button>
             </Link>
@@ -224,21 +224,21 @@ export default function EditCategoryPage() {
           </div>
 
           {/* Page Title */}
-          <div className="text-center mb-8">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+          <div className="mb-6">
+            <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
               {t('edit.title')}
             </h1>
-            <p className="text-gray-600 text-sm sm:text-base">
+            <p className="text-[15px] text-slate-500 mt-1.5">
               {t('edit.subtitle')}
             </p>
           </div>
         </div>
 
         <div className="max-w-2xl mx-auto">
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+          <Card className="rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92">
             <CardHeader>
-              <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <TagIcon className="w-6 h-6 text-primary-600" />
+              <CardTitle className="font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900 flex items-center gap-2">
+                <TagIcon className="w-5 h-5 text-violet-600" />
                 {t('categoryDetails')}
               </CardTitle>
             </CardHeader>
@@ -246,24 +246,24 @@ export default function EditCategoryPage() {
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Preview */}
-                <div className="text-center p-6 bg-gray-50 rounded-lg">
-                  <div 
+                <div className="text-center p-6 bg-slate-50/50 rounded-[16px]">
+                  <div
                     className="w-16 h-16 rounded-2xl shadow-lg flex items-center justify-center mx-auto mb-3 transition-colors"
                     style={{ backgroundColor: formData.color }}
                   >
                     {renderCategoryIcon(category.icon, "w-8 h-8 text-white")}
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900">
                     {formData.name || 'Category Name'}
                   </h3>
                   {formData.description && (
-                    <p className="text-sm text-gray-600 mt-1">{formData.description}</p>
+                    <p className="text-sm text-slate-600 mt-1">{formData.description}</p>
                   )}
                 </div>
 
                 {/* Name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 mb-2">
                     {t('edit.categoryName')}
                   </label>
                   <Input
@@ -280,7 +280,7 @@ export default function EditCategoryPage() {
 
                 {/* Description */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 mb-2">
                     {t('edit.description')}
                   </label>
                   <Input
@@ -293,7 +293,7 @@ export default function EditCategoryPage() {
 
                 {/* Parent Category */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 mb-2">
                     {t('edit.parentCategory')}
                   </label>
                   <select
@@ -315,7 +315,7 @@ export default function EditCategoryPage() {
 
                 {/* Color */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 mb-2">
                     {t('edit.color')}
                   </label>
                   <div className="flex items-center gap-3 mb-3">
@@ -323,7 +323,7 @@ export default function EditCategoryPage() {
                       type="color"
                       value={formData.color}
                       onChange={(e) => handleInputChange('color', e.target.value)}
-                      className="w-12 h-12 rounded-lg border border-gray-300 cursor-pointer"
+                      className="w-12 h-12 rounded-lg border border-slate-300 cursor-pointer"
                     />
                     <Input
                       type="text"
@@ -342,9 +342,9 @@ export default function EditCategoryPage() {
                         type="button"
                         onClick={() => handleInputChange('color', color)}
                         className={`w-8 h-8 rounded-lg border-2 transition-all ${
-                          formData.color === color 
-                            ? 'border-gray-900 scale-110' 
-                            : 'border-gray-300 hover:border-gray-400'
+                          formData.color === color
+                            ? 'border-slate-900 scale-110'
+                            : 'border-slate-300 hover:border-slate-400'
                         }`}
                         style={{ backgroundColor: color }}
                       />

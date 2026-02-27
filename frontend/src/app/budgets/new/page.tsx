@@ -184,8 +184,8 @@ export default function CreateBudgetPage() {
       <div className="space-y-5">
         <div className="flex items-center justify-between">
           <Link href={BUDGET_BASE}>
-            <Button variant="outline">
-              <ArrowLeftIcon className="mr-1.5 h-4 w-4" />
+            <Button variant="secondary" size="sm" className="flex items-center gap-2">
+              <ArrowLeftIcon className="h-4 w-4" />
               {t('backToBudgets')}
             </Button>
           </Link>
