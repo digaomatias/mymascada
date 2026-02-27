@@ -4,10 +4,12 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { CheckCircleIcon, ExclamationCircleIcon, EyeIcon, EyeSlashIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import { AppIcon } from '@/components/app-icon';
 import { apiClient } from '@/lib/api-client';
 import { useTranslations } from 'next-intl';
+import { cn } from '@/lib/utils';
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -112,7 +114,7 @@ function ResetPasswordForm() {
   // Success state
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
             <div className="flex justify-center mb-6">
@@ -120,24 +122,24 @@ function ResetPasswordForm() {
                 <CheckCircleIcon className="w-12 h-12 text-white" />
               </div>
             </div>
-            <h2 className="text-h1 text-gray-900">{t('passwordResetSuccessTitle')}</h2>
+            <h2 className="text-h1 text-slate-900">{t('passwordResetSuccessTitle')}</h2>
           </div>
 
           <Card>
             <CardContent className="p-8">
               <div className="text-center space-y-4">
-                <p className="text-gray-700">
+                <p className="text-slate-700">
                   {t('passwordResetSuccessDescription')}
                 </p>
 
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-slate-500">
                   {t('passwordResetSecurityNote')}
                 </p>
 
                 <div className="pt-4">
                   <Link
                     href="/auth/login"
-                    className="inline-block w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-600 transition-colors text-center"
+                    className="btn btn-primary w-full justify-center"
                   >
                     {t('signInNow')}
                   </Link>
@@ -153,7 +155,7 @@ function ResetPasswordForm() {
   // Missing token/email state
   if (!formData.token || !formData.email) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
             <div className="flex justify-center mb-6">
@@ -161,27 +163,27 @@ function ResetPasswordForm() {
                 <XCircleIcon className="w-12 h-12 text-white" />
               </div>
             </div>
-            <h2 className="text-h1 text-gray-900">{t('invalidResetLinkTitle')}</h2>
+            <h2 className="text-h1 text-slate-900">{t('invalidResetLinkTitle')}</h2>
           </div>
 
           <Card>
             <CardContent className="p-8">
               <div className="text-center space-y-4">
-                <p className="text-gray-700">
+                <p className="text-slate-700">
                   {t('invalidResetLinkDescription')}
                 </p>
 
                 <div className="pt-4 space-y-3">
                   <Link
                     href="/auth/forgot-password"
-                    className="inline-block w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-600 transition-colors text-center"
+                    className="btn btn-primary w-full justify-center"
                   >
                     {t('requestNewResetLink')}
                   </Link>
 
                   <Link
                     href="/auth/login"
-                    className="inline-block w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-center"
+                    className="btn btn-secondary w-full justify-center"
                   >
                     {t('backToSignIn')}
                   </Link>
@@ -196,7 +198,7 @@ function ResetPasswordForm() {
 
   // Form state
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="flex justify-center mb-6">
@@ -204,8 +206,8 @@ function ResetPasswordForm() {
               <AppIcon size={80} />
             </div>
           </div>
-          <h2 className="text-h1 text-gray-900">{t('resetPasswordTitle')}</h2>
-          <p className="mt-2 text-gray-600">
+          <h2 className="text-h1 text-slate-900">{t('resetPasswordTitle')}</h2>
+          <p className="mt-2 text-slate-600">
             {t('resetPasswordSubtitle')}
           </p>
         </div>
@@ -214,12 +216,12 @@ function ResetPasswordForm() {
           <CardContent className="p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
               {errors.length > 0 && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="bg-danger-50 border border-danger-200 rounded-card p-4">
                   <div className="flex items-start gap-3">
-                    <ExclamationCircleIcon className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                    <ExclamationCircleIcon className="w-5 h-5 text-danger-500 flex-shrink-0 mt-0.5" />
                     <div>
                       {errors.map((error, index) => (
-                        <p key={index} className="text-sm text-red-700">{error}</p>
+                        <p key={index} className="text-sm text-danger-700">{error}</p>
                       ))}
                     </div>
                   </div>
@@ -227,7 +229,7 @@ function ResetPasswordForm() {
               )}
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
                   {t('email')}
                 </label>
                 <input
@@ -236,15 +238,15 @@ function ResetPasswordForm() {
                   type="email"
                   value={formData.email}
                   disabled
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                  className="input"
                 />
                 {validationErrors.email && (
-                  <p className="mt-1 text-sm text-red-600">{validationErrors.email}</p>
+                  <p className="mt-1 text-sm text-danger-600">{validationErrors.email}</p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="newPassword" className="block text-sm font-medium text-slate-700 mb-1">
                   {t('newPassword')}
                 </label>
                 <div className="relative">
@@ -256,13 +258,16 @@ function ResetPasswordForm() {
                     required
                     value={formData.newPassword}
                     onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
-                    className={`w-full px-4 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${validationErrors.newPassword ? 'border-red-300' : 'border-gray-300'}`}
+                    className={cn(
+                      'input pr-10',
+                      validationErrors.newPassword && 'border-danger focus:border-danger focus:ring-danger/20'
+                    )}
                     placeholder={t('newPasswordPlaceholder')}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
                   >
                     {showPassword ? (
                       <EyeSlashIcon className="w-5 h-5" />
@@ -272,26 +277,26 @@ function ResetPasswordForm() {
                   </button>
                 </div>
                 {validationErrors.newPassword && (
-                  <p className="mt-1 text-sm text-red-600">{validationErrors.newPassword}</p>
+                  <p className="mt-1 text-sm text-danger-600">{validationErrors.newPassword}</p>
                 )}
 
                 {/* Password requirements checklist */}
                 <div className="mt-3 space-y-1">
-                  <p className="text-xs font-medium text-gray-600">{t('passwordRequirementsTitle')}</p>
+                  <p className="text-xs font-medium text-slate-600">{t('passwordRequirementsTitle')}</p>
                   <ul className="text-xs space-y-1">
-                    <li className={passwordChecks.minLength ? 'text-green-600' : 'text-gray-500'}>
+                    <li className={passwordChecks.minLength ? 'text-green-600' : 'text-slate-500'}>
                       {passwordChecks.minLength ? '✓' : '○'} {t('passwordRequirements.minLength')}
                     </li>
-                    <li className={passwordChecks.hasUppercase ? 'text-green-600' : 'text-gray-500'}>
+                    <li className={passwordChecks.hasUppercase ? 'text-green-600' : 'text-slate-500'}>
                       {passwordChecks.hasUppercase ? '✓' : '○'} {t('passwordRequirements.uppercase')}
                     </li>
-                    <li className={passwordChecks.hasLowercase ? 'text-green-600' : 'text-gray-500'}>
+                    <li className={passwordChecks.hasLowercase ? 'text-green-600' : 'text-slate-500'}>
                       {passwordChecks.hasLowercase ? '✓' : '○'} {t('passwordRequirements.lowercase')}
                     </li>
-                    <li className={passwordChecks.hasNumber ? 'text-green-600' : 'text-gray-500'}>
+                    <li className={passwordChecks.hasNumber ? 'text-green-600' : 'text-slate-500'}>
                       {passwordChecks.hasNumber ? '✓' : '○'} {t('passwordRequirements.number')}
                     </li>
-                    <li className={passwordChecks.hasSpecial ? 'text-green-600' : 'text-gray-500'}>
+                    <li className={passwordChecks.hasSpecial ? 'text-green-600' : 'text-slate-500'}>
                       {passwordChecks.hasSpecial ? '✓' : '○'} {t('passwordRequirements.special')}
                     </li>
                   </ul>
@@ -299,7 +304,7 @@ function ResetPasswordForm() {
               </div>
 
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 mb-1">
                   {t('confirmPassword')}
                 </label>
                 <div className="relative">
@@ -311,13 +316,16 @@ function ResetPasswordForm() {
                     required
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    className={`w-full px-4 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${validationErrors.confirmPassword ? 'border-red-300' : 'border-gray-300'}`}
+                    className={cn(
+                      'input pr-10',
+                      validationErrors.confirmPassword && 'border-danger focus:border-danger focus:ring-danger/20'
+                    )}
                     placeholder={t('confirmPasswordPlaceholder')}
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
                   >
                     {showConfirmPassword ? (
                       <EyeSlashIcon className="w-5 h-5" />
@@ -327,32 +335,23 @@ function ResetPasswordForm() {
                   </button>
                 </div>
                 {validationErrors.confirmPassword && (
-                  <p className="mt-1 text-sm text-red-600">{validationErrors.confirmPassword}</p>
+                  <p className="mt-1 text-sm text-danger-600">{validationErrors.confirmPassword}</p>
                 )}
                 {formData.confirmPassword && (
-                  <p className={`mt-1 text-xs ${passwordsMatch ? 'text-green-600' : 'text-red-600'}`}>
+                  <p className={cn('mt-1 text-xs', passwordsMatch ? 'text-green-600' : 'text-danger-600')}>
                     {passwordsMatch ? t('passwordsMatch') : t('passwordsDoNotMatch')}
                   </p>
                 )}
               </div>
 
-              <button
+              <Button
                 type="submit"
+                className="w-full"
+                loading={isLoading}
                 disabled={isLoading || !allPasswordChecksPassing || !passwordsMatch}
-                className="w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
-                {isLoading ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    {t('resettingPassword')}
-                  </>
-                ) : (
-                  t('resetPassword')
-                )}
-              </button>
+                {t('resetPassword')}
+              </Button>
 
               <div className="text-center">
                 <Link
@@ -374,10 +373,10 @@ export default function ResetPasswordPage() {
   const tCommon = useTranslations('common');
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-gray-600">{tCommon('loading')}</p>
+          <p className="mt-4 text-slate-600">{tCommon('loading')}</p>
         </div>
       </div>
     }>
