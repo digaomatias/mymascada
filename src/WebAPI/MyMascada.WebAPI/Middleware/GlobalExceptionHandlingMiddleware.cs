@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using FluentValidation;
 using Microsoft.Extensions.Logging;
 using MyMascada.Application.Common.Interfaces;
 
@@ -52,6 +53,13 @@ public class GlobalExceptionHandlingMiddleware
             UserId = context.User?.Identity?.Name,
             CorrelationId = correlationId
         };
+
+        // FluentValidation errors get a structured 422 response — short-circuit here.
+        if (exception is ValidationException validationException)
+        {
+            await HandleValidationExceptionAsync(context, validationException, correlationId);
+            return;
+        }
 
         // Determine exception severity and appropriate response
         var (statusCode, logLevel, userMessage) = ClassifyException(exception);
@@ -114,6 +122,32 @@ public class GlobalExceptionHandlingMiddleware
         });
 
         await context.Response.WriteAsync(jsonResponse);
+    }
+
+    private static async Task HandleValidationExceptionAsync(HttpContext context, ValidationException exception, Guid correlationId)
+    {
+        var errors = exception.Errors
+            .GroupBy(e => e.PropertyName)
+            .ToDictionary(
+                g => g.Key,
+                g => g.Select(e => e.ErrorMessage).ToArray());
+
+        var response = new
+        {
+            Error = new
+            {
+                Message = "One or more validation errors occurred.",
+                CorrelationId = correlationId,
+                Timestamp = DateTime.UtcNow,
+                Type = nameof(ValidationException),
+                Errors = errors
+            }
+        };
+
+        context.Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
+        context.Response.ContentType = "application/json";
+
+        await context.Response.WriteAsJsonAsync(response);
     }
 
     private (HttpStatusCode statusCode, LogLevel logLevel, string userMessage) ClassifyException(Exception exception)
