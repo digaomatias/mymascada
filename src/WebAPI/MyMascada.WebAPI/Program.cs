@@ -260,8 +260,8 @@ app.UseRequestLocalization();
 // Add global exception handling middleware (early in pipeline)
 app.UseGlobalExceptionHandling();
 
-// Add CORS debugging middleware for production
-if (app.Environment.IsProduction())
+// CORS debugging middleware — development only
+if (app.Environment.IsDevelopment())
 {
     app.Use(async (context, next) =>
     {
@@ -269,15 +269,15 @@ if (app.Environment.IsProduction())
         var origin = context.Request.Headers.Origin.FirstOrDefault();
         var method = context.Request.Method;
         var path = context.Request.Path;
-        
+
         logger.LogInformation("CORS Debug: {Method} {Path} from Origin: {Origin}", method, path, origin ?? "null");
-        
+
         await next();
-        
+
         var corsHeaders = string.Join(", ", context.Response.Headers
             .Where(h => h.Key.StartsWith("Access-Control"))
             .Select(h => $"{h.Key}={h.Value}"));
-        
+
         logger.LogInformation("CORS Debug: Response headers: {Headers}", corsHeaders);
     });
 }

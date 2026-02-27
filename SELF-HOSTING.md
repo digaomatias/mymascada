@@ -321,25 +321,30 @@ docker compose up -d
 
 ## Backup and Restore
 
-### Database Backup
+### Automated Backups (built-in)
+
+The Docker Compose stack includes an automated backup service that runs daily and
+stores compressed PostgreSQL dumps in a `./backups/` directory next to your
+`docker-compose.yml`. Backups are retained for 7 days of daily snapshots and
+4 weeks of weekly snapshots — older files are pruned automatically.
+
+No extra configuration is needed. The backup container starts alongside the
+other services:
+
+```bash
+docker compose up -d          # backup service starts automatically
+docker compose ps backup      # check it is running
+```
+
+Backup files are written to `./backups/` on the host. To change the retention
+policy, set `BACKUP_KEEP_DAYS` and `BACKUP_KEEP_WEEKS` in your `.env` file.
+
+### Manual Database Backup
+
+To take an on-demand backup at any time:
 
 ```bash
 docker compose exec postgres pg_dump -U mymascada mymascada > backup_$(date +%Y%m%d).sql
-```
-
-### Automated Backup Schedule
-
-Set up a cron job for regular automated backups:
-
-```bash
-# Edit crontab
-crontab -e
-
-# Add daily backup at 2:00 AM (adjust path as needed)
-0 2 * * * cd /path/to/mymascada && docker compose exec -T postgres pg_dump -U mymascada mymascada | gzip > /path/to/backups/mymascada_$(date +\%Y\%m\%d).sql.gz
-
-# Optional: remove backups older than 30 days
-0 3 * * * find /path/to/backups -name "mymascada_*.sql.gz" -mtime +30 -delete
 ```
 
 ### Database Restore

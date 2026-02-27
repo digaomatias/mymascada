@@ -12,11 +12,12 @@ public static class ApplicationServiceExtensions
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        // Add MediatR with logging behaviors
+        // Add MediatR with pipeline behaviors (order matters: first registered = outermost)
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssembly(typeof(MyMascada.Application.Features.Authentication.Commands.RegisterCommand).Assembly);
             cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(LoggingBehaviour<,>));
+            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
             cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(AuditLoggingBehaviour<,>));
         });
 

@@ -7,7 +7,7 @@ using MyMascada.Domain.Common;
 
 namespace MyMascada.Application.Features.Transactions.Commands;
 
-public class UpdateTransactionCommand : IRequest<TransactionDto>
+public class UpdateTransactionCommand : IRequest<TransactionDto>, ITransactionBaseCommand
 {
     public Guid UserId { get; set; }
     public int Id { get; set; }
