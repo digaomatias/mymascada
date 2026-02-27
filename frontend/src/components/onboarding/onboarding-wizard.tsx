@@ -39,6 +39,7 @@ export function OnboardingWizard() {
   const [goalName, setGoalName] = useState('');
   const [goalTargetAmount, setGoalTargetAmount] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSkipping, setIsSkipping] = useState(false);
   const [redirectCountdown, setRedirectCountdown] = useState(REDIRECT_SECONDS);
   const [error, setError] = useState<string | null>(null);
   const [accounts, setAccounts] = useState<Array<{ id: number; name: string; currentBalance: number }>>([]);
@@ -88,6 +89,7 @@ export function OnboardingWizard() {
       setRedirectCountdown(REDIRECT_SECONDS);
       setIsSubmitting(false);
     } catch (err) {
+      console.error('Onboarding error:', err);
       const message = err instanceof Error ? err.message : 'An error occurred';
       setError(message);
       setIsSubmitting(false);
@@ -102,6 +104,27 @@ export function OnboardingWizard() {
     }
     router.replace('/dashboard');
   }, [refreshUser, router]);
+
+  const handleSkip = useCallback(async () => {
+    setIsSkipping(true);
+    setError(null);
+    try {
+      await apiClient.completeOnboarding({
+        monthlyIncome: 0,
+        monthlyExpenses: 0,
+        goalName: t('goalSuggestion.suggestedGoal'),
+        goalTargetAmount: 0,
+        goalType: 'EmergencyFund',
+        dataEntryMethod: 'manual',
+      });
+      await navigateToDashboard();
+    } catch (err) {
+      console.error('Onboarding error:', err);
+      const message = err instanceof Error ? err.message : 'An error occurred';
+      setError(message);
+      setIsSkipping(false);
+    }
+  }, [navigateToDashboard, t]);
 
   useEffect(() => {
     if (currentStep !== 5) {
@@ -223,10 +246,22 @@ export function OnboardingWizard() {
           </div>
         )}
 
-        {!showProgress && currentStep !== 5 && (
-          <p className="mx-auto text-center text-xs font-medium tracking-[0.12em] text-violet-500/70">
-            {t('welcome.duration')}
-          </p>
+        {currentStep !== 5 && (
+          <div className="flex flex-col items-center gap-2">
+            {!showProgress && (
+              <p className="text-center text-xs font-medium tracking-[0.12em] text-violet-500/70">
+                {t('welcome.duration')}
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={() => { void handleSkip(); }}
+              disabled={isSkipping || isSubmitting}
+              className="text-xs text-violet-400/70 hover:text-violet-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed underline underline-offset-2"
+            >
+              {isSkipping ? t('skipping') : t('skip')}
+            </button>
+          </div>
         )}
 
         {currentStep === 5 && (

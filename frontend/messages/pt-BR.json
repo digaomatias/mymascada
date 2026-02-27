@@ -287,6 +287,19 @@
       "syncFailed": "Falha ao sincronizar dados bancários. Por favor, tente novamente.",
       "refreshButtonLabel": "Atualizar transações dos bancos conectados"
     },
+    "gettingStarted": {
+      "title": "Bem-vindo! Veja como começar",
+      "subtitle": "Complete estes três passos para começar a acompanhar suas finanças.",
+      "step1Title": "Adicione sua primeira conta",
+      "step1Desc": "Crie uma conta bancária, cartão de crédito ou poupança para começar a acompanhar seus saldos.",
+      "step1Cta": "Adicionar Conta",
+      "step2Title": "Importe suas transações",
+      "step2Desc": "Envie um arquivo CSV ou OFX do seu banco para preencher instantaneamente seu histórico de transações.",
+      "step2Cta": "Importar Transações",
+      "step3Title": "Configure categorias e orçamentos",
+      "step3Desc": "Organize seus gastos com categorias e regras para automatizar a categorização de transações.",
+      "step3Cta": "Configurar Categorias"
+    },
     "onboarding": {
       "title": "Bem-vindo(a) ao MyMascada!",
       "subtitle": "Vamos configurar suas finanças. Complete estes passos em qualquer ordem.",
@@ -2178,7 +2191,21 @@
       "autoCategorize": "Categorizar automaticamente"
     },
     "buttons": {
-      "import": "Importar Transações {format}"
+      "import": "Importar Transações {format}",
+      "analyzeImport": "Analisar Importação",
+      "analyzeWithAI": "Analisar com IA",
+      "mapColumns": "Mapear Colunas Manualmente",
+      "continueToMapping": "Continuar para Mapeamento de Colunas"
+    },
+    "unified": {
+      "title": "Importar Transações",
+      "subtitle": "Envie um arquivo do banco para importar suas transações",
+      "dropHere": "Arraste seu arquivo aqui ou clique para procurar",
+      "supports": "Suporta arquivos OFX, QFX e CSV (máx. 10 MB)",
+      "analyzing": "Analisando seu CSV...",
+      "csvWithAI": "Seu CSV será analisado pela IA para detectar colunas automaticamente.",
+      "csvManual": "Você mapeará manualmente as colunas do CSV para os campos de transação.",
+      "ofxReady": "Seu arquivo OFX/QFX está pronto para importação."
     },
     "results": {
       "title": "Importação Concluída",
@@ -3373,6 +3400,8 @@
     "next": "Próximo",
     "back": "Voltar",
     "finish": "Concluir Configuração",
-    "submitting": "Salvando..."
+    "submitting": "Salvando...",
+    "skip": "Pular para o Painel",
+    "skipping": "Pulando..."
   }
 }

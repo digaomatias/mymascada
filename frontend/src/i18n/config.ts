@@ -8,7 +8,7 @@ export const defaultLocale: Locale = 'en';
 // Locale display names for the language selector
 export const localeNames: Record<Locale, string> = {
   'en': 'English',
-  'pt-BR': 'Portugues (Brasil)',
+  'pt-BR': 'Português (Brasil)',
 };
 
 // Check if a string is a valid locale
