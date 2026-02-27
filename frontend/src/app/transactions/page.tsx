@@ -9,7 +9,7 @@ import { AppLayout } from '@/components/app-layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { apiClient } from '@/lib/api-client';
 import { createTransactionDetailUrl } from '@/lib/navigation-utils';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
@@ -987,11 +987,13 @@ function TransactionsPageContent() {
                             key={filterType}
                             type="button"
                             onClick={() => setDateFilter(filterType)}
-                            className={`${isMobile ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-xs'} rounded-md transition-colors cursor-pointer ${
+                            className={cn(
+                              'rounded-md transition-colors cursor-pointer text-xs',
+                              isMobile ? 'px-2 py-1' : 'px-3 py-1.5',
                               dateFilter === filterType
                                 ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white font-medium'
                                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                            }`}
+                            )}
                           >
                             {labels[filterType]}
                           </button>
@@ -1160,10 +1162,10 @@ function TransactionsPageContent() {
         {/* Bulk Action Toolbar */}
         {isSelectionMode && selectedTransactionIds.size > 0 && (
           <Card className="mb-4 rounded-[26px] border border-violet-100/80 bg-white/95 shadow-[0_20px_44px_-32px_rgba(76,29,149,0.48)] backdrop-blur-sm sticky top-4 z-[5]">
-            <CardContent className={`${isMobile ? 'p-3' : 'p-4'}`}>
-              <div className={`flex items-center ${isMobile ? 'gap-2' : 'justify-between'}`}>
+            <CardContent className={cn(isMobile ? 'p-3' : 'p-4')}>
+              <div className={cn('flex items-center', isMobile ? 'gap-2' : 'justify-between')}>
                 <div className="flex items-center gap-2">
-                  <span className={`${isMobile ? 'px-2 py-1 bg-primary-100 text-primary-700 rounded-full text-xs font-medium' : 'text-sm font-medium text-slate-700'}`}>
+                  <span className={cn(isMobile ? 'px-2 py-1 bg-primary-100 text-primary-700 rounded-full text-xs font-medium' : 'text-sm font-medium text-slate-700')}>
                     {tCommon('selected', { count: selectedTransactionIds.size })}
                   </span>
                 </div>
@@ -1172,7 +1174,7 @@ function TransactionsPageContent() {
                   {bulkCategorizing ? (
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
-                      <span className={`${isMobile ? 'text-xs' : 'text-sm'} text-slate-600`}>
+                      <span className={cn(isMobile ? 'text-xs' : 'text-sm', 'text-slate-600')}>
                         {t('processing')}
                       </span>
                     </div>
@@ -1259,10 +1261,10 @@ function TransactionsPageContent() {
                     return (
                       <div key={item.id}>
                         <div 
-                          className={`${isMobile ? 'p-3 border-l-4 border-blue-500' : 'p-4'} hover:bg-slate-50 transition-colors cursor-pointer`}
+                          className={cn(isMobile ? 'p-3' : 'p-4', 'hover:bg-slate-50 transition-colors cursor-pointer')}
                           onClick={() => toggleTransferExpansion(item.transferId)}
                         >
-                          <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-3'}`}>
+                          <div className={cn('flex items-center', isMobile ? 'gap-2' : 'gap-3')}>
                             {/* Transfer Icon - Desktop Only */}
                             {!isMobile && (
                               <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm bg-gradient-to-br from-blue-100 to-blue-200">
@@ -1394,26 +1396,17 @@ function TransactionsPageContent() {
                   return (
                     <React.Fragment key={transaction.id}>
                     <div
-                      className={`relative group ${
-                        isSelected 
-                          ? 'bg-primary-50 border-l-4 border-primary-500' 
-                          : isMobile 
-                            ? `border-l-4 ${
-                                isTransfer(transaction) 
-                                  ? 'border-blue-500' 
-                                  : isIncome 
-                                    ? 'border-success-500' 
-                                    : 'border-slate-300'
-                              }` 
-                            : ''
-                      } ${openMenuId === transaction.id ? 'z-30' : ''}`}
+                      className={cn(
+                        'relative group',
+                        isSelected && 'bg-primary-50 border-l-4 border-primary-500',
+                        openMenuId === transaction.id && 'z-30'
+                      )}
                     >
                       <div 
-                        className={`block ${isMobile ? 'p-3 pr-3' : 'p-4 pr-12'} transition-colors ${
-                          isSelectionMode 
-                            ? 'cursor-pointer hover:bg-slate-50' 
-                            : 'cursor-pointer hover:bg-slate-50'
-                        }`}
+                        className={cn(
+                          'block transition-colors cursor-pointer hover:bg-slate-50',
+                          isMobile ? 'p-3 pr-3' : 'p-4 pr-12'
+                        )}
                         onClick={(e) => {
                           if (isSelectionMode) {
                             // In selection mode, only handle clicks that aren't on the checkbox
@@ -1489,7 +1482,7 @@ function TransactionsPageContent() {
                           }
                         }}
                       >
-                        <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-3'}`}>
+                        <div className={cn('flex items-center', isMobile ? 'gap-2' : 'gap-3')}>
                           {/* Checkbox (Selection Mode) */}
                           {isSelectionMode && (
                             <div 
@@ -1523,13 +1516,14 @@ function TransactionsPageContent() {
                           
                           {/* Transaction Icon - Desktop Only */}
                           {!isMobile && (
-                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ${
+                            <div className={cn(
+                              'w-12 h-12 rounded-xl flex items-center justify-center shadow-sm',
                               isTransfer(transaction)
                                 ? 'bg-gradient-to-br from-blue-100 to-blue-200'
-                                : isIncome 
-                                  ? 'bg-gradient-to-br from-success-100 to-success-200' 
+                                : isIncome
+                                  ? 'bg-gradient-to-br from-success-100 to-success-200'
                                   : 'bg-gradient-to-br from-slate-100 to-slate-200'
-                            }`}>
+                            )}>
                               {isTransfer(transaction) ? (
                                 <ArrowsRightLeftIcon className="w-6 h-6 text-blue-600" />
                               ) : isIncome ? (
