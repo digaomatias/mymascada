@@ -288,6 +288,19 @@
       "syncFailed": "Failed to sync bank data. Please try again.",
       "refreshButtonLabel": "Refresh transactions from connected banks"
     },
+    "gettingStarted": {
+      "title": "Welcome! Here's how to get started",
+      "subtitle": "Complete these three steps to start tracking your finances.",
+      "step1Title": "Add your first account",
+      "step1Desc": "Create a bank account, credit card, or savings account to start tracking your balances.",
+      "step1Cta": "Add Account",
+      "step2Title": "Import your transactions",
+      "step2Desc": "Upload a CSV or OFX file from your bank to instantly populate your transaction history.",
+      "step2Cta": "Import Transactions",
+      "step3Title": "Set up categories and budgets",
+      "step3Desc": "Organize your spending with categories and rules to automate transaction categorization.",
+      "step3Cta": "Set Up Categories"
+    },
     "onboarding": {
       "title": "Welcome to MyMascada!",
       "subtitle": "Let's get your finances set up. Complete these steps in any order.",
@@ -2179,7 +2192,21 @@
       "autoCategorize": "Auto-categorize transactions"
     },
     "buttons": {
-      "import": "Import {format} Transactions"
+      "import": "Import {format} Transactions",
+      "analyzeImport": "Analyze Import",
+      "analyzeWithAI": "Analyze with AI",
+      "mapColumns": "Map Columns Manually",
+      "continueToMapping": "Continue to Column Mapping"
+    },
+    "unified": {
+      "title": "Import Transactions",
+      "subtitle": "Upload a bank file to import your transactions",
+      "dropHere": "Drop your file here or click to browse",
+      "supports": "Supports OFX, QFX, and CSV files (max 10 MB)",
+      "analyzing": "Analyzing your CSV...",
+      "csvWithAI": "Your CSV will be analyzed by AI to automatically detect columns.",
+      "csvManual": "You'll manually map the CSV columns to the transaction fields.",
+      "ofxReady": "Your OFX/QFX file is ready to import."
     },
     "results": {
       "title": "Import Complete",
@@ -3374,6 +3401,8 @@
     "next": "Next",
     "back": "Back",
     "finish": "Complete Setup",
-    "submitting": "Saving..."
+    "submitting": "Saving...",
+    "skip": "Skip to Dashboard",
+    "skipping": "Skipping..."
   }
 }
