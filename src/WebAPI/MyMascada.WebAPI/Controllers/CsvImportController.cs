@@ -20,6 +20,23 @@ public class CsvImportController : ControllerBase
     private const int MaxFileSizeMB = 10;
     private const int MaxFileSizeBytes = MaxFileSizeMB * 1024 * 1024;
 
+    private static readonly string[] AllowedCsvMimeTypes =
+    [
+        "text/csv",
+        "text/plain",
+        "application/csv",
+        "application/octet-stream"
+    ];
+
+    private static bool IsAllowedCsvContentType(string? contentType)
+    {
+        if (string.IsNullOrWhiteSpace(contentType))
+            return false;
+        // Strip any parameters (e.g. "text/csv; charset=utf-8")
+        var baseType = contentType.Split(';')[0].Trim().ToLowerInvariant();
+        return Array.IndexOf(AllowedCsvMimeTypes, baseType) >= 0;
+    }
+
     public CsvImportController(IMediator mediator, IAICsvAnalysisService aiAnalysisService, ICurrentUserService currentUserService)
     {
         _mediator = mediator;
@@ -53,6 +70,11 @@ public class CsvImportController : ControllerBase
             if (!file.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
             {
                 return BadRequest(new { message = "Only CSV files are allowed" });
+            }
+
+            if (!IsAllowedCsvContentType(file.ContentType))
+            {
+                return BadRequest(new { message = "Invalid file content type. Only CSV files are allowed." });
             }
 
             // Analyze CSV structure with AI
@@ -193,6 +215,11 @@ public class CsvImportController : ControllerBase
             if (!file.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
             {
                 return BadRequest(new { message = "Only CSV files are allowed" });
+            }
+
+            if (!IsAllowedCsvContentType(file.ContentType))
+            {
+                return BadRequest(new { message = "Invalid file content type. Only CSV files are allowed." });
             }
 
             // Read file data into byte array

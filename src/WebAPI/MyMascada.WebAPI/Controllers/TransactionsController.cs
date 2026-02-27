@@ -477,7 +477,7 @@ public class TransactionsController : ControllerBase
     [HttpPost("normalize-amounts")]
     public async Task<ActionResult<BulkNormalizeTransactionAmountsResult>> NormalizeTransactionAmounts()
     {
-        var command = new BulkNormalizeTransactionAmountsCommand();
+        var command = new BulkNormalizeTransactionAmountsCommand { UserId = _currentUserService.GetUserId() };
 
         try
         {

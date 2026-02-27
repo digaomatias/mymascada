@@ -71,6 +71,32 @@ public class TelegramWebhookController : ControllerBase
             }
 
             var chatId = message.Chat.Id;
+
+            // Verify the incoming chatId belongs to the bot owner
+            if (settings.ChatId.HasValue)
+            {
+                if (chatId != settings.ChatId.Value)
+                {
+                    _logger.LogWarning("Rejected message from unauthorized chatId {ChatId} for user {UserId}", chatId, settings.UserId);
+                    // Optionally inform the sender this bot is not for them
+                    string? rejectToken = null;
+                    try { rejectToken = _encryptionService.Decrypt(settings.EncryptedBotToken); } catch { /* ignore */ }
+                    if (rejectToken != null)
+                    {
+                        await _telegramBotService.SendMessageAsync(rejectToken, chatId,
+                            "This bot is configured for another user.");
+                    }
+                    return Ok();
+                }
+            }
+            else
+            {
+                // First interaction: record this chatId as the owner
+                settings.ChatId = chatId;
+                await _telegramSettingsRepository.UpdateAsync(settings);
+                _logger.LogInformation("Registered chatId {ChatId} as owner for user {UserId}", chatId, settings.UserId);
+            }
+
             string botToken;
 
             try

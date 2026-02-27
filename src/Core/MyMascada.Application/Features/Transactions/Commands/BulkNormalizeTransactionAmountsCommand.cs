@@ -9,7 +9,10 @@ namespace MyMascada.Application.Features.Transactions.Commands;
 /// Command to normalize all existing transaction amounts based on their type
 /// Ensures expenses are negative and income is positive for data consistency
 /// </summary>
-public record BulkNormalizeTransactionAmountsCommand : IRequest<BulkNormalizeTransactionAmountsResult>;
+public record BulkNormalizeTransactionAmountsCommand : IRequest<BulkNormalizeTransactionAmountsResult>
+{
+    public Guid UserId { get; init; }
+}
 
 public class BulkNormalizeTransactionAmountsResult
 {
@@ -46,8 +49,8 @@ public class BulkNormalizeTransactionAmountsCommandHandler : IRequestHandler<Bul
 
         try
         {
-            // Get all transactions that need normalization
-            var allTransactions = await _transactionRepository.GetAllTransactionsForNormalizationAsync();
+            // Get all transactions that need normalization (scoped to the requesting user)
+            var allTransactions = await _transactionRepository.GetAllTransactionsForNormalizationAsync(request.UserId);
             result.TotalTransactions = allTransactions.Count();
 
             _logger.LogInformation("Found {TotalCount} transactions to process", result.TotalTransactions);

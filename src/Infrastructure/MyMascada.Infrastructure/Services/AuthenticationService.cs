@@ -67,6 +67,10 @@ public class AuthenticationService : IAuthenticationService
         return await Task.FromResult(tokenHandler.WriteToken(token));
     }
 
+    private const int CurrentIterations = 600000;
+    private const int LegacyIterations = 10000;
+    private const string CurrentHashPrefix = "v2$";
+
     public async Task<string> HashPasswordAsync(string password)
     {
         // Generate a salt
@@ -74,32 +78,48 @@ public class AuthenticationService : IAuthenticationService
         using var rng = RandomNumberGenerator.Create();
         rng.GetBytes(salt);
 
-        // Hash the password with the salt using PBKDF2
-        using var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 10000, HashAlgorithmName.SHA256);
+        // Hash the password with the salt using PBKDF2 at the current iteration count
+        using var pbkdf2 = new Rfc2898DeriveBytes(password, salt, CurrentIterations, HashAlgorithmName.SHA256);
         var hash = pbkdf2.GetBytes(32);
 
-        // Combine salt and hash
+        // Combine salt and hash; prefix with version marker
         var hashBytes = new byte[48];
         Array.Copy(salt, 0, hashBytes, 0, 16);
         Array.Copy(hash, 0, hashBytes, 16, 32);
 
-        return await Task.FromResult(Convert.ToBase64String(hashBytes));
+        return await Task.FromResult(CurrentHashPrefix + Convert.ToBase64String(hashBytes));
     }
 
     public async Task<bool> VerifyPasswordAsync(string password, string hashedPassword)
     {
         try
         {
-            var hashBytes = Convert.FromBase64String(hashedPassword);
-            
+            // Detect hash version and select iteration count accordingly
+            int iterations;
+            string base64Data;
+
+            if (hashedPassword.StartsWith(CurrentHashPrefix, StringComparison.Ordinal))
+            {
+                iterations = CurrentIterations;
+                base64Data = hashedPassword.Substring(CurrentHashPrefix.Length);
+            }
+            else
+            {
+                // Legacy hash without prefix — uses old iteration count
+                iterations = LegacyIterations;
+                base64Data = hashedPassword;
+            }
+
+            var hashBytes = Convert.FromBase64String(base64Data);
+
             // Extract the salt
             var salt = new ArraySegment<byte>(hashBytes, 0, 16).ToArray();
-            
-            // Extract the hash
+
+            // Extract the stored hash
             var storedHash = new ArraySegment<byte>(hashBytes, 16, 32).ToArray();
 
-            // Hash the provided password with the salt
-            using var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 10000, HashAlgorithmName.SHA256);
+            // Hash the provided password with the same salt and iterations
+            using var pbkdf2 = new Rfc2898DeriveBytes(password, salt, iterations, HashAlgorithmName.SHA256);
             var testHash = pbkdf2.GetBytes(32);
 
             // Compare the hashes
@@ -109,6 +129,11 @@ public class AuthenticationService : IAuthenticationService
         {
             return false;
         }
+    }
+
+    public bool NeedsRehash(string hashedPassword)
+    {
+        return !hashedPassword.StartsWith(CurrentHashPrefix, StringComparison.Ordinal);
     }
 
     public string GenerateSecurityStamp()

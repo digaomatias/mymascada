@@ -41,12 +41,13 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
 
-    // In Docker Compose the API sits behind an internal bridge network, so we
-    // trust all sources.  For non-containerised or multi-hop deployments you
-    // SHOULD restrict to known proxies, e.g.:
-    //   options.KnownProxies.Add(IPAddress.Parse("10.0.0.1"));
+    // Trust only the Docker bridge network range (172.16.0.0/12) where the
+    // internal reverse proxy lives. This prevents X-Forwarded-* header spoofing
+    // from external clients.
     options.KnownNetworks.Clear();
     options.KnownProxies.Clear();
+    options.KnownNetworks.Add(new Microsoft.AspNetCore.HttpOverrides.IPNetwork(
+        System.Net.IPAddress.Parse("172.16.0.0"), 12));
 
     // Limit the number of proxy hops to prevent header spoofing
     options.ForwardLimit = 2;

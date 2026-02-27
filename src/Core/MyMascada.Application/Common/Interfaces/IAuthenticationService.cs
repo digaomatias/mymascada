@@ -8,6 +8,7 @@ public interface IAuthenticationService
     Task<string> GenerateJwtTokenAsync(User user);
     Task<string> HashPasswordAsync(string password);
     Task<bool> VerifyPasswordAsync(string password, string hashedPassword);
+    bool NeedsRehash(string hashedPassword);
     string GenerateSecurityStamp();
     Task<AuthenticationResponse> GoogleLoginAsync(string email, string? firstName, string? lastName, string? googleId, string? inviteCode = null);
     Task<AuthenticationResponse> GoogleTokenLoginAsync(string idToken);
