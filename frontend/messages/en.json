@@ -1575,7 +1575,39 @@
     },
     "filters": {
       "showInactive": "Show inactive rules",
-      "rulesFound": "{count} rule{count, plural, =1 {} other {s}} found"
+      "rulesFound": "{count} rule{count, plural, =1 {} other {s}} found",
+      "search": "Search",
+      "searchPlaceholder": "Search by rule name, pattern, description, or category",
+      "type": "Type",
+      "allTypes": "All types",
+      "sort": "Sort",
+      "sortPriorityAsc": "Priority (Low to High)",
+      "sortPriorityDesc": "Priority (High to Low)",
+      "sortMatchesDesc": "Most Matches",
+      "sortAccuracyDesc": "Highest Accuracy",
+      "sortCreatedDesc": "Newest First",
+      "noMatches": "No rules match your current filters",
+      "clear": "Clear filters"
+    },
+    "bulk": {
+      "selectedCount": "{count} selected",
+      "selectVisible": "Select visible",
+      "clearSelection": "Clear selection",
+      "selectRule": "Select rule {name}",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "delete": "Delete"
+    },
+    "reorder": {
+      "start": "Reorder priorities",
+      "modeActive": "Reorder mode",
+      "title": "Priority Order",
+      "help": "Drag rules to define processing order. Lower priority values run first.",
+      "save": "Save order",
+      "saving": "Saving...",
+      "cancel": "Cancel",
+      "moveUp": "Move up",
+      "moveDown": "Move down"
     },
     "empty": {
       "title": "No rules yet",
@@ -1620,7 +1652,14 @@
       "suggestionAccepted": "Rule \"{name}\" created successfully!",
       "suggestionAcceptFailed": "Failed to create rule. Please try again.",
       "suggestionDismissed": "Rule suggestion dismissed successfully.",
-      "suggestionDismissFailed": "Failed to dismiss suggestion. Please try again."
+      "suggestionDismissFailed": "Failed to dismiss suggestion. Please try again.",
+      "bulkDeleteConfirm": "Delete {count} selected rules?",
+      "bulkActivateSuccess": "{count} selected rule{count, plural, =1 {} other {s}} activated",
+      "bulkDeactivateSuccess": "{count} selected rule{count, plural, =1 {} other {s}} deactivated",
+      "bulkDeleteSuccess": "{count} selected rule{count, plural, =1 {} other {s}} deleted",
+      "bulkUpdateFailed": "Failed to apply bulk action",
+      "prioritiesUpdated": "Rule priorities updated",
+      "prioritiesUpdateFailed": "Failed to update priorities"
     },
     "new": {
       "title": "Create New Rule",
