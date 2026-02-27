@@ -80,7 +80,8 @@ public class TelegramWebhookController : ControllerBase
                     _logger.LogWarning("Rejected message from unauthorized chatId {ChatId} for user {UserId}", chatId, settings.UserId);
                     // Optionally inform the sender this bot is not for them
                     string? rejectToken = null;
-                    try { rejectToken = _encryptionService.Decrypt(settings.EncryptedBotToken); } catch { /* ignore */ }
+                    try { rejectToken = _encryptionService.Decrypt(settings.EncryptedBotToken); }
+                    catch (Exception ex) { _logger.LogWarning(ex, "Failed to decrypt bot token while rejecting unauthorized chatId {ChatId} for user {UserId}", chatId, settings.UserId); }
                     if (rejectToken != null)
                     {
                         await _telegramBotService.SendMessageAsync(rejectToken, chatId,

@@ -71,7 +71,7 @@ public class AuthenticationService : IAuthenticationService
     private const int LegacyIterations = 10000;
     private const string CurrentHashPrefix = "v2$";
 
-    public async Task<string> HashPasswordAsync(string password)
+    public Task<string> HashPasswordAsync(string password)
     {
         // Generate a salt
         var salt = new byte[16];
@@ -87,10 +87,10 @@ public class AuthenticationService : IAuthenticationService
         Array.Copy(salt, 0, hashBytes, 0, 16);
         Array.Copy(hash, 0, hashBytes, 16, 32);
 
-        return await Task.FromResult(CurrentHashPrefix + Convert.ToBase64String(hashBytes));
+        return Task.FromResult(CurrentHashPrefix + Convert.ToBase64String(hashBytes));
     }
 
-    public async Task<bool> VerifyPasswordAsync(string password, string hashedPassword)
+    public Task<bool> VerifyPasswordAsync(string password, string hashedPassword)
     {
         try
         {
@@ -123,11 +123,11 @@ public class AuthenticationService : IAuthenticationService
             var testHash = pbkdf2.GetBytes(32);
 
             // Compare the hashes
-            return await Task.FromResult(CryptographicOperations.FixedTimeEquals(storedHash, testHash));
+            return Task.FromResult(CryptographicOperations.FixedTimeEquals(storedHash, testHash));
         }
         catch
         {
-            return false;
+            return Task.FromResult(false);
         }
     }
 

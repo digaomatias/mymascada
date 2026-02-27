@@ -20,12 +20,15 @@ public class CsvImportController : ControllerBase
     private const int MaxFileSizeMB = 10;
     private const int MaxFileSizeBytes = MaxFileSizeMB * 1024 * 1024;
 
+    // Intentionally excludes "text/plain" and "application/octet-stream" — both are too broad
+    // and would allow non-CSV files. The .csv extension check is the primary gate; these MIME
+    // types are a secondary defence. Some browsers do send "application/octet-stream" for CSV
+    // downloads, but we accept that trade-off in favour of tighter security.
     private static readonly string[] AllowedCsvMimeTypes =
     [
         "text/csv",
-        "text/plain",
         "application/csv",
-        "application/octet-stream"
+        "application/vnd.ms-excel"
     ];
 
     private static bool IsAllowedCsvContentType(string? contentType)
