@@ -10,7 +10,7 @@ using MyMascada.Domain.Common;
 
 namespace MyMascada.Application.Features.Transactions.Commands;
 
-public class CreateTransactionCommand : IRequest<TransactionDto>
+public class CreateTransactionCommand : IRequest<TransactionDto>, ITransactionBaseCommand
 {
     public Guid UserId { get; set; }
     public decimal Amount { get; set; }

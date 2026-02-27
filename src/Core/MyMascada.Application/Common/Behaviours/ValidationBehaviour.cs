@@ -11,16 +11,16 @@ namespace MyMascada.Application.Common.Behaviours;
 public class ValidationBehaviour<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : notnull
 {
-    private readonly IEnumerable<IValidator<TRequest>> _validators;
+    private readonly IReadOnlyList<IValidator<TRequest>> _validators;
 
     public ValidationBehaviour(IEnumerable<IValidator<TRequest>> validators)
     {
-        _validators = validators;
+        _validators = validators.ToList();
     }
 
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
-        if (!_validators.Any())
+        if (_validators.Count == 0)
             return await next();
 
         var context = new ValidationContext<TRequest>(request);

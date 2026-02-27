@@ -3,6 +3,7 @@ using System.Text.Json;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
 using MyMascada.Application.Common.Interfaces;
+using MyMascada.Domain.Common;
 
 namespace MyMascada.WebAPI.Middleware;
 
@@ -138,7 +139,7 @@ public class GlobalExceptionHandlingMiddleware
             {
                 Message = "One or more validation errors occurred.",
                 CorrelationId = correlationId,
-                Timestamp = DateTime.UtcNow,
+                Timestamp = DateTimeProvider.UtcNow,
                 Type = nameof(ValidationException),
                 Errors = errors
             }
@@ -203,7 +204,7 @@ public class GlobalExceptionHandlingMiddleware
             {
                 Message = userMessage,
                 CorrelationId = correlationId,
-                Timestamp = DateTime.UtcNow,
+                Timestamp = DateTimeProvider.UtcNow,
                 Type = exception.GetType().Name
             }
         };
