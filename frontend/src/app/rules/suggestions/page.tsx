@@ -22,14 +22,16 @@ export default function RuleSuggestionsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
-            <SparklesIcon className="w-8 h-8 text-white" />
+      <AppLayout>
+        <div className="min-h-[50vh] flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
+              <SparklesIcon className="w-8 h-8 text-white" />
+            </div>
+            <div className="mt-6 text-slate-700 font-medium">{t('suggestions.title')}</div>
           </div>
-          <div className="mt-6 text-slate-700 font-medium">{t('suggestions.title')}</div>
         </div>
-      </div>
+      </AppLayout>
     );
   }
 

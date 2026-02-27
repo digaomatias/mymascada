@@ -1574,7 +1574,39 @@
     },
     "filters": {
       "showInactive": "Mostrar regras inativas",
-      "rulesFound": "{count} regra{count, plural, =1 {} other {s}} encontrada{count, plural, =1 {} other {s}}"
+      "rulesFound": "{count} regra{count, plural, =1 {} other {s}} encontrada{count, plural, =1 {} other {s}}",
+      "search": "Buscar",
+      "searchPlaceholder": "Busque por nome da regra, padrão, descrição ou categoria",
+      "type": "Tipo",
+      "allTypes": "Todos os tipos",
+      "sort": "Ordenar",
+      "sortPriorityAsc": "Prioridade (Menor para Maior)",
+      "sortPriorityDesc": "Prioridade (Maior para Menor)",
+      "sortMatchesDesc": "Mais Correspondências",
+      "sortAccuracyDesc": "Maior Precisão",
+      "sortCreatedDesc": "Mais Recentes",
+      "noMatches": "Nenhuma regra corresponde aos filtros atuais",
+      "clear": "Limpar filtros"
+    },
+    "bulk": {
+      "selectedCount": "{count} selecionada{count, plural, =1 {} other {s}}",
+      "selectVisible": "Selecionar visíveis",
+      "clearSelection": "Limpar seleção",
+      "selectRule": "Selecionar regra {name}",
+      "activate": "Ativar",
+      "deactivate": "Desativar",
+      "delete": "Excluir"
+    },
+    "reorder": {
+      "start": "Reordenar prioridades",
+      "modeActive": "Modo de reordenação",
+      "title": "Ordem de Prioridade",
+      "help": "Arraste as regras para definir a ordem de processamento. Menores prioridades executam primeiro.",
+      "save": "Salvar ordem",
+      "saving": "Salvando...",
+      "cancel": "Cancelar",
+      "moveUp": "Mover para cima",
+      "moveDown": "Mover para baixo"
     },
     "empty": {
       "title": "Nenhuma regra ainda",
@@ -1619,7 +1651,14 @@
       "suggestionAccepted": "Regra \"{name}\" criada com sucesso!",
       "suggestionAcceptFailed": "Falha ao criar regra. Por favor, tente novamente.",
       "suggestionDismissed": "Sugestão de regra descartada com sucesso.",
-      "suggestionDismissFailed": "Falha ao descartar sugestão. Por favor, tente novamente."
+      "suggestionDismissFailed": "Falha ao descartar sugestão. Por favor, tente novamente.",
+      "bulkDeleteConfirm": "Excluir {count} regras selecionadas?",
+      "bulkActivateSuccess": "{count} regra{count, plural, =1 {} other {s}} selecionada{count, plural, =1 {} other {s}} ativada{count, plural, =1 {} other {s}}",
+      "bulkDeactivateSuccess": "{count} regra{count, plural, =1 {} other {s}} selecionada{count, plural, =1 {} other {s}} desativada{count, plural, =1 {} other {s}}",
+      "bulkDeleteSuccess": "{count} regra{count, plural, =1 {} other {s}} selecionada{count, plural, =1 {} other {s}} excluída{count, plural, =1 {} other {s}}",
+      "bulkUpdateFailed": "Falha ao aplicar ação em lote",
+      "prioritiesUpdated": "Prioridades das regras atualizadas",
+      "prioritiesUpdateFailed": "Falha ao atualizar prioridades"
     },
     "new": {
       "title": "Criar Nova Regra",
