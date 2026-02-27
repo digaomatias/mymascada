@@ -6,11 +6,10 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { getReturnUrl } from '@/lib/navigation-utils';
 import { useEffect, useState, useCallback } from 'react';
 import { AppLayout } from '@/components/app-layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TransactionForm, TransactionStatus } from '@/components/forms/transaction-form';
 import { apiClient } from '@/lib/api-client';
 import { TransactionBackButton } from '@/components/ui/smart-back-button';
-import { 
+import {
   PencilIcon,
   CheckIcon,
   ExclamationTriangleIcon,
@@ -41,7 +40,7 @@ interface Transaction {
 // Utility function to map enum values to display names
 const getTransactionStatus = (status: string | number): TransactionStatus => {
   if (typeof status === 'string') return status.toLowerCase() as TransactionStatus;
-  
+
   switch (status) {
     case 1: return 'pending';
     case 2: return 'cleared';
@@ -68,7 +67,7 @@ export default function EditTransactionPage() {
   const searchParams = useSearchParams();
   const transactionId = params?.id as string;
   const returnUrl = getReturnUrl(searchParams);
-  
+
   const t = useTranslations('transactions');
   const tToasts = useTranslations('toasts');
   const [loading, setLoading] = useState(false);
@@ -87,10 +86,10 @@ export default function EditTransactionPage() {
     try {
       setLoadingTransaction(true);
       setError(null);
-      
+
       const transactionData = await apiClient.getTransaction(parseInt(transactionId)) as Transaction;
       setTransaction(transactionData);
-      
+
       // Note: Transfer transactions are edited without modifying their transfer relationship
     } catch (err) {
       console.error('Failed to load transaction:', err);
@@ -128,7 +127,7 @@ export default function EditTransactionPage() {
       // For transfer transactions, preserve the original sign to maintain transfer integrity
       const amount = parseFloat(formData.amount);
       let finalAmount: number;
-      
+
       if (isCurrentTransfer && transaction) {
         // Keep the original sign: negative for source, positive for destination
         finalAmount = transaction.amount < 0 ? -amount : amount;
@@ -140,7 +139,7 @@ export default function EditTransactionPage() {
       // Map status to enum values
       const statusMap: Record<string, number> = {
         'pending': 1,
-        'cleared': 2, 
+        'cleared': 2,
         'reconciled': 3,
         'cancelled': 4
       };
@@ -160,11 +159,11 @@ export default function EditTransactionPage() {
       };
 
       await apiClient.updateTransaction(parseInt(transactionId), updateData);
-      
+
       setSuccess(true);
       const transferNote = isCurrentTransfer ? ` ${t('transferUpdateNote')}` : '';
       toast.success(`${tToasts('transactionUpdated')}${transferNote}`, { duration: 4000 });
-      
+
       // Redirect after a short delay - preserve filter context
       setTimeout(() => {
         router.push(returnUrl);
@@ -189,7 +188,7 @@ export default function EditTransactionPage() {
           <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <PencilIcon className="w-8 h-8 text-white" />
           </div>
-          <div className="mt-6 text-gray-700 font-medium">{t('loadingTransaction')}</div>
+          <div className="mt-6 text-slate-700 font-medium">{t('loadingTransaction')}</div>
         </div>
       </div>
     );
@@ -202,14 +201,12 @@ export default function EditTransactionPage() {
   if (error && !transaction) {
     return (
       <AppLayout>
-        <Card className="max-w-2xl mx-auto bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-          <CardContent className="p-8 text-center">
-            <ExclamationTriangleIcon className="w-16 h-16 text-danger-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('notFound')}</h2>
-            <p className="text-gray-600 mb-6">{error}</p>
-            <TransactionBackButton />
-          </CardContent>
-        </Card>
+        <div className="max-w-2xl mx-auto rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92 p-8 text-center">
+          <ExclamationTriangleIcon className="w-16 h-16 text-danger-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">{t('notFound')}</h2>
+          <p className="text-slate-600 mb-6">{error}</p>
+          <TransactionBackButton />
+        </div>
       </AppLayout>
     );
   }
@@ -232,86 +229,66 @@ export default function EditTransactionPage() {
   return (
     <AppLayout>
       {/* Header */}
-      <div className="mb-6 lg:mb-8">
-        {/* Navigation Bar */}
-        <div className="flex items-center justify-between mb-6">
-          <TransactionBackButton size="sm" />
-        </div>
+      <header className="flex flex-wrap items-center justify-between gap-4 mb-5">
+        <TransactionBackButton size="sm" />
+      </header>
 
-        {/* Page Title */}
-        <div className="text-center mb-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-            {t('editTransaction')}
-          </h1>
-          <p className="text-gray-600 text-sm sm:text-base">
-            {t('editTransactionDesc')}
-          </p>
-        </div>
+      {/* Page Title */}
+      <div className="mb-6">
+        <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
+          {t('editTransaction')}
+        </h1>
+        <p className="mt-1.5 text-[15px] text-slate-500">
+          {t('editTransactionDesc')}
+        </p>
       </div>
 
       {/* Success Message */}
       {success && (
-        <Card className="mb-6 bg-success-50 border-success-200 shadow-lg">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <CheckIcon className="w-5 h-5 text-success-600" />
-              <span className="text-success-800 font-medium">{t('transactionUpdated')}</span>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="mb-6 rounded-2xl border border-success-200 bg-success-50 p-4 shadow-sm">
+          <div className="flex items-center gap-2">
+            <CheckIcon className="w-5 h-5 text-success-600" />
+            <span className="text-success-800 font-medium">{t('transactionUpdated')}</span>
+          </div>
+        </div>
       )}
 
       {/* Error Message */}
       {error && (
-        <Card className="mb-6 bg-danger-50 border-danger-200 shadow-lg">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <ExclamationTriangleIcon className="w-5 h-5 text-danger-600" />
-              <span className="text-danger-800 font-medium">{error}</span>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="mb-6 rounded-2xl border border-danger-200 bg-danger-50 p-4 shadow-sm">
+          <div className="flex items-center gap-2">
+            <ExclamationTriangleIcon className="w-5 h-5 text-danger-600" />
+            <span className="text-danger-800 font-medium">{error}</span>
+          </div>
+        </div>
       )}
 
       {/* Transfer Warning */}
       {transaction && isTransfer(transaction) && (
-        <Card className="mb-6 bg-blue-50 border-blue-200 shadow-lg">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <ArrowsRightLeftIcon className="w-5 h-5 text-blue-600" />
-              <div>
-                <span className="text-blue-800 font-medium">{t('transferTransaction')}</span>
-                <p className="text-blue-700 text-sm mt-1">
-                  {t('transferInfo')}
-                </p>
-              </div>
+        <div className="mb-6 rounded-2xl border border-blue-200/80 bg-blue-50/80 p-4 shadow-sm">
+          <div className="flex items-center gap-2">
+            <ArrowsRightLeftIcon className="w-5 h-5 text-blue-600" />
+            <div>
+              <span className="text-blue-800 font-medium">{t('transferTransaction')}</span>
+              <p className="text-blue-700 text-sm mt-1">
+                {t('transferInfo')}
+              </p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Edit Form */}
-      <Card className="max-w-4xl mx-auto bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <PencilIcon className="w-5 h-5" />
-            {t('transactionDetails')}
-            {transaction && isTransfer(transaction) && (
-              <ArrowsRightLeftIcon className="w-5 h-5 text-blue-500" />
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {transaction && (
-            <TransactionForm
-              initialData={initialData}
-              onSubmit={handleSubmit}
-              onCancel={handleCancel}
-              submitText={loading ? t('updating') : t('updateTransaction')}
-            />
-          )}
-        </CardContent>
-      </Card>
+      <div className="max-w-4xl mx-auto rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92 p-6">
+        {transaction && (
+          <TransactionForm
+            initialData={initialData}
+            onSubmit={handleSubmit}
+            onCancel={handleCancel}
+            submitText={loading ? t('updating') : t('updateTransaction')}
+          />
+        )}
+      </div>
     </AppLayout>
   );
 }
