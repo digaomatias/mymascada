@@ -29,7 +29,7 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "clsx": "^2.1.1",
-    "date-fns": "^3.6.0",
+    "date-fns": "^4.1.0",
     "eslint": "^9.29.0",
     "eslint-config-next": "^16.1.6",
     "google-auth-library": "^10.1.0",
