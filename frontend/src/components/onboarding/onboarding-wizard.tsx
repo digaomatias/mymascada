@@ -89,6 +89,7 @@ export function OnboardingWizard() {
       setRedirectCountdown(REDIRECT_SECONDS);
       setIsSubmitting(false);
     } catch (err) {
+      console.error('Onboarding error:', err);
       const message = err instanceof Error ? err.message : 'An error occurred';
       setError(message);
       setIsSubmitting(false);
@@ -118,6 +119,7 @@ export function OnboardingWizard() {
       });
       await navigateToDashboard();
     } catch (err) {
+      console.error('Onboarding error:', err);
       const message = err instanceof Error ? err.message : 'An error occurred';
       setError(message);
       setIsSkipping(false);

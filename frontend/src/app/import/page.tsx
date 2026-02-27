@@ -21,7 +21,7 @@ import { apiClient } from '@/lib/api-client';
 import { useFeatures } from '@/contexts/features-context';
 import { CSVMappingReview } from '@/components/forms/csv-mapping-review';
 import { ImportReviewScreen } from '@/components/import-review/import-review-screen';
-import { ImportAnalysisResult, ImportExecutionResult } from '@/types/import-review';
+import { ImportAnalysisResult, ImportExecutionResult, ImportReviewItem } from '@/types/import-review';
 import { useTranslations } from 'next-intl';
 import { BackendAccountType } from '@/lib/utils';
 
@@ -439,10 +439,10 @@ function ImportPageContent() {
       });
 
       // Fix transaction types based on amount convention
-      const typedResponse = analysisResponse as any;
-      const correctedResponse = {
+      const typedResponse = analysisResponse as unknown as ImportAnalysisResult;
+      const correctedResponse: ImportAnalysisResult = {
         ...typedResponse,
-        reviewItems: typedResponse.reviewItems?.map((item: any) => {
+        reviewItems: typedResponse.reviewItems?.map((item: ImportReviewItem) => {
           if (!item?.importCandidate) return item;
           const correctedType = determineCorrectTransactionType(
             item.importCandidate.amount,
