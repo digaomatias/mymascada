@@ -50,6 +50,22 @@ interface YearlyComparison {
   netIncome: number;
 }
 
+interface MonthlySummaryCategory {
+  categoryId: number;
+  categoryName: string;
+  categoryColor?: string;
+  amount: number;
+  transactionCount: number;
+  percentage: number;
+}
+
+interface MonthlySummary {
+  totalIncome?: number;
+  totalExpenses?: number;
+  netAmount?: number;
+  topCategories?: MonthlySummaryCategory[];
+}
+
 const PANEL_CLASS =
   'rounded-[26px] border border-violet-100/70 bg-white/92 p-5 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs';
 
@@ -95,14 +111,7 @@ export default function AnalyticsPage() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [monthlyTrends, setMonthlyTrends] = useState<MonthlyTrend[]>([]);
   const [yearlyData, setYearlyData] = useState<YearlyComparison[]>([]);
-  const [categoryData, setCategoryData] = useState<{
-    categoryId: number;
-    categoryName: string;
-    categoryColor?: string;
-    amount: number;
-    transactionCount: number;
-    percentage: number;
-  }[]>([]);
+  const [categoryData, setCategoryData] = useState<MonthlySummaryCategory[]>([]);
   const [loadingTrends, setLoadingTrends] = useState(true);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [loadingYearly, setLoadingYearly] = useState(true);
@@ -175,7 +184,7 @@ export default function AnalyticsPage() {
       const trends: MonthlyTrend[] = [];
       results.forEach((result, i) => {
         if (result.status === 'fulfilled') {
-          const summary = result.value as any;
+          const summary = result.value as MonthlySummary;
           const { year: y, month: m } = monthParams[i];
           trends.push({
             month: new Date(y, m - 1).toLocaleDateString('en-US', {
@@ -203,7 +212,7 @@ export default function AnalyticsPage() {
       const selectedQuarter = Math.ceil(month / 3);
       const quarterStartMonth = (selectedQuarter - 1) * 3 + 1;
       const categoryMonth = range === 'quarter' ? quarterStartMonth : month;
-      const currentSummary = (await apiClient.getMonthlySummary(year, categoryMonth)) as any;
+      const currentSummary = (await apiClient.getMonthlySummary(year, categoryMonth)) as MonthlySummary;
       setCategoryData(currentSummary?.topCategories ?? []);
     } catch (error) {
       console.error('Failed to load category data:', error);
@@ -230,7 +239,7 @@ export default function AnalyticsPage() {
 
       results.forEach((result, i) => {
         if (result.status === 'fulfilled') {
-          const summary = result.value as any;
+          const summary = result.value as MonthlySummary;
           const { year: y } = allParams[i];
           const totals = yearTotals.get(y)!;
           totals.income += summary.totalIncome || 0;
