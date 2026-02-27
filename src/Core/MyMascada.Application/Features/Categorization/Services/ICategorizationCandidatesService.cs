@@ -37,7 +37,7 @@ public interface ICategorizationCandidatesService
     /// Applies multiple candidates in a batch operation
     /// </summary>
     Task<BatchCandidateResult> ApplyCandidatesBatchAsync(
-        IEnumerable<int> candidateIds, string appliedBy, CancellationToken cancellationToken = default);
+        IEnumerable<int> candidateIds, string appliedBy, Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Rejects multiple candidates in a batch operation

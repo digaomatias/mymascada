@@ -64,7 +64,7 @@ public interface ITransactionRepository
     Task<HashSet<int>> GetCategorizedTransactionIdsAsync(IEnumerable<int> transactionIds);
     
     // Bulk operations for categorization
-    Task BulkUpdateCategorizationAsync<T>(IEnumerable<T> updates, CancellationToken cancellationToken = default)
+    Task BulkUpdateCategorizationAsync<T>(IEnumerable<T> updates, Guid userId, CancellationToken cancellationToken = default)
         where T : class;
 }
 

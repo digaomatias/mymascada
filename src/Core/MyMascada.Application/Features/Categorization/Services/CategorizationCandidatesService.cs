@@ -178,7 +178,7 @@ public class CategorizationCandidatesService : ICategorizationCandidatesService
     }
 
     public async Task<BatchCandidateResult> ApplyCandidatesBatchAsync(
-        IEnumerable<int> candidateIds, string appliedBy, CancellationToken cancellationToken = default)
+        IEnumerable<int> candidateIds, string appliedBy, Guid userId, CancellationToken cancellationToken = default)
     {
         var result = new BatchCandidateResult();
         var ids = candidateIds.ToList();
@@ -237,6 +237,7 @@ public class CategorizationCandidatesService : ICategorizationCandidatesService
                         AutoCategorizedAt = DateTime.UtcNow,
                         IsReviewed = true
                     }),
+                    userId,
                     cancellationToken);
 
                 // Mark all candidates as applied in a single bulk operation

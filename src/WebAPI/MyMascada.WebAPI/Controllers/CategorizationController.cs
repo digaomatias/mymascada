@@ -709,7 +709,7 @@ public class CategorizationController : ControllerBase
             }
 
             var result = await _candidatesService.ApplyCandidatesBatchAsync(
-                candidateIds, $"User-{userId}", cancellationToken);
+                candidateIds, $"User-{userId}", userId, cancellationToken);
 
             return Ok(new
             {

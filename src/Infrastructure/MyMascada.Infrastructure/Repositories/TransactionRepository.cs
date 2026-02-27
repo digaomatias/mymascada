@@ -13,6 +13,8 @@ namespace MyMascada.Infrastructure.Repositories;
 
 public class TransactionRepository : ITransactionRepository
 {
+    private const int DefaultDuplicateLookbackDays = 180;
+
     private readonly ApplicationDbContext _context;
     private readonly ITransactionQueryService _queryService;
     private readonly IAccountAccessService _accountAccess;
@@ -530,7 +532,7 @@ public class TransactionRepository : ITransactionRepository
     public async Task<List<Transaction>> GetAllForDuplicateDetectionAsync(Guid userId, bool includeReviewed = false, DateTime? sinceDate = null)
     {
         var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
-        var cutoff = sinceDate ?? DateTime.UtcNow.AddDays(-180);
+        var cutoff = sinceDate ?? DateTime.UtcNow.AddDays(-DefaultDuplicateLookbackDays);
 
         var query = _context.Transactions
             .Include(t => t.Account)
@@ -677,7 +679,7 @@ public class TransactionRepository : ITransactionRepository
         return new HashSet<int>(categorizedIds);
     }
 
-    public async Task BulkUpdateCategorizationAsync<T>(IEnumerable<T> updates, CancellationToken cancellationToken = default)
+    public async Task BulkUpdateCategorizationAsync<T>(IEnumerable<T> updates, Guid userId, CancellationToken cancellationToken = default)
         where T : class
     {
         var updateList = updates.ToList();
@@ -700,6 +702,21 @@ public class TransactionRepository : ITransactionRepository
 
             updateData[transactionId] = (categoryId, method, confidence, by, at, reviewed);
         }
+
+        // Verify user owns all transactions before applying any updates
+        var accessibleAccountIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
+        var requestedIds = updateData.Keys.ToList();
+        var verifiedIds = await _context.Transactions
+            .Where(t => requestedIds.Contains(t.Id) && accessibleAccountIds.Contains(t.AccountId))
+            .Select(t => t.Id)
+            .ToHashSetAsync(cancellationToken);
+
+        // Drop any transaction IDs that do not belong to the user
+        foreach (var id in requestedIds.Where(id => !verifiedIds.Contains(id)))
+            updateData.Remove(id);
+
+        if (updateData.Count == 0)
+            return;
 
         // Group by categoryId to issue one batch UPDATE per category instead of one per transaction
         var byCategoryId = updateData.GroupBy(kvp => kvp.Value.CategoryId);

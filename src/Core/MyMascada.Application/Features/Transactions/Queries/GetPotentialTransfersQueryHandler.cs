@@ -11,6 +11,8 @@ namespace MyMascada.Application.Features.Transactions.Queries;
 /// </summary>
 public class GetPotentialTransfersQueryHandler : IRequestHandler<GetPotentialTransfersQuery, PotentialTransfersResponse>
 {
+    private const int DefaultTransferLookbackDays = 90;
+
     private readonly ITransactionRepository _transactionRepository;
     private readonly IAccountRepository _accountRepository;
     private readonly IMapper _mapper;
@@ -27,8 +29,8 @@ public class GetPotentialTransfersQueryHandler : IRequestHandler<GetPotentialTra
 
     public async Task<PotentialTransfersResponse> Handle(GetPotentialTransfersQuery request, CancellationToken cancellationToken)
     {
-        // Get user transactions within a 90-day window to avoid unbounded queries
-        var cutoffDate = DateTime.UtcNow.AddDays(-90);
+        // Get user transactions within a lookback window to avoid unbounded queries
+        var cutoffDate = DateTime.UtcNow.AddDays(-DefaultTransferLookbackDays);
         var transactions = await _transactionRepository.GetUserTransactionsAsync(
             request.UserId,
             includeDeleted: false,
