@@ -85,8 +85,7 @@
     "processing": "Processing...",
     "simple": "Simple",
     "advanced": "Advanced",
-    "chooseFile": "Choose File"
-    ,
+    "chooseFile": "Choose File",
     "selectDateTime": "Select date and time"
   },
   "nav": {
@@ -3145,15 +3144,99 @@
   },
   "landing": {
     "appName": "MyMascada",
-    "heroTitle": "Welcome to",
-    "heroSubtitle": "Your AI-powered personal finance management application. Track transactions, manage budgets, and gain insights into your financial health.",
+    "hero": {
+      "titleLine1": "Your finances.",
+      "titleHighlight": "Your rules.",
+      "titleLine2": "",
+      "subtitle": "A modern, AI-powered personal finance app that respects your privacy. Track spending, set budgets, and actually understand where your money goes.",
+      "subtext": "Free, open source, and self-hostable. No ads, no data selling, no catch.",
+      "ctaPrimary": "Get started — it's free",
+      "ctaSecondary": "See features"
+    },
+    "stats": {
+      "stat1": {
+        "value": "100%",
+        "label": "Free & open source"
+      },
+      "stat2": {
+        "value": "AI",
+        "label": "Smart categorization"
+      },
+      "stat3": {
+        "value": "CSV/OFX",
+        "label": "Universal import"
+      },
+      "stat4": {
+        "value": "🔒",
+        "label": "Self-hostable"
+      }
+    },
     "features": {
-      "trackingTitle": "Transaction Tracking",
-      "trackingDescription": "Easily track all your financial transactions with automated categorization and CSV import capabilities.",
-      "insightsTitle": "AI-Powered Insights",
-      "insightsDescription": "Get intelligent categorization and insights about your spending patterns with our AI engine.",
-      "securityTitle": "Secure & Private",
-      "securityDescription": "Your financial data is secure with enterprise-grade encryption and privacy-first design."
+      "sectionTitle": "Everything you need, nothing you don't",
+      "sectionSubtitle": "Built for people who want real control over their finances — without the bloat or the subscription fees.",
+      "tracking": {
+        "title": "Transaction Tracking",
+        "description": "Log income and expenses effortlessly. See exactly where every dollar goes and spot opportunities to save."
+      },
+      "ai": {
+        "title": "AI-Powered Categorization",
+        "description": "Import your bank statement and let AI categorize everything automatically. Less manual work, more actionable insights."
+      },
+      "goals": {
+        "title": "Budgets & Goals",
+        "description": "Set spending limits per category, create savings goals, and track your progress with visual dashboards."
+      },
+      "import": {
+        "title": "Smart Import",
+        "description": "Bring your bank statements (CSV or OFX) and let AI map the columns automatically. Works with any bank worldwide."
+      },
+      "analytics": {
+        "title": "Clear Analytics",
+        "description": "Charts that actually tell you something. Spending trends, category breakdowns, and financial runway at a glance."
+      },
+      "security": {
+        "title": "Privacy First",
+        "description": "Your financial data stays yours. Strong encryption, no data sales, no ads. Want full control? Self-host it on your own server."
+      }
+    },
+    "valueProposition": {
+      "title": "Built for people who care about their data",
+      "paragraph1": "Most finance apps want your data as much as you want their features. We think that's a bad trade. MyMascada is open source — every line of code is auditable, and you can run it entirely on your own infrastructure.",
+      "paragraph2": "Whether you use our hosted version or self-host, you get the same powerful features: AI categorization, smart budgets, detailed analytics, and a clean interface that stays out of your way.",
+      "point1": "Full source code on GitHub — audit everything",
+      "point2": "Self-host with Docker in under 5 minutes",
+      "point3": "No vendor lock-in — export your data anytime",
+      "point4": "AI features are optional and privacy-respecting",
+      "quote": "The best financial tool is the one you actually trust with your data."
+    },
+    "howItWorks": {
+      "title": "Up and running in minutes",
+      "step1": {
+        "title": "Create your account",
+        "description": "Quick signup, no credit card required. You're in within a minute."
+      },
+      "step2": {
+        "title": "Import or log",
+        "description": "Upload your bank statement or start logging transactions manually. AI handles the categorization."
+      },
+      "step3": {
+        "title": "Take control",
+        "description": "Set budgets, track goals, and watch your financial picture come into focus."
+      }
+    },
+    "openSource": {
+      "title": "Open source. Always.",
+      "description": "MyMascada is 100% open source under a permissive license. Browse the code, contribute, or spin up your own instance. No fine print, no surprises."
+    },
+    "cta": {
+      "title": "Ready to take control of your finances?",
+      "subtitle": "Free, private, and built to last. Start making better financial decisions today.",
+      "button": "Create free account"
+    },
+    "footer": {
+      "terms": "Terms of Service",
+      "privacy": "Privacy Policy",
+      "copyright": "© 2026 MyMascada. Open source with ❤️"
     }
   },
   "goals": {

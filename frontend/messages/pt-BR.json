@@ -3144,15 +3144,99 @@
   },
   "landing": {
     "appName": "MyMascada",
-    "heroTitle": "Bem-vindo à",
-    "heroSubtitle": "Seu aplicativo de gestão financeira pessoal com IA. Acompanhe transações, gerencie orçamentos e obtenha insights sobre sua saúde financeira.",
+    "hero": {
+      "titleLine1": "Tome as rédeas da sua",
+      "titleHighlight": "vida financeira",
+      "titleLine2": "",
+      "subtitle": "Chega de fechar os olhos pro extrato. O MyMascada te ajuda a entender pra onde vai seu dinheiro, criar hábitos financeiros saudáveis e construir o futuro que você merece.",
+      "subtext": "Gratuito, open source e com inteligência artificial pra facilitar sua vida.",
+      "ctaPrimary": "Começar agora — é grátis",
+      "ctaSecondary": "Conhecer as funcionalidades"
+    },
+    "stats": {
+      "stat1": {
+        "value": "100%",
+        "label": "Gratuito e open source"
+      },
+      "stat2": {
+        "value": "IA",
+        "label": "Categorização automática"
+      },
+      "stat3": {
+        "value": "CSV/OFX",
+        "label": "Importação fácil"
+      },
+      "stat4": {
+        "value": "🔒",
+        "label": "Seus dados, seu controle"
+      }
+    },
     "features": {
-      "trackingTitle": "Acompanhamento de Transações",
-      "trackingDescription": "Acompanhe facilmente todas as suas transações financeiras com categorização automática e importação de CSV.",
-      "insightsTitle": "Insights com IA",
-      "insightsDescription": "Obtenha categorização inteligente e insights sobre seus padrões de gasto com nosso motor de IA.",
-      "securityTitle": "Seguro e Privado",
-      "securityDescription": "Seus dados financeiros ficam protegidos com criptografia de nível empresarial e design voltado à privacidade."
+      "sectionTitle": "Tudo que você precisa pra organizar suas finanças",
+      "sectionSubtitle": "Sem complicação, sem pegadinha. Ferramentas práticas pra quem quer sair do vermelho ou manter o controle.",
+      "tracking": {
+        "title": "Controle de Gastos",
+        "description": "Registre suas receitas e despesas de um jeito simples. Veja exatamente pra onde tá indo cada centavo e identifique onde dá pra economizar."
+      },
+      "ai": {
+        "title": "IA que Trabalha pra Você",
+        "description": "Importou o extrato? A inteligência artificial categoriza suas transações automaticamente. Menos trabalho manual, mais tempo pra focar no que importa."
+      },
+      "goals": {
+        "title": "Metas e Orçamentos",
+        "description": "Quer juntar pra uma viagem? Comprar a casa própria? Defina metas, crie orçamentos por categoria e acompanhe seu progresso mês a mês."
+      },
+      "import": {
+        "title": "Importação Inteligente",
+        "description": "Traga seus extratos bancários (CSV ou OFX) e deixe a IA mapear tudo automaticamente. Funciona com qualquer banco brasileiro ou internacional."
+      },
+      "analytics": {
+        "title": "Relatórios que Fazem Sentido",
+        "description": "Gráficos claros que mostram pra onde vai seu dinheiro, como seus gastos evoluem e onde estão as oportunidades de economia."
+      },
+      "security": {
+        "title": "Privacidade em Primeiro Lugar",
+        "description": "Seus dados financeiros são seus. Criptografia forte, sem venda de dados, sem anúncios. E se quiser, pode rodar o MyMascada no seu próprio servidor."
+      }
+    },
+    "valueProposition": {
+      "title": "Mais que um app de finanças — uma ferramenta de educação financeira",
+      "paragraph1": "A gente sabe que organizar as finanças parece difícil. Planilha complicada, app que cobra mensalidade, banco que não ajuda. O MyMascada nasceu pra mudar isso.",
+      "paragraph2": "Aqui você não só registra seus gastos — você aprende a entender seus padrões financeiros. A IA te ajuda a categorizar, os relatórios te mostram o caminho, e as metas te mantêm motivado.",
+      "point1": "Entenda seus padrões de gasto e identifique desperdícios",
+      "point2": "Crie orçamentos realistas baseados no seu histórico real",
+      "point3": "Acompanhe metas de economia com progresso visual",
+      "point4": "Receba insights automáticos sobre sua saúde financeira",
+      "quote": "Quem não sabe pra onde vai o dinheiro, nunca vai ter o suficiente."
+    },
+    "howItWorks": {
+      "title": "Simples de começar",
+      "step1": {
+        "title": "Crie sua conta",
+        "description": "Cadastro rápido e gratuito. Em menos de um minuto você já tá dentro."
+      },
+      "step2": {
+        "title": "Importe ou registre",
+        "description": "Traga seu extrato bancário ou comece registrando suas transações manualmente. A IA cuida do resto."
+      },
+      "step3": {
+        "title": "Tome o controle",
+        "description": "Acompanhe seus gastos, defina metas e veja sua vida financeira se transformar."
+      }
+    },
+    "openSource": {
+      "title": "Open source e transparente",
+      "description": "O MyMascada é 100% open source. Você pode ver o código, contribuir, ou rodar sua própria instância. Sem letras miúdas, sem surpresas."
+    },
+    "cta": {
+      "title": "Pronto pra mudar sua relação com o dinheiro?",
+      "subtitle": "Milhares de decisões financeiras acontecem todo mês. Comece a tomar as melhores.",
+      "button": "Criar conta gratuita"
+    },
+    "footer": {
+      "terms": "Termos de Uso",
+      "privacy": "Privacidade",
+      "copyright": "© 2026 MyMascada. Open source com ❤️"
     }
   },
   "goals": {
