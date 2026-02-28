@@ -780,7 +780,7 @@ function TransactionsPageContent() {
                           {t('more')}
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48 bg-white shadow-lg border border-slate-200 rounded-lg">
+                      <DropdownMenuContent align="end" side="bottom" className="w-48 bg-white shadow-lg border border-slate-200 rounded-lg z-50">
                         {features.aiCategorization && (
                           <DropdownMenuItem asChild>
                             <Link href="/import" className="flex items-center gap-2 px-3 py-2 hover:bg-slate-50 cursor-pointer">
