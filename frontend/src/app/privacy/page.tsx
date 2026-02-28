@@ -72,11 +72,12 @@ export default function PrivacyPolicyPage() {
             </li>
           </ul>
 
-          <h3 className="text-lg font-semibold text-gray-900 mt-6 mb-3">OpenAI API (AI Categorization)</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mt-6 mb-3">OpenAI API (AI Features)</h3>
           <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-1">
-            <li><strong>What is shared:</strong> Transaction descriptions and amounts are sent to OpenAI for categorization suggestions.</li>
-            <li><strong>When:</strong> Only when AI-powered categorization is triggered during transaction review.</li>
-            <li><strong>Data retention:</strong> OpenAI API usage data is subject to OpenAI&apos;s data retention policies. We use the API with zero data retention where available.</li>
+            <li><strong>What is shared:</strong> Transaction descriptions, amounts, and category names are sent to OpenAI
+              for categorization suggestions, chat responses, CSV import analysis, and rule suggestions.</li>
+            <li><strong>When:</strong> Only when you actively use AI-powered features (categorization, chat assistant,
+              smart CSV import).</li>
             <li>
               <strong>Their policy:</strong>{' '}
               <a href="https://openai.com/privacy/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary-600 underline">
@@ -84,6 +85,33 @@ export default function PrivacyPolicyPage() {
               </a>
             </li>
           </ul>
+
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+            <h4 className="text-base font-semibold text-amber-900 mb-2">⚠️ Important: AI Data Sharing Disclosure</h4>
+            <p className="text-sm text-amber-800 mb-2">
+              The hosted version of MyMascada (mymascada.com) participates in OpenAI&apos;s data sharing program.
+              This means that <strong>data sent to OpenAI through our AI features may be used by OpenAI to
+              improve their models</strong>. This includes transaction descriptions and category information
+              processed through AI categorization, chat, and import features.
+            </p>
+            <p className="text-sm text-amber-800 mb-2">
+              <strong>What this means for you:</strong>
+            </p>
+            <ul className="list-disc pl-5 text-sm text-amber-800 space-y-1 mb-2">
+              <li>Transaction descriptions you submit for AI categorization may be used to train OpenAI models</li>
+              <li>Chat conversations with the AI assistant may be used to train OpenAI models</li>
+              <li>This only applies when you actively use AI features &mdash; your data is never sent to OpenAI otherwise</li>
+              <li>We do not share your account information, email, passwords, or account balances with OpenAI</li>
+            </ul>
+            <p className="text-sm text-amber-800 mb-2">
+              <strong>How to avoid this:</strong>
+            </p>
+            <ul className="list-disc pl-5 text-sm text-amber-800 space-y-1">
+              <li>Simply don&apos;t use AI features &mdash; manual categorization and all other features work without any data leaving our servers</li>
+              <li>Self-host MyMascada with your own OpenAI API key (data sharing is off by default for individual API accounts)</li>
+              <li>Self-host and use a different AI provider (the app supports configurable AI backends)</li>
+            </ul>
+          </div>
 
           <h3 className="text-lg font-semibold text-gray-900 mt-6 mb-3">Stripe (Payment Processing)</h3>
           <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-1">
