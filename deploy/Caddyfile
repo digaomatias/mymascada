@@ -11,13 +11,52 @@
 #   DOMAIN=localhost
 # =============================================================================
 
+# Rate limiting configuration
+# Requires caddy-rate-limit plugin: https://github.com/mholt/caddy-ratelimit
+(rate_limit_global) {
+    rate_limit {
+        zone global_ip {
+            key {remote_host}
+            events {$RATE_LIMIT_GLOBAL_RPM:200}
+            window 1m
+        }
+    }
+}
+
+(rate_limit_auth) {
+    rate_limit {
+        zone auth_ip {
+            key {remote_host}
+            events {$RATE_LIMIT_AUTH_RPM:20}
+            window 1m
+        }
+    }
+}
+
+(rate_limit_api) {
+    rate_limit {
+        zone api_ip {
+            key {remote_host}
+            events {$RATE_LIMIT_API_RPM:100}
+            window 1m
+        }
+    }
+}
+
 {$DOMAIN:localhost} {
-    # API requests
-    handle /api/* {
+    # Auth endpoints — stricter rate limiting
+    handle /api/auth/* {
+        import rate_limit_auth
         reverse_proxy api:5126
     }
 
-    # Health check endpoint
+    # API requests — standard rate limiting
+    handle /api/* {
+        import rate_limit_api
+        reverse_proxy api:5126
+    }
+
+    # Health check endpoint (no rate limiting)
     handle /health {
         reverse_proxy api:5126
     }
@@ -27,8 +66,9 @@
         reverse_proxy api:5126
     }
 
-    # Everything else goes to the frontend
+    # Everything else goes to the frontend — global rate limiting
     handle {
+        import rate_limit_global
         reverse_proxy frontend:3000
     }
 
