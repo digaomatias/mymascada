@@ -198,7 +198,7 @@ export default function SettingsPage() {
           <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <CogIcon className="w-8 h-8 text-white" />
           </div>
-          <div className="mt-6 text-gray-700 font-medium">{tCommon('loading')}</div>
+          <div className="mt-6 text-slate-700 font-medium">{tCommon('loading')}</div>
         </div>
       </div>
     );
@@ -212,10 +212,10 @@ export default function SettingsPage() {
     <AppLayout>
         {/* Header */}
         <div className="mb-6 lg:mb-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
+          <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
             {t('title')}
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-[15px] text-slate-500 mt-1.5">
             {t('subtitle')}
           </p>
         </div>
@@ -223,17 +223,17 @@ export default function SettingsPage() {
         {/* Settings Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Language Preference Card */}
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg h-full">
+          <Card className="rounded-[26px] border border-violet-100/70 bg-white/92 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs h-full">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center shrink-0">
+                <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-violet-600 rounded-xl flex items-center justify-center shrink-0">
                   <LanguageIcon className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h3 className="text-lg font-semibold text-slate-900">
                     {t('language.title')}
                   </h3>
-                  <p className="text-sm text-gray-600 mt-1 mb-3">
+                  <p className="text-sm text-slate-500 mt-1 mb-3">
                     {t('language.description')}
                   </p>
                   <Select
@@ -249,7 +249,7 @@ export default function SettingsPage() {
                     ))}
                   </Select>
                   {isSavingLocale && (
-                    <p className="text-sm text-primary-600 mt-2">
+                    <p className="text-sm text-violet-600 mt-2">
                       {t('language.saving')}
                     </p>
                   )}
@@ -259,28 +259,28 @@ export default function SettingsPage() {
           </Card>
 
           {/* Default Categories Card */}
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg h-full">
+          <Card className="rounded-[26px] border border-violet-100/70 bg-white/92 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs h-full">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center shrink-0">
+                <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-violet-600 rounded-xl flex items-center justify-center shrink-0">
                   <TagIcon className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h3 className="text-lg font-semibold text-slate-900">
                     {t('categorySeeding.title')}
                   </h3>
-                  <p className="text-sm text-gray-600 mt-1 mb-3">
+                  <p className="text-sm text-slate-500 mt-1 mb-3">
                     {t('categorySeeding.description')}
                   </p>
 
                   {isLoadingCategories ? (
-                    <p className="text-sm text-gray-500">{tCommon('loading')}</p>
+                    <p className="text-sm text-slate-500">{tCommon('loading')}</p>
                   ) : categoryCount !== null && categoryCount > 0 ? (
                     <div>
                       <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3">
                         {t('categorySeeding.alreadyHasCategories')}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-slate-500">
                         {t('categorySeeding.hasCategories', { count: categoryCount })}
                       </p>
                     </div>
@@ -289,7 +289,7 @@ export default function SettingsPage() {
                       <p className="text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
                         {t('categorySeeding.noCategories')}
                       </p>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
                         {t('categorySeeding.localeLabel')}
                       </label>
                       <Select
@@ -334,25 +334,25 @@ export default function SettingsPage() {
 
           {/* Transaction Import Card - only visible when AI Categorization is enabled */}
           {features.aiCategorization && (
-            <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg h-full">
+            <Card className="rounded-[26px] border border-violet-100/70 bg-white/92 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs h-full">
               <CardContent className="p-6">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center shrink-0">
+                  <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-violet-600 rounded-xl flex items-center justify-center shrink-0">
                     <ArrowDownTrayIcon className="w-6 h-6 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-lg font-semibold text-slate-900">
                       {t('transactionImport.title')}
                     </h3>
-                    <p className="text-sm text-gray-600 mt-1 mb-3">
+                    <p className="text-sm text-slate-500 mt-1 mb-3">
                       {t('transactionImport.description')}
                     </p>
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-medium text-slate-900">
                           {t('transactionImport.aiCleaning')}
                         </p>
-                        <p className="text-xs text-gray-500 mt-0.5">
+                        <p className="text-xs text-slate-500 mt-0.5">
                           {t('transactionImport.aiCleaningDescription')}
                         </p>
                       </div>
@@ -362,8 +362,8 @@ export default function SettingsPage() {
                         aria-checked={aiCleaningEnabled}
                         onClick={handleAiCleaningToggle}
                         disabled={isSavingAiCleaning}
-                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
-                          aiCleaningEnabled ? 'bg-primary-600' : 'bg-gray-200'
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+                          aiCleaningEnabled ? 'bg-violet-600' : 'bg-slate-200'
                         }`}
                       >
                         <span
@@ -380,22 +380,22 @@ export default function SettingsPage() {
           )}
 
           {/* Dashboard Template Card */}
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg h-full">
+          <Card className="rounded-[26px] border border-violet-100/70 bg-white/92 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs h-full">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center shrink-0">
+                <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-violet-600 rounded-xl flex items-center justify-center shrink-0">
                   <PresentationChartBarIcon className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h3 className="text-lg font-semibold text-slate-900">
                     {t('dashboardLayout.title')}
                   </h3>
-                  <p className="text-sm text-gray-600 mt-1 mb-3">
+                  <p className="text-sm text-slate-500 mt-1 mb-3">
                     {t('dashboardLayout.description')}
                   </p>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-slate-900">
                         {dashboardTemplate === 'education'
                           ? t('dashboardLayout.education')
                           : t('dashboardLayout.advanced')}
@@ -406,8 +406,8 @@ export default function SettingsPage() {
                       role="switch"
                       aria-checked={dashboardTemplate === 'education'}
                       onClick={handleDashboardTemplateToggle}
-                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-                        dashboardTemplate === 'education' ? 'bg-primary-600' : 'bg-gray-200'
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 ${
+                        dashboardTemplate === 'education' ? 'bg-violet-600' : 'bg-slate-200'
                       }`}
                     >
                       <span
@@ -427,15 +427,15 @@ export default function SettingsPage() {
             const IconComponent = item.icon;
             return (
               <Link key={item.href} href={item.href}>
-                <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer h-full">
+                <Card className="rounded-[26px] border border-violet-100/70 bg-white/92 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs hover:shadow-[0_24px_52px_-28px_rgba(76,29,149,0.55)] transition-shadow cursor-pointer h-full">
                   <CardContent className="p-6">
                     <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center shrink-0">
+                      <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-violet-600 rounded-xl flex items-center justify-center shrink-0">
                         <IconComponent className="w-6 h-6 text-white" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <h3 className="text-lg font-semibold text-gray-900">
+                          <h3 className="text-lg font-semibold text-slate-900">
                             {t(`items.${item.labelKey}.title`)}
                           </h3>
                           {item.badge && (
@@ -444,11 +444,11 @@ export default function SettingsPage() {
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">
+                        <p className="text-sm text-slate-500 mt-1">
                           {t(`items.${item.labelKey}.description`)}
                         </p>
                       </div>
-                      <ChevronRightIcon className="w-5 h-5 text-gray-400 shrink-0" />
+                      <ChevronRightIcon className="w-5 h-5 text-slate-400 shrink-0" />
                     </div>
                   </CardContent>
                 </Card>
@@ -459,7 +459,7 @@ export default function SettingsPage() {
 
         {/* Coming Soon Section */}
         <div className="mt-8">
-          <h2 className="text-lg font-semibold text-gray-700 mb-4">{t('comingSoon.title')}</h2>
+          <h2 className="text-lg font-semibold text-slate-600 mb-4">{t('comingSoon.title')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
               { icon: UserIcon, labelKey: 'profile' as const },
@@ -468,15 +468,15 @@ export default function SettingsPage() {
             ].map((item) => {
               const IconComponent = item.icon;
               return (
-                <Card key={item.labelKey} className="bg-white/50 border border-gray-200">
+                <Card key={item.labelKey} className="rounded-2xl bg-white/60 border border-violet-100/40">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3 opacity-50">
-                      <div className="w-10 h-10 bg-gray-300 rounded-lg flex items-center justify-center">
-                        <IconComponent className="w-5 h-5 text-gray-500" />
+                      <div className="w-10 h-10 bg-slate-200 rounded-xl flex items-center justify-center">
+                        <IconComponent className="w-5 h-5 text-slate-500" />
                       </div>
                       <div>
-                        <h3 className="font-medium text-gray-700">{t(`comingSoon.items.${item.labelKey}.title`)}</h3>
-                        <p className="text-xs text-gray-500">{t(`comingSoon.items.${item.labelKey}.description`)}</p>
+                        <h3 className="font-medium text-slate-600">{t(`comingSoon.items.${item.labelKey}.title`)}</h3>
+                        <p className="text-xs text-slate-500">{t(`comingSoon.items.${item.labelKey}.description`)}</p>
                       </div>
                     </div>
                   </CardContent>

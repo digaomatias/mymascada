@@ -28,17 +28,17 @@ const MAX_CHARS = 5000;
 const chatComponents: Partial<Components> = {
   // Headings render as compact section labels with a subtle separator
   h1: ({ children }) => (
-    <div className="text-xs font-semibold text-primary-700 mt-3 first:mt-0 mb-1 pb-0.5 border-b border-gray-100">
+    <div className="text-xs font-semibold text-violet-700 mt-3 first:mt-0 mb-1 pb-0.5 border-b border-slate-100">
       {children}
     </div>
   ),
   h2: ({ children }) => (
-    <div className="text-xs font-semibold text-primary-700 mt-3 first:mt-0 mb-1 pb-0.5 border-b border-gray-100">
+    <div className="text-xs font-semibold text-violet-700 mt-3 first:mt-0 mb-1 pb-0.5 border-b border-slate-100">
       {children}
     </div>
   ),
   h3: ({ children }) => (
-    <div className="text-xs font-semibold text-primary-700 mt-3 first:mt-0 mb-1 pb-0.5 border-b border-gray-100">
+    <div className="text-xs font-semibold text-violet-700 mt-3 first:mt-0 mb-1 pb-0.5 border-b border-slate-100">
       {children}
     </div>
   ),
@@ -51,10 +51,10 @@ const chatComponents: Partial<Components> = {
         ? 'text-red-600'
         : text.startsWith('+')
           ? 'text-emerald-600'
-          : 'text-primary-700';
+          : 'text-violet-700';
       return <strong className={`font-semibold ${color}`}>{children}</strong>;
     }
-    return <strong className="font-semibold text-gray-900">{children}</strong>;
+    return <strong className="font-semibold text-slate-900">{children}</strong>;
   },
 };
 
@@ -242,12 +242,12 @@ export default function ChatPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <ChatBubbleLeftRightIcon className="w-8 h-8 text-white" />
           </div>
-          <div className="mt-6 text-gray-700 font-medium">{tCommon('loading')}</div>
+          <div className="mt-6 text-slate-700 font-medium">{tCommon('loading')}</div>
         </div>
       </div>
     );
@@ -261,14 +261,14 @@ export default function ChatPage() {
   if (chatConfigured === false) {
     return (
       <AppLayout mainClassName="relative z-10 flex-1 flex items-center justify-center p-4 pb-24 md:pb-4">
-          <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center">
+          <div className="max-w-md w-full rounded-[26px] border border-violet-100/70 bg-white/92 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs p-8 text-center">
             <div className="w-16 h-16 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <ExclamationCircleIcon className="w-8 h-8 text-amber-600" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            <h2 className="text-xl font-semibold text-slate-900 mb-2">
               {t('notConfigured')}
             </h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-slate-500 mb-6">
               {t('notConfiguredDescription')}
             </p>
             <Link href="/settings/ai">
@@ -288,16 +288,16 @@ export default function ChatPage() {
     <AppLayout mainClassName="relative z-10 flex-1 flex flex-col max-w-4xl mx-auto w-full pb-24 md:pb-0" noBackground>
         {/* Header bar with clear button */}
         {hasMessages && (
-          <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 bg-white/80 backdrop-blur-xs">
+          <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200 bg-white/90 backdrop-blur-xs">
             <div className="flex items-center gap-2">
-              <SparklesIcon className="w-5 h-5 text-primary-600" />
-              <h1 className="text-sm font-medium text-gray-700">{t('title')}</h1>
+              <SparklesIcon className="w-5 h-5 text-violet-600" />
+              <h1 className="text-sm font-medium text-slate-700">{t('title')}</h1>
             </div>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setShowClearConfirm(true)}
-              className="text-gray-500 hover:text-red-600"
+              className="text-slate-500 hover:text-red-600"
             >
               <TrashIcon className="w-4 h-4 mr-1" />
               {t('clearHistory')}
@@ -313,21 +313,21 @@ export default function ChatPage() {
           {loadingHistory ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
-                <div className="animate-spin w-8 h-8 border-2 border-primary-600 border-t-transparent rounded-full mx-auto mb-3" />
-                <p className="text-sm text-gray-500">{t('loading')}</p>
+                <div className="animate-spin w-8 h-8 border-2 border-violet-600 border-t-transparent rounded-full mx-auto mb-3" />
+                <p className="text-sm text-slate-500">{t('loading')}</p>
               </div>
             </div>
           ) : !hasMessages ? (
             /* Empty State */
             <div className="flex-1 flex items-center justify-center py-12">
               <div className="max-w-md w-full text-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-primary-400 to-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <div className="w-20 h-20 bg-gradient-to-br from-violet-500 to-violet-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
                   <SparklesIcon className="w-10 h-10 text-white" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                <h2 className="text-2xl font-bold text-slate-900 mb-2">
                   {t('title')}
                 </h2>
-                <p className="text-gray-600 mb-8">
+                <p className="text-slate-500 mb-8">
                   {t('subtitle')}
                 </p>
                 <div className="flex flex-wrap gap-2 justify-center">
@@ -336,7 +336,7 @@ export default function ChatPage() {
                       key={key}
                       onClick={() => handleSuggestedPrompt(t(`suggestedPrompts.${key}`))}
                       disabled={sending}
-                      className="px-4 py-2 text-sm bg-white border border-gray-200 rounded-full text-gray-700 hover:bg-primary-50 hover:border-primary-200 hover:text-primary-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-4 py-2 text-sm bg-white border border-violet-200/60 rounded-full text-slate-700 hover:bg-violet-50 hover:border-violet-300 hover:text-violet-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {t(`suggestedPrompts.${key}`)}
                     </button>
@@ -370,14 +370,14 @@ export default function ChatPage() {
                   <div
                     className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-3 ${
                       message.role === 'user'
-                        ? 'bg-primary-600 text-white'
+                        ? 'bg-violet-600 text-white'
                         : message.id < 0 && !message.content
                           ? ''
-                          : 'bg-white border border-gray-200 text-gray-800'
+                          : 'bg-white border border-slate-200 text-slate-800'
                     }`}
                   >
                     {message.role === 'assistant' ? (
-                      <div className="prose prose-sm max-w-none break-words overflow-hidden prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-pre:my-2 prose-pre:overflow-x-auto prose-pre:max-w-full prose-table:overflow-x-auto prose-table:block prose-table:text-xs prose-code:text-primary-700 prose-code:bg-primary-50 prose-code:px-1 prose-code:rounded prose-code:break-all">
+                      <div className="prose prose-sm max-w-none break-words overflow-hidden prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-pre:my-2 prose-pre:overflow-x-auto prose-pre:max-w-full prose-table:overflow-x-auto prose-table:block prose-table:text-xs prose-code:text-violet-700 prose-code:bg-violet-50 prose-code:px-1 prose-code:rounded prose-code:break-all">
                         <ReactMarkdown components={chatComponents}>{message.content}</ReactMarkdown>
                       </div>
                     ) : (
@@ -385,7 +385,7 @@ export default function ChatPage() {
                     )}
                     <p
                       className={`text-xs mt-1.5 ${
-                        message.role === 'user' ? 'text-primary-200' : 'text-gray-400'
+                        message.role === 'user' ? 'text-violet-200' : 'text-slate-400'
                       }`}
                     >
                       {formatTimestamp(message.createdAt)}
@@ -397,11 +397,11 @@ export default function ChatPage() {
               {/* Typing indicator */}
               {sending && (
                 <div className="flex justify-start">
-                  <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3">
+                  <div className="bg-white border border-slate-200 rounded-2xl px-4 py-3">
                     <div className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                     </div>
                   </div>
                 </div>
@@ -412,7 +412,7 @@ export default function ChatPage() {
         </div>
 
         {/* Input area */}
-        <div className="border-t border-gray-200 bg-white px-4 py-3">
+        <div className="border-t border-slate-200 bg-white px-4 py-3">
           <div className="flex items-end gap-2">
             <div className="flex-1 relative">
               <textarea
@@ -427,13 +427,13 @@ export default function ChatPage() {
                 placeholder={t('inputPlaceholder')}
                 disabled={sending}
                 rows={1}
-                className="w-full resize-none rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full resize-none rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ maxHeight: '150px' }}
               />
               {input.length > MAX_CHARS * 0.9 && (
                 <span
                   className={`absolute bottom-1 right-2 text-xs ${
-                    input.length >= MAX_CHARS ? 'text-red-500' : 'text-gray-400'
+                    input.length >= MAX_CHARS ? 'text-red-500' : 'text-slate-400'
                   }`}
                 >
                   {input.length}/{MAX_CHARS}
