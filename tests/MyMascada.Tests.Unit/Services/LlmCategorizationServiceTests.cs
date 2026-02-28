@@ -13,6 +13,7 @@ public class LlmCategorizationServiceTests
 {
     private readonly IUserAiKernelFactory _kernelFactory;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IAiTokenTracker _tokenTracker;
     private readonly ILogger<LlmCategorizationService> _logger;
     private readonly Guid _testUserId = Guid.NewGuid();
 
@@ -20,6 +21,7 @@ public class LlmCategorizationServiceTests
     {
         _kernelFactory = Substitute.For<IUserAiKernelFactory>();
         _currentUserService = Substitute.For<ICurrentUserService>();
+        _tokenTracker = Substitute.For<IAiTokenTracker>();
         _logger = Substitute.For<ILogger<LlmCategorizationService>>();
 
         _currentUserService.GetUserId().Returns(_testUserId);
@@ -30,7 +32,7 @@ public class LlmCategorizationServiceTests
     {
         // Arrange
         _kernelFactory.CreateKernelForUserAsync(_testUserId).Returns((Kernel?)null);
-        var service = new LlmCategorizationService(_kernelFactory, _currentUserService, _logger);
+        var service = new LlmCategorizationService(_kernelFactory, _currentUserService, _tokenTracker, _logger);
 
         var transactions = new List<Transaction>
         {
@@ -55,7 +57,7 @@ public class LlmCategorizationServiceTests
     {
         // Arrange
         _kernelFactory.CreateKernelForUserAsync(_testUserId).Returns((Kernel?)null);
-        var service = new LlmCategorizationService(_kernelFactory, _currentUserService, _logger);
+        var service = new LlmCategorizationService(_kernelFactory, _currentUserService, _tokenTracker, _logger);
 
         // Act
         var result = await service.IsServiceAvailableAsync();
@@ -69,7 +71,7 @@ public class LlmCategorizationServiceTests
     {
         // Arrange
         _kernelFactory.CreateKernelForUserAsync(_testUserId).Returns((Kernel?)null);
-        var service = new LlmCategorizationService(_kernelFactory, _currentUserService, _logger);
+        var service = new LlmCategorizationService(_kernelFactory, _currentUserService, _tokenTracker, _logger);
 
         // Act & Assert
         Func<Task> act = () => service.SendPromptAsync("test");
