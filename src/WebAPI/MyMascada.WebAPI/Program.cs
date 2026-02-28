@@ -28,13 +28,23 @@ try
     builder.Services.AddSingleton<MyMascada.Infrastructure.Services.Logging.IPiiMaskingService>(piiMaskingService);
 
     // Configure Serilog from configuration with PII masking
-    builder.Host.UseSerilog((context, services, configuration) => configuration
-        .ReadFrom.Configuration(context.Configuration)
-        .ReadFrom.Services(services)
-        .Enrich.FromLogContext()
-        .Enrich.WithProperty("Application", "MyMascada")
-        .Enrich.WithProperty("Environment", context.HostingEnvironment.EnvironmentName)
-        .Enrich.With(new MyMascada.Infrastructure.Services.Logging.PiiMaskingEnricher(piiMaskingService)));
+    builder.Host.UseSerilog((context, services, configuration) =>
+    {
+        configuration
+            .ReadFrom.Configuration(context.Configuration)
+            .ReadFrom.Services(services)
+            .Enrich.FromLogContext()
+            .Enrich.WithProperty("Application", "MyMascada")
+            .Enrich.WithProperty("Environment", context.HostingEnvironment.EnvironmentName)
+            .Enrich.With(new MyMascada.Infrastructure.Services.Logging.PiiMaskingEnricher(piiMaskingService));
+
+        // Respect LOG_LEVEL env var (e.g. LOG_LEVEL=Debug)
+        var logLevel = context.Configuration["LOG_LEVEL"];
+        if (!string.IsNullOrEmpty(logLevel) && Enum.TryParse<LogEventLevel>(logLevel, ignoreCase: true, out var level))
+        {
+            configuration.MinimumLevel.Is(level);
+        }
+    });
 
 // Configure forwarded headers for reverse proxy (Nginx Proxy Manager)
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
@@ -123,6 +133,20 @@ builder.Services.AddRateLimitingConfiguration();
 builder.Services.AddAiChatServices();
 builder.Services.AddTelegramServices();
 
+// Sentry — only if SENTRY_DSN is configured
+var sentryDsn = builder.Configuration["SENTRY_DSN"];
+if (!string.IsNullOrWhiteSpace(sentryDsn))
+{
+    builder.WebHost.UseSentry(options =>
+    {
+        options.Dsn = sentryDsn;
+        options.TracesSampleRate = 0.1; // 10 % of transactions
+        options.Environment = builder.Environment.EnvironmentName;
+        options.SendDefaultPii = false;
+    });
+    Log.Information("Sentry error tracking enabled");
+}
+
 // Add localization services for multi-language support
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 builder.Services.AddLocalizationServices();
@@ -163,6 +187,8 @@ var app = builder.Build();
     var emailEnabled = string.Equals(builder.Configuration["Email:Enabled"], "true", StringComparison.OrdinalIgnoreCase);
     var emailStatus = emailEnabled ? "Enabled" : "Disabled";
 
+    var sentryStatus = !string.IsNullOrWhiteSpace(sentryDsn) ? "Enabled" : "Disabled (no DSN)";
+
     app.Logger.LogInformation("============================================");
     app.Logger.LogInformation("MyMascada Finance Application");
     app.Logger.LogInformation("============================================");
@@ -171,6 +197,7 @@ var app = builder.Build();
     app.Logger.LogInformation("  Google OAuth:       {GoogleStatus}", googleStatus);
     app.Logger.LogInformation("  Bank Sync (Akahu):  {BankSyncStatus}", bankSyncStatus);
     app.Logger.LogInformation("  Email:              {EmailStatus}", emailStatus);
+    app.Logger.LogInformation("  Sentry:             {SentryStatus}", sentryStatus);
     app.Logger.LogInformation("============================================");
 }
 
@@ -252,6 +279,9 @@ if (app.Environment.IsDevelopment())
 // Use forwarded headers (must be first, before any middleware that needs Request.Scheme/Host)
 app.UseForwardedHeaders();
 
+// Correlation ID — propagate or generate X-Correlation-Id, enrich Serilog context
+app.UseCorrelationId();
+
 // Add security headers (early in pipeline, before any response is sent)
 app.UseSecurityHeaders();
 
@@ -327,26 +357,37 @@ recurringJobManager.AddOrUpdate<MyMascada.Application.BackgroundJobs.IRecurringP
 // Map controllers
 app.MapControllers();
 
-// Map health check endpoint for load balancers and container orchestration
+// Health check JSON response writer (shared between liveness and readiness endpoints)
+static async Task WriteHealthCheckResponse(HttpContext context, Microsoft.Extensions.Diagnostics.HealthChecks.HealthReport report)
+{
+    context.Response.ContentType = "application/json";
+    var result = new
+    {
+        status = report.Status.ToString(),
+        checks = report.Entries.Select(e => new
+        {
+            name = e.Key,
+            status = e.Value.Status.ToString(),
+            description = e.Value.Description,
+            duration = e.Value.Duration.TotalMilliseconds
+        }),
+        totalDuration = report.TotalDuration.TotalMilliseconds
+    };
+    await context.Response.WriteAsJsonAsync(result);
+}
+
+// Liveness probe — lightweight, excludes dependency checks
 app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
 {
-    ResponseWriter = async (context, report) =>
-    {
-        context.Response.ContentType = "application/json";
-        var result = new
-        {
-            status = report.Status.ToString(),
-            checks = report.Entries.Select(e => new
-            {
-                name = e.Key,
-                status = e.Value.Status.ToString(),
-                description = e.Value.Description,
-                duration = e.Value.Duration.TotalMilliseconds
-            }),
-            totalDuration = report.TotalDuration.TotalMilliseconds
-        };
-        await context.Response.WriteAsJsonAsync(result);
-    }
+    Predicate = _ => false, // no individual checks — just confirms the process is alive
+    ResponseWriter = WriteHealthCheckResponse
+});
+
+// Readiness probe — runs checks tagged "ready" (database, external services)
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready"),
+    ResponseWriter = WriteHealthCheckResponse
 });
 
 // Add a simple test endpoint
