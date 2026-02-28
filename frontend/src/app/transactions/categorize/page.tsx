@@ -6,14 +6,13 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import React from 'react';
 import { AppLayout } from '@/components/app-layout';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { apiClient } from '@/lib/api-client';
 import Link from 'next/link';
-import { 
+import {
   ArrowLeftIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
@@ -62,13 +61,13 @@ export default function CategorizePage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const { 
-    paginationInfo, 
-    handlePageChange, 
-    handlePageSizeChange, 
+  const {
+    paginationInfo,
+    handlePageChange,
+    handlePageSizeChange,
     updatePagination,
     currentPage,
-    pageSize 
+    pageSize
   } = usePagination(25); // Use 25 as default page size
   const [showFilters, setShowFilters] = useState(false);
   const [accounts, setAccounts] = useState<Array<{ id: number; name: string }>>([]);
@@ -145,7 +144,7 @@ export default function CategorizePage() {
         totalCount: number;
         page: number;
       };
-      
+
       // No frontend filtering needed - API handles uncategorized filtering
       setTransactions(response?.transactions || []);
       updatePagination({
@@ -223,11 +222,11 @@ export default function CategorizePage() {
       // Map status to enum values
       const statusMap: Record<string, number> = {
         'pending': 1,
-        'cleared': 2, 
+        'cleared': 2,
         'reconciled': 3,
         'cancelled': 4
       };
-      
+
       // Convert status to number if it's a string
       let statusValue = 2; // Default to Cleared
       if (typeof transaction.status === 'string') {
@@ -250,14 +249,14 @@ export default function CategorizePage() {
       // Remove from the list since it's now categorized
       setTransactions(prev => prev.filter(t => t.id !== transactionId));
       setCategorizedCount(prev => prev + 1);
-      
+
       // Update pagination info
       updatePagination({
         totalCount: paginationInfo.totalCount - 1,
         totalPages: Math.ceil((paginationInfo.totalCount - 1) / paginationInfo.pageSize),
         page: paginationInfo.currentPage
       });
-      
+
       toast.success(tToasts('transactionCategorized'));
     } catch (error) {
       console.error('Failed to categorize transaction:', error);
@@ -272,7 +271,7 @@ export default function CategorizePage() {
           <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <WalletIcon className="w-8 h-8 text-white" />
           </div>
-          <div className="mt-6 text-gray-700 font-medium">{t('loading')}</div>
+          <div className="mt-6 text-slate-700 font-medium">{t('loading')}</div>
         </div>
       </div>
     );
@@ -286,51 +285,46 @@ export default function CategorizePage() {
     <AppLayout>
       <AiSuggestionsProvider>
         {/* Header */}
-        <div className="mb-6 lg:mb-8">
-          {/* Navigation Bar */}
-          <div className="flex items-center justify-between mb-6">
-            <Button 
-              variant="secondary" 
-              size="sm" 
-              className="flex items-center gap-2"
-              onClick={() => router.back()}
-            >
-              <ArrowLeftIcon className="w-4 h-4" />
-              <span className="hidden sm:inline">{tCommon('back')}</span>
-            </Button>
+        <header className="flex flex-wrap items-center justify-between gap-4 mb-5">
+          <Button
+            variant="secondary"
+            size="sm"
+            className="flex items-center gap-2"
+            onClick={() => router.back()}
+          >
+            <ArrowLeftIcon className="w-4 h-4" />
+            <span className="hidden sm:inline">{tCommon('back')}</span>
+          </Button>
+        </header>
+
+        {/* Page Title */}
+        <div className="mb-6">
+          <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
+            {t('categorizeTitle')}
+          </h1>
+          <div className="mt-1.5 flex flex-wrap items-center gap-3 text-[15px] text-slate-500">
+            <span>
+              {t('categorizeCountLabel', {
+                count: paginationInfo.totalCount,
+                status: showAll ? t('categorizeFilter.allTransactions') : t('categorizeFilter.uncategorized')
+              })}
+            </span>
+            {categorizedCount > 0 && (
+              <span className="px-2 py-1 bg-success-100 text-success-700 rounded-md text-xs font-medium">
+                {t('categorizedLabel', { count: categorizedCount })}
+              </span>
+            )}
           </div>
-          
-          {/* Page Title */}
-          <div className="text-center mb-8">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-              {t('categorizeTitle')}
-            </h1>
-            <div className="flex flex-col items-center gap-2">
-              <div className="flex items-center justify-center gap-4 text-sm text-gray-600">
-                <span>
-                  {t('categorizeCountLabel', {
-                    count: paginationInfo.totalCount,
-                    status: showAll ? t('categorizeFilter.allTransactions') : t('categorizeFilter.uncategorized')
-                  })}
-                </span>
-                {categorizedCount > 0 && (
-                  <span className="px-2 py-1 bg-success-100 text-success-700 rounded-md font-medium">
-                    {t('categorizedLabel', { count: categorizedCount })}
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-gray-500">
-                {t('categorizeTransferExclusion')}
-              </p>
-            </div>
-          </div>
+          <p className="mt-1 text-xs text-slate-400">
+            {t('categorizeTransferExclusion')}
+          </p>
         </div>
 
         {/* Search and Filters */}
         <div className="mb-6">
           <div className="flex gap-2 mb-4">
             <div className="flex-1 relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
               <Input
                 type="text"
                 placeholder={t('searchPlaceholder')}
@@ -352,55 +346,53 @@ export default function CategorizePage() {
 
           {/* Filters */}
           {showFilters && (
-            <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-              <CardContent className="p-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {tCommon('account')}
-                    </label>
-                    <Select
-                      className="w-full text-sm"
-                      value={selectedAccountId}
-                      onChange={(e) => setSelectedAccountId(e.target.value)}
-                    >
-                      <option value="">{tFilters('allAccounts')}</option>
-                      {accounts.map((account) => (
-                        <option key={account.id} value={account.id}>
-                          {account.name}
-                        </option>
-                      ))}
-                    </Select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {t('categorizeFilter.label')}
-                    </label>
-                    <Select
-                      className="w-full text-sm"
-                      value={showAll ? 'all' : 'uncategorized'}
-                      onChange={(e) => setShowAll(e.target.value === 'all')}
-                    >
-                      <option value="uncategorized">{t('categorizeFilter.uncategorized')}</option>
-                      <option value="all">{t('categorizeFilter.allTransactions')}</option>
-                    </Select>
-                  </div>
+            <div className="rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92 p-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 mb-2">
+                    {tCommon('account')}
+                  </label>
+                  <Select
+                    className="w-full text-sm"
+                    value={selectedAccountId}
+                    onChange={(e) => setSelectedAccountId(e.target.value)}
+                  >
+                    <option value="">{tFilters('allAccounts')}</option>
+                    {accounts.map((account) => (
+                      <option key={account.id} value={account.id}>
+                        {account.name}
+                      </option>
+                    ))}
+                  </Select>
                 </div>
-                
-                <div className="flex justify-end mt-4 gap-2">
-                  <Button variant="secondary" size="sm" onClick={() => {
-                    setSelectedAccountId('');
-                    setShowAll(false);
-                    handlePageChange(1);
-                    fetchUncategorizedTransactions(1, searchTerm, '');
-                  }}>
-                    {tCommon('clear')}
-                  </Button>
-                  <Button size="sm" onClick={handleApplyFilters}>{t('applyFilters')}</Button>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 mb-2">
+                    {t('categorizeFilter.label')}
+                  </label>
+                  <Select
+                    className="w-full text-sm"
+                    value={showAll ? 'all' : 'uncategorized'}
+                    onChange={(e) => setShowAll(e.target.value === 'all')}
+                  >
+                    <option value="uncategorized">{t('categorizeFilter.uncategorized')}</option>
+                    <option value="all">{t('categorizeFilter.allTransactions')}</option>
+                  </Select>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+
+              <div className="flex justify-end mt-4 gap-2">
+                <Button variant="secondary" size="sm" onClick={() => {
+                  setSelectedAccountId('');
+                  setShowAll(false);
+                  handlePageChange(1);
+                  fetchUncategorizedTransactions(1, searchTerm, '');
+                }}>
+                  {tCommon('clear')}
+                </Button>
+                <Button size="sm" onClick={handleApplyFilters}>{t('applyFilters')}</Button>
+              </div>
+            </div>
           )}
         </div>
 
@@ -416,35 +408,35 @@ export default function CategorizePage() {
         )}
 
         {/* Transaction List */}
-        <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+        <div className="rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92 overflow-hidden">
           {loading ? (
-            <CardContent className="p-6">
+            <div className="p-6">
               <div className="space-y-4">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <div key={i} className="animate-pulse">
-                    <div className="flex items-center gap-4 p-4 bg-gray-100 rounded-lg">
-                      <div className="w-12 h-12 bg-gray-300 rounded-xl"></div>
+                    <div className="flex items-center gap-4 p-4 bg-slate-100 rounded-xl">
+                      <div className="w-12 h-12 bg-slate-300 rounded-xl"></div>
                       <div className="flex-1">
-                        <div className="h-4 bg-gray-300 rounded w-1/2 mb-2"></div>
-                        <div className="h-3 bg-gray-300 rounded w-1/4"></div>
+                        <div className="h-4 bg-slate-300 rounded w-1/2 mb-2"></div>
+                        <div className="h-3 bg-slate-300 rounded w-1/4"></div>
                       </div>
-                      <div className="h-6 bg-gray-300 rounded w-20"></div>
+                      <div className="h-6 bg-slate-300 rounded w-20"></div>
                     </div>
                   </div>
                 ))}
               </div>
-            </CardContent>
+            </div>
           ) : transactions.length === 0 ? (
-            <CardContent className="p-8 text-center">
+            <div className="p-8 text-center">
               {/* Show success state only if we've actually categorized transactions or no filters are applied */}
               {(categorizedCount > 0 || (!selectedAccountId && !searchTerm)) ? (
                 <>
                   <div className="w-20 h-20 bg-gradient-to-br from-success-400 to-success-600 rounded-3xl shadow-2xl flex items-center justify-center mx-auto mb-6">
                     <CheckIcon className="w-10 h-10 text-white" />
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('categorizeAllDoneTitle')}</h3>
-                  <p className="text-gray-600 mb-6">
-                    {categorizedCount > 0 
+                  <h3 className="text-xl font-semibold text-slate-900 mb-2">{t('categorizeAllDoneTitle')}</h3>
+                  <p className="text-slate-600 mb-6">
+                    {categorizedCount > 0
                       ? t('categorizeAllDoneWithCount', { count: categorizedCount })
                       : t('categorizeAllDoneEmpty')
                     }
@@ -460,18 +452,18 @@ export default function CategorizePage() {
                 </>
               ) : (
                 <>
-                  <div className="w-20 h-20 bg-gradient-to-br from-gray-400 to-gray-600 rounded-3xl shadow-2xl flex items-center justify-center mx-auto mb-6">
+                  <div className="w-20 h-20 bg-gradient-to-br from-slate-400 to-slate-600 rounded-3xl shadow-2xl flex items-center justify-center mx-auto mb-6">
                     <FunnelIcon className="w-10 h-10 text-white" />
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('categorizeNoMatchesTitle')}</h3>
-                  <p className="text-gray-600 mb-6">
+                  <h3 className="text-xl font-semibold text-slate-900 mb-2">{t('categorizeNoMatchesTitle')}</h3>
+                  <p className="text-slate-600 mb-6">
                     {t('categorizeNoMatchesDescription', {
                       status: showAll ? t('categorizeFilter.allTransactions') : t('categorizeFilter.uncategorized')
                     })}
                   </p>
                   <div className="flex justify-center gap-2">
-                    <Button 
-                      variant="secondary" 
+                    <Button
+                      variant="secondary"
                       onClick={() => {
                         setSelectedAccountId('');
                         setSearchTerm('');
@@ -491,46 +483,51 @@ export default function CategorizePage() {
                   </div>
                 </>
               )}
-            </CardContent>
+            </div>
           ) : (
-            <CardContent className="p-0">
+            <div className="p-0">
               {/* Transaction Cards */}
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-slate-100">
                 {transactions.map((transaction) => {
                   const isIncome = transaction.amount > 0;
-                  
+
                   return (
-                    <div key={transaction.id} className={`${isMobile ? 'p-3 border-l-4' : 'p-4'} ${isIncome ? 'border-success-500' : 'border-gray-300'} hover:bg-gray-50 transition-colors`}>
-                      <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-3'}`}>
+                    <div key={transaction.id} className={cn(
+                      isMobile ? 'p-3 border-l-4' : 'p-4',
+                      isIncome ? 'border-success-500' : 'border-slate-300',
+                      'hover:bg-slate-50 transition-colors'
+                    )}>
+                      <div className={cn('flex items-center', isMobile ? 'gap-2' : 'gap-3')}>
                         {/* Transaction Icon - Desktop Only */}
                         {!isMobile && (
-                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ${
-                            isIncome 
-                              ? 'bg-gradient-to-br from-success-100 to-success-200' 
-                              : 'bg-gradient-to-br from-gray-100 to-gray-200'
-                          }`}>
+                          <div className={cn(
+                            'w-12 h-12 rounded-xl flex items-center justify-center shadow-sm',
+                            isIncome
+                              ? 'bg-gradient-to-br from-success-100 to-success-200'
+                              : 'bg-gradient-to-br from-slate-100 to-slate-200'
+                          )}>
                             {isIncome ? (
                               <ArrowTrendingUpIcon className="w-6 h-6 text-success-600" />
                             ) : (
-                              <ArrowTrendingDownIcon className="w-6 h-6 text-gray-600" />
+                              <ArrowTrendingDownIcon className="w-6 h-6 text-slate-600" />
                             )}
                           </div>
                         )}
-                        
+
                         {/* Transaction Details */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between">
                             <div className="min-w-0 flex-1">
-                              <p className="text-sm font-semibold text-gray-900 truncate">
+                              <p className="text-sm font-semibold text-slate-900 truncate">
                                 {transaction.userDescription || transaction.description}
                               </p>
-                              
-                              <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+
+                              <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
                                 <span className="flex items-center gap-1">
                                   <CalendarIcon className="w-3 h-3" />
                                   {formatDate(transaction.transactionDate)}
                                 </span>
-                                
+
                                 {transaction.accountName && (
                                   <span className="flex items-center gap-1">
                                     <BuildingOffice2Icon className="w-3 h-3" />
@@ -546,17 +543,15 @@ export default function CategorizePage() {
                                 )}
                               </div>
                             </div>
-                            
+
                             {/* Amount */}
                             <div className="text-right ml-3">
-                              <p className={`text-sm font-bold ${
-                                isIncome ? 'text-success-600' : 'text-gray-900'
-                              }`}>
+                              <p className={cn('text-sm font-bold', isIncome ? 'text-emerald-600' : 'text-slate-900')}>
                                 {isIncome ? '+' : ''}{formatCurrency(Math.abs(transaction.amount))}
                               </p>
                             </div>
                           </div>
-                          
+
                           {/* Enhanced Category Picker with AI */}
                           <div className="mt-3">
                             <CategoryPicker
@@ -579,9 +574,9 @@ export default function CategorizePage() {
                               confidenceThreshold={0.85}
                               onAiSuggestionApplied={(suggestion) => {
                                 toast.success(
-                                  tToasts('aiSuggestionApplied', { 
-                                    category: suggestion.categoryName, 
-                                    confidence: Math.round(suggestion.confidence * 100) 
+                                  tToasts('aiSuggestionApplied', {
+                                    category: suggestion.categoryName,
+                                    confidence: Math.round(suggestion.confidence * 100)
                                   }),
                                   { duration: 3000 }
                                 );
@@ -601,7 +596,7 @@ export default function CategorizePage() {
                   );
                 })}
               </div>
-              
+
               {/* Standardized Pagination */}
               <Pagination
                 pagination={paginationInfo}
@@ -616,9 +611,9 @@ export default function CategorizePage() {
                 loading={loading}
                 className="border-t-0"
               />
-            </CardContent>
+            </div>
           )}
-        </Card>
+        </div>
       </AiSuggestionsProvider>
     </AppLayout>
   );

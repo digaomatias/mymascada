@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { AppLayout } from '@/components/app-layout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import {
   CheckCircleIcon,
   ArrowPathIcon,
@@ -19,7 +18,7 @@ import { ReconciliationFileUpload } from '@/components/forms/reconciliation-file
 import { ReconciliationDetailsView } from '@/components/reconciliation/reconciliation-details-view';
 import { AkahuReconciliationForm } from '@/components/reconciliation/akahu-reconciliation-form';
 import { AkahuBalanceComparison } from '@/components/reconciliation/akahu-balance-comparison';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
@@ -177,40 +176,40 @@ export default function ReconcileAccountPage() {
 
   const handleMatchTransactions = async () => {
     if (!reconciliation.id) return;
-    
+
     try {
       setLoading(true);
-      
+
       // Calculate date range from bank transactions
       // Handle both full ISO dates and date-only formats
       const transactionDates = bankTransactions
         .map(t => {
           if (!t.transactionDate) return null;
-          
+
           // If date is in YYYY-MM-DD format, append time component
-          const dateStr = t.transactionDate.includes('T') 
-            ? t.transactionDate 
+          const dateStr = t.transactionDate.includes('T')
+            ? t.transactionDate
             : `${t.transactionDate}T00:00:00.000Z`;
-          
+
           const date = new Date(dateStr);
-          
+
           // Validate the date
           if (isNaN(date.getTime())) {
             console.warn('Invalid date found in bank transaction:', t.transactionDate);
             return null;
           }
-          
+
           return date;
         })
         .filter(date => date !== null) as Date[];
-      
-      const startDate = transactionDates.length > 0 
+
+      const startDate = transactionDates.length > 0
         ? new Date(Math.min(...transactionDates.map(d => d.getTime()))).toISOString()
         : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 days ago
       const endDate = transactionDates.length > 0
         ? new Date(Math.max(...transactionDates.map(d => d.getTime()))).toISOString()
         : new Date().toISOString();
-      
+
       const matchRequest = {
         bankTransactions,
         startDate,
@@ -220,9 +219,9 @@ export default function ReconcileAccountPage() {
         useDateRangeMatching: true,
         dateRangeToleranceDays: 2
       };
-      
+
       console.log('Sending match request:', matchRequest);
-      
+
       await apiClient.matchTransactions(reconciliation.id, matchRequest);
 
       // Matching completed successfully
@@ -320,172 +319,170 @@ export default function ReconcileAccountPage() {
     setStep('review');
   };
 
+  const cardClass = 'rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92';
+
   const renderStepContent = () => {
     switch (step) {
       case 'initiate':
         return (
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-            <CardContent className="p-6">
-              <div className="space-y-6">
+          <div className={cn(cardClass, 'p-6')}>
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">{t('startReconciliation')}</h3>
+                <p className="text-slate-600 mb-6">
+                  {t('startReconciliationDesc')}
+                </p>
+              </div>
+
+              <div className="space-y-4">
                 <div>
-                  <h3 className="text-lg font-semibold mb-4">{t('startReconciliation')}</h3>
-                  <p className="text-gray-600 mb-6">
-                    {t('startReconciliationDesc')}
-                  </p>
+                  <DateTimePicker
+                    label={t('statementEndDate')}
+                    value={reconciliation.statementEndDate}
+                    onChange={(value) => setReconciliation(prev => ({
+                      ...prev,
+                      statementEndDate: value
+                    }))}
+                    placeholder={t('selectStatementDate')}
+                    showTime={false}
+                  />
                 </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <DateTimePicker
-                      label={t('statementEndDate')}
-                      value={reconciliation.statementEndDate}
-                      onChange={(value) => setReconciliation(prev => ({
-                        ...prev,
-                        statementEndDate: value
-                      }))}
-                      placeholder={t('selectStatementDate')}
-                      showTime={false}
-                    />
-                  </div>
-
-                  <div>
-                    <CurrencyInput
-                      label={t('statementEndingBalance')}
-                      value={reconciliation.statementEndBalance}
-                      onChange={(value) => setReconciliation(prev => ({
-                        ...prev,
-                        statementEndBalance: value
-                      }))}
-                      currency="NZD"
-                      placeholder={t('enterEndingBalance')}
-                      allowNegative={true}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {t('notesOptional')}
-                    </label>
-                    <textarea
-                      value={reconciliation.notes}
-                      onChange={(e) => setReconciliation(prev => ({
-                        ...prev,
-                        notes: e.target.value
-                      }))}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      placeholder={t('notesPlaceholder')}
-                    />
-                  </div>
+                <div>
+                  <CurrencyInput
+                    label={t('statementEndingBalance')}
+                    value={reconciliation.statementEndBalance}
+                    onChange={(value) => setReconciliation(prev => ({
+                      ...prev,
+                      statementEndBalance: value
+                    }))}
+                    currency="NZD"
+                    placeholder={t('enterEndingBalance')}
+                    allowNegative={true}
+                  />
                 </div>
 
-                <div className="flex justify-end gap-3">
-                  <Link href={`/accounts/${accountId}`}>
-                    <Button variant="secondary">
-                      {tCommon('cancel')}
-                    </Button>
-                  </Link>
-                  <Button
-                    onClick={handleStartReconciliation}
-                    disabled={loading || !reconciliation.statementEndDate}
-                    className="flex items-center gap-2"
-                  >
-                    {loading && <ArrowPathIcon className="w-4 h-4 animate-spin" />}
-                    {t('start')}
-                  </Button>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    {t('notesOptional')}
+                  </label>
+                  <textarea
+                    value={reconciliation.notes}
+                    onChange={(e) => setReconciliation(prev => ({
+                      ...prev,
+                      notes: e.target.value
+                    }))}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    placeholder={t('notesPlaceholder')}
+                  />
                 </div>
               </div>
-            </CardContent>
-          </Card>
+
+              <div className="flex justify-end gap-3">
+                <Link href={`/accounts/${accountId}`}>
+                  <Button variant="secondary">
+                    {tCommon('cancel')}
+                  </Button>
+                </Link>
+                <Button
+                  onClick={handleStartReconciliation}
+                  disabled={loading || !reconciliation.statementEndDate}
+                  className="flex items-center gap-2"
+                >
+                  {loading && <ArrowPathIcon className="w-4 h-4 animate-spin" />}
+                  {t('start')}
+                </Button>
+              </div>
+            </div>
+          </div>
         );
 
       case 'import':
         return (
           <div className="space-y-6">
             {/* Header Card */}
-            <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-              <CardContent className="p-6">
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">{t('importTransactions')}</h3>
-                  <p className="text-gray-600 mb-4">
-                    {akahuAvailability?.isAvailable
-                      ? t('importDescAkahu')
-                      : t('importDescFile')
-                    }
-                  </p>
+            <div className={cn(cardClass, 'p-6')}>
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">{t('importTransactions')}</h3>
+                <p className="text-slate-600 mb-4">
+                  {akahuAvailability?.isAvailable
+                    ? t('importDescAkahu')
+                    : t('importDescFile')
+                  }
+                </p>
+              </div>
+
+              {/* Source Toggle - Show only if Akahu is available */}
+              {akahuAvailability?.isAvailable && (
+                <div className="flex rounded-lg border border-slate-200 p-1 bg-slate-50">
+                  <button
+                    onClick={() => setImportSource('akahu')}
+                    className={cn(
+                      'flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors',
+                      importSource === 'akahu'
+                        ? 'bg-white text-primary-700 shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900'
+                    )}
+                  >
+                    <CloudArrowDownIcon className="w-4 h-4" />
+                    {t('fetchFromAkahu')}
+                  </button>
+                  <button
+                    onClick={() => setImportSource('file')}
+                    className={cn(
+                      'flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors',
+                      importSource === 'file'
+                        ? 'bg-white text-primary-700 shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900'
+                    )}
+                  >
+                    <DocumentArrowUpIcon className="w-4 h-4" />
+                    {t('uploadFile')}
+                  </button>
                 </div>
+              )}
 
-                {/* Source Toggle - Show only if Akahu is available */}
-                {akahuAvailability?.isAvailable && (
-                  <div className="flex rounded-lg border border-gray-200 p-1 bg-gray-50">
-                    <button
-                      onClick={() => setImportSource('akahu')}
-                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                        importSource === 'akahu'
-                          ? 'bg-white text-primary-700 shadow-sm'
-                          : 'text-gray-600 hover:text-gray-900'
-                      }`}
-                    >
-                      <CloudArrowDownIcon className="w-4 h-4" />
-                      {t('fetchFromAkahu')}
-                    </button>
-                    <button
-                      onClick={() => setImportSource('file')}
-                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                        importSource === 'file'
-                          ? 'bg-white text-primary-700 shadow-sm'
-                          : 'text-gray-600 hover:text-gray-900'
-                      }`}
-                    >
-                      <DocumentArrowUpIcon className="w-4 h-4" />
-                      {t('uploadFile')}
-                    </button>
+              {/* Show connection status if checking */}
+              {checkingAkahu && (
+                <div className="mt-4 bg-slate-50 border border-slate-200 rounded-xl p-4">
+                  <div className="flex items-center gap-3">
+                    <ArrowPathIcon className="w-5 h-5 text-slate-500 animate-spin" />
+                    <span className="text-slate-600">{t('checkingConnection')}</span>
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* Show connection status if checking */}
-                {checkingAkahu && (
-                  <div className="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center gap-3">
-                      <ArrowPathIcon className="w-5 h-5 text-gray-500 animate-spin" />
-                      <span className="text-gray-600">{t('checkingConnection')}</span>
+              {/* Show why Akahu is unavailable (if checked and not available) */}
+              {!checkingAkahu && akahuAvailability && !akahuAvailability.isAvailable && (
+                <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <LinkIcon className="w-5 h-5 text-amber-600 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-amber-900">{t('connectionNotAvailable')}</h4>
+                      <p className="text-sm text-amber-700 mt-1">
+                        {akahuAvailability.unavailableReason || t('connectToAkahu')}
+                      </p>
+                      <Link href="/settings/bank-connections">
+                        <Button variant="secondary" size="sm" className="mt-2">
+                          {t('connectBankAccount')}
+                        </Button>
+                      </Link>
                     </div>
                   </div>
-                )}
-
-                {/* Show why Akahu is unavailable (if checked and not available) */}
-                {!checkingAkahu && akahuAvailability && !akahuAvailability.isAvailable && (
-                  <div className="mt-4 bg-amber-50 border border-amber-200 rounded-lg p-4">
-                    <div className="flex items-start gap-3">
-                      <LinkIcon className="w-5 h-5 text-amber-600 mt-0.5" />
-                      <div>
-                        <h4 className="font-medium text-amber-900">{t('connectionNotAvailable')}</h4>
-                        <p className="text-sm text-amber-700 mt-1">
-                          {akahuAvailability.unavailableReason || t('connectToAkahu')}
-                        </p>
-                        <Link href="/settings/bank-connections">
-                          <Button variant="secondary" size="sm" className="mt-2">
-                            {t('connectBankAccount')}
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                </div>
+              )}
+            </div>
 
             {/* Akahu Import Form */}
             {importSource === 'akahu' && akahuAvailability?.isAvailable && (
-              <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-                <CardContent className="p-6">
-                  <AkahuReconciliationForm
-                    accountId={accountId}
-                    onSuccess={handleAkahuSuccess}
-                    onError={(error) => toast.error(error)}
-                  />
-                </CardContent>
-              </Card>
+              <div className={cn(cardClass, 'p-6')}>
+                <AkahuReconciliationForm
+                  accountId={accountId}
+                  onSuccess={handleAkahuSuccess}
+                  onError={(error) => toast.error(error)}
+                />
+              </div>
             )}
 
             {/* File Upload (existing functionality) */}
@@ -501,122 +498,112 @@ export default function ReconcileAccountPage() {
 
                 {/* Show imported transactions */}
                 {bankTransactions.length > 0 && (
-                  <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-                    <CardContent className="p-6">
-                      <div>
-                        <h4 className="font-medium mb-3">{t('bankTransactionsCount', { count: bankTransactions.length })}</h4>
-                        <div className="space-y-2 max-h-60 overflow-y-auto">
-                          {bankTransactions.map((transaction, index) => (
-                            <div key={index} className="flex justify-between items-center p-3 bg-white rounded border">
-                              <div>
-                                <div className="font-medium">{transaction.description}</div>
-                                <div className="text-sm text-gray-500">
-                                  {transaction.transactionDate.split('T')[0].split('-').reverse().join('/')}
-                                  {transaction.reference && ` • Ref: ${transaction.reference}`}
-                                </div>
-                              </div>
-                              <div className={`font-semibold ${transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                {formatCurrency(transaction.amount)}
+                  <div className={cn(cardClass, 'p-6')}>
+                    <div>
+                      <h4 className="font-medium text-slate-900 mb-3">{t('bankTransactionsCount', { count: bankTransactions.length })}</h4>
+                      <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {bankTransactions.map((transaction, index) => (
+                          <div key={index} className="flex justify-between items-center p-3 bg-white rounded-xl border border-slate-200">
+                            <div>
+                              <div className="font-medium text-slate-900">{transaction.description}</div>
+                              <div className="text-sm text-slate-500">
+                                {transaction.transactionDate.split('T')[0].split('-').reverse().join('/')}
+                                {transaction.reference && ` • Ref: ${transaction.reference}`}
                               </div>
                             </div>
-                          ))}
-                        </div>
+                            <div className={cn('font-semibold', transaction.amount >= 0 ? 'text-emerald-600' : 'text-red-600')}>
+                              {formatCurrency(transaction.amount)}
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div>
                 )}
 
                 {/* Demo: Manual transaction entry for testing */}
-                <Card className="bg-gray-50/80 backdrop-blur-xs border-0 shadow-sm">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-medium text-gray-900">{t('demoAddSample')}</h4>
-                        <p className="text-sm text-gray-600">{t('demoDesc')}</p>
-                      </div>
-                      <Button onClick={addSampleTransaction} variant="secondary" size="sm">
-                        {t('addSampleTransaction')}
-                      </Button>
+                <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 backdrop-blur-xs p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium text-slate-900">{t('demoAddSample')}</h4>
+                      <p className="text-sm text-slate-600">{t('demoDesc')}</p>
                     </div>
-                  </CardContent>
-                </Card>
+                    <Button onClick={addSampleTransaction} variant="secondary" size="sm">
+                      {t('addSampleTransaction')}
+                    </Button>
+                  </div>
+                </div>
 
                 {/* Navigation for file upload */}
-                <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-                  <CardContent className="p-6">
-                    <div className="flex justify-end gap-3">
-                      <Button variant="secondary" onClick={() => setStep('initiate')}>
-                        {tCommon('back')}
-                      </Button>
-                      <Button
-                        onClick={handleImportTransactions}
-                        disabled={bankTransactions.length === 0}
-                        className="flex items-center gap-2"
-                      >
-                        <ArrowPathIcon className="w-4 h-4" />
-                        {t('continueToMatching')}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                <div className={cn(cardClass, 'p-6')}>
+                  <div className="flex justify-end gap-3">
+                    <Button variant="secondary" onClick={() => setStep('initiate')}>
+                      {tCommon('back')}
+                    </Button>
+                    <Button
+                      onClick={handleImportTransactions}
+                      disabled={bankTransactions.length === 0}
+                      className="flex items-center gap-2"
+                    >
+                      <ArrowPathIcon className="w-4 h-4" />
+                      {t('continueToMatching')}
+                    </Button>
+                  </div>
+                </div>
               </>
             )}
 
             {/* Back button for Akahu mode */}
             {importSource === 'akahu' && (
-              <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-                <CardContent className="p-6">
-                  <div className="flex justify-start">
-                    <Button variant="secondary" onClick={() => setStep('initiate')}>
-                      {tCommon('back')}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className={cn(cardClass, 'p-6')}>
+                <div className="flex justify-start">
+                  <Button variant="secondary" onClick={() => setStep('initiate')}>
+                    {tCommon('back')}
+                  </Button>
+                </div>
+              </div>
             )}
           </div>
         );
 
       case 'matching':
         return (
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-            <CardContent className="p-6">
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">{t('matchTransactions')}</h3>
-                  <p className="text-gray-600 mb-6">
-                    {t('matchTransactionsDesc')}
-                  </p>
-                </div>
+          <div className={cn(cardClass, 'p-6')}>
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">{t('matchTransactions')}</h3>
+                <p className="text-slate-600 mb-6">
+                  {t('matchTransactionsDesc')}
+                </p>
+              </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-center gap-3">
-                    <ArrowPathIcon className="w-5 h-5 text-blue-600" />
-                    <div>
-                      <h4 className="font-medium text-blue-900">{t('readyToMatch')}</h4>
-                      <p className="text-sm text-blue-700">
-                        {t('transactionsToCompare', { count: bankTransactions.length })}
-                      </p>
-                    </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <ArrowPathIcon className="w-5 h-5 text-blue-600" />
+                  <div>
+                    <h4 className="font-medium text-blue-900">{t('readyToMatch')}</h4>
+                    <p className="text-sm text-blue-700">
+                      {t('transactionsToCompare', { count: bankTransactions.length })}
+                    </p>
                   </div>
                 </div>
-
-                <div className="flex justify-end gap-3">
-                  <Button variant="secondary" onClick={() => setStep('import')}>
-                    {tCommon('back')}
-                  </Button>
-                  <Button
-                    onClick={handleMatchTransactions}
-                    disabled={loading}
-                    className="flex items-center gap-2"
-                  >
-                    {loading && <ArrowPathIcon className="w-4 h-4 animate-spin" />}
-                    {t('matchTransactions')}
-                  </Button>
-                </div>
               </div>
-            </CardContent>
-          </Card>
+
+              <div className="flex justify-end gap-3">
+                <Button variant="secondary" onClick={() => setStep('import')}>
+                  {tCommon('back')}
+                </Button>
+                <Button
+                  onClick={handleMatchTransactions}
+                  disabled={loading}
+                  className="flex items-center gap-2"
+                >
+                  {loading && <ArrowPathIcon className="w-4 h-4 animate-spin" />}
+                  {t('matchTransactions')}
+                </Button>
+              </div>
+            </div>
+          </div>
         );
 
       case 'review':
@@ -624,19 +611,17 @@ export default function ReconcileAccountPage() {
           <div className="space-y-6">
             {/* Balance Comparison (Akahu only) */}
             {akahuBalanceData && (
-              <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-                <CardContent className="p-6">
-                  <AkahuBalanceComparison
-                    akahuBalance={akahuBalanceData.akahuBalance}
-                    myMascadaBalance={akahuBalanceData.myMascadaBalance}
-                    difference={akahuBalanceData.difference}
-                    isBalanced={akahuBalanceData.isBalanced}
-                    isCurrentBalance={akahuBalanceData.isCurrentBalance}
-                    pendingTransactionsTotal={akahuBalanceData.pendingTransactionsTotal}
-                    pendingTransactionsCount={akahuBalanceData.pendingTransactionsCount}
-                  />
-                </CardContent>
-              </Card>
+              <div className={cn(cardClass, 'p-6')}>
+                <AkahuBalanceComparison
+                  akahuBalance={akahuBalanceData.akahuBalance}
+                  myMascadaBalance={akahuBalanceData.myMascadaBalance}
+                  difference={akahuBalanceData.difference}
+                  isBalanced={akahuBalanceData.isBalanced}
+                  isCurrentBalance={akahuBalanceData.isCurrentBalance}
+                  pendingTransactionsTotal={akahuBalanceData.pendingTransactionsTotal}
+                  pendingTransactionsCount={akahuBalanceData.pendingTransactionsCount}
+                />
+              </div>
             )}
 
             <ReconciliationDetailsView
@@ -649,41 +634,37 @@ export default function ReconcileAccountPage() {
             />
           </div>
         ) : (
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-            <CardContent className="p-6">
-              <div className="text-center text-red-600">
-                {t('reconciliationIdNotFound')}
-              </div>
-            </CardContent>
-          </Card>
+          <div className={cn(cardClass, 'p-6')}>
+            <div className="text-center text-red-600">
+              {t('reconciliationIdNotFound')}
+            </div>
+          </div>
         );
 
       case 'complete':
         return (
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-            <CardContent className="p-6">
-              <div className="space-y-6 text-center">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                  <CheckCircleIcon className="w-10 h-10 text-green-600" />
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">{t('reconciliationComplete')}</h3>
-                  <p className="text-gray-600">
-                    {t('reconciliationCompleteDesc')}
-                  </p>
-                </div>
-
-                <div className="flex justify-center">
-                  <Link href={`/accounts/${accountId}`}>
-                    <Button>
-                      {t('backToAccount')}
-                    </Button>
-                  </Link>
-                </div>
+          <div className={cn(cardClass, 'p-6')}>
+            <div className="space-y-6 text-center">
+              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto">
+                <CheckCircleIcon className="w-10 h-10 text-emerald-600" />
               </div>
-            </CardContent>
-          </Card>
+
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">{t('reconciliationComplete')}</h3>
+                <p className="text-slate-600">
+                  {t('reconciliationCompleteDesc')}
+                </p>
+              </div>
+
+              <div className="flex justify-center">
+                <Link href={`/accounts/${accountId}`}>
+                  <Button>
+                    {t('backToAccount')}
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
         );
 
       default:
@@ -704,22 +685,25 @@ export default function ReconcileAccountPage() {
       <div className="flex items-center justify-between mb-8">
         {steps.map((stepItem, index) => (
           <div key={stepItem.key} className="flex items-center">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+            <div className={cn(
+              'w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium',
               stepItem.completed || stepItem.key === step
                 ? 'bg-primary-600 text-white'
-                : 'bg-gray-200 text-gray-600'
-            }`}>
+                : 'bg-slate-200 text-slate-600'
+            )}>
               {stepItem.completed ? <CheckCircleIcon className="w-5 h-5" /> : index + 1}
             </div>
-            <span className={`ml-2 text-sm ${
-              stepItem.key === step ? 'text-primary-600 font-medium' : 'text-gray-500'
-            }`}>
+            <span className={cn(
+              'ml-2 text-sm',
+              stepItem.key === step ? 'text-primary-600 font-medium' : 'text-slate-500'
+            )}>
               {stepItem.label}
             </span>
             {index < steps.length - 1 && (
-              <div className={`w-12 h-px mx-4 ${
-                stepItem.completed ? 'bg-primary-600' : 'bg-gray-200'
-              }`} />
+              <div className={cn(
+                'w-12 h-px mx-4',
+                stepItem.completed ? 'bg-primary-600' : 'bg-slate-200'
+              )} />
             )}
           </div>
         ))}
@@ -734,7 +718,7 @@ export default function ReconcileAccountPage() {
           <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <ScaleIcon className="w-8 h-8 text-white" />
           </div>
-          <div className="mt-6 text-gray-700 font-medium">{t('loading')}</div>
+          <div className="mt-6 text-slate-700 font-medium">{t('loading')}</div>
         </div>
       </div>
     );
@@ -743,27 +727,23 @@ export default function ReconcileAccountPage() {
   return (
     <AppLayout>
       {/* Header */}
-      <div className="mb-6 lg:mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <Link href={`/accounts/${accountId}`}>
-            <Button variant="secondary" size="sm" className="flex items-center gap-2">
-              <ArrowLeftIcon className="w-4 h-4" />
-              {t('backToAccount')}
-            </Button>
-          </Link>
-        </div>
+      <header className="flex flex-wrap items-center justify-between gap-4 mb-5">
+        <Link href={`/accounts/${accountId}`}>
+          <Button variant="secondary" size="sm" className="flex items-center gap-2">
+            <ArrowLeftIcon className="w-4 h-4" />
+            {t('backToAccount')}
+          </Button>
+        </Link>
+      </header>
 
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-600 rounded-3xl shadow-2xl flex items-center justify-center mx-auto mb-4">
-            <ScaleIcon className="w-10 h-10 text-white" />
-          </div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-            {t('reconcileAccount', { name: account.name })}
-          </h1>
-          <p className="text-gray-600">
-            {t('balanceWithStatement')}
-          </p>
-        </div>
+      {/* Page Title */}
+      <div className="mb-6">
+        <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
+          {t('reconcileAccount', { name: account.name })}
+        </h1>
+        <p className="mt-1.5 text-[15px] text-slate-500">
+          {t('balanceWithStatement')}
+        </p>
       </div>
 
       {/* Progress Indicator */}
