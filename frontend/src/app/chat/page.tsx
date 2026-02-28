@@ -1,9 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, KeyboardEvent } from 'react';
-import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useAuth } from '@/contexts/auth-context';
 import { AppLayout } from '@/components/app-layout';
 import { Button } from '@/components/ui/button';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
@@ -12,7 +10,6 @@ import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import {
-  ChatBubbleLeftRightIcon,
   PaperAirplaneIcon,
   TrashIcon,
   SparklesIcon,
@@ -21,6 +18,8 @@ import {
 } from '@heroicons/react/24/outline';
 import type { ChatMessageDto } from '@/types/chat';
 import type { Components } from 'react-markdown';
+import { useAuthGuard } from '@/hooks/use-auth-guard';
+import { ChatSkeleton } from '@/components/skeletons';
 
 const MAX_CHARS = 5000;
 
@@ -59,8 +58,7 @@ const chatComponents: Partial<Components> = {
 };
 
 export default function ChatPage() {
-  const { isAuthenticated, isLoading } = useAuth();
-  const router = useRouter();
+  const { shouldRender, isAuthResolved } = useAuthGuard();
   const t = useTranslations('chat');
   const tCommon = useTranslations('common');
 
@@ -78,12 +76,6 @@ export default function ChatPage() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const shouldAutoScroll = useRef(true);
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/auth/login');
-    }
-  }, [isAuthenticated, isLoading, router]);
 
   // Check chat AI configuration
   const checkChatConfiguration = useCallback(async () => {
@@ -111,11 +103,11 @@ export default function ChatPage() {
   }, [t]);
 
   useEffect(() => {
-    if (isAuthenticated && !isLoading) {
+    if (isAuthResolved) {
       checkChatConfiguration();
       loadHistory();
     }
-  }, [isAuthenticated, isLoading, checkChatConfiguration, loadHistory]);
+  }, [isAuthResolved, checkChatConfiguration, loadHistory]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -240,22 +232,7 @@ export default function ChatPage() {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
-            <ChatBubbleLeftRightIcon className="w-8 h-8 text-white" />
-          </div>
-          <div className="mt-6 text-slate-700 font-medium">{tCommon('loading')}</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return null;
-  }
+  if (!shouldRender) return null;
 
   // Not Configured State
   if (chatConfigured === false) {
@@ -278,6 +255,15 @@ export default function ChatPage() {
               </Button>
             </Link>
           </div>
+      </AppLayout>
+    );
+  }
+
+  // Show skeleton while auth or chat config is still loading
+  if (!isAuthResolved || chatConfigured === null) {
+    return (
+      <AppLayout mainClassName="relative z-10 flex-1 flex flex-col max-w-4xl mx-auto w-full pb-24 md:pb-0" noBackground>
+        <ChatSkeleton />
       </AppLayout>
     );
   }

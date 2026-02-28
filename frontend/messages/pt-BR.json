@@ -1,6 +1,7 @@
 {
   "common": {
     "loading": "Carregando...",
+    "loadingPage": "Carregando página...",
     "save": "Salvar",
     "cancel": "Cancelar",
     "delete": "Excluir",

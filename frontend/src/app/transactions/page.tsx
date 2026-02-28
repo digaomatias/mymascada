@@ -1,9 +1,9 @@
 'use client';
 
-import { useAuth } from '@/contexts/auth-context';
 import { useFeatures } from '@/contexts/features-context';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback, Suspense } from 'react';
+import { useAuthGuard } from '@/hooks/use-auth-guard';
 import React from 'react';
 import { AppLayout } from '@/components/app-layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -86,7 +86,7 @@ interface Transaction {
 // }
 
 function TransactionsPageContent() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { shouldRender, isAuthResolved } = useAuthGuard();
   const { features } = useFeatures();
   const { isMobile } = useDeviceDetect();
   const router = useRouter();
@@ -313,12 +313,6 @@ function TransactionsPageContent() {
     return grouped;
   }, [transactions]);
 
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/auth/login');
-    }
-  }, [isAuthenticated, isLoading, router]);
-
   const fetchTransactions = useCallback(async (page = 1, search = '', filter = transferFilter, categoryId = selectedCategoryId, accountId = selectedAccountId, reviewStatus = reviewFilter, currentDateFilter = dateFilter, currentTypeFilter = typeFilter, currentReconciliationFilter = reconciliationFilter, currentSortBy = sortBy, currentSortDirection = sortDirection) => {
     try {
       setLoading(true);
@@ -420,11 +414,11 @@ function TransactionsPageContent() {
   }, [getDateRangeFromFilter, setCurrentPage, transferFilter, selectedCategoryId, selectedAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter, sortBy, sortDirection]);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthResolved) {
       fetchTransactions(currentPage, searchTerm, transferFilter, selectedCategoryId, selectedAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter, sortBy, sortDirection);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, currentPage, searchTerm, transferFilter, selectedCategoryId, selectedAccountId, reviewFilter, dateFilter, typeFilter, startDate, endDate, reconciliationFilter, sortBy, sortDirection]);
+  }, [isAuthResolved, currentPage, searchTerm, transferFilter, selectedCategoryId, selectedAccountId, reviewFilter, dateFilter, typeFilter, startDate, endDate, reconciliationFilter, sortBy, sortDirection]);
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
@@ -463,15 +457,13 @@ function TransactionsPageContent() {
     }
   }, [setAllCategories]);
 
-  // Load initial data when authenticated
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthResolved) {
       loadCategories();
       loadAccounts();
-      // Load all categories for bulk assignment
       loadAllCategories();
     }
-  }, [isAuthenticated, loadCategories, loadAccounts, loadAllCategories]);
+  }, [isAuthResolved, loadCategories, loadAccounts, loadAllCategories]);
 
   // Check Akahu connection status for mobile overflow menu
   useEffect(() => {
@@ -485,10 +477,10 @@ function TransactionsPageContent() {
       }
     };
 
-    if (isAuthenticated) {
+    if (isAuthResolved) {
       checkAkahuConnection();
     }
-  }, [isAuthenticated]);
+  }, [isAuthResolved]);
 
   // Handle sync for mobile overflow menu
   const handleMobileSync = async () => {
@@ -702,22 +694,7 @@ function TransactionsPageContent() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
-            <WalletIcon className="w-8 h-8 text-white" />
-          </div>
-          <div className="mt-6 text-slate-700 font-medium">{t('loading')}</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return null;
-  }
+  if (!shouldRender) return null;
 
   return (
     <AppLayout>
@@ -1806,9 +1783,8 @@ function TransactionsPageContent() {
 export const dynamic = 'force-dynamic';
 
 export default function TransactionsPage() {
-  const tCommon = useTranslations('common');
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#faf8ff] flex items-center justify-center"><div className="text-slate-700 font-medium">{tCommon('loading')}</div></div>}>
+    <Suspense fallback={null}>
       <TransactionsPageContent />
     </Suspense>
   );

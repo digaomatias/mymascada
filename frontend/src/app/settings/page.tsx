@@ -1,15 +1,14 @@
 'use client';
 
 import { useAuth } from '@/contexts/auth-context';
-import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
+import { useAuthGuard } from '@/hooks/use-auth-guard';
 import { AppLayout } from '@/components/app-layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import {
-  CogIcon,
   BuildingLibraryIcon,
   UserIcon,
   BellIcon,
@@ -26,6 +25,7 @@ import { useLocale } from '@/contexts/locale-context';
 import { useTranslations } from 'next-intl';
 import { apiClient } from '@/lib/api-client';
 import { useFeatures } from '@/contexts/features-context';
+import { SettingsSkeleton } from '@/components/skeletons/settings-skeleton';
 
 interface SettingsItem {
   href: string;
@@ -59,8 +59,8 @@ const settingsItems: SettingsItem[] = [
 ];
 
 export default function SettingsPage() {
-  const { isAuthenticated, isLoading, refreshUser, user } = useAuth();
-  const router = useRouter();
+  const { shouldRender, isAuthResolved } = useAuthGuard();
+  const { refreshUser, user } = useAuth();
   const { locale, setLocale, locales, localeNames, isLoading: localeLoading } = useLocale();
   const { features } = useFeatures();
   const t = useTranslations('settings');
@@ -110,12 +110,6 @@ export default function SettingsPage() {
   const [seedResult, setSeedResult] = useState<{ success: boolean; count?: number; error?: string } | null>(null);
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/auth/login');
-    }
-  }, [isAuthenticated, isLoading, router]);
-
-  useEffect(() => {
     if (user?.aiDescriptionCleaning !== undefined) {
       setAiCleaningEnabled(user.aiDescriptionCleaning);
     }
@@ -154,10 +148,10 @@ export default function SettingsPage() {
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated && !isLoading) {
+    if (isAuthResolved) {
       fetchCategorySeedingData();
     }
-  }, [isAuthenticated, isLoading, fetchCategorySeedingData]);
+  }, [isAuthResolved, fetchCategorySeedingData]);
 
   const handleSeedCategories = async () => {
     setIsSeeding(true);
@@ -191,21 +185,22 @@ export default function SettingsPage() {
     }
   };
 
-  if (isLoading || localeLoading) {
-    return (
-      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
-            <CogIcon className="w-8 h-8 text-white" />
-          </div>
-          <div className="mt-6 text-slate-700 font-medium">{tCommon('loading')}</div>
-        </div>
-      </div>
-    );
-  }
+  if (!shouldRender) return null;
 
-  if (!isAuthenticated) {
-    return null;
+  if (localeLoading) {
+    return (
+      <AppLayout>
+        <div className="mb-6 lg:mb-8">
+          <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
+            {t('title')}
+          </h1>
+          <p className="text-[15px] text-slate-500 mt-1.5">
+            {t('subtitle')}
+          </p>
+        </div>
+        <SettingsSkeleton />
+      </AppLayout>
+    );
   }
 
   return (

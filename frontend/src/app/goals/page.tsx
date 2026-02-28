@@ -31,8 +31,11 @@ import {
   sortGoalsByJourney,
   pickGoalNudge,
 } from '@/lib/goals/goal-type-config';
+import { GoalsSkeleton } from '@/components/skeletons';
+import { useAuthGuard } from '@/hooks/use-auth-guard';
 
 export default function GoalsPage() {
+  const { shouldRender, isAuthResolved } = useAuthGuard();
   const t = useTranslations('goals');
   const router = useRouter();
   const [goals, setGoals] = useState<GoalSummary[]>([]);
@@ -44,6 +47,7 @@ export default function GoalsPage() {
   });
 
   useEffect(() => {
+    if (!isAuthResolved) return;
     const load = async () => {
       try {
         setIsLoading(true);
@@ -65,7 +69,7 @@ export default function GoalsPage() {
       }
     };
     load();
-  }, [showCompleted, t]);
+  }, [isAuthResolved, showCompleted, t]);
 
   const sorted = useMemo(() => sortGoalsByJourney(goals), [goals]);
   const nudge = useMemo(() => pickGoalNudge(goals, goalCtx), [goals, goalCtx]);
@@ -136,6 +140,8 @@ export default function GoalsPage() {
       }),
     [sorted],
   );
+
+  if (!shouldRender) return null;
 
   const handleTogglePin = async (goal: GoalSummary, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -208,14 +214,7 @@ export default function GoalsPage() {
 
         {/* Loading */}
         {isLoading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-40 animate-pulse rounded-[26px] border border-violet-100/80 bg-white/80"
-              />
-            ))}
-          </div>
+          <GoalsSkeleton />
         ) : sorted.length === 0 ? (
           /* Empty state */
           <section className="rounded-[28px] border border-violet-100/80 bg-white/92 p-10 text-center shadow-[0_20px_50px_-30px_rgba(76,29,149,0.45)]">
