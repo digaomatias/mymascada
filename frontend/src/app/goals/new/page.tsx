@@ -96,9 +96,9 @@ export default function CreateGoalPage() {
 
         {/* Form Card */}
         <div className="max-w-2xl mx-auto">
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+          <Card className="rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92">
             <CardHeader>
-              <CardTitle>{t('createGoal')}</CardTitle>
+              <CardTitle className="font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900">{t('createGoal')}</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -179,7 +179,7 @@ export default function CreateGoalPage() {
                       </option>
                     ))}
                   </Select>
-                  <p className="text-xs text-gray-500">{t('form.linkedAccountHelp')}</p>
+                  <p className="text-xs text-slate-500">{t('form.linkedAccountHelp')}</p>
                 </div>
 
                 <div className="flex justify-end gap-3">
