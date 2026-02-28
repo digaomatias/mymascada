@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Domain.Entities;
+using MyMascada.Infrastructure.Services.AI;
 using System.Text.Json;
 
 namespace MyMascada.Infrastructure.Services;
@@ -10,6 +11,7 @@ public class LlmCategorizationService : ILlmCategorizationService
 {
     private readonly IUserAiKernelFactory _kernelFactory;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IAiTokenTracker _tokenTracker;
     private readonly ILogger<LlmCategorizationService> _logger;
     private readonly string _systemPrompt;
 
@@ -19,10 +21,12 @@ public class LlmCategorizationService : ILlmCategorizationService
     public LlmCategorizationService(
         IUserAiKernelFactory kernelFactory,
         ICurrentUserService currentUserService,
+        IAiTokenTracker tokenTracker,
         ILogger<LlmCategorizationService> logger)
     {
         _kernelFactory = kernelFactory;
         _currentUserService = currentUserService;
+        _tokenTracker = tokenTracker;
         _logger = logger;
         _systemPrompt = CreateSystemPrompt();
     }
@@ -77,6 +81,15 @@ public class LlmCategorizationService : ILlmCategorizationService
 
             _logger.LogDebug("Received LLM response length: {Length} characters", responseText.Length);
             _logger.LogDebug("LLM response preview: {Preview}...", responseText.Length > 500 ? responseText.Substring(0, 500) : responseText);
+
+            // Track token usage
+            var (promptTokens, completionTokens, _) = SemanticKernelTokenExtractor.ExtractTokenUsage(response.Metadata, _logger);
+            if (promptTokens > 0 || completionTokens > 0)
+            {
+                var modelId = SemanticKernelTokenExtractor.ExtractModelId(response.Metadata);
+                var userId = _currentUserService.GetUserId();
+                await _tokenTracker.TrackUsageAsync(userId, modelId, "categorization", promptTokens, completionTokens);
+            }
 
             var result = ParseLlmResponse(responseText, transactions);
             result.Summary.ProcessingTimeMs = (int)(DateTime.UtcNow - startTime).TotalMilliseconds;
@@ -137,6 +150,16 @@ public class LlmCategorizationService : ILlmCategorizationService
         try
         {
             var response = await kernel.InvokePromptAsync(prompt, cancellationToken: cancellationToken);
+
+            // Track token usage for generic prompts (e.g., CSV import analysis)
+            var (promptTokens, completionTokens, _) = SemanticKernelTokenExtractor.ExtractTokenUsage(response.Metadata, _logger);
+            if (promptTokens > 0 || completionTokens > 0)
+            {
+                var modelId = SemanticKernelTokenExtractor.ExtractModelId(response.Metadata);
+                var userId = _currentUserService.GetUserId();
+                await _tokenTracker.TrackUsageAsync(userId, modelId, "csv-import", promptTokens, completionTokens);
+            }
+
             return response.ToString();
         }
         catch (Exception ex)

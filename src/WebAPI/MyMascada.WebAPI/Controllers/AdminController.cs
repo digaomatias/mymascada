@@ -15,15 +15,18 @@ public class AdminController : ControllerBase
     private readonly IMediator _mediator;
     private readonly IWaitlistRepository _waitlistRepository;
     private readonly IInvitationCodeRepository _invitationCodeRepository;
+    private readonly IAiTokenTracker _aiTokenTracker;
 
     public AdminController(
         IMediator mediator,
         IWaitlistRepository waitlistRepository,
-        IInvitationCodeRepository invitationCodeRepository)
+        IInvitationCodeRepository invitationCodeRepository,
+        IAiTokenTracker aiTokenTracker)
     {
         _mediator = mediator;
         _waitlistRepository = waitlistRepository;
         _invitationCodeRepository = invitationCodeRepository;
+        _aiTokenTracker = aiTokenTracker;
     }
 
     [HttpGet("waitlist")]
@@ -75,6 +78,16 @@ public class AdminController : ControllerBase
         code.Status = InvitationCodeStatus.Revoked;
         await _invitationCodeRepository.UpdateAsync(code);
         return Ok(new { message = "Code revoked" });
+    }
+
+    [HttpGet("ai-usage")]
+    public async Task<IActionResult> GetAiUsage([FromQuery] int days = 30)
+    {
+        var from = DateTime.UtcNow.Date.AddDays(-days);
+        var to = DateTime.UtcNow;
+
+        var summary = await _aiTokenTracker.GetAdminSummaryAsync(from, to);
+        return Ok(summary);
     }
 }
 
