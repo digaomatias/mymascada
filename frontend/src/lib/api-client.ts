@@ -1782,6 +1782,25 @@ class ApiClient {
     return this.request('/api/onboarding/status');
   }
 
+  // Billing methods
+  async getBillingStatus(): Promise<BillingStatusResponse> {
+    return this.request('/api/billing/status');
+  }
+
+  async createCheckoutSession(priceId: string, returnUrl: string): Promise<CheckoutResponse> {
+    return this.request('/api/billing/checkout', {
+      method: 'POST',
+      body: JSON.stringify({ priceId, returnUrl }),
+    });
+  }
+
+  async createPortalSession(returnUrl: string): Promise<PortalResponse> {
+    return this.request('/api/billing/portal', {
+      method: 'POST',
+      body: JSON.stringify({ returnUrl }),
+    });
+  }
+
   private getAuthHeaders(): Record<string, string> {
     const token = this.getToken();
     return token ? { 'Authorization': `Bearer ${token}` } : {};
@@ -1795,6 +1814,29 @@ export interface FeatureFlags {
   bankSync: boolean;
   emailNotifications: boolean;
   accountSharing: boolean;
+  stripeBilling: boolean;
+}
+
+// Billing Types
+export interface BillingStatusResponse {
+  planName: string;
+  status: string;
+  stripeCustomerId?: string;
+  maxAccounts: number;
+  maxTransactionsPerMonth: number;
+  maxAiCallsPerMonth: number;
+  currentAccountCount: number;
+  currentMonthTransactionCount: number;
+  currentPeriodEnd?: string;
+  publishableKey?: string;
+}
+
+export interface CheckoutResponse {
+  url: string;
+}
+
+export interface PortalResponse {
+  url: string;
 }
 
 // Account Sharing Types

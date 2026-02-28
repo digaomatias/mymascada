@@ -122,6 +122,7 @@ builder.Services.AddCorsConfiguration(builder.Configuration);
 builder.Services.AddRateLimitingConfiguration();
 builder.Services.AddAiChatServices();
 builder.Services.AddTelegramServices();
+builder.Services.AddBillingServices(builder.Configuration);
 
 // Add localization services for multi-language support
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
@@ -163,6 +164,9 @@ var app = builder.Build();
     var emailEnabled = string.Equals(builder.Configuration["Email:Enabled"], "true", StringComparison.OrdinalIgnoreCase);
     var emailStatus = emailEnabled ? "Enabled" : "Disabled";
 
+    var stripeEnabled = builder.Configuration.GetValue<bool>("Stripe:Enabled");
+    var billingStatus = stripeEnabled ? "Enabled" : "Disabled";
+
     app.Logger.LogInformation("============================================");
     app.Logger.LogInformation("MyMascada Finance Application");
     app.Logger.LogInformation("============================================");
@@ -171,6 +175,7 @@ var app = builder.Build();
     app.Logger.LogInformation("  Google OAuth:       {GoogleStatus}", googleStatus);
     app.Logger.LogInformation("  Bank Sync (Akahu):  {BankSyncStatus}", bankSyncStatus);
     app.Logger.LogInformation("  Email:              {EmailStatus}", emailStatus);
+    app.Logger.LogInformation("  Stripe Billing:     {BillingStatus}", billingStatus);
     app.Logger.LogInformation("============================================");
 }
 
@@ -295,6 +300,9 @@ app.UseAuthorization();
 
 // Add rate limiting (after auth so we can identify users)
 app.UseRateLimiter();
+
+// Add usage limit enforcement (after auth and rate limiting, skip when billing disabled)
+app.UseUsageLimits();
 
 // Add Hangfire Dashboard (only in development for security)
 if (app.Environment.IsDevelopment())

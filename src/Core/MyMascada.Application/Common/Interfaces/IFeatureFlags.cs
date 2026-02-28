@@ -11,4 +11,5 @@ public interface IFeatureFlags
     bool GoogleOAuth { get; }
     bool BankSync { get; }
     bool HasGlobalAiKey { get; }
+    bool StripeBilling { get; }
 }

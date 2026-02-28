@@ -24,7 +24,8 @@ public class FeaturesController : ControllerBase
             AiCategorization = _featureFlags.AiCategorization,
             GoogleOAuth = _featureFlags.GoogleOAuth,
             BankSync = _featureFlags.BankSync,
-            EmailNotifications = _featureFlags.EmailNotifications
+            EmailNotifications = _featureFlags.EmailNotifications,
+            StripeBilling = _featureFlags.StripeBilling
         };
 
         return Ok(response);
@@ -37,4 +38,5 @@ public class FeatureFlagsResponse
     public bool GoogleOAuth { get; set; }
     public bool BankSync { get; set; }
     public bool EmailNotifications { get; set; }
+    public bool StripeBilling { get; set; }
 }

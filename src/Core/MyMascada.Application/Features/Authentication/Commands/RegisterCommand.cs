@@ -32,6 +32,8 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Authentic
     private readonly IValidator<RegisterCommand> _validator;
     private readonly IRegistrationStrategy _registrationStrategy;
     private readonly IInviteCodeValidationService _inviteCodeValidationService;
+    private readonly IBillingService _billingService;
+    private readonly IFeatureFlags _featureFlags;
     private readonly ILogger<RegisterCommandHandler> _logger;
     private readonly BetaAccessOptions _betaAccessOptions;
 
@@ -41,6 +43,8 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Authentic
         IValidator<RegisterCommand> validator,
         IRegistrationStrategy registrationStrategy,
         IInviteCodeValidationService inviteCodeValidationService,
+        IBillingService billingService,
+        IFeatureFlags featureFlags,
         ILogger<RegisterCommandHandler> logger,
         IOptions<BetaAccessOptions> betaAccessOptions)
     {
@@ -49,6 +53,8 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Authentic
         _validator = validator;
         _registrationStrategy = registrationStrategy;
         _inviteCodeValidationService = inviteCodeValidationService;
+        _billingService = billingService;
+        _featureFlags = featureFlags;
         _logger = logger;
         _betaAccessOptions = betaAccessOptions.Value;
     }
@@ -120,6 +126,20 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Authentic
         if (!string.IsNullOrWhiteSpace(request.InviteCode))
         {
             await _inviteCodeValidationService.ClaimAsync(request.InviteCode, user.Id);
+        }
+
+        // Create Stripe customer and assign free plan when billing is enabled
+        if (_featureFlags.StripeBilling)
+        {
+            try
+            {
+                await _billingService.CreateCustomerAsync(user.Id, user.Email, user.FullName);
+                _logger.LogInformation("Stripe customer created for user {UserId}", user.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create Stripe customer for user {UserId}. Registration continues.", user.Id);
+            }
         }
 
         // Note: Categories are no longer auto-seeded at registration.

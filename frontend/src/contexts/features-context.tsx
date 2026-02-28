@@ -14,6 +14,7 @@ const defaultFeatures: FeatureFlags = {
   bankSync: false,
   emailNotifications: false,
   accountSharing: false,
+  stripeBilling: false,
 };
 
 const FeaturesContext = createContext<FeaturesContextType>({
