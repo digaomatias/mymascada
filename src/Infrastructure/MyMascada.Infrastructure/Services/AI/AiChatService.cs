@@ -23,6 +23,7 @@ public class AiChatService : IAiChatService
     private readonly IRuleSuggestionService _ruleSuggestionService;
     private readonly ICategorizationRuleRepository _categorizationRuleRepository;
     private readonly IGoalRepository _goalRepository;
+    private readonly IAiTokenTracker _tokenTracker;
     private readonly ILogger<AiChatService> _logger;
 
     public AiChatService(
@@ -38,6 +39,7 @@ public class AiChatService : IAiChatService
         IRuleSuggestionService ruleSuggestionService,
         ICategorizationRuleRepository categorizationRuleRepository,
         IGoalRepository goalRepository,
+        IAiTokenTracker tokenTracker,
         ILogger<AiChatService> logger)
     {
         _chatMessageRepository = chatMessageRepository;
@@ -52,6 +54,7 @@ public class AiChatService : IAiChatService
         _ruleSuggestionService = ruleSuggestionService;
         _categorizationRuleRepository = categorizationRuleRepository;
         _goalRepository = goalRepository;
+        _tokenTracker = tokenTracker;
         _logger = logger;
     }
 
@@ -134,6 +137,14 @@ public class AiChatService : IAiChatService
                 Content = assistantContent
             };
             await _chatMessageRepository.AddAsync(assistantMessage);
+
+            // 9.5. Track AI token usage
+            var (promptTokens, completionTokens, _) = SemanticKernelTokenExtractor.ExtractTokenUsage(response.Metadata, _logger);
+            if (promptTokens > 0 || completionTokens > 0)
+            {
+                var modelId = SemanticKernelTokenExtractor.ExtractModelId(response.Metadata);
+                await _tokenTracker.TrackUsageAsync(userId, modelId, "chat", promptTokens, completionTokens);
+            }
 
             // 10. Return response
             return new AiChatResponse

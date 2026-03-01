@@ -12,7 +12,7 @@ export default function TermsOfServicePage() {
 
         <div className="bg-white rounded-lg shadow-sm p-8 sm:p-12 prose prose-gray max-w-none">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Terms of Service</h1>
-          <p className="text-sm text-gray-500 mb-8">Last updated: February 2025</p>
+          <p className="text-sm text-gray-500 mb-8">Last updated: February 2026</p>
 
           <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">What is MyMascada?</h2>
           <p className="text-gray-700 mb-4">
@@ -33,7 +33,9 @@ export default function TermsOfServicePage() {
           <p className="text-gray-700 mb-4">
             MyMascada is a tool for tracking and organizing your personal finances. Nothing in this application
             constitutes financial advice, investment advice, tax advice, or any other form of professional advice.
-            You are solely responsible for your financial decisions.
+            Any AI-generated categorizations or insights are for informational purposes only. You are solely
+            responsible for your financial decisions. Always consult a qualified professional for financial,
+            tax, or legal matters.
           </p>
 
           <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">Limitation of Liability</h2>
@@ -51,6 +53,17 @@ export default function TermsOfServicePage() {
             <li>You agree not to attempt to access other users&apos; data or disrupt the service.</li>
           </ul>
 
+          <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">Your Rights</h2>
+          <p className="text-gray-700 mb-4">
+            You retain ownership of all data you enter into MyMascada. You have the right to:
+          </p>
+          <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-2">
+            <li><strong>Access</strong> all your personal data at any time through the application.</li>
+            <li><strong>Export</strong> your transaction and financial data.</li>
+            <li><strong>Delete</strong> your account and all associated data from your account settings.</li>
+            <li><strong>Rectify</strong> any inaccurate data by editing it within the application.</li>
+          </ul>
+
           <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">Account Termination</h2>
           <p className="text-gray-700 mb-4">
             The operator reserves the right to suspend or terminate any account, or discontinue the service
@@ -62,6 +75,35 @@ export default function TermsOfServicePage() {
           <p className="text-gray-700 mb-4">
             For details on how your data is collected, used, and stored, please refer to
             the <Link href="/privacy" className="text-primary hover:text-primary-600 underline">Privacy Policy</Link>.
+          </p>
+
+          <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">Third-Party Services</h2>
+          <p className="text-gray-700 mb-4">
+            MyMascada may integrate with third-party services to provide its features. These include, but
+            are not limited to:
+          </p>
+          <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-2">
+            <li><strong>OpenAI</strong> &mdash; for AI-powered transaction categorization (optional, only when enabled).</li>
+            <li><strong>Stripe</strong> &mdash; for payment processing (optional, only if subscription features are used).</li>
+            <li><strong>Akahu</strong> &mdash; for bank account syncing in New Zealand (optional, only when connected).</li>
+            <li><strong>Google</strong> &mdash; for OAuth sign-in (optional, only if you choose &quot;Sign in with Google&quot;).</li>
+          </ul>
+          <p className="text-gray-700 mb-4">
+            Your use of these integrations is subject to each provider&apos;s own terms and privacy policies.
+            Data is only shared with these services when you actively use the corresponding feature. See
+            our <Link href="/privacy" className="text-primary hover:text-primary-600 underline">Privacy Policy</Link> for
+            full details.
+          </p>
+
+          <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">GDPR &amp; Data Protection</h2>
+          <p className="text-gray-700 mb-4">
+            If you are located in the European Economic Area (EEA), you have additional rights under the
+            General Data Protection Regulation (GDPR), including the right to access, rectify, port, and
+            erase your personal data, as well as the right to restrict or object to certain processing.
+            To exercise these rights, contact us at{' '}
+            <a href="mailto:support@mymascada.com" className="text-primary hover:text-primary-600 underline">
+              support@mymascada.com
+            </a>.
           </p>
 
           <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">Open Source</h2>
@@ -81,7 +123,11 @@ export default function TermsOfServicePage() {
           <hr className="my-8 border-gray-200" />
 
           <p className="text-sm text-gray-500">
-            Questions? Reach out via the{' '}
+            Questions? Reach out at{' '}
+            <a href="mailto:support@mymascada.com" className="text-primary hover:text-primary-600 underline">
+              support@mymascada.com
+            </a>{' '}
+            or via the{' '}
             <a href="https://github.com/digaomatias/mymascada/discussions" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary-600 underline">
               GitHub Discussions
             </a> page.

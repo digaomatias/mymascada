@@ -1,7 +1,6 @@
 'use client';
 
-import { useAuth } from '@/contexts/auth-context';
-import { useRouter } from 'next/navigation';
+import { useAuthGuard } from '@/hooks/use-auth-guard';
 import { useEffect, useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { AppLayout } from '@/components/app-layout';
@@ -69,8 +68,7 @@ interface Category {
 }
 
 export default function CategoriesPage() {
-  const { isAuthenticated, isLoading } = useAuth();
-  const router = useRouter();
+  const { shouldRender, isAuthResolved } = useAuthGuard();
   const t = useTranslations('categories');
   const tCommon = useTranslations('common');
   const [categories, setCategories] = useState<Category[]>([]);
@@ -82,16 +80,10 @@ export default function CategoriesPage() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/auth/login');
-    }
-  }, [isAuthenticated, isLoading, router]);
-
-  useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthResolved) {
       loadCategories();
     }
-  }, [isAuthenticated]);
+  }, [isAuthResolved]);
 
   // Debounce search term
   useEffect(() => {
@@ -274,22 +266,7 @@ export default function CategoriesPage() {
     return sorted;
   }, [displayCategories, viewMode]);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
-            <TagIcon className="w-8 h-8 text-white" />
-          </div>
-          <div className="mt-6 text-slate-700 font-medium">{t('loading')}</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return null;
-  }
+  if (!shouldRender) return null;
 
   return (
     <AppLayout>

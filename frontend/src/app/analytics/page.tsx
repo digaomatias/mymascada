@@ -2,7 +2,6 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { AppLayout } from '@/components/app-layout';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,7 @@ import { CategorySpendingChart } from '@/components/charts/category-spending-cha
 import { PeriodSelector, PeriodType } from '@/components/analytics/period-selector';
 import { apiClient } from '@/lib/api-client';
 import { cn, formatCurrency } from '@/lib/utils';
-import { useAuth } from '@/contexts/auth-context';
+import { useAuthGuard } from '@/hooks/use-auth-guard';
 import {
   ArrowRightIcon,
   ArrowTrendingDownIcon,
@@ -104,8 +103,7 @@ function StatCard({ label, value, hint, tone, iconBg, iconColor, icon: Icon }: S
 }
 
 export default function AnalyticsPage() {
-  const { isAuthenticated, isLoading } = useAuth();
-  const router = useRouter();
+  const { shouldRender, isAuthResolved } = useAuthGuard();
   const t = useTranslations('analytics');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
@@ -118,16 +116,10 @@ export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState<PeriodType>('year');
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/auth/login');
-    }
-  }, [isAuthenticated, isLoading, router]);
-
-  useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthResolved) {
       loadAnalyticsData();
     }
-  }, [isAuthenticated, selectedYear, selectedMonth, timeRange]);
+  }, [isAuthResolved, selectedYear, selectedMonth, timeRange]);
 
   const loadTrendsData = async (
     range: PeriodType,
@@ -319,6 +311,8 @@ export default function AnalyticsPage() {
   const initialYearly = loadingYearly && yearlyData.length === 0;
 
   const insightTone = netAmount >= 0 ? 'emerald' : 'amber';
+
+  if (!shouldRender) return null;
 
   return (
     <AppLayout>

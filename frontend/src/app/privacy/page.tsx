@@ -12,7 +12,7 @@ export default function PrivacyPolicyPage() {
 
         <div className="bg-white rounded-lg shadow-sm p-8 sm:p-12 prose prose-gray max-w-none">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Privacy Policy</h1>
-          <p className="text-sm text-gray-500 mb-8">Last updated: February 2025</p>
+          <p className="text-sm text-gray-500 mb-8">Last updated: February 2026</p>
 
           <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">Overview</h2>
           <p className="text-gray-700 mb-4">
@@ -72,14 +72,56 @@ export default function PrivacyPolicyPage() {
             </li>
           </ul>
 
-          <h3 className="text-lg font-semibold text-gray-900 mt-6 mb-3">OpenAI API (AI Categorization)</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mt-6 mb-3">OpenAI API (AI Features)</h3>
           <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-1">
-            <li><strong>What is shared:</strong> Transaction descriptions and amounts are sent to OpenAI for categorization suggestions.</li>
-            <li><strong>When:</strong> Only when AI-powered categorization is triggered during transaction review.</li>
+            <li><strong>What is shared:</strong> Transaction descriptions, amounts, and category names are sent to OpenAI
+              for categorization suggestions, chat responses, CSV import analysis, and rule suggestions.</li>
+            <li><strong>When:</strong> Only when you actively use AI-powered features (categorization, chat assistant,
+              smart CSV import).</li>
             <li>
               <strong>Their policy:</strong>{' '}
               <a href="https://openai.com/privacy/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary-600 underline">
                 OpenAI Privacy Policy
+              </a>
+            </li>
+          </ul>
+
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+            <h4 className="text-base font-semibold text-amber-900 mb-2">⚠️ Important: AI Data Sharing Disclosure</h4>
+            <p className="text-sm text-amber-800 mb-2">
+              The hosted version of MyMascada (mymascada.com) participates in OpenAI&apos;s data sharing program.
+              This means that <strong>data sent to OpenAI through our AI features may be used by OpenAI to
+              improve their models</strong>. This includes transaction descriptions and category information
+              processed through AI categorization, chat, and import features.
+            </p>
+            <p className="text-sm text-amber-800 mb-2">
+              <strong>What this means for you:</strong>
+            </p>
+            <ul className="list-disc pl-5 text-sm text-amber-800 space-y-1 mb-2">
+              <li>Transaction descriptions you submit for AI categorization may be used to train OpenAI models</li>
+              <li>Chat conversations with the AI assistant may be used to train OpenAI models</li>
+              <li>This only applies when you actively use AI features &mdash; your data is never sent to OpenAI otherwise</li>
+              <li>We do not share your account information, email, passwords, or account balances with OpenAI</li>
+            </ul>
+            <p className="text-sm text-amber-800 mb-2">
+              <strong>How to avoid this:</strong>
+            </p>
+            <ul className="list-disc pl-5 text-sm text-amber-800 space-y-1">
+              <li>Simply don&apos;t use AI features &mdash; manual categorization and all other features work without any data leaving our servers</li>
+              <li>Self-host MyMascada with your own OpenAI API key (data sharing is off by default for individual API accounts)</li>
+              <li>Self-host and use a different AI provider (the app supports configurable AI backends)</li>
+            </ul>
+          </div>
+
+          <h3 className="text-lg font-semibold text-gray-900 mt-6 mb-3">Stripe (Payment Processing)</h3>
+          <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-1">
+            <li><strong>What is shared:</strong> Email address and payment information are processed by Stripe for subscription management.</li>
+            <li><strong>When:</strong> Only if you subscribe to a paid plan or make a payment.</li>
+            <li><strong>Note:</strong> We do not store your full credit card details. All payment data is handled securely by Stripe.</li>
+            <li>
+              <strong>Their policy:</strong>{' '}
+              <a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary-600 underline">
+                Stripe Privacy Policy
               </a>
             </li>
           </ul>
@@ -93,15 +135,44 @@ export default function PrivacyPolicyPage() {
           <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">Data Retention</h2>
           <p className="text-gray-700 mb-4">
             Your data is retained for as long as your account is active. If you delete your account,
-            your data will be removed from our systems.
+            your data will be permanently removed from our systems. Backups containing your data may
+            persist for up to 30 days after deletion before being fully purged.
           </p>
 
           <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">Your Rights</h2>
           <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-2">
-            <li><strong>Export:</strong> You can export your transaction data from within the application.</li>
-            <li><strong>Deletion:</strong> You can delete your account and all associated data from your account settings.</li>
             <li><strong>Access:</strong> All your data is visible to you within the application at all times.</li>
+            <li><strong>Export:</strong> You can export your transaction data from within the application.</li>
+            <li><strong>Rectification:</strong> You can edit and correct your data directly in the application.</li>
+            <li><strong>Deletion:</strong> You can delete your account and all associated data from your account settings.</li>
+            <li><strong>Portability:</strong> You can export your data in standard formats for use with other services.</li>
           </ul>
+
+          <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">GDPR &amp; European Users</h2>
+          <p className="text-gray-700 mb-4">
+            If you are located in the European Economic Area (EEA), you have rights under the General
+            Data Protection Regulation (GDPR). In addition to the rights listed above, you may:
+          </p>
+          <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-2">
+            <li><strong>Object</strong> to certain types of data processing.</li>
+            <li><strong>Restrict</strong> the processing of your personal data in specific circumstances.</li>
+            <li><strong>Lodge a complaint</strong> with your local data protection authority.</li>
+          </ul>
+          <p className="text-gray-700 mb-4">
+            The legal basis for processing your data is your consent (provided at registration) and the
+            legitimate interest of providing the service you signed up for. To exercise any of these rights,
+            contact us at{' '}
+            <a href="mailto:support@mymascada.com" className="text-primary hover:text-primary-600 underline">
+              support@mymascada.com
+            </a>.
+          </p>
+
+          <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">Security</h2>
+          <p className="text-gray-700 mb-4">
+            We take reasonable measures to protect your data, including encrypted connections (HTTPS),
+            hashed passwords, and access controls. However, no system is 100% secure, and we cannot
+            guarantee absolute security.
+          </p>
 
           <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">Changes to This Policy</h2>
           <p className="text-gray-700 mb-4">
@@ -112,7 +183,11 @@ export default function PrivacyPolicyPage() {
           <hr className="my-8 border-gray-200" />
 
           <p className="text-sm text-gray-500">
-            Questions about your data? Reach out via the{' '}
+            Questions about your data? Reach out at{' '}
+            <a href="mailto:support@mymascada.com" className="text-primary hover:text-primary-600 underline">
+              support@mymascada.com
+            </a>{' '}
+            or via the{' '}
             <a href="https://github.com/digaomatias/mymascada/discussions" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary-600 underline">
               GitHub Discussions
             </a> page. Also see our <Link href="/terms" className="text-primary hover:text-primary-600 underline">Terms of Service</Link>.

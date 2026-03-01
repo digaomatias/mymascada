@@ -4,7 +4,6 @@ import { useAuth } from '@/contexts/auth-context';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { AppLayout } from '@/components/app-layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import AccountForm, { Account } from '@/components/forms/account-form';
 import { apiClient } from '@/lib/api-client';
@@ -34,9 +33,9 @@ export default function NewAccountPage() {
     setLoading(true);
     try {
       await apiClient.createAccount(data);
-      
+
       setSuccess(true);
-      
+
       // Redirect after a brief success message
       setTimeout(() => {
         router.push('/accounts');
@@ -60,7 +59,7 @@ export default function NewAccountPage() {
           <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <BuildingOffice2Icon className="w-8 h-8 text-white" />
           </div>
-          <div className="mt-6 text-gray-700 font-medium">{tCommon('loading')}</div>
+          <div className="mt-6 text-slate-700 font-medium">{tCommon('loading')}</div>
         </div>
       </div>
     );
@@ -73,16 +72,14 @@ export default function NewAccountPage() {
   if (success) {
     return (
       <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
-        <Card className="mx-4 max-w-md w-full bg-white/90 backdrop-blur-xs border-0 shadow-2xl">
-          <CardContent className="p-8 text-center">
-            <div className="w-16 h-16 bg-gradient-to-br from-success-500 to-success-600 rounded-2xl shadow-2xl flex items-center justify-center mx-auto mb-6">
-              <CheckIcon className="w-8 h-8 text-white" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('accountCreated')}</h2>
-            <p className="text-gray-600 mb-6">{t('accountCreatedDesc')}</p>
-            <div className="text-sm text-gray-500">{t('redirectingToAccounts')}</div>
-          </CardContent>
-        </Card>
+        <div className="mx-4 max-w-md w-full rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92 p-8 text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-success-500 to-success-600 rounded-2xl shadow-2xl flex items-center justify-center mx-auto mb-6">
+            <CheckIcon className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-2xl font-semibold text-slate-900 mb-2">{t('accountCreated')}</h2>
+          <p className="text-slate-600 mb-6">{t('accountCreatedDesc')}</p>
+          <div className="text-sm text-slate-500">{t('redirectingToAccounts')}</div>
+        </div>
       </div>
     );
   }
@@ -90,51 +87,39 @@ export default function NewAccountPage() {
   return (
     <AppLayout>
       {/* Header */}
-      <div className="mb-6 lg:mb-8">
-        {/* Navigation Bar */}
-        <div className="flex items-center justify-between mb-6">
-          <Link href="/accounts">
-            <Button variant="secondary" size="sm" className="flex items-center gap-2">
-              <ArrowLeftIcon className="w-4 h-4" />
-              <span className="hidden sm:inline">{t('backToAccounts')}</span>
-              <span className="sm:hidden">{t('back')}</span>
-            </Button>
-          </Link>
-        </div>
+      <header className="flex flex-wrap items-center justify-between gap-4 mb-5">
+        <Link href="/accounts">
+          <Button variant="secondary" size="sm" className="flex items-center gap-2">
+            <ArrowLeftIcon className="w-4 h-4" />
+            <span className="hidden sm:inline">{t('backToAccounts')}</span>
+            <span className="sm:hidden">{t('back')}</span>
+          </Button>
+        </Link>
+      </header>
 
-        {/* Page Title */}
-        <div className="text-center mb-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-            {t('createNewAccount')}
-          </h1>
-          <p className="text-gray-600 text-sm sm:text-base">
-            {t('createNewAccountDesc')}
-          </p>
-        </div>
+      {/* Page Title */}
+      <div className="mb-6">
+        <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
+          {t('createNewAccount')}
+        </h1>
+        <p className="mt-1.5 text-[15px] text-slate-500">
+          {t('createNewAccountDesc')}
+        </p>
       </div>
 
       {/* Account Form */}
       <div className="max-w-2xl mx-auto">
-        <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BuildingOffice2Icon className="w-6 h-6 text-primary-600" />
-              {t('accountDetails')}
-            </CardTitle>
-          </CardHeader>
-
-          <CardContent>
-            <AccountForm
-              variant="full"
-              initialData={{ currency: user?.currency || 'NZD' }}
-              onSubmit={handleSubmit}
-              onCancel={handleCancel}
-              loading={loading}
-              submitText={t('createAccount')}
-              showCancel={true}
-            />
-          </CardContent>
-        </Card>
+        <div className="rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92 p-6">
+          <AccountForm
+            variant="full"
+            initialData={{ currency: user?.currency || 'NZD' }}
+            onSubmit={handleSubmit}
+            onCancel={handleCancel}
+            loading={loading}
+            submitText={t('createAccount')}
+            showCancel={true}
+          />
+        </div>
       </div>
     </AppLayout>
   );

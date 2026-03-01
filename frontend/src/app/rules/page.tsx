@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useAuth } from '@/contexts/auth-context';
-import { useRouter } from 'next/navigation';
+import { useAuthGuard } from '@/hooks/use-auth-guard';
 import { AppLayout } from '@/components/app-layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -87,8 +86,7 @@ interface RuleTestResult {
 }
 
 export default function RulesPage() {
-  const { isAuthenticated, isLoading } = useAuth();
-  const router = useRouter();
+  const { shouldRender, isAuthResolved } = useAuthGuard();
   const t = useTranslations('rules');
   const tCommon = useTranslations('common');
   const [rules, setRules] = useState<CategorizationRule[]>([]);
@@ -110,15 +108,10 @@ export default function RulesPage() {
   const [testingRuleId, setTestingRuleId] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/auth/login');
-      return;
-    }
-
-    if (isAuthenticated) {
+    if (isAuthResolved) {
       refreshRulesData();
     }
-  }, [isAuthenticated, isLoading, router, includeInactive]);
+  }, [isAuthResolved, includeInactive]);
 
   const loadRules = async () => {
     try {
@@ -480,24 +473,7 @@ export default function RulesPage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <AppLayout>
-        <div className="min-h-[50vh] flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
-              <AdjustmentsHorizontalIcon className="w-8 h-8 text-white" />
-            </div>
-            <div className="mt-6 text-slate-700 font-medium">{t('page.title')}</div>
-          </div>
-        </div>
-      </AppLayout>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return null;
-  }
+  if (!shouldRender) return null;
 
   return (
     <AppLayout>

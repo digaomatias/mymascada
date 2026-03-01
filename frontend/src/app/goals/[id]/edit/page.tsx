@@ -112,8 +112,10 @@ export default function EditGoalPage() {
   if (isLoading) {
     return (
       <AppLayout>
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-96" />
+        <div className="space-y-4">
+          <Skeleton className="h-8 w-64 rounded-2xl" />
+          <Skeleton className="h-96 rounded-[26px]" />
+        </div>
       </AppLayout>
     );
   }
@@ -133,9 +135,9 @@ export default function EditGoalPage() {
 
         {/* Form Card */}
         <div className="max-w-2xl mx-auto">
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+          <Card className="rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92">
             <CardHeader>
-              <CardTitle>{tCommon('edit')} - {name}</CardTitle>
+              <CardTitle className="font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900">{tCommon('edit')} - {name}</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -188,7 +190,7 @@ export default function EditGoalPage() {
                       disabled={!!linkedAccountId}
                     />
                     {linkedAccountId && (
-                      <p className="text-xs text-gray-500">{t('form.currentAmountLinkedHint')}</p>
+                      <p className="text-xs text-slate-500">{t('form.currentAmountLinkedHint')}</p>
                     )}
                   </div>
                 </div>
@@ -251,7 +253,7 @@ export default function EditGoalPage() {
                       </option>
                     ))}
                   </Select>
-                  <p className="text-xs text-gray-500">{t('form.linkedAccountHelp')}</p>
+                  <p className="text-xs text-slate-500">{t('form.linkedAccountHelp')}</p>
                 </div>
 
                 <div className="flex justify-end gap-3">

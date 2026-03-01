@@ -47,6 +47,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Goal> Goals => Set<Goal>();
     public DbSet<UserFinancialProfile> UserFinancialProfiles => Set<UserFinancialProfile>();
     public DbSet<DashboardNudgeDismissal> DashboardNudgeDismissals => Set<DashboardNudgeDismissal>();
+    public DbSet<AiTokenUsage> AiTokenUsages => Set<AiTokenUsage>();
     public DbSet<BillingPlan> BillingPlans => Set<BillingPlan>();
     public DbSet<UserSubscription> UserSubscriptions => Set<UserSubscription>();
 
@@ -817,6 +818,24 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.NudgeType).IsRequired().HasMaxLength(50);
 
             entity.HasIndex(e => new { e.UserId, e.NudgeType }).IsUnique();
+
+            entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
+        // AiTokenUsage configuration
+        modelBuilder.Entity<AiTokenUsage>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.Timestamp).IsRequired();
+            entity.Property(e => e.Model).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Operation).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.EstimatedCostUsd).HasPrecision(18, 8);
+
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.Timestamp);
+            entity.HasIndex(e => new { e.UserId, e.Timestamp });
+            entity.HasIndex(e => e.Operation);
 
             entity.HasQueryFilter(e => !e.IsDeleted);
         });

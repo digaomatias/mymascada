@@ -131,7 +131,7 @@ export default function TelegramSettingsPage() {
           <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <ChatBubbleBottomCenterTextIcon className="w-8 h-8 text-white" />
           </div>
-          <div className="mt-6 text-gray-700 font-medium">{tCommon('loading')}</div>
+          <div className="mt-6 text-slate-700 font-medium">{tCommon('loading')}</div>
         </div>
       </div>
     );
@@ -146,7 +146,7 @@ export default function TelegramSettingsPage() {
       {/* Back link */}
         <Link
           href="/settings"
-          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4"
+          className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 mb-4"
         >
           <ArrowLeftIcon className="w-4 h-4" />
           {t('backToSettings')}
@@ -155,32 +155,32 @@ export default function TelegramSettingsPage() {
         {/* Header */}
         <div className="mb-6 lg:mb-8">
           <div className="flex items-center gap-3 mb-1">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-violet-600 rounded-xl flex items-center justify-center">
               <ChatBubbleBottomCenterTextIcon className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
+              <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
                 {t('title')}
               </h1>
-              <p className="text-gray-600 mt-0.5">{t('subtitle')}</p>
+              <p className="text-[15px] text-slate-500 mt-0.5">{t('subtitle')}</p>
             </div>
           </div>
         </div>
 
         {loadingSettings ? (
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+          <Card className="rounded-[26px] border border-violet-100/70 bg-white/92 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs">
             <CardContent className="p-6">
               <div className="animate-pulse space-y-4">
-                <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-                <div className="h-10 bg-gray-200 rounded"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                <div className="h-4 bg-slate-200 rounded w-1/3"></div>
+                <div className="h-10 bg-slate-200 rounded"></div>
+                <div className="h-4 bg-slate-200 rounded w-1/4"></div>
               </div>
             </CardContent>
           </Card>
         ) : settings?.hasSettings ? (
           /* State 2: Connected */
           <div className="space-y-4">
-            <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+            <Card className="rounded-[26px] border border-violet-100/70 bg-white/92 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs">
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
                   <CheckCircleIcon className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
@@ -201,9 +201,9 @@ export default function TelegramSettingsPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+            <Card className="rounded-[26px] border border-violet-100/70 bg-white/92 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs">
               <CardContent className="p-6">
-                <p className="text-sm text-gray-600 mb-4">{t('connectedDescription')}</p>
+                <p className="text-sm text-slate-500 mb-4">{t('connectedDescription')}</p>
                 <Button
                   variant="danger"
                   onClick={() => setShowDisconnectConfirm(true)}
@@ -218,10 +218,10 @@ export default function TelegramSettingsPage() {
           /* State 1: Not configured (wizard) */
           <div className="space-y-4">
             {/* Instructions */}
-            <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+            <Card className="rounded-[26px] border border-violet-100/70 bg-white/92 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs">
               <CardContent className="p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-3">{t('setup.title')}</h2>
-                <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700">
+                <h2 className="text-lg font-semibold text-slate-900 mb-3">{t('setup.title')}</h2>
+                <ol className="list-decimal list-inside space-y-2 text-sm text-slate-700">
                   <li>{t('setup.step1')}</li>
                   <li>{t('setup.step2')}</li>
                   <li>{t('setup.step3')}</li>
@@ -231,7 +231,7 @@ export default function TelegramSettingsPage() {
                   href="https://t.me/BotFather"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-block mt-3 text-sm text-primary-600 hover:text-primary-800 font-medium"
+                  className="inline-block mt-3 text-sm text-violet-600 hover:text-violet-800 font-medium"
                 >
                   {t('setup.openBotFather')}
                 </a>
@@ -239,10 +239,10 @@ export default function TelegramSettingsPage() {
             </Card>
 
             {/* Token Input & Actions */}
-            <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+            <Card className="rounded-[26px] border border-violet-100/70 bg-white/92 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs">
               <CardContent className="p-6 space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
                     {t('token.label')}
                   </label>
                   <Input
@@ -255,7 +255,7 @@ export default function TelegramSettingsPage() {
                     placeholder={t('token.placeholder')}
                     className="w-full"
                   />
-                  <p className="text-xs text-gray-500 mt-1.5">{t('token.hint')}</p>
+                  <p className="text-xs text-slate-500 mt-1.5">{t('token.hint')}</p>
                 </div>
 
                 {/* Test Token */}
@@ -286,7 +286,7 @@ export default function TelegramSettingsPage() {
                 </div>
 
                 {/* Connect */}
-                <div className="pt-3 border-t border-gray-100">
+                <div className="pt-3 border-t border-slate-100">
                   <Button
                     variant="primary"
                     onClick={handleConnect}

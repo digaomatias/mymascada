@@ -24,6 +24,8 @@ import {
 } from '@/lib/budget/budget-triage';
 import { BudgetContextualNudge } from '@/components/budget/budget-contextual-nudge';
 import { cn } from '@/lib/utils';
+import { BudgetsSkeleton } from '@/components/skeletons';
+import { useAuthGuard } from '@/hooks/use-auth-guard';
 
 const BUDGET_BASE = '/budgets';
 
@@ -63,6 +65,7 @@ function formatDateRange(startDate: string, endDate: string) {
 }
 
 export default function BudgetsPage() {
+  const { shouldRender, isAuthResolved } = useAuthGuard();
   const t = useTranslations('budgets');
   const [budgets, setBudgets] = useState<BudgetSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -70,6 +73,7 @@ export default function BudgetsPage() {
   const [currentPeriodOnly, setCurrentPeriodOnly] = useState(false);
 
   useEffect(() => {
+    if (!isAuthResolved) return;
     const load = async () => {
       try {
         setIsLoading(true);
@@ -86,9 +90,11 @@ export default function BudgetsPage() {
     };
 
     load();
-  }, [showInactive, currentPeriodOnly, t]);
+  }, [isAuthResolved, showInactive, currentPeriodOnly, t]);
 
   const sortedBudgets = useMemo(() => sortBudgetsForTriage(budgets), [budgets]);
+
+  if (!shouldRender) return null;
 
   return (
     <AppLayout>
@@ -138,14 +144,7 @@ export default function BudgetsPage() {
         <BudgetContextualNudge budgets={sortedBudgets} basePath={BUDGET_BASE} />
 
         {isLoading ? (
-          <div className="grid gap-4 md:grid-cols-2">
-            {[1, 2, 3, 4].map((item) => (
-              <div
-                key={item}
-                className="h-56 animate-pulse rounded-[24px] border border-violet-100/80 bg-white/80"
-              />
-            ))}
-          </div>
+          <BudgetsSkeleton />
         ) : sortedBudgets.length === 0 ? (
           <section className="rounded-[28px] border border-violet-100/80 bg-white/92 p-10 text-center shadow-[0_20px_50px_-30px_rgba(76,29,149,0.45)]">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-100 text-violet-600">

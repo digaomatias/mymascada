@@ -135,10 +135,10 @@ export default function LoginPage() {
               <AppIcon size={80} />
             </div>
           </div>
-          <h2 className="text-h1 text-gray-900">
+          <h2 className="text-h1 text-slate-900">
             {t('signInTitle')}
           </h2>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 text-slate-600">
             {t('signInSubtitle')}
           </p>
         </div>
@@ -230,9 +230,9 @@ export default function LoginPage() {
                     type="checkbox"
                     checked={formData.rememberMe}
                     onChange={handleInputChange}
-                    className="h-4 w-4 text-primary border-gray-300 rounded-sm focus:ring-primary"
+                    className="h-4 w-4 text-primary border-slate-300 rounded-sm focus:ring-primary"
                   />
-                  <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-900">
+                  <label htmlFor="rememberMe" className="ml-2 block text-sm text-slate-700">
                     {t('rememberMe')}
                   </label>
                 </div>
@@ -257,10 +257,10 @@ export default function LoginPage() {
                 <>
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-300"></div>
+                      <div className="w-full border-t border-slate-200"></div>
                     </div>
                     <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-white text-gray-500">{t('orContinueWith')}</span>
+                      <span className="px-2 bg-white text-slate-500">{t('orContinueWith')}</span>
                     </div>
                   </div>
 
@@ -271,7 +271,7 @@ export default function LoginPage() {
               )}
 
               <div className="text-center">
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-slate-600">
                   {t('noAccount')}{' '}
                   <Link href="/auth/register" className="font-medium text-primary hover:text-primary-600">
                     {t('signUp')}
@@ -282,10 +282,10 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        <div className="text-center text-xs text-gray-500">
-          <Link href="/terms" className="hover:text-gray-700 underline">{t('termsLink')}</Link>
+        <div className="text-center text-xs text-slate-500">
+          <Link href="/terms" className="hover:text-slate-700 underline">{t('termsLink')}</Link>
           {' · '}
-          <Link href="/privacy" className="hover:text-gray-700 underline">{t('privacyLink')}</Link>
+          <Link href="/privacy" className="hover:text-slate-700 underline">{t('privacyLink')}</Link>
         </div>
       </div>
     </div>

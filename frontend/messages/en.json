@@ -1,6 +1,7 @@
 {
   "common": {
     "loading": "Loading...",
+    "loadingPage": "Loading page...",
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
@@ -224,6 +225,8 @@
     "passwordsMatch": "✓ Passwords match",
     "passwordsDoNotMatch": "✗ Passwords do not match",
     "resettingPassword": "Resetting Password...",
+    "country": "Country",
+    "countryPlaceholder": "Select your country",
     "inviteCode": "Invite Code",
     "inviteCodePlaceholder": "Enter your invite code",
     "acceptTerms": "I agree to the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>",

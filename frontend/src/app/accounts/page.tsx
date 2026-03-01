@@ -1,6 +1,5 @@
 'use client';
 
-import { useAuth } from '@/contexts/auth-context';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { AppLayout } from '@/components/app-layout';
@@ -31,6 +30,8 @@ import { AddAccountButton } from '@/components/buttons/add-account-button';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { ShareAccountModal } from '@/components/modals/share-account-modal';
 import { useTranslations } from 'next-intl';
+import { useAuthGuard } from '@/hooks/use-auth-guard';
+import { AccountsSkeleton } from '@/components/skeletons';
 
 interface Account {
   id: number;
@@ -51,7 +52,7 @@ interface Account {
 }
 
 export default function AccountsPage() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { shouldRender, isAuthResolved } = useAuthGuard();
   const router = useRouter();
   const t = useTranslations('accounts');
   const tCommon = useTranslations('common');
@@ -64,17 +65,11 @@ export default function AccountsPage() {
   const [processingShareIds, setProcessingShareIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/auth/login');
-    }
-  }, [isAuthenticated, isLoading, router]);
-
-  useEffect(() => {
-    if (isAuthenticated && typeof window !== 'undefined') {
+    if (isAuthResolved) {
       loadAccounts();
       loadPendingInvitations();
     }
-  }, [isAuthenticated]);
+  }, [isAuthResolved]);
 
   const loadAccounts = async () => {
     try {
@@ -186,22 +181,7 @@ export default function AccountsPage() {
     return role === 2 ? t('sharing.roleManager') : t('sharing.roleViewer');
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
-            <BuildingOffice2Icon className="w-8 h-8 text-white" />
-          </div>
-          <div className="mt-6 text-gray-700 font-medium">{t('loading')}</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return null;
-  }
+  if (!shouldRender) return null;
 
   return (
     <AppLayout>
@@ -340,14 +320,7 @@ export default function AccountsPage() {
 
         {/* Accounts list */}
         {loading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-28 animate-pulse rounded-[26px] border border-violet-100/80 bg-white/80"
-              />
-            ))}
-          </div>
+          <AccountsSkeleton />
         ) : accounts.length === 0 ? (
           /* Empty state */
           <section className="rounded-[28px] border border-violet-100/80 bg-white/92 p-10 text-center shadow-[0_20px_50px_-30px_rgba(76,29,149,0.45)]">

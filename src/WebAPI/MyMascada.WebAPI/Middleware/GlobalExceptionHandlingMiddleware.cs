@@ -41,7 +41,10 @@ public class GlobalExceptionHandlingMiddleware
 
     private async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
-        var correlationId = Guid.NewGuid();
+        // Prefer the per-request correlation ID set by CorrelationIdMiddleware
+        var correlationId = context.Items["CorrelationId"] is string cid
+            ? Guid.TryParse(cid, out var parsed) ? parsed : Guid.NewGuid()
+            : Guid.NewGuid();
         
         // Extract request information for logging
         var requestInfo = new

@@ -9,6 +9,7 @@ public static class AiChatServiceExtensions
     {
         services.AddScoped<IFinancialContextBuilder, FinancialContextBuilder>();
         services.AddScoped<IAiChatService, AiChatService>();
+        services.AddScoped<IAiTokenTracker, AiTokenTracker>();
         return services;
     }
 }

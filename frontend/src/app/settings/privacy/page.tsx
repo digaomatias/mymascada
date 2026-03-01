@@ -111,7 +111,7 @@ export default function PrivacySettingsPage() {
           <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <ShieldCheckIcon className="w-8 h-8 text-white" />
           </div>
-          <div className="mt-6 text-gray-700 font-medium">{tCommon('loading')}</div>
+          <div className="mt-6 text-slate-700 font-medium">{tCommon('loading')}</div>
         </div>
       </div>
     );
@@ -125,65 +125,65 @@ export default function PrivacySettingsPage() {
     <AppLayout>
       {/* Header */}
         <div className="mb-6 lg:mb-8">
-          <Link href="/settings" className="inline-flex items-center text-primary-600 hover:text-primary-800 mb-4">
-            <ArrowLeftIcon className="w-4 h-4 mr-2" />
+          <Link href="/settings" className="inline-flex items-center gap-2 text-sm text-violet-600 hover:text-violet-800 mb-4">
+            <ArrowLeftIcon className="w-4 h-4" />
             {t('backToSettings')}
           </Link>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
+          <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
             {t('title')}
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-[15px] text-slate-500 mt-1.5">
             {t('subtitle')}
           </p>
         </div>
 
         <div className="space-y-6">
           {/* Data Summary Card */}
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+          <Card className="rounded-[26px] border border-violet-100/70 bg-white/92 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs">
             <CardContent className="p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('dataSummary.title')}</h2>
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">{t('dataSummary.title')}</h2>
 
               {loadingSummary ? (
                 <div className="animate-pulse space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                  <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                  <div className="h-4 bg-slate-200 rounded w-1/2"></div>
+                  <div className="h-4 bg-slate-200 rounded w-2/3"></div>
                 </div>
               ) : summary ? (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-primary-600">{summary.totalAccounts}</div>
-                    <div className="text-sm text-gray-600">{t('dataSummary.accounts')}</div>
+                  <div className="text-center p-3 bg-violet-50/40 rounded-xl border border-violet-100/60">
+                    <div className="text-2xl font-bold text-violet-600">{summary.totalAccounts}</div>
+                    <div className="text-sm text-slate-600">{t('dataSummary.accounts')}</div>
                   </div>
-                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-primary-600">{summary.totalTransactions}</div>
-                    <div className="text-sm text-gray-600">{t('dataSummary.transactions')}</div>
+                  <div className="text-center p-3 bg-violet-50/40 rounded-xl border border-violet-100/60">
+                    <div className="text-2xl font-bold text-violet-600">{summary.totalTransactions}</div>
+                    <div className="text-sm text-slate-600">{t('dataSummary.transactions')}</div>
                   </div>
-                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-primary-600">{summary.totalCategories}</div>
-                    <div className="text-sm text-gray-600">{t('dataSummary.categories')}</div>
+                  <div className="text-center p-3 bg-violet-50/40 rounded-xl border border-violet-100/60">
+                    <div className="text-2xl font-bold text-violet-600">{summary.totalCategories}</div>
+                    <div className="text-sm text-slate-600">{t('dataSummary.categories')}</div>
                   </div>
-                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-primary-600">{summary.totalRules}</div>
-                    <div className="text-sm text-gray-600">{t('dataSummary.rules')}</div>
+                  <div className="text-center p-3 bg-violet-50/40 rounded-xl border border-violet-100/60">
+                    <div className="text-2xl font-bold text-violet-600">{summary.totalRules}</div>
+                    <div className="text-sm text-slate-600">{t('dataSummary.rules')}</div>
                   </div>
                 </div>
               ) : (
-                <p className="text-gray-500">{t('dataSummary.unavailable')}</p>
+                <p className="text-slate-500">{t('dataSummary.unavailable')}</p>
               )}
             </CardContent>
           </Card>
 
           {/* Export Data Card */}
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
+          <Card className="rounded-[26px] border border-violet-100/70 bg-white/92 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shrink-0">
                   <ArrowDownTrayIcon className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-lg font-semibold text-gray-900">{t('export.title')}</h2>
-                  <p className="text-sm text-gray-600 mt-1 mb-4">
+                  <h2 className="text-lg font-semibold text-slate-900">{t('export.title')}</h2>
+                  <p className="text-sm text-slate-500 mt-1 mb-4">
                     {t('export.description')}
                   </p>
                   <Button
@@ -199,15 +199,15 @@ export default function PrivacySettingsPage() {
           </Card>
 
           {/* Delete Account Card */}
-          <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg border-l-4 border-l-red-500">
+          <Card className="rounded-[26px] border border-violet-100/70 bg-white/92 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs border-l-4 border-l-red-500">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-red-400 to-red-600 rounded-xl flex items-center justify-center shrink-0">
                   <TrashIcon className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-lg font-semibold text-gray-900">{t('delete.title')}</h2>
-                  <p className="text-sm text-gray-600 mt-1 mb-4">
+                  <h2 className="text-lg font-semibold text-slate-900">{t('delete.title')}</h2>
+                  <p className="text-sm text-slate-500 mt-1 mb-4">
                     {t('delete.description')}
                   </p>
 
