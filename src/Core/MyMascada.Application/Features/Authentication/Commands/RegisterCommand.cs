@@ -23,10 +23,18 @@ public class RegisterCommand : IRequest<AuthenticationResponse>
     public string? IpAddress { get; set; }
     public string? UserAgent { get; set; }
     public string? InviteCode { get; set; }
+    public string? Country { get; set; }
+    public string? Language { get; set; }
 }
 
 public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthenticationResponse>
 {
+    private static readonly string[] SupportedLocales = ["en", "pt-BR"];
+    private static readonly HashSet<string> ValidCountryCodes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "AR", "AU", "BR", "CA", "CL", "CO", "DE", "ES", "FR", "GB", "JP", "MX", "NZ", "PT", "US"
+    };
+
     private readonly IUserRepository _userRepository;
     private readonly IAuthenticationService _authenticationService;
     private readonly IValidator<RegisterCommand> _validator;
@@ -91,6 +99,16 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Authentic
             return response;
         }
 
+        // Resolve locale from language preference — use canonical casing from the allowlist
+        var locale = SupportedLocales.FirstOrDefault(l =>
+            string.Equals(l, request.Language, StringComparison.OrdinalIgnoreCase)) ?? "en";
+
+        // Sanitize country code — only accept known codes, otherwise store null
+        var country = !string.IsNullOrWhiteSpace(request.Country) &&
+                      ValidCountryCodes.Contains(request.Country.Trim().ToUpperInvariant())
+            ? request.Country.Trim().ToUpperInvariant()
+            : null;
+
         // Create new user
         var user = new User
         {
@@ -105,6 +123,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Authentic
             LastName = request.LastName,
             PhoneNumber = request.PhoneNumber,
             Currency = request.Currency,
+            Locale = locale,
             TimeZone = request.TimeZone,
             EmailConfirmed = _registrationStrategy.AutoConfirmEmail,
             PhoneNumberConfirmed = false,

@@ -69,6 +69,8 @@ public class AuthController : ControllerBase
             Currency = request.Currency,
             TimeZone = request.TimeZone,
             InviteCode = request.InviteCode,
+            Country = request.Country,
+            Language = request.Language,
             IpAddress = GetClientIpAddress(),
             UserAgent = Request.Headers.UserAgent.FirstOrDefault()
         };

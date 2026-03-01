@@ -12,4 +12,6 @@ public class RegisterRequest
     public string Currency { get; set; } = "USD";
     public string TimeZone { get; set; } = "UTC";
     public string? InviteCode { get; set; }
+    public string? Country { get; set; }
+    public string? Language { get; set; }
 }
