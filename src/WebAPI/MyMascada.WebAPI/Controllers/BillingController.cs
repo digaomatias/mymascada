@@ -15,17 +15,20 @@ public class BillingController : ControllerBase
     private readonly ICurrentUserService _currentUserService;
     private readonly IFeatureFlags _featureFlags;
     private readonly StripeOptions _stripeOptions;
+    private readonly IConfiguration _configuration;
 
     public BillingController(
         IBillingService billingService,
         ICurrentUserService currentUserService,
         IFeatureFlags featureFlags,
-        IOptions<StripeOptions> stripeOptions)
+        IOptions<StripeOptions> stripeOptions,
+        IConfiguration configuration)
     {
         _billingService = billingService;
         _currentUserService = currentUserService;
         _featureFlags = featureFlags;
         _stripeOptions = stripeOptions.Value;
+        _configuration = configuration;
     }
 
     [HttpGet("status")]
@@ -66,6 +69,12 @@ public class BillingController : ControllerBase
         if (!_featureFlags.StripeBilling)
             return NotFound();
 
+        if (string.IsNullOrWhiteSpace(request.PriceId))
+            return BadRequest(new { message = "Price ID is required." });
+
+        if (!IsValidReturnUrl(request.ReturnUrl))
+            return BadRequest(new { message = "Invalid return URL." });
+
         try
         {
             var userId = _currentUserService.GetUserId();
@@ -87,6 +96,9 @@ public class BillingController : ControllerBase
         if (!_featureFlags.StripeBilling)
             return NotFound();
 
+        if (!IsValidReturnUrl(request.ReturnUrl))
+            return BadRequest(new { message = "Invalid return URL." });
+
         try
         {
             var userId = _currentUserService.GetUserId();
@@ -102,6 +114,28 @@ public class BillingController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+    }
+
+    /// <summary>
+    /// Validates that the return URL is safe (relative path or matches the configured frontend URL).
+    /// Prevents open redirect attacks.
+    /// </summary>
+    private bool IsValidReturnUrl(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+            return false;
+
+        // Allow relative URLs (but not protocol-relative like //)
+        if (url.StartsWith('/') && !url.StartsWith("//"))
+            return true;
+
+        // Allow configured frontend URL
+        var frontendUrl = _configuration["FrontendUrl"] ?? "";
+        if (!string.IsNullOrEmpty(frontendUrl) &&
+            url.StartsWith(frontendUrl, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return false;
     }
 }
 

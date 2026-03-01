@@ -50,7 +50,7 @@ public class StripeBillingService : IBillingService
             subscription = new UserSubscription
             {
                 UserId = userId,
-                PlanId = freePlan?.Id ?? 1,
+                PlanId = freePlan?.Id ?? throw new InvalidOperationException("Default 'free' billing plan not found. Billing setup is incomplete."),
                 StripeCustomerId = customer.Id,
                 Status = "free"
             };
@@ -212,7 +212,7 @@ public class StripeBillingService : IBillingService
         var freePlan = await _context.BillingPlans
             .FirstOrDefaultAsync(p => p.StripePriceId == "free" && !p.IsDeleted);
 
-        subscription.PlanId = freePlan?.Id ?? 1;
+        subscription.PlanId = freePlan?.Id ?? throw new InvalidOperationException("Default 'free' billing plan not found. Billing setup is incomplete.");
         subscription.Status = "free";
         subscription.StripeSubscriptionId = null;
         subscription.CurrentPeriodStart = null;

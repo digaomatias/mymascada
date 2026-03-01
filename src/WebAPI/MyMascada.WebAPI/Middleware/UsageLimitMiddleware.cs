@@ -8,7 +8,7 @@ public class UsageLimitMiddleware
     private readonly RequestDelegate _next;
     private readonly IFeatureFlags _featureFlags;
 
-    // Paths where we enforce usage limits
+    // Paths where we enforce usage limits (normalized to lowercase, no trailing slash)
     private static readonly HashSet<string> AccountCreationPaths = new(StringComparer.OrdinalIgnoreCase)
     {
         "/api/accounts"
@@ -16,7 +16,11 @@ public class UsageLimitMiddleware
 
     private static readonly HashSet<string> TransactionCreationPaths = new(StringComparer.OrdinalIgnoreCase)
     {
-        "/api/transactions"
+        "/api/transactions",
+        "/api/transactions/adjustment",
+        "/api/ofx-import/import",
+        "/api/csvimport/import-with-mappings",
+        "/api/importreview/execute"
     };
 
     public UsageLimitMiddleware(RequestDelegate next, IFeatureFlags featureFlags)
@@ -49,7 +53,9 @@ public class UsageLimitMiddleware
             return;
         }
 
-        var path = context.Request.Path.Value ?? string.Empty;
+        // Normalize path: trim trailing slash for consistent matching
+        var rawPath = context.Request.Path.Value ?? string.Empty;
+        var path = rawPath.TrimEnd('/');
 
         // Check account creation limit
         if (AccountCreationPaths.Contains(path))

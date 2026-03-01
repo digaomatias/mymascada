@@ -17,11 +17,13 @@ import { useTranslations } from 'next-intl';
 import { apiClient, BillingStatusResponse } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { useFeatures } from '@/contexts/features-context';
+import { useLocale } from '@/contexts/locale-context';
 
 export default function BillingPage() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const { features } = useFeatures();
+  const { locale } = useLocale();
   const t = useTranslations('settings.billing');
   const tCommon = useTranslations('common');
 
@@ -176,7 +178,7 @@ export default function BillingPage() {
                   </p>
                   {billingStatus.currentPeriodEnd && (
                     <p className="text-sm text-gray-500 mt-1">
-                      {t('periodEnd')}: {new Date(billingStatus.currentPeriodEnd).toLocaleDateString()}
+                      {t('periodEnd')}: {new Date(billingStatus.currentPeriodEnd).toLocaleDateString(locale)}
                     </p>
                   )}
                   {isCanceled && (
@@ -261,12 +263,12 @@ export default function BillingPage() {
                     {t('manageBilling')}
                   </Button>
                 )}
+                {/* TODO: Implement plan selection UI that provides the correct Stripe priceId */}
                 {!isPaid && (
                   <Button
                     variant="secondary"
-                    onClick={() => handleCheckout('')}
-                    loading={checkoutLoading}
-                    disabled={checkoutLoading}
+                    disabled={true}
+                    title="Plan selection coming soon"
                   >
                     {t('upgradePlan')}
                   </Button>
