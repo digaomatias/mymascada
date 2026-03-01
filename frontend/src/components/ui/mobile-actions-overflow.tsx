@@ -50,7 +50,7 @@ function MobileActionsOverflow({
   }
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger
         className={cn(
           // Minimum 44px touch target for accessibility
@@ -72,7 +72,7 @@ function MobileActionsOverflow({
       >
         <EllipsisVerticalIcon className="w-5 h-5" aria-hidden="true" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" side="bottom" className="min-w-[180px] bg-white shadow-lg border border-gray-200 rounded-lg">
+      <DropdownMenuContent align="end" collisionPadding={8} className="min-w-[180px] bg-white shadow-lg border border-gray-200 rounded-lg">
         {visibleActions.map((action) => {
           const itemContent = (
             <>

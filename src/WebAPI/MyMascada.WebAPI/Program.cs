@@ -5,6 +5,7 @@ using MyMascada.Infrastructure.Data;
 using MyMascada.WebAPI.Extensions;
 using MyMascada.WebAPI.Middleware;
 using MyMascada.WebAPI.Services;
+using MediatR;
 using Serilog;
 using Serilog.Events;
 using Hangfire;
@@ -265,6 +266,24 @@ if (app.Environment.IsDevelopment())
         {
             app.Logger.LogError(ex, "Failed to apply development migrations");
             // Continue startup even if migrations fail in development
+        }
+    }
+
+    // Auto-seed test user in development
+    using (var scope = app.Services.CreateScope())
+    {
+        try
+        {
+            var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+            var result = await mediator.Send(new MyMascada.Application.Features.Testing.Commands.CreateTestUserCommand());
+            if (result.IsSuccess)
+                app.Logger.LogInformation("Development test user seeded: {Email}", "test-user@mymascada.local");
+            else
+                app.Logger.LogInformation("Test user already exists, skipping seed");
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(ex, "Failed to seed development test user");
         }
     }
 }
