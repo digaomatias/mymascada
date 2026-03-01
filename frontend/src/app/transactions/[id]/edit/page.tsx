@@ -97,6 +97,7 @@ export default function EditTransactionPage() {
     } finally {
       setLoadingTransaction(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transactionId]);
 
   useEffect(() => {

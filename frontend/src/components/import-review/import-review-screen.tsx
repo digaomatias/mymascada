@@ -203,6 +203,7 @@ export function ImportReviewScreen({
       }
 
       const request: ImportExecutionRequest = {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         analysisId: analysisResult.analysisId || analysisResult.analysisTimestamp || (analysisResult as any).analyzedAt,
         accountId: analysisResult.accountId,
         decisions
@@ -251,6 +252,7 @@ export function ImportReviewScreen({
       }
 
       // Process result based on structure - handle both new and legacy formats
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const resultAny = result as any;
       const success = resultAny.success ?? (resultAny.importedTransactionsCount !== undefined);
       const importedCount = resultAny.statistics?.importedCount || resultAny.importedTransactionsCount || resultAny.Statistics?.ImportedCount || 0;

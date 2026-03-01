@@ -53,6 +53,7 @@ export function EditTransactionModal({
     } finally {
       setIsLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transactionId, onClose]);
 
   // Load transaction data when modal opens

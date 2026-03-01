@@ -242,6 +242,7 @@ export function CSVMappingReviewForReconciliation({
     };
     
     parseFullCsvFile();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [csvFile]);
 
   // Helper function to detect likely date format from sample data

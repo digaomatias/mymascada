@@ -47,6 +47,7 @@ export default function BankConnectionsPage() {
       loadConnections();
       loadProviders();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
 
   // Check for OAuth callback data on mount (Production App mode only)

@@ -119,6 +119,7 @@ export default function AnalyticsPage() {
     if (isAuthResolved) {
       loadAnalyticsData();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthResolved, selectedYear, selectedMonth, timeRange]);
 
   const loadTrendsData = async (
@@ -263,12 +264,12 @@ export default function AnalyticsPage() {
     loadYearlyData(selectedYear);
   };
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string }) => {
     if (active && payload && payload[0]) {
       return (
         <div className="rounded-xl border border-violet-100/70 bg-white/98 p-3 shadow-[0_18px_36px_-26px_rgba(76,29,149,0.55)] backdrop-blur-xs">
           <p className="font-[var(--font-dash-sans)] text-sm font-semibold text-slate-900">{label}</p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry: { name: string; value: number; color: string }, index: number) => (
             <p key={index} className="font-[var(--font-dash-mono)] text-sm" style={{ color: entry.color }}>
               {entry.name}: {formatCurrency(entry.value)}
             </p>

@@ -85,6 +85,7 @@ export default function GoalDetailPage() {
     if (goalId) {
       loadGoal();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [goalId]);
 
   const handleDelete = async () => {

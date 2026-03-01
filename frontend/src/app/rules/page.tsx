@@ -53,7 +53,7 @@ interface CategorizationRule {
   accuracyRate: number;
   createdAt: string;
   updatedAt: string;
-  conditions: any[];
+  conditions: Array<{ field: string; operator: string; value: string; isCaseSensitive: boolean; order: number }>;
   applicationCount: number;
 }
 
@@ -111,12 +111,13 @@ export default function RulesPage() {
     if (isAuthResolved) {
       refreshRulesData();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthResolved, includeInactive]);
 
   const loadRules = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get(`/api/rules?includeInactive=${includeInactive}`) as any[];
+      const response = await apiClient.get<CategorizationRule[]>(`/api/rules?includeInactive=${includeInactive}`);
       setRules(response);
     } catch (error) {
       console.error('Failed to load rules:', error);
@@ -129,7 +130,7 @@ export default function RulesPage() {
   const loadStatistics = async () => {
     try {
       const response = await apiClient.get('/api/rules/statistics');
-      setStatistics(response as any);
+      setStatistics(response as RuleStatistics);
     } catch (error) {
       console.error('Failed to load statistics:', error);
     }

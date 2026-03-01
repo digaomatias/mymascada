@@ -72,6 +72,7 @@ function CallbackContent() {
     };
 
     handleCallback();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, router]);
 
   return (

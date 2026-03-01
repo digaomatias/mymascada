@@ -124,6 +124,7 @@ export default function TransactionDetailsPage() {
     } finally {
       setLoadingTransaction(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transactionId]);
 
   const loadCategories = useCallback(async () => {

@@ -123,6 +123,7 @@ export default function ReconcileAccountPage() {
       loadAccount();
       checkAkahuAvailability();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, accountId, loadAccount]);
 
   const checkAkahuAvailability = async () => {

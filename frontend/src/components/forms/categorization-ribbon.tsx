@@ -213,8 +213,8 @@ export function CategorizationRibbon({
       setRulePreview(result);
       setShowRulePreview(true);
       
-      const existingCount = result.ruleMatches?.filter((m: any) => m.isExistingCandidate).length || 0;
-      const newCount = result.ruleMatches?.filter((m: any) => !m.isExistingCandidate).length || 0;
+      const existingCount = result.ruleMatches?.filter((m: { isExistingCandidate: boolean }) => m.isExistingCandidate).length || 0;
+      const newCount = result.ruleMatches?.filter((m: { isExistingCandidate: boolean }) => !m.isExistingCandidate).length || 0;
       
       if (existingCount > 0 && newCount > 0) {
         toast.info(tToasts('ruleCategorizationFoundExistingAndNew', { existing: existingCount, totalNew: newCount }));

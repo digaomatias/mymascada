@@ -309,6 +309,7 @@ export function CSVMappingReview({
     } else {
       setUniqueTypeValues([]);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mappings.typeColumn, mappings.typeValueMappings, analysisResult.sampleRows]);
 
   const handleMappingChange = (field: keyof ColumnMappings, value: string) => {
@@ -494,6 +495,7 @@ export function CSVMappingReview({
             },
             // Pass the analysis result for the Import Review screen
             analysisResult: analysisResult
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           } as ImportResult & { analysisResult: any });
         }
       } else {

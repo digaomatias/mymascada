@@ -69,6 +69,7 @@ export function TransfersModal({ isOpen, onClose, onRefresh }: TransfersModalPro
     } finally {
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
 
   useEffect(() => {

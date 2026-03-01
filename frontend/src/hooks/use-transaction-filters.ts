@@ -83,7 +83,6 @@ export const useTransactionFilters = () => {
   // Reset page to 1 when sort changes
   useEffect(() => {
     setCurrentPage(1);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortBy, sortDirection]);
 
   const handleSetCurrentPage = (page: number) => {

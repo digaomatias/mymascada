@@ -41,6 +41,7 @@ export default function PrivacySettingsPage() {
     if (isAuthenticated) {
       loadSummary();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
 
   const loadSummary = async () => {

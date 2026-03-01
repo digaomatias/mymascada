@@ -59,6 +59,7 @@ export default function CategoryTrendsPage() {
     if (isAuthenticated) {
       loadCategoryTrends();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
 
   const loadCategoryTrends = async () => {

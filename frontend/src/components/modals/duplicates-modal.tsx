@@ -76,6 +76,7 @@ export function DuplicatesModal({ isOpen, onClose, onRefresh }: DuplicatesModalP
     } finally {
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
 
   useEffect(() => {

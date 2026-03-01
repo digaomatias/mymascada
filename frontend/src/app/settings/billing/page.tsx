@@ -29,7 +29,8 @@ export default function BillingPage() {
 
   const [billingStatus, setBillingStatus] = useState<BillingStatusResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_checkoutLoading, setCheckoutLoading] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
 
   useEffect(() => {
@@ -57,7 +58,8 @@ export default function BillingPage() {
     }
   }, [isAuthenticated, isLoading, features.stripeBilling, loadBillingStatus]);
 
-  const handleCheckout = async (priceId: string) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _handleCheckout = async (priceId: string) => {
     setCheckoutLoading(true);
     try {
       const response = await apiClient.createCheckoutSession(
