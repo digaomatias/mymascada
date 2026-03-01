@@ -27,9 +27,15 @@ export const countries: Country[] = [
   { code: 'NZ', name: 'New Zealand', currency: 'NZD', locale: 'en' },
   { code: 'PT', name: 'Portugal', currency: 'EUR', locale: 'pt-BR' },
   { code: 'US', name: 'United States', currency: 'USD', locale: 'en' },
-];
+].sort((a, b) => a.name.localeCompare(b.name)) as Country[];
+
+/** Valid country codes for server-side validation */
+export const validCountryCodes = new Set(countries.map((c) => c.code));
+
+/** O(1) lookup by country code */
+const countriesByCode = new Map(countries.map((c) => [c.code, c]));
 
 /** Look up a country by ISO code */
 export function getCountryByCode(code: string): Country | undefined {
-  return countries.find((c) => c.code === code);
+  return countriesByCode.get(code);
 }

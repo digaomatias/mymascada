@@ -29,6 +29,12 @@ public class RegisterCommand : IRequest<AuthenticationResponse>
 
 public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthenticationResponse>
 {
+    private static readonly string[] SupportedLocales = ["en", "pt-BR"];
+    private static readonly HashSet<string> ValidCountryCodes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "AR", "AU", "BR", "CA", "CL", "CO", "DE", "ES", "FR", "GB", "JP", "MX", "NZ", "PT", "US"
+    };
+
     private readonly IUserRepository _userRepository;
     private readonly IAuthenticationService _authenticationService;
     private readonly IValidator<RegisterCommand> _validator;
@@ -93,12 +99,15 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Authentic
             return response;
         }
 
-        // Resolve locale from language preference (default to "en" if unsupported)
-        var supportedLocales = new[] { "en", "pt-BR" };
-        var locale = !string.IsNullOrWhiteSpace(request.Language) &&
-                     supportedLocales.Contains(request.Language, StringComparer.OrdinalIgnoreCase)
-            ? request.Language
-            : "en";
+        // Resolve locale from language preference — use canonical casing from the allowlist
+        var locale = SupportedLocales.FirstOrDefault(l =>
+            string.Equals(l, request.Language, StringComparison.OrdinalIgnoreCase)) ?? "en";
+
+        // Sanitize country code — only accept known codes, otherwise store null
+        var country = !string.IsNullOrWhiteSpace(request.Country) &&
+                      ValidCountryCodes.Contains(request.Country.Trim().ToUpperInvariant())
+            ? request.Country.Trim().ToUpperInvariant()
+            : null;
 
         // Create new user
         var user = new User

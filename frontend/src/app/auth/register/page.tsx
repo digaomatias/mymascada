@@ -205,6 +205,7 @@ export default function RegisterPage() {
       setFormData(prev => ({
         ...prev,
         country: '',
+        currency: 'NZD',
         language: '',
       }));
     }
