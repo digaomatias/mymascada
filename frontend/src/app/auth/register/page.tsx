@@ -8,11 +8,14 @@ import { RegisterRequest } from '@/types/auth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Select } from '@/components/ui/select';
 import { EnvelopeIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { AppIcon } from '@/components/app-icon';
 import { GoogleSignInButton } from '@/components/auth/google-signin-button';
 import { useFeatures } from '@/contexts/features-context';
 import { useTranslations } from 'next-intl';
+import { countries, getCountryByCode } from '@/lib/countries';
+import { setStoredLocale } from '@/i18n/client';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -34,6 +37,8 @@ export default function RegisterPage() {
     currency: 'NZD', // Default to New Zealand Dollar
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     inviteCode: '',
+    country: '',
+    language: '',
   });
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
@@ -184,6 +189,27 @@ export default function RegisterPage() {
     }
   };
 
+  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const code = e.target.value;
+    const country = getCountryByCode(code);
+    if (country) {
+      setFormData(prev => ({
+        ...prev,
+        country: country.code,
+        currency: country.currency,
+        language: country.locale,
+      }));
+      // Persist locale so subsequent pages (post-registration) render in the right language
+      setStoredLocale(country.locale);
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        country: '',
+        language: '',
+      }));
+    }
+  };
+
   // Show verification email sent success screen
   if (verificationSent) {
     return (
@@ -288,6 +314,25 @@ export default function RegisterPage() {
                   error={!!validationErrors.lastName}
                   errorMessage={validationErrors.lastName}
                 />
+              </div>
+
+              <div>
+                <label htmlFor="country" className="block text-sm font-medium text-slate-700 mb-1">
+                  {t('country')}
+                </label>
+                <Select
+                  id="country"
+                  name="country"
+                  value={formData.country || ''}
+                  onChange={handleCountryChange}
+                  placeholder={t('countryPlaceholder')}
+                >
+                  {countries.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.name}
+                    </option>
+                  ))}
+                </Select>
               </div>
 
               <Input

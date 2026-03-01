@@ -23,6 +23,8 @@ public class RegisterCommand : IRequest<AuthenticationResponse>
     public string? IpAddress { get; set; }
     public string? UserAgent { get; set; }
     public string? InviteCode { get; set; }
+    public string? Country { get; set; }
+    public string? Language { get; set; }
 }
 
 public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthenticationResponse>
@@ -91,6 +93,13 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Authentic
             return response;
         }
 
+        // Resolve locale from language preference (default to "en" if unsupported)
+        var supportedLocales = new[] { "en", "pt-BR" };
+        var locale = !string.IsNullOrWhiteSpace(request.Language) &&
+                     supportedLocales.Contains(request.Language, StringComparer.OrdinalIgnoreCase)
+            ? request.Language
+            : "en";
+
         // Create new user
         var user = new User
         {
@@ -105,6 +114,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Authentic
             LastName = request.LastName,
             PhoneNumber = request.PhoneNumber,
             Currency = request.Currency,
+            Locale = locale,
             TimeZone = request.TimeZone,
             EmailConfirmed = _registrationStrategy.AutoConfirmEmail,
             PhoneNumberConfirmed = false,

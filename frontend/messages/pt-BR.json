@@ -224,6 +224,8 @@
     "passwordsMatch": "✓ Senhas coincidem",
     "passwordsDoNotMatch": "✗ Senhas não coincidem",
     "resettingPassword": "Redefinindo senha...",
+    "country": "País",
+    "countryPlaceholder": "Selecione seu país",
     "inviteCode": "Código de Convite",
     "inviteCodePlaceholder": "Digite seu código de convite",
     "acceptTerms": "Eu concordo com os <terms>Termos de Serviço</terms> e a <privacy>Política de Privacidade</privacy>",
