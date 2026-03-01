@@ -83,7 +83,8 @@ export function CategorySpendingChart({ data, title }: CategorySpendingChartProp
   };
 
   // Custom label for pie chart
-  const renderCustomLabel = (entry: { percent: number }) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const renderCustomLabel = (entry: any) => {
     const percentage = (entry.percent * 100);
     if (percentage < 5) return null; // Don't show label for small slices
     return `${percentage.toFixed(0)}%`;
