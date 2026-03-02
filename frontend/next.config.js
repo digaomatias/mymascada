@@ -38,6 +38,8 @@ const withPWA = require('next-pwa')({
 const createNextIntlPlugin = require('next-intl/plugin');
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
+const { withSentryConfig } = require('@sentry/nextjs');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   env: {
@@ -69,4 +71,40 @@ const nextConfig = {
   serverExternalPackages: [],
 };
 
-module.exports = withPWA(withNextIntl(nextConfig));
+const combinedConfig = withPWA(withNextIntl(nextConfig));
+
+// Only apply Sentry config when a DSN is present or SENTRY_AUTH_TOKEN is set.
+// This ensures the build works fine in environments without Sentry configured.
+const hasSentry = !!(process.env.NEXT_PUBLIC_SENTRY_DSN || process.env.SENTRY_DSN || process.env.SENTRY_AUTH_TOKEN);
+
+module.exports = hasSentry
+  ? withSentryConfig(combinedConfig, {
+      // Sentry organisation / project slugs (read from env; empty = no upload)
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+
+      // Source map upload — only when SENTRY_AUTH_TOKEN is set
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+
+      // Only upload source maps in CI/production
+      silent: true,
+
+      // Automatically tree-shake Sentry logger statements to reduce bundle size
+      disableLogger: true,
+
+      // Hides source maps from the browser bundle (they're uploaded to Sentry)
+      hideSourceMaps: true,
+
+      // Tunnels Sentry requests through Next.js to avoid ad-blockers
+      tunnelRoute: '/monitoring-tunnel',
+
+      // Disable automatic source map upload when no auth token is present
+      sourcemaps: {
+        disable: !process.env.SENTRY_AUTH_TOKEN,
+      },
+
+      // Disable automatic instrumentation injection when no DSN (pure auth-token-only scenario)
+      autoInstrumentServerFunctions: true,
+      autoInstrumentMiddleware: true,
+    })
+  : combinedConfig;
