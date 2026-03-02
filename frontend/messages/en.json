@@ -86,8 +86,7 @@
     "processing": "Processing...",
     "simple": "Simple",
     "advanced": "Advanced",
-    "chooseFile": "Choose File"
-    ,
+    "chooseFile": "Choose File",
     "selectDateTime": "Select date and time"
   },
   "nav": {
@@ -169,7 +168,7 @@
       "lastNameRequired": "Last name is required",
       "usernameRequired": "Username is required",
       "invalidCredentials": "Invalid email or password",
-      "accountLocked": "Account is locked. Please try again later.",
+      "accountLocked": "Account Temporarily Locked",
       "genericError": "An error occurred. Please try again.",
       "passwordTooCommon": "This password is too common. Please choose a stronger password.",
       "passwordContainsPersonalInfo": "Password should not contain your name or email",
@@ -177,7 +176,8 @@
       "resetTokenMissing": "Reset token is missing. Please use the link from your email.",
       "passwordRequirements": "Password does not meet all requirements",
       "resetFailed": "Failed to reset password. Please try again.",
-      "unexpected": "An unexpected error occurred. Please try again later."
+      "unexpected": "An unexpected error occurred. Please try again later.",
+      "accountLockedDetail": "Your account has been temporarily locked due to multiple failed login attempts. Please wait a few minutes before trying again, or contact support if you need immediate access."
     },
     "emailVerification": {
       "verifying": "Verifying your email...",

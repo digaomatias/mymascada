@@ -43,6 +43,8 @@ export interface AuthenticationResponse {
   errors: string[];
   requiresEmailVerification?: boolean;
   message?: string;
+  /** True when the account has been locked due to too many failed login attempts. */
+  isAccountLocked?: boolean;
 }
 
 // Email Verification Types

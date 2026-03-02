@@ -1,4 +1,7 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using MyMascada.Application.Common.Configuration;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Authentication.DTOs;
 using MyMascada.Domain.Entities;
@@ -20,6 +23,8 @@ public class LoginQueryHandler : IRequestHandler<LoginQuery, AuthenticationRespo
     private readonly IUserAiSettingsRepository _aiSettingsRepository;
     private readonly IAccountRepository _accountRepository;
     private readonly IFeatureFlags _featureFlags;
+    private readonly LockoutOptions _lockoutOptions;
+    private readonly ILogger<LoginQueryHandler> _logger;
 
     public LoginQueryHandler(
         IUserRepository userRepository,
@@ -27,7 +32,9 @@ public class LoginQueryHandler : IRequestHandler<LoginQuery, AuthenticationRespo
         IUserFinancialProfileRepository financialProfileRepository,
         IUserAiSettingsRepository aiSettingsRepository,
         IAccountRepository accountRepository,
-        IFeatureFlags featureFlags)
+        IFeatureFlags featureFlags,
+        IOptions<LockoutOptions> lockoutOptions,
+        ILogger<LoginQueryHandler> logger)
     {
         _userRepository = userRepository;
         _authenticationService = authenticationService;
@@ -35,6 +42,8 @@ public class LoginQueryHandler : IRequestHandler<LoginQuery, AuthenticationRespo
         _aiSettingsRepository = aiSettingsRepository;
         _accountRepository = accountRepository;
         _featureFlags = featureFlags;
+        _lockoutOptions = lockoutOptions.Value;
+        _logger = logger;
     }
 
     public async Task<AuthenticationResponse> Handle(LoginQuery request, CancellationToken cancellationToken)
@@ -61,7 +70,9 @@ public class LoginQueryHandler : IRequestHandler<LoginQuery, AuthenticationRespo
         // Check if account is locked
         if (user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow)
         {
-            response.Errors.Add($"Account is locked until {user.LockoutEnd.Value:yyyy-MM-dd HH:mm} UTC");
+            // Do not reveal the exact unlock time for security reasons
+            response.IsAccountLocked = true;
+            response.Errors.Add("Your account has been temporarily locked due to multiple failed login attempts. Please try again later.");
             return response;
         }
 
@@ -73,11 +84,20 @@ public class LoginQueryHandler : IRequestHandler<LoginQuery, AuthenticationRespo
             // Increment failed login count
             user.AccessFailedCount++;
 
-            // Lock account after 5 failed attempts
-            if (user.AccessFailedCount >= 5 && user.LockoutEnabled)
+            // Lock account after configured number of failed attempts
+            if (user.AccessFailedCount >= _lockoutOptions.MaxFailedAccessAttempts && user.LockoutEnabled)
             {
-                user.LockoutEnd = DateTimeOffset.UtcNow.AddMinutes(15);
-                response.Errors.Add("Account has been locked due to multiple failed login attempts");
+                user.LockoutEnd = DateTimeOffset.UtcNow.AddMinutes(_lockoutOptions.DefaultLockoutTimeSpanMinutes);
+
+                _logger.LogWarning(
+                    "Account locked out. UserId={UserId} Email={Email} FailedAttempts={FailedAttempts} LockoutUntil={LockoutUntil}",
+                    user.Id,
+                    user.Email,
+                    user.AccessFailedCount,
+                    user.LockoutEnd.Value.UtcDateTime);
+
+                response.IsAccountLocked = true;
+                response.Errors.Add("Your account has been temporarily locked due to multiple failed login attempts. Please try again later.");
             }
             else
             {

@@ -174,6 +174,33 @@ public class AuthController : ControllerBase
         return Ok(new { Status = "Healthy", Timestamp = DateTime.UtcNow });
     }
 
+    /// <summary>
+    /// Unlocks a user account that was locked due to repeated failed login attempts.
+    /// This endpoint is intended for administrative use. In production, restrict access
+    /// to admin roles or a dedicated admin API surface.
+    /// </summary>
+    [HttpPost("admin/unlock/{userId:guid}")]
+    [Authorize]
+    public async Task<IActionResult> UnlockAccount(Guid userId)
+    {
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user == null)
+        {
+            return NotFound(new { Message = "User not found" });
+        }
+
+        if (!user.LockoutEnd.HasValue || user.LockoutEnd.Value <= DateTimeOffset.UtcNow)
+        {
+            return Ok(new { Message = "Account is not currently locked" });
+        }
+
+        user.LockoutEnd = null;
+        user.AccessFailedCount = 0;
+        await _userRepository.UpdateAsync(user);
+
+        return Ok(new { Message = "Account unlocked successfully", UserId = userId });
+    }
+
     [HttpGet("me")]
     [Authorize]
     public async Task<ActionResult<UserDto>> GetCurrentUser()

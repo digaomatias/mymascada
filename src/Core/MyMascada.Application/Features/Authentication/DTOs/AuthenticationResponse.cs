@@ -19,6 +19,12 @@ public class AuthenticationResponse
     /// Message to display to the user (e.g., "Please check your email to verify your account")
     /// </summary>
     public string? Message { get; set; }
+
+    /// <summary>
+    /// Indicates that the account has been locked out due to too many failed login attempts.
+    /// The client should show a user-friendly lockout message without revealing the exact unlock time.
+    /// </summary>
+    public bool IsAccountLocked { get; set; }
 }
 
 public class UserDto
