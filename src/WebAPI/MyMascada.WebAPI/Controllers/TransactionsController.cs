@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Transactions.Commands;
 using MyMascada.Application.Features.Transactions.DTOs;
@@ -471,6 +472,44 @@ public class TransactionsController : ControllerBase
         catch (ArgumentException ex)
         {
             return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Export transactions as a CSV file download.
+    /// Supports optional filtering by date range and account.
+    /// Returns a UTF-8 BOM CSV for Excel compatibility.
+    /// </summary>
+    [HttpGet("export/csv")]
+    [EnableRateLimiting("standard")]
+    [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> ExportTransactionsCsv(
+        [FromQuery] DateTime? from = null,
+        [FromQuery] DateTime? to = null,
+        [FromQuery] int? accountId = null)
+    {
+        var userId = _currentUserService.GetUserId();
+
+        try
+        {
+            var query = new ExportTransactionsCsvQuery
+            {
+                UserId = userId,
+                From = from?.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(from.Value, DateTimeKind.Utc) : from,
+                To = to?.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(to.Value, DateTimeKind.Utc) : to,
+                AccountId = accountId
+            };
+
+            var csvBytes = await _mediator.Send(query);
+            var fileName = $"transactions-{DateTime.UtcNow:yyyy-MM-dd}.csv";
+
+            return File(csvBytes, "text/csv; charset=utf-8", fileName);
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, "An error occurred while exporting transactions. Please try again later.");
         }
     }
 
