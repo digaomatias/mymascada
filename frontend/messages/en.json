@@ -86,8 +86,7 @@
     "processing": "Processing...",
     "simple": "Simple",
     "advanced": "Advanced",
-    "chooseFile": "Choose File"
-    ,
+    "chooseFile": "Choose File",
     "selectDateTime": "Select date and time"
   },
   "nav": {
@@ -3434,5 +3433,11 @@
     "submitting": "Saving...",
     "skip": "Skip to Dashboard",
     "skipping": "Skipping..."
+  },
+  "cookieConsent": {
+    "ariaLabel": "Cookie consent",
+    "message": "We use essential cookies only — for your session and language preference. No tracking or advertising cookies.",
+    "learnMore": "Learn more",
+    "accept": "Got it"
   }
 }

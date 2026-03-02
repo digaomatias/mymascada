@@ -5,6 +5,7 @@ import { AuthProvider } from '@/contexts/auth-context';
 import { AiSuggestionsProvider } from '@/contexts/ai-suggestions-context';
 import { FeaturesProvider } from '@/contexts/features-context';
 import { LocaleWrapper } from '@/components/locale-wrapper';
+import { CookieConsent } from '@/components/cookie-consent';
 import { Toaster } from 'sonner';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
@@ -52,6 +53,7 @@ export default async function RootLayout({
                 <div id="root">
                   {children}
                 </div>
+                <CookieConsent />
                 <Toaster
                   position="bottom-right"
                   toastOptions={{
