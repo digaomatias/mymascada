@@ -102,6 +102,7 @@ export default function CategoryDetailsPage() {
     } finally {
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoryId, router]);
 
   const getDateRangeFromFilter = useCallback((filter: DateFilter) => {

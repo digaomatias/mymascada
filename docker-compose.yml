@@ -134,6 +134,12 @@ services:
       Email__Smtp__Password: ${SMTP_PASSWORD:-}
       Email__Smtp__UseStartTls: ${SMTP_USE_STARTTLS:-true}
       Email__Smtp__UseSsl: ${SMTP_USE_SSL:-false}
+
+      # Stripe Billing (optional - enables subscription billing)
+      Stripe__Enabled: ${STRIPE_ENABLED:-false}
+      Stripe__SecretKey: ${STRIPE_SECRET_KEY:-}
+      Stripe__PublishableKey: ${STRIPE_PUBLISHABLE_KEY:-}
+      Stripe__WebhookSecret: ${STRIPE_WEBHOOK_SECRET:-}
     depends_on:
       migration:
         condition: service_completed_successfully

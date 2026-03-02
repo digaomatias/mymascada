@@ -32,19 +32,21 @@ interface TransactionCandidatesResponse {
 }
 
 // Deep comparison function for query parameters
-function deepEqual(obj1: any, obj2: any): boolean {
+function deepEqual(obj1: unknown, obj2: unknown): boolean {
   if (obj1 === obj2) return true;
   if (obj1 == null || obj2 == null) return false;
   if (typeof obj1 !== 'object' || typeof obj2 !== 'object') return false;
   
-  const keys1 = Object.keys(obj1);
-  const keys2 = Object.keys(obj2);
+  const record1 = obj1 as Record<string, unknown>;
+  const record2 = obj2 as Record<string, unknown>;
+  const keys1 = Object.keys(record1);
+  const keys2 = Object.keys(record2);
   
   if (keys1.length !== keys2.length) return false;
   
   for (const key of keys1) {
     if (!keys2.includes(key)) return false;
-    if (!deepEqual(obj1[key], obj2[key])) return false;
+    if (!deepEqual(record1[key], record2[key])) return false;
   }
   
   return true;
@@ -128,7 +130,7 @@ export function useTransactionsWithCandidates({
   transactions,
   candidatesQuery
 }: {
-  transactions: any[];
+  transactions: Array<{ id: number; [key: string]: unknown }>;
   candidatesQuery: ReturnType<typeof useTransactionCandidates>;
 }) {
   return transactions.map(transaction => ({

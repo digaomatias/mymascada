@@ -19,7 +19,8 @@ import {
   ArrowDownTrayIcon,
   SparklesIcon,
   ChatBubbleBottomCenterTextIcon,
-  PresentationChartBarIcon
+  PresentationChartBarIcon,
+  CreditCardIcon
 } from '@heroicons/react/24/outline';
 import { useLocale } from '@/contexts/locale-context';
 import { useTranslations } from 'next-intl';
@@ -32,6 +33,7 @@ interface SettingsItem {
   icon: React.ComponentType<{ className?: string }>;
   labelKey: string;
   badge?: boolean;
+  featureFlag?: string;
 }
 
 const settingsItems: SettingsItem[] = [
@@ -45,6 +47,12 @@ const settingsItems: SettingsItem[] = [
     href: '/settings/ai',
     icon: SparklesIcon,
     labelKey: 'aiSettings',
+  },
+  {
+    href: '/settings/billing',
+    icon: CreditCardIcon,
+    labelKey: 'billing',
+    featureFlag: 'stripeBilling',
   },
   {
     href: '/settings/telegram',
@@ -418,7 +426,7 @@ export default function SettingsPage() {
           </Card>
 
           {/* Other Settings Items */}
-          {settingsItems.map((item) => {
+          {settingsItems.filter((item) => !item.featureFlag || features[item.featureFlag as keyof typeof features]).map((item) => {
             const IconComponent = item.icon;
             return (
               <Link key={item.href} href={item.href}>

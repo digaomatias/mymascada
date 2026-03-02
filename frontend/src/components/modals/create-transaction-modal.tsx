@@ -90,6 +90,7 @@ export function CreateTransactionModal({
         status: 2
       });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, bankTransaction]);
 
   const loadCategories = async () => {

@@ -61,6 +61,7 @@ export function InlineTransferCreator({ sourceTransaction, onCancel, onSuccess }
       console.error('Failed to load accounts:', error);
       toast.error(tToasts('accountsLoadFailed'));
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sourceTransaction.accountId]);
 
   const searchSuggestedTransactions = useCallback(async () => {

@@ -133,19 +133,20 @@ export function RuleBuilderWizard() {
 
   useEffect(() => {
     loadCategories();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadCategories = async () => {
     try {
-      const response = await apiClient.get('/api/categories');
-      setCategories(response as any);
+      const response = await apiClient.get<Category[]>('/api/categories');
+      setCategories(response);
     } catch (error) {
       console.error('Failed to load categories:', error);
       toast.error(t('toasts.loadCategoriesFailed'));
     }
   };
 
-  const updateFormData = (field: string, value: any) => {
+  const updateFormData = (field: string, value: string | number | boolean | string[] | RuleCondition[]) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -163,7 +164,7 @@ export function RuleBuilderWizard() {
     updateFormData('conditions', [...formData.conditions, newCondition]);
   };
 
-  const updateCondition = (index: number, field: string, value: any) => {
+  const updateCondition = (index: number, field: string, value: string | boolean) => {
     const updatedConditions = [...formData.conditions];
     updatedConditions[index] = {
       ...updatedConditions[index],
@@ -210,11 +211,11 @@ export function RuleBuilderWizard() {
 
       // For now, we'll create a temporary rule and test it
       // In production, you might want a dedicated test endpoint
-      const createResponse = await apiClient.post('/api/rules', tempRule) as any;
+      const createResponse = await apiClient.post<{ id: number }>('/api/rules', tempRule);
       const ruleId = createResponse.id; // Fixed: removed .data accessor
 
       // Test the rule
-      const testResponse = await apiClient.post(`/api/rules/${ruleId}/test?maxResults=20`, null) as any;
+      const testResponse = await apiClient.post<{ matchingTransactions: TestTransaction[] }>(`/api/rules/${ruleId}/test?maxResults=20`, null);
 
       setTestResults(testResponse.matchingTransactions || []);
 

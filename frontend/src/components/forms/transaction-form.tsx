@@ -280,6 +280,7 @@ export function TransactionForm({
     if (transactionId) {
       fetchAiSuggestions();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transactionId]);
 
   return (

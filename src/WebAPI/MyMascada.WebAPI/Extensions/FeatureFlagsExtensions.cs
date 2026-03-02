@@ -18,6 +18,7 @@ public static class FeatureFlagsExtensions
         var googleOAuth = IsNonPlaceholder(configuration["Authentication:Google:ClientId"], "YOUR_GOOGLE_CLIENT_ID");
         var bankSync = configuration.GetValue<bool>("Akahu:Enabled");
         var hasGlobalAiKey = IsNonPlaceholder(configuration["LLM:OpenAI:ApiKey"], "YOUR_OPENAI_API_KEY");
+        var stripeBilling = configuration.GetValue<bool>("Stripe:Enabled");
 
         // Singleton — values never change after startup
         services.AddSingleton<IFeatureFlags>(new StartupFeatureFlags(
@@ -25,7 +26,8 @@ public static class FeatureFlagsExtensions
             emailNotifications,
             googleOAuth,
             bankSync,
-            hasGlobalAiKey));
+            hasGlobalAiKey,
+            stripeBilling));
 
         // Registration strategy depends on email availability
         if (emailNotifications)

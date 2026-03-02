@@ -96,6 +96,7 @@ export default function EditCategoryPage() {
     } finally {
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoryId, router]);
 
   const loadCategories = useCallback(async () => {

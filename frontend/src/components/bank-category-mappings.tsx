@@ -88,6 +88,7 @@ export default function BankCategoryMappings() {
   useEffect(() => {
     loadMappings();
     loadCategories();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadMappings = async () => {
@@ -114,8 +115,18 @@ export default function BankCategoryMappings() {
       });
 
       // Flatten hierarchical categories into a flat array for searching
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const flattenCategories = (cats: any[], result: Category[] = []): Category[] => {
+      interface HierarchicalCategory {
+        id: number;
+        name: string;
+        fullPath?: string;
+        parentCategoryId?: number | null;
+        color?: string;
+        icon?: string;
+        isSystemCategory?: boolean;
+        children?: HierarchicalCategory[];
+      }
+
+      const flattenCategories = (cats: HierarchicalCategory[], result: Category[] = []): Category[] => {
         for (const cat of cats) {
           result.push({
             id: cat.id,
@@ -133,7 +144,7 @@ export default function BankCategoryMappings() {
         return result;
       };
 
-      const mappedCategories = flattenCategories((categoriesData as any[]) || []);
+      const mappedCategories = flattenCategories((categoriesData as HierarchicalCategory[]) || []);
       console.log('[BankCategoryMappings] Loaded categories:', mappedCategories.length, mappedCategories.slice(0, 5));
       setCategories(mappedCategories);
     } catch (error) {

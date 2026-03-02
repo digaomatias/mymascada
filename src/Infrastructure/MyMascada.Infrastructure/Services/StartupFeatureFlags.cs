@@ -13,18 +13,21 @@ public class StartupFeatureFlags : IFeatureFlags
     public bool GoogleOAuth { get; }
     public bool BankSync { get; }
     public bool HasGlobalAiKey { get; }
+    public bool StripeBilling { get; }
 
     public StartupFeatureFlags(
         bool aiCategorization,
         bool emailNotifications,
         bool googleOAuth,
         bool bankSync,
-        bool hasGlobalAiKey)
+        bool hasGlobalAiKey,
+        bool stripeBilling)
     {
         AiCategorization = aiCategorization;
         EmailNotifications = emailNotifications;
         GoogleOAuth = googleOAuth;
         BankSync = bankSync;
         HasGlobalAiKey = hasGlobalAiKey;
+        StripeBilling = stripeBilling;
     }
 }

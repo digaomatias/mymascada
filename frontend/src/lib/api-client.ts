@@ -52,6 +52,7 @@ class ApiClient {
     return this.request<T>(endpoint, { method: 'GET' });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async post<T>(endpoint: string, data?: any): Promise<T> {
     return this.request<T>(endpoint, { 
       method: 'POST',
@@ -59,6 +60,7 @@ class ApiClient {
     });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async put<T>(endpoint: string, data?: any): Promise<T> {
     return this.request<T>(endpoint, { 
       method: 'PUT',
@@ -1223,6 +1225,7 @@ class ApiClient {
     accountId: number;
     csvData?: {
       content: string; // Base64 encoded
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       mappings: Record<string, any>;
       hasHeader: boolean;
     };
@@ -1268,6 +1271,7 @@ class ApiClient {
       reviewItemId: string;
       decision: number; // ConflictResolution enum value (0-4)
       userNotes?: string;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       candidate?: any; // ImportCandidateDto data to avoid cache dependency
     }>;
   }): Promise<{
@@ -1302,6 +1306,7 @@ class ApiClient {
     summary: RuleSuggestionsSummary;
   }> {
     const response = await this.request('/api/RuleSuggestions');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return response as any;
   }
 
@@ -1318,6 +1323,7 @@ class ApiClient {
     
     const url = `/api/RuleSuggestions/generate${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
     const response = await this.request(url, { method: 'POST' });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return response as any;
   }
 
@@ -1330,6 +1336,7 @@ class ApiClient {
       method: 'POST',
       body: JSON.stringify(options || {}),
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return response as any;
   }
 
@@ -1341,6 +1348,7 @@ class ApiClient {
 
   async getRuleSuggestionsSummary(): Promise<RuleSuggestionsSummary> {
     const response = await this.request('/api/RuleSuggestions/summary');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return response as any;
   }
 
@@ -1435,11 +1443,13 @@ class ApiClient {
 
     const url = `/api/bankcategorymappings${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
     const response = await this.request(url);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return response as any;
   }
 
   async getBankCategoryMapping(id: number): Promise<BankCategoryMapping> {
     const response = await this.request(`/api/bankcategorymappings/${id}`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return response as any;
   }
 
@@ -1452,6 +1462,7 @@ class ApiClient {
       method: 'POST',
       body: JSON.stringify(data),
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return response as any;
   }
 
@@ -1462,6 +1473,7 @@ class ApiClient {
       method: 'PUT',
       body: JSON.stringify(data),
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return response as any;
   }
 
@@ -1476,6 +1488,7 @@ class ApiClient {
       method: 'PATCH',
       body: JSON.stringify({ isExcluded }),
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return response as any;
   }
 
@@ -1782,6 +1795,25 @@ class ApiClient {
     return this.request('/api/onboarding/status');
   }
 
+  // Billing methods
+  async getBillingStatus(): Promise<BillingStatusResponse> {
+    return this.request('/api/billing/status');
+  }
+
+  async createCheckoutSession(priceId: string, returnUrl: string): Promise<CheckoutResponse> {
+    return this.request('/api/billing/checkout', {
+      method: 'POST',
+      body: JSON.stringify({ priceId, returnUrl }),
+    });
+  }
+
+  async createPortalSession(returnUrl: string): Promise<PortalResponse> {
+    return this.request('/api/billing/portal', {
+      method: 'POST',
+      body: JSON.stringify({ returnUrl }),
+    });
+  }
+
   private getAuthHeaders(): Record<string, string> {
     const token = this.getToken();
     return token ? { 'Authorization': `Bearer ${token}` } : {};
@@ -1795,6 +1827,29 @@ export interface FeatureFlags {
   bankSync: boolean;
   emailNotifications: boolean;
   accountSharing: boolean;
+  stripeBilling: boolean;
+}
+
+// Billing Types
+export interface BillingStatusResponse {
+  planName: string;
+  status: string;
+  stripeCustomerId?: string;
+  maxAccounts: number;
+  maxTransactionsPerMonth: number;
+  maxAiCallsPerMonth: number;
+  currentAccountCount: number;
+  currentMonthTransactionCount: number;
+  currentPeriodEnd?: string;
+  publishableKey?: string;
+}
+
+export interface CheckoutResponse {
+  url: string;
+}
+
+export interface PortalResponse {
+  url: string;
 }
 
 // Account Sharing Types

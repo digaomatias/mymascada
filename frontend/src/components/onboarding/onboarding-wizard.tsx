@@ -49,9 +49,9 @@ export function OnboardingWizard() {
 
   useEffect(() => {
     apiClient.getAccountsWithBalances()
-      .then((data: any) => {
+      .then((data: unknown) => {
         if (Array.isArray(data)) {
-          setAccounts(data.map((a: any) => ({ id: a.id, name: a.name, currentBalance: a.currentBalance ?? 0 })));
+          setAccounts(data.map((a: Record<string, unknown>) => ({ id: a.id as number, name: a.name as string, currentBalance: (a.currentBalance as number) ?? 0 })));
         }
       })
       .catch(() => {

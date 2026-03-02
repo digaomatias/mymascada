@@ -1877,6 +1877,10 @@
       "telegram": {
         "title": "Telegram Bot",
         "description": "Chat with Alce from Telegram using your own bot"
+      },
+      "billing": {
+        "title": "Billing & Subscription",
+        "description": "Manage your subscription plan and account limits"
       }
     },
     "badges": {
@@ -2083,6 +2087,29 @@
         "tokenRequired": "Bot token is required",
         "connectFailed": "Failed to connect Telegram bot. Please check the token and try again.",
         "disconnectFailed": "Failed to disconnect Telegram bot"
+      }
+    },
+    "billing": {
+      "title": "Billing & Subscription",
+      "subtitle": "Manage your subscription plan and billing information",
+      "backToSettings": "Back to Settings",
+      "currentPlan": "Current Plan",
+      "planName": "Plan: {plan}",
+      "planStatus": "Status: {status}",
+      "currentUsage": "Current Usage",
+      "accounts": "Accounts",
+      "transactionsThisMonth": "Transactions This Month",
+      "unlimited": "Unlimited",
+      "periodEnd": "Billing Period Ends",
+      "upgradePlan": "Upgrade Plan",
+      "manageBilling": "Manage Billing",
+      "canceledNotice": "Your subscription has been canceled. You will retain access until the end of the current billing period.",
+      "noBilling": "No active subscription",
+      "setupBilling": "Set up a subscription to unlock premium features and higher usage limits.",
+      "checkoutError": "Failed to initiate checkout. Please try again.",
+      "portalError": "Failed to open billing portal. Please try again.",
+      "errors": {
+        "loadFailed": "Failed to load billing status"
       }
     },
     "privacy": {

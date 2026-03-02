@@ -51,7 +51,7 @@ interface Category {
 
 // Helper function to get suggestion source label key based on categorization method
 const getAiSuggestionSourceKey = (suggestion: AiSuggestion): string => {
-  const method = suggestion.method || (suggestion as any).categorization_method || 'LLM';
+  const method = suggestion.method || (suggestion as unknown as Record<string, unknown>).categorization_method as string || 'LLM';
   switch (method) {
     case 'Rules':
     case 'Rule':
@@ -70,8 +70,8 @@ const getAiSuggestionSourceKey = (suggestion: AiSuggestion): string => {
 // Helper function to sort suggestions with rule-based suggestions prioritized first
 const sortSuggestionsByPriority = (suggestions: AiSuggestion[]): AiSuggestion[] => {
   return [...suggestions].sort((a, b) => {
-    const aMethod = a.method || (a as any).categorization_method || 'LLM';
-    const bMethod = b.method || (b as any).categorization_method || 'LLM';
+    const aMethod = a.method || (a as unknown as Record<string, unknown>).categorization_method as string || 'LLM';
+    const bMethod = b.method || (b as unknown as Record<string, unknown>).categorization_method as string || 'LLM';
     
     // Define priority order: Rules > ML > LLM > others
     const methodPriority = {
@@ -182,7 +182,7 @@ export function CategoryPicker({
           categoryName: s.categoryName,
           confidence: s.confidence,
           method: s.method,
-          categorization_method: (s as any).categorization_method,
+          categorization_method: (s as unknown as Record<string, unknown>).categorization_method,
           raw_suggestion: s,
           reasoning: s.reasoning?.slice(0, 50) + '...'
         })),
@@ -197,7 +197,7 @@ export function CategoryPicker({
           suggestion: firstSuggestion,
           sourceLabel: getAiSuggestionSourceKey(firstSuggestion),
           method: firstSuggestion.method,
-          categorization_method: (firstSuggestion as any).categorization_method
+          categorization_method: (firstSuggestion as unknown as Record<string, unknown>).categorization_method
         });
       }
     }

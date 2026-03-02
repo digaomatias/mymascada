@@ -1876,6 +1876,10 @@
       "telegram": {
         "title": "Bot do Telegram",
         "description": "Converse com o Alce pelo Telegram usando seu próprio bot"
+      },
+      "billing": {
+        "title": "Faturamento e Assinatura",
+        "description": "Gerencie seu plano de assinatura e limites da conta"
       }
     },
     "badges": {
@@ -2082,6 +2086,29 @@
         "tokenRequired": "O token do bot é obrigatório",
         "connectFailed": "Falha ao conectar o bot do Telegram. Verifique o token e tente novamente.",
         "disconnectFailed": "Falha ao desconectar o bot do Telegram"
+      }
+    },
+    "billing": {
+      "title": "Faturamento e Assinatura",
+      "subtitle": "Gerencie seu plano de assinatura e informações de faturamento",
+      "backToSettings": "Voltar para Configurações",
+      "currentPlan": "Plano Atual",
+      "planName": "Plano: {plan}",
+      "planStatus": "Status: {status}",
+      "currentUsage": "Uso Atual",
+      "accounts": "Contas",
+      "transactionsThisMonth": "Transações Este Mês",
+      "unlimited": "Ilimitado",
+      "periodEnd": "Período de Cobrança Termina",
+      "upgradePlan": "Melhorar Plano",
+      "manageBilling": "Gerenciar Faturamento",
+      "canceledNotice": "Sua assinatura foi cancelada. Você manterá acesso até o final do período de cobrança atual.",
+      "noBilling": "Nenhuma assinatura ativa",
+      "setupBilling": "Configure uma assinatura para desbloquear recursos premium e limites de uso maiores.",
+      "checkoutError": "Falha ao iniciar checkout. Tente novamente.",
+      "portalError": "Falha ao abrir o portal de faturamento. Tente novamente.",
+      "errors": {
+        "loadFailed": "Falha ao carregar status de faturamento"
       }
     },
     "privacy": {

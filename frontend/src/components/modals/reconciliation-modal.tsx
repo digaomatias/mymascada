@@ -123,6 +123,7 @@ export function ReconciliationModal({
       // Check Akahu availability
       checkAkahuAvailability();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, accountId]);
 
   const checkAkahuAvailability = async () => {

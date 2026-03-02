@@ -73,15 +73,15 @@ export function CategoryTrendChart({ categories, selectedCategoryIds }: Category
   };
 
   // Custom tooltip
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string }) => {
     if (active && payload && payload.length > 0) {
       // Calculate total for this period
-      const total = payload.reduce((sum: number, entry: any) => sum + (entry.value || 0), 0);
+      const total = payload.reduce((sum: number, entry: { value: number }) => sum + (entry.value || 0), 0);
 
       return (
         <div className="max-w-xs rounded-xl border border-violet-100/70 bg-white/98 p-4 shadow-[0_18px_36px_-26px_rgba(76,29,149,0.55)] backdrop-blur-xs">
           <p className="mb-2 font-[var(--font-dash-sans)] text-sm font-semibold text-slate-900">{label}</p>
-          {payload.map((entry: any, index: number) => {
+          {payload.map((entry: { name: string; value: number; color: string }, index: number) => {
             const percentage = total > 0 ? ((entry.value / total) * 100).toFixed(1) : 0;
             return (
               <div

@@ -74,6 +74,7 @@ export default function EditGoalPage() {
     if (goalId) {
       loadData();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [goalId]);
 
   const handleSubmit = async (e: React.FormEvent) => {

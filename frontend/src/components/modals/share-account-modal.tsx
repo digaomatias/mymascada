@@ -38,6 +38,7 @@ export function ShareAccountModal({
       setEmail('');
       setRole(1);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, accountId]);
 
   const loadShares = async () => {

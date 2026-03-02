@@ -46,6 +46,7 @@ services:
       Authentication__Google__ClientSecret: ""
       Akahu__Enabled: "false"
       Email__Enabled: "false"
+      Stripe__Enabled: "false"
 
   frontend:
     container_name: mymascada-demo-frontend

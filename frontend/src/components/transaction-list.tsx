@@ -385,6 +385,7 @@ export function TransactionList({
       console.error('Failed to load categories:', error);
       setAllCategories([]);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadAccounts = useCallback(async () => {
@@ -403,6 +404,7 @@ export function TransactionList({
     if (showAccountFilter) {
       loadAccounts();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showAccountFilter, loadCategories]);
 
   // Bulk selection functions

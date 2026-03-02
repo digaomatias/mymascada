@@ -48,6 +48,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<UserFinancialProfile> UserFinancialProfiles => Set<UserFinancialProfile>();
     public DbSet<DashboardNudgeDismissal> DashboardNudgeDismissals => Set<DashboardNudgeDismissal>();
     public DbSet<AiTokenUsage> AiTokenUsages => Set<AiTokenUsage>();
+    public DbSet<BillingPlan> BillingPlans => Set<BillingPlan>();
+    public DbSet<UserSubscription> UserSubscriptions => Set<UserSubscription>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -834,6 +836,44 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.Timestamp);
             entity.HasIndex(e => new { e.UserId, e.Timestamp });
             entity.HasIndex(e => e.Operation);
+
+            entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
+        // BillingPlan configuration
+        modelBuilder.Entity<BillingPlan>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.StripePriceId).IsRequired().HasMaxLength(100);
+
+            entity.HasIndex(e => e.StripePriceId).IsUnique();
+            entity.HasIndex(e => e.IsActive);
+
+            entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
+        // UserSubscription configuration
+        modelBuilder.Entity<UserSubscription>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.StripeCustomerId).HasMaxLength(100);
+            entity.Property(e => e.StripeSubscriptionId).HasMaxLength(100);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(20).HasDefaultValue("free");
+
+            // One subscription per user
+            entity.HasIndex(e => e.UserId).IsUnique();
+
+            // Index for Stripe lookups
+            entity.HasIndex(e => e.StripeCustomerId);
+            entity.HasIndex(e => e.StripeSubscriptionId);
+
+            entity.HasOne(e => e.Plan)
+                .WithMany(p => p.Subscriptions)
+                .HasForeignKey(e => e.PlanId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasQueryFilter(e => !e.IsDeleted);
         });
