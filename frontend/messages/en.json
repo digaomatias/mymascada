@@ -114,7 +114,8 @@
     "categorize": "Categorize",
     "toggleMenu": "Toggle menu",
     "aiChat": "Ask Alce",
-    "goals": "Goals"
+    "goals": "Goals",
+    "version": "v{version}"
   },
   "auth": {
     "signIn": "Sign In",
@@ -1956,6 +1957,13 @@
       "error": "Failed to seed categories. Please try again.",
       "noCategories": "You don't have any categories yet. Seed default categories to get started.",
       "hasCategories": "You currently have {count} categories."
+    },
+    "about": {
+      "title": "About",
+      "description": "Application version and system information",
+      "frontendVersion": "Frontend",
+      "backendVersion": "Backend",
+      "unavailable": "Unavailable"
     },
     "bankConnections": {
       "title": "Bank Connections",

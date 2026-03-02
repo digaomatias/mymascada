@@ -158,6 +158,9 @@ export default function Navigation() {
             <ArrowRightOnRectangleIcon className="w-[18px] h-[18px]" />
             {t('logout')}
           </button>
+          <div className="mt-2 px-3 text-[10px] text-violet-300/40">
+            {t('version', { version: process.env.NEXT_PUBLIC_APP_VERSION ?? '0.0.0' })}
+          </div>
         </div>
       </aside>
 
@@ -231,6 +234,9 @@ export default function Navigation() {
                   <ArrowRightOnRectangleIcon className="w-[18px] h-[18px]" />
                   {t('logout')}
                 </button>
+                <div className="mt-2 text-center text-[10px] text-violet-300/40">
+                  {t('version', { version: process.env.NEXT_PUBLIC_APP_VERSION ?? '0.0.0' })}
+                </div>
               </div>
             </div>
           </div>
