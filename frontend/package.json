@@ -33,7 +33,7 @@
     "date-fns": "^4.1.0",
     "eslint": "^9.29.0",
     "eslint-config-next": "^16.1.6",
-    "google-auth-library": "^10.1.0",
+    "google-auth-library": "^10.6.1",
     "lucide-react": "^0.468.0",
     "next": "^15.3.3",
     "next-intl": "^4.7.0",
