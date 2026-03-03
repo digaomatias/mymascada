@@ -3351,6 +3351,7 @@
     },
     "edit": {
       "title": "Edit Goal",
+      "subtitle": "Update your goal details and track your progress",
       "saving": "Saving...",
       "saveChanges": "Save Changes"
     }

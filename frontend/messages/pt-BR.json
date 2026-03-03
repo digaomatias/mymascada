@@ -3351,6 +3351,7 @@
     },
     "edit": {
       "title": "Editar Meta",
+      "subtitle": "Atualize os detalhes da sua meta e acompanhe seu progresso",
       "saving": "Salvando...",
       "saveChanges": "Salvar Alterações"
     }
