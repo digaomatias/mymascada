@@ -325,7 +325,7 @@ export function RuleBuilderWizard() {
         ))}
       </div>
 
-      <section className="rounded-[26px] border border-violet-100/60 bg-white/90 shadow-lg shadow-violet-200/20 backdrop-blur-xs overflow-hidden">
+      <section className="rounded-[26px] border border-violet-100/60 bg-white/90 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
         {/* Card Header */}
         <div className="p-6 pb-0">
           <h2 className="font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900">
