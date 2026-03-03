@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import * as Sentry from '@sentry/nextjs';
 import { useTranslations } from 'next-intl';
 
 interface ErrorProps {
@@ -13,6 +14,7 @@ export default function GlobalError({ error, reset }: ErrorProps) {
 
   useEffect(() => {
     console.error('[ErrorBoundary]', error);
+    Sentry.captureException(error);
   }, [error]);
 
   return (
