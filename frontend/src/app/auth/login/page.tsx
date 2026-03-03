@@ -30,6 +30,7 @@ export default function LoginPage() {
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [hasInteracted, setHasInteracted] = useState(false);
   const [requiresVerification, setRequiresVerification] = useState(false);
+  const [isAccountLocked, setIsAccountLocked] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
 
@@ -73,6 +74,7 @@ export default function LoginPage() {
     e.preventDefault();
     setErrors([]);
     setRequiresVerification(false);
+    setIsAccountLocked(false);
     setResendSuccess(false);
 
     if (!validateForm()) {
@@ -85,6 +87,8 @@ export default function LoginPage() {
       router.push('/dashboard');
     } else if (response.requiresEmailVerification) {
       setRequiresVerification(true);
+    } else if (response.isAccountLocked) {
+      setIsAccountLocked(true);
     } else {
       setErrors(response.errors);
     }
@@ -180,7 +184,23 @@ export default function LoginPage() {
                 </div>
               )}
 
-              {errors.length > 0 && !requiresVerification && (
+              {isAccountLocked && (
+                <div className="bg-danger-50 border border-danger-200 rounded-card p-4">
+                  <div className="flex items-start gap-3">
+                    <ExclamationCircleIcon className="w-5 h-5 text-danger-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <h3 className="text-sm font-medium text-danger-800 mb-1">
+                        {t('errors.accountLocked')}
+                      </h3>
+                      <p className="text-sm text-danger-700">
+                        {t('errors.accountLockedDetail')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {errors.length > 0 && !requiresVerification && !isAccountLocked && (
                 <div className="bg-danger-50 border border-danger-200 rounded-card p-4">
                   <h3 className="text-sm font-medium text-danger-800 mb-2">
                     {t('errors.genericError')}

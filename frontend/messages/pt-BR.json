@@ -169,7 +169,7 @@
       "lastNameRequired": "Sobrenome é obrigatório",
       "usernameRequired": "Nome de usuário é obrigatório",
       "invalidCredentials": "E-mail ou senha inválidos",
-      "accountLocked": "Conta bloqueada. Tente novamente mais tarde.",
+      "accountLocked": "Conta Temporariamente Bloqueada",
       "genericError": "Ocorreu um erro. Tente novamente.",
       "passwordTooCommon": "Esta senha é muito comum. Escolha uma senha mais forte.",
       "passwordContainsPersonalInfo": "A senha não deve conter seu nome ou e-mail",
@@ -177,7 +177,8 @@
       "resetTokenMissing": "O token de redefinição está ausente. Use o link do seu e-mail.",
       "passwordRequirements": "A senha não atende a todos os requisitos",
       "resetFailed": "Falha ao redefinir a senha. Tente novamente.",
-      "unexpected": "Ocorreu um erro inesperado. Tente novamente mais tarde."
+      "unexpected": "Ocorreu um erro inesperado. Tente novamente mais tarde.",
+      "accountLockedDetail": "Sua conta foi temporariamente bloqueada devido a múltiplas tentativas de login malsucedidas. Aguarde alguns minutos antes de tentar novamente, ou entre em contato com o suporte se precisar de acesso imediato."
     },
     "emailVerification": {
       "verifying": "Verificando seu e-mail...",

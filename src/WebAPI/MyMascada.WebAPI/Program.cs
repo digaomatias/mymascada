@@ -117,6 +117,10 @@ builder.Services.Configure<MyMascada.Application.Common.Configuration.BetaAccess
 builder.Services.Configure<MyMascada.Application.Common.Configuration.AppOptions>(
     builder.Configuration.GetSection(MyMascada.Application.Common.Configuration.AppOptions.SectionName));
 
+// Configure account lockout options
+builder.Services.Configure<MyMascada.Application.Common.Configuration.LockoutOptions>(
+    builder.Configuration.GetSection(MyMascada.Application.Common.Configuration.LockoutOptions.SectionName));
+
 // Add organized service groups using extension methods
 builder.Services.AddFeatureFlags(builder.Configuration); // Must be first — other extensions depend on IFeatureFlags
 builder.Services.AddDatabaseServices(builder.Configuration, builder.Environment);
