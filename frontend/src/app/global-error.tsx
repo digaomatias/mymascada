@@ -5,6 +5,7 @@
 // https://nextjs.org/docs/app/api-reference/file-conventions/error#global-errorjs
 
 import { useEffect } from 'react';
+import * as Sentry from '@sentry/nextjs';
 
 interface GlobalErrorProps {
   error: Error & { digest?: string };
@@ -14,13 +15,7 @@ interface GlobalErrorProps {
 export default function GlobalError({ error, reset }: GlobalErrorProps) {
   useEffect(() => {
     console.error('[GlobalError]', error);
-
-    // Report to Sentry if configured
-    if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
-      import('@sentry/nextjs').then(({ captureException }) => {
-        captureException(error);
-      });
-    }
+    Sentry.captureException(error);
   }, [error]);
 
   return (

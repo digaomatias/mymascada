@@ -1,6 +1,8 @@
 // Next.js Instrumentation Hook
 // https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation
 
+import { captureRequestError } from '@sentry/nextjs';
+
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     await import('./sentry.server.config');
@@ -20,11 +22,6 @@ export const onRequestError: (
   request: any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   context: any
-) => void | Promise<void> = async (err, request, context) => {
-  // Only report if Sentry is configured
-  const dsn = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
-  if (!dsn) return;
-
-  const { captureRequestError } = await import('@sentry/nextjs');
+) => void | Promise<void> = (err, request, context) => {
   captureRequestError(err, request, context);
 };

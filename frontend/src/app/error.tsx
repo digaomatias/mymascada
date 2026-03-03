@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import * as Sentry from '@sentry/nextjs';
 import { useTranslations } from 'next-intl';
 
 interface ErrorProps {
@@ -13,13 +14,7 @@ export default function GlobalError({ error, reset }: ErrorProps) {
 
   useEffect(() => {
     console.error('[ErrorBoundary]', error);
-
-    // Report to Sentry if configured (dynamic import to keep it optional)
-    if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
-      import('@sentry/nextjs').then(({ captureException }) => {
-        captureException(error);
-      });
-    }
+    Sentry.captureException(error);
   }, [error]);
 
   return (
