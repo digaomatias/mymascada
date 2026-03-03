@@ -859,7 +859,11 @@
       "confirmSuccess": "Confirmadas {count} transferência{count, plural, one {} other {s}}",
       "confirmPartial": "Confirmadas {success} transferências, {failed} falharam",
       "confirmFailed": "Falha ao confirmar transferências ({count} erros)"
-    }
+    },
+    "exportCsv": "Exportar CSV",
+    "exportingCsv": "Exportando...",
+    "exportCsvSuccess": "Transações exportadas com sucesso",
+    "exportCsvError": "Falha ao exportar transações"
   },
   "accounts": {
     "title": "Contas",

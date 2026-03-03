@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Transactions.DTOs;
 using MyMascada.Application.Features.Transactions.Queries;
+using Microsoft.Extensions.Logging;
 using MyMascada.WebAPI.Controllers;
 using NSubstitute;
 using System.Security.Claims;
@@ -19,6 +20,7 @@ public class TransactionsControllerDateTimeTests
 {
     private readonly IMediator _mediator;
     private readonly ICurrentUserService _currentUserService;
+    private readonly ILogger<TransactionsController> _logger;
     private readonly TransactionsController _controller;
     private readonly Guid _userId = Guid.NewGuid();
 
@@ -26,9 +28,10 @@ public class TransactionsControllerDateTimeTests
     {
         _mediator = Substitute.For<IMediator>();
         _currentUserService = Substitute.For<ICurrentUserService>();
+        _logger = Substitute.For<ILogger<TransactionsController>>();
         _currentUserService.GetUserId().Returns(_userId);
 
-        _controller = new TransactionsController(_mediator, _currentUserService);
+        _controller = new TransactionsController(_mediator, _currentUserService, _logger);
 
         // Setup user context
         var claims = new List<Claim>

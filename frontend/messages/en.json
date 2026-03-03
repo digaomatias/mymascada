@@ -86,8 +86,7 @@
     "processing": "Processing...",
     "simple": "Simple",
     "advanced": "Advanced",
-    "chooseFile": "Choose File"
-    ,
+    "chooseFile": "Choose File",
     "selectDateTime": "Select date and time"
   },
   "nav": {
@@ -860,7 +859,11 @@
       "confirmSuccess": "Successfully confirmed {count} transfer{count, plural, one {} other {s}}",
       "confirmPartial": "Confirmed {success} transfers, {failed} failed",
       "confirmFailed": "Failed to confirm any transfers ({count} errors)"
-    }
+    },
+    "exportCsv": "Export CSV",
+    "exportingCsv": "Exporting...",
+    "exportCsvSuccess": "Transactions exported successfully",
+    "exportCsvError": "Failed to export transactions"
   },
   "accounts": {
     "title": "Accounts",

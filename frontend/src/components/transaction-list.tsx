@@ -27,7 +27,8 @@ import {
   CheckIcon,
   XMarkIcon,
   ArrowsRightLeftIcon,
-  WalletIcon
+  WalletIcon,
+  ArrowDownTrayIcon
 } from '@heroicons/react/24/outline';
 import {
   DropdownMenu,
@@ -141,6 +142,7 @@ export function TransactionList({
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [expandedTransfers, setExpandedTransfers] = useState<Set<string>>(new Set());
   const [createTransferForTransaction, setCreateTransferForTransaction] = useState<Transaction | null>(null);
+  const [exportingCsv, setExportingCsv] = useState(false);
 
   // Helper function to get date range from filter type (UTC normalized)
   const getDateRangeFromFilter = useCallback((filter: typeof dateFilter) => {
@@ -512,6 +514,32 @@ export function TransactionList({
     setShowFilters(false);
   };
 
+  const handleExportCsv = async () => {
+    try {
+      setExportingCsv(true);
+      const dateRange = getDateRangeFromFilter(dateFilter);
+      const blob = await apiClient.exportTransactionsCsv({
+        from: dateRange.start,
+        to: dateRange.end,
+        accountId: effectiveAccountId ? parseInt(effectiveAccountId) : undefined,
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `transactions-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast.success(t('exportCsvSuccess'));
+    } catch (error) {
+      console.error("Failed to export CSV:", error);
+      toast.error(t('exportCsvError'));
+    } finally {
+      setExportingCsv(false);
+    }
+  };
+
   const handleBulkDelete = () => {
     setShowBulkDeleteDialog(true);
   };
@@ -611,6 +639,19 @@ export function TransactionList({
                 >
                   <CheckIcon className="w-4 h-4" />
                   <span className="hidden sm:inline">{t('select')}</span>
+                </Button>
+
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleExportCsv}
+                  disabled={exportingCsv}
+                  className="flex items-center gap-2"
+                >
+                  <ArrowDownTrayIcon className="w-4 h-4" />
+                  <span className="hidden sm:inline">
+                    {exportingCsv ? t('exportingCsv') : t('exportCsv')}
+                  </span>
                 </Button>
                 {headerActions}
               </>

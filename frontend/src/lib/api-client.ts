@@ -340,6 +340,37 @@ class ApiClient {
     return this.request(`/api/transactions/recent?count=${count}`);
   }
 
+  async exportTransactionsCsv(params?: {
+    from?: string;
+    to?: string;
+    accountId?: number;
+  }): Promise<Blob> {
+    const queryParams = new URLSearchParams();
+    if (params?.from) queryParams.append('from', params.from);
+    if (params?.to) queryParams.append('to', params.to);
+    if (params?.accountId) queryParams.append('accountId', params.accountId.toString());
+
+    const url = `${this.baseURL}/api/transactions/export/csv${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+
+    const token = this.getToken();
+    const headers: HeadersInit = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(url, {
+      method: 'GET',
+      credentials: 'include',
+      headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(`CSV export failed: ${response.status}`);
+    }
+
+    return response.blob();
+  }
+
   async reviewTransaction(id: number): Promise<void> {
     return this.request(`/api/transactions/${id}/review`, {
       method: 'PATCH',

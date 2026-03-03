@@ -7,6 +7,7 @@ using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Transactions.Commands;
 using MyMascada.Application.Features.Transactions.DTOs;
 using MyMascada.Application.Features.Transactions.Queries;
+using Microsoft.Extensions.Logging;
 using MyMascada.WebAPI.Controllers;
 
 namespace MyMascada.Tests.Unit.Controllers;
@@ -15,6 +16,7 @@ public class TransactionsControllerTests
 {
     private readonly IMediator _mediator;
     private readonly ICurrentUserService _currentUserService;
+    private readonly ILogger<TransactionsController> _logger;
     private readonly TransactionsController _controller;
     private readonly Guid _userId = Guid.NewGuid();
 
@@ -22,9 +24,10 @@ public class TransactionsControllerTests
     {
         _mediator = Substitute.For<IMediator>();
         _currentUserService = Substitute.For<ICurrentUserService>();
+        _logger = Substitute.For<ILogger<TransactionsController>>();
         _currentUserService.GetUserId().Returns(_userId);
 
-        _controller = new TransactionsController(_mediator, _currentUserService);
+        _controller = new TransactionsController(_mediator, _currentUserService, _logger);
 
         // Setup user claims
         SetupUserClaims();
@@ -583,7 +586,7 @@ public class TransactionsControllerTests
         var currentUserService = Substitute.For<ICurrentUserService>();
         currentUserService.GetUserId().Returns(_ => throw new UnauthorizedAccessException("Invalid user ID in token"));
 
-        var controller = new TransactionsController(_mediator, currentUserService);
+        var controller = new TransactionsController(_mediator, currentUserService, _logger);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
@@ -601,7 +604,7 @@ public class TransactionsControllerTests
         var currentUserService = Substitute.For<ICurrentUserService>();
         currentUserService.GetUserId().Returns(_ => throw new UnauthorizedAccessException("Invalid user ID in token"));
 
-        var controller = new TransactionsController(_mediator, currentUserService);
+        var controller = new TransactionsController(_mediator, currentUserService, _logger);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
