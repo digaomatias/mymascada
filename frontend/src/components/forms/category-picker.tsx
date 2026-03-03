@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Input } from '@/components/ui/input';
 import { BaseModal } from '@/components/modals/base-modal';
 import { useDeviceDetect } from '@/hooks/use-device-detect';
@@ -152,6 +153,8 @@ export function CategoryPicker({
   const { isMobile } = useDeviceDetect();
   const inputRef = useRef<HTMLInputElement>(null);
   const preventFocusRef = useRef(false);
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
 
   // Use the smart AI suggestions hook
   const aiSuggestionsFromHook = useAiSuggestionsForTransaction({
@@ -204,6 +207,38 @@ export function CategoryPicker({
   }, [transaction, effectiveAiSuggestions, useExternalAiSuggestions, effectiveIsLoading]);
 
 
+
+  // Calculate and track dropdown position for portal rendering
+  const updateDropdownPosition = useCallback(() => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const dropdownMaxHeight = 400;
+      const gap = 4; // mt-1 equivalent
+      const spaceBelow = window.innerHeight - rect.bottom - gap;
+      const openAbove = spaceBelow < dropdownMaxHeight && rect.top > spaceBelow;
+
+      setDropdownStyle({
+        position: 'fixed',
+        left: rect.left,
+        width: Math.max(rect.width, 320),
+        ...(openAbove
+          ? { bottom: window.innerHeight - rect.top + gap }
+          : { top: rect.bottom + gap }),
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isOpen && !isMobile) {
+      updateDropdownPosition();
+      window.addEventListener('scroll', updateDropdownPosition, true);
+      window.addEventListener('resize', updateDropdownPosition);
+      return () => {
+        window.removeEventListener('scroll', updateDropdownPosition, true);
+        window.removeEventListener('resize', updateDropdownPosition);
+      };
+    }
+  }, [isOpen, isMobile, updateDropdownPosition]);
 
   // Get selected category
   const selectedCategory = (categories || []).find(cat => cat?.id === Number(value));
@@ -834,10 +869,10 @@ export function CategoryPicker({
     </div>
   );
 
-  // Desktop: Inline dropdown replacement
+  // Desktop: Inline trigger with portal dropdown
   if (!isMobile) {
     return (
-      <div className="relative">
+      <div className="relative" ref={triggerRef}>
         <div className="relative">
           {/* AI indicator when there are suggestions */}
           {!isOpen && topAiSuggestion && !selectedCategory && (
@@ -854,7 +889,7 @@ export function CategoryPicker({
           <Input
             type="text"
             placeholder={
-              selectedCategory ? selectedCategory.name : 
+              selectedCategory ? selectedCategory.name :
               topAiSuggestion ? `${t(getAiSuggestionSourceKey(topAiSuggestion))}: ${topAiSuggestion.categoryName}` :
               placeholder
             }
@@ -868,8 +903,8 @@ export function CategoryPicker({
             onBlur={handleDesktopBlur}
             disabled={disabled}
             className={`
-              ${isOpen ? 'pl-10' : topAiSuggestion && !selectedCategory ? 'pl-16' : 'pl-4'} 
-              pr-10 
+              ${isOpen ? 'pl-10' : topAiSuggestion && !selectedCategory ? 'pl-16' : 'pl-4'}
+              pr-10
               ${error ? 'border-red-300' : ''}
               ${topAiSuggestion && !selectedCategory ? 'border-purple-300 bg-purple-50' : ''}
             `}
@@ -884,16 +919,16 @@ export function CategoryPicker({
                 handleSelect(topAiSuggestion.categoryId, true, topAiSuggestion);
               }}
               className="
-                absolute right-8 top-1/2 transform -translate-y-1/2 
-                px-2 py-1 bg-purple-600 text-white text-xs rounded 
+                absolute right-8 top-1/2 transform -translate-y-1/2
+                px-2 py-1 bg-purple-600 text-white text-xs rounded
                 hover:bg-purple-700 transition-colors cursor-pointer
               "
             >
               {tCommon('apply')}
             </button>
           )}
-          <ChevronDownIcon 
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 cursor-pointer" 
+          <ChevronDownIcon
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 cursor-pointer"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -908,10 +943,15 @@ export function CategoryPicker({
           />
         </div>
 
-        {isOpen && !disabled && hasContent && (
-          <div className="absolute z-[9999] mt-1 w-full min-w-80 bg-white rounded-lg shadow-lg border border-gray-200 p-4 left-0">
+        {isOpen && !disabled && hasContent && createPortal(
+          <div
+            className="z-[9999] bg-white rounded-lg shadow-lg border border-gray-200 p-4 max-h-[min(400px,50vh)] overflow-y-auto"
+            style={dropdownStyle}
+            onMouseDown={(e) => e.preventDefault()}
+          >
             {pickerContent}
-          </div>
+          </div>,
+          document.body
         )}
       </div>
     );
