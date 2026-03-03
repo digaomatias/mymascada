@@ -202,7 +202,7 @@ export default function EditTransactionPage() {
   if (error && !transaction) {
     return (
       <AppLayout>
-        <div className="max-w-2xl mx-auto rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92 p-8 text-center">
+        <div className="rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92 p-8 text-center">
           <ExclamationTriangleIcon className="w-16 h-16 text-danger-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-slate-900 mb-2">{t('notFound')}</h2>
           <p className="text-slate-600 mb-6">{error}</p>
@@ -280,7 +280,7 @@ export default function EditTransactionPage() {
       )}
 
       {/* Edit Form */}
-      <div className="max-w-4xl mx-auto rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92 p-6">
+      <div className="rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92 p-6">
         {transaction && (
           <TransactionForm
             initialData={initialData}

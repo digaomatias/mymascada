@@ -135,18 +135,16 @@ function NewTransactionPageContent() {
       </div>
 
       {/* Transaction Form */}
-      <div className="max-w-2xl mx-auto">
-        <div className="rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92 p-6">
-          <div className="flex items-center gap-2 mb-5">
-            <BanknotesIcon className="w-5 h-5 text-primary-600" />
-            <h2 className="text-base font-semibold text-slate-900">{t('transactionDetails')}</h2>
-          </div>
-          <TransactionForm
-            initialData={accountIdFromUrl ? { accountId: accountIdFromUrl } : undefined}
-            onSubmit={handleSubmit}
-            onCancel={() => router.push('/transactions')}
-          />
+      <div className="rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92 p-6">
+        <div className="flex items-center gap-2 mb-5">
+          <BanknotesIcon className="w-5 h-5 text-primary-600" />
+          <h2 className="text-base font-semibold text-slate-900">{t('transactionDetails')}</h2>
         </div>
+        <TransactionForm
+          initialData={accountIdFromUrl ? { accountId: accountIdFromUrl } : undefined}
+          onSubmit={handleSubmit}
+          onCancel={() => router.push('/transactions')}
+        />
       </div>
     </AppLayout>
   );
