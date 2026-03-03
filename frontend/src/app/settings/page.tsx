@@ -20,7 +20,8 @@ import {
   SparklesIcon,
   ChatBubbleBottomCenterTextIcon,
   PresentationChartBarIcon,
-  CreditCardIcon
+  CreditCardIcon,
+  InformationCircleIcon
 } from '@heroicons/react/24/outline';
 import { useLocale } from '@/contexts/locale-context';
 import { useTranslations } from 'next-intl';
@@ -77,6 +78,7 @@ export default function SettingsPage() {
   const [aiCleaningEnabled, setAiCleaningEnabled] = useState(false);
   const [isSavingAiCleaning, setIsSavingAiCleaning] = useState(false);
   const [dashboardTemplate, setDashboardTemplate] = useState<'education' | 'advanced'>('education');
+  const [backendVersion, setBackendVersion] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -97,6 +99,12 @@ export default function SettingsPage() {
     } catch {
       // Ignore localStorage errors
     }
+  }, []);
+
+  useEffect(() => {
+    apiClient.getBackendVersion()
+      .then((res) => setBackendVersion(res.version))
+      .catch(() => setBackendVersion(null));
   }, []);
 
   const handleDashboardTemplateToggle = () => {
@@ -487,6 +495,37 @@ export default function SettingsPage() {
               );
             })}
           </div>
+        </div>
+
+        {/* About Section */}
+        <div className="mt-8">
+          <Card className="rounded-[26px] border border-violet-100/70 bg-white/92 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-violet-600 rounded-xl flex items-center justify-center shrink-0">
+                  <InformationCircleIcon className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-semibold text-slate-900">
+                    {t('about.title')}
+                  </h3>
+                  <p className="text-sm text-slate-500 mt-1 mb-3">
+                    {t('about.description')}
+                  </p>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">{t('about.frontendVersion')}</span>
+                      <span className="font-mono text-slate-900">{process.env.NEXT_PUBLIC_APP_VERSION ?? '0.0.0'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">{t('about.backendVersion')}</span>
+                      <span className="font-mono text-slate-900">{backendVersion ?? t('about.unavailable')}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
     </AppLayout>
   );

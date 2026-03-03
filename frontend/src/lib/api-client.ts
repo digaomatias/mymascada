@@ -151,6 +151,10 @@ class ApiClient {
     return this.request<{ status: string; timestamp: string }>('/api/auth/health');
   }
 
+  async getBackendVersion(): Promise<{ version: string }> {
+    return this.request<{ version: string }>('/api/version');
+  }
+
   async getCurrentUser(): Promise<unknown> {
     return this.request('/api/auth/me');
   }

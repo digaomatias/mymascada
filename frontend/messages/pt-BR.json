@@ -113,7 +113,8 @@
     "categorize": "Categorizar",
     "toggleMenu": "Alternar menu",
     "aiChat": "Pergunte ao Alce",
-    "goals": "Metas"
+    "goals": "Metas",
+    "version": "v{version}"
   },
   "auth": {
     "signIn": "Entrar",
@@ -1955,6 +1956,13 @@
       "error": "Falha ao criar categorias. Tente novamente.",
       "noCategories": "Você ainda não tem categorias. Crie categorias padrão para começar.",
       "hasCategories": "Você possui atualmente {count} categorias."
+    },
+    "about": {
+      "title": "Sobre",
+      "description": "Versão do aplicativo e informações do sistema",
+      "frontendVersion": "Frontend",
+      "backendVersion": "Backend",
+      "unavailable": "Indisponível"
     },
     "bankConnections": {
       "title": "Conexões Bancárias",
