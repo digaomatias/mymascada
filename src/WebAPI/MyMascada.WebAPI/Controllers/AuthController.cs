@@ -180,7 +180,7 @@ public class AuthController : ControllerBase
     /// to admin roles or a dedicated admin API surface.
     /// </summary>
     [HttpPost("admin/unlock/{userId:guid}")]
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UnlockAccount(Guid userId)
     {
         var user = await _userRepository.GetByIdAsync(userId);

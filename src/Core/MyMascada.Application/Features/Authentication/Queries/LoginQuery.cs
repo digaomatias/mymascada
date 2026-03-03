@@ -17,6 +17,8 @@ public class LoginQuery : IRequest<AuthenticationResponse>
 
 public class LoginQueryHandler : IRequestHandler<LoginQuery, AuthenticationResponse>
 {
+    private const string InvalidCredentialsMessage = "Invalid credentials";
+
     private readonly IUserRepository _userRepository;
     private readonly IAuthenticationService _authenticationService;
     private readonly IUserFinancialProfileRepository _financialProfileRepository;
@@ -63,16 +65,14 @@ public class LoginQueryHandler : IRequestHandler<LoginQuery, AuthenticationRespo
 
         if (user == null)
         {
-            response.Errors.Add("Invalid credentials");
+            response.Errors.Add(InvalidCredentialsMessage);
             return response;
         }
 
-        // Check if account is locked
+        // Check if account is locked — return generic message to prevent user enumeration
         if (user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow)
         {
-            // Do not reveal the exact unlock time for security reasons
-            response.IsAccountLocked = true;
-            response.Errors.Add("Your account has been temporarily locked due to multiple failed login attempts. Please try again later.");
+            response.Errors.Add(InvalidCredentialsMessage);
             return response;
         }
 
@@ -96,12 +96,11 @@ public class LoginQueryHandler : IRequestHandler<LoginQuery, AuthenticationRespo
                     user.AccessFailedCount,
                     user.LockoutEnd.Value.UtcDateTime);
 
-                response.IsAccountLocked = true;
-                response.Errors.Add("Your account has been temporarily locked due to multiple failed login attempts. Please try again later.");
+                response.Errors.Add(InvalidCredentialsMessage);
             }
             else
             {
-                response.Errors.Add("Invalid credentials");
+                response.Errors.Add(InvalidCredentialsMessage);
             }
 
             await _userRepository.UpdateAsync(user);
