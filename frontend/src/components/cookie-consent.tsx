@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 
 const STORAGE_KEY = 'cookie_consent_accepted';
+const CONSENT_VALUE = '1';
 
 export function CookieConsent() {
   const t = useTranslations('cookieConsent');
@@ -22,7 +23,7 @@ export function CookieConsent() {
 
   const handleAccept = () => {
     try {
-      localStorage.setItem(STORAGE_KEY, '1');
+      localStorage.setItem(STORAGE_KEY, CONSENT_VALUE);
     } catch {
       // ignore
     }
