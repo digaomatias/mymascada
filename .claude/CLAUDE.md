@@ -68,6 +68,33 @@ Clean Architecture with four layers:
 - **Modals**: Use `<BaseModal>` from `@/components/modals/base-modal`
 - **Confirmation dialogs**: Use `<ConfirmationDialog>` from `@/components/ui/confirmation-dialog`
 
+## UI Pattern: Creation/Edit Forms (CRITICAL — Consistency Required)
+
+All "create new" and "edit" pages **MUST** follow the same full-page layout pattern. **Do NOT use modals or centered cards for creation/edit flows.**
+
+### Reference Implementation: Budget Creation (`/budgets/new`)
+
+The standard pattern is:
+1. **Full-page layout** — form takes the full content area (no modal, no centered card)
+2. **Back button** — top-left, e.g. "← Back to Budgets"
+3. **Page title + subtitle** — large heading with descriptive subtitle
+4. **Step indicator** (if multi-step) — numbered circles with connecting lines
+5. **Form card** — white card with rounded corners, subtle shadow, full-width within content area
+6. **Action button** — bottom-right of the card (e.g. "Next →", "Save")
+
+### Pages that MUST follow this pattern:
+- `/budgets/new` and `/budgets/[id]/edit` ✅ (reference)
+- `/goals/new` and `/goals/[id]/edit` ❌ (currently centered card — needs fix)
+- `/transactions/new` and `/transactions/[id]/edit` ❌ (currently modal — needs fix)
+- `/accounts/new` and `/accounts/[id]/edit` ❌ (currently modal — needs fix)
+- `/categories/new` and `/categories/[id]/edit`
+- `/rules/new` (wizard — already follows similar pattern)
+
+### What NOT to do:
+- ❌ Open a modal/dialog for creating or editing entities
+- ❌ Use a small centered card that doesn't fill the content area
+- ❌ Mix patterns — every creation flow must look and feel the same
+
 ## PR Screenshots (Required for UI Changes)
 
 If your PR modifies any files under `frontend/src/app/` or `frontend/src/components/`:
