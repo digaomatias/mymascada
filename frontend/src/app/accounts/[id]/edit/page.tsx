@@ -194,61 +194,60 @@ export default function EditAccountPage() {
       </div>
 
       {/* Account Form */}
-      <div className="max-w-2xl mx-auto">
-        <div className="rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92 p-6">
-          {/* Data Integrity Warning */}
-          {hasTransactions && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
-              <div className="flex items-start gap-3">
-                <ExclamationTriangleIcon className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-sm font-medium text-yellow-800">{t('editCarefully')}</h4>
-                  <p className="text-sm text-yellow-700 mt-1">
-                    {t('editCarefullyDesc')}
-                  </p>
-                  <ul className="text-sm text-yellow-700 mt-2 list-disc list-inside">
-                    <li>{t('editCarefullyList.balance')}</li>
-                    <li>{t('editCarefullyList.currency')}</li>
-                    <li>{t('editCarefullyList.type')}</li>
-                  </ul>
-                </div>
+      <div className="rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92 p-6">
+        {/* Data Integrity Warning */}
+        {hasTransactions && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
+            <div className="flex items-start gap-3">
+              <ExclamationTriangleIcon className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-sm font-medium text-yellow-800">{t('editCarefully')}</h4>
+                <p className="text-sm text-yellow-700 mt-1">
+                  {t('editCarefullyDesc')}
+                </p>
+                <ul className="text-sm text-yellow-700 mt-2 list-disc list-inside">
+                  <li>{t('editCarefullyList.balance')}</li>
+                  <li>{t('editCarefullyList.currency')}</li>
+                  <li>{t('editCarefullyList.type')}</li>
+                </ul>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
-          <AccountForm
-            variant="full"
-            initialData={{
-              name: account.name,
-              type: account.type,
-              institution: account.institution,
-              currentBalance: (account as Account & { calculatedBalance?: number }).calculatedBalance || account.currentBalance,
-              currency: account.currency,
-              notes: account.notes,
-            }}
-            onSubmit={handleSubmit}
-            onCancel={handleCancel}
-            loading={loading}
-            submitText={t('updateAccount')}
-            showCancel={true}
-            hasTransactions={hasTransactions}
-          />
+        <AccountForm
+          variant="full"
+          initialData={{
+            name: account.name,
+            type: account.type,
+            institution: account.institution,
+            currentBalance: (account as Account & { calculatedBalance?: number }).calculatedBalance || account.currentBalance,
+            currency: account.currency,
+            notes: account.notes,
+          }}
+          onSubmit={handleSubmit}
+          onCancel={handleCancel}
+          loading={loading}
+          submitText={t('updateAccount')}
+          showCancel={true}
+          hasTransactions={hasTransactions}
+        />
 
-          {/* Balance Adjustment */}
-          {account && (
-            <div className="mt-6 pt-6 border-t border-slate-200">
-              <BalanceAdjustment
-                currentBalance={(account as Account & { calculatedBalance?: number }).calculatedBalance || account.currentBalance}
-                currency={account.currency}
-                accountId={accountId}
-                onAdjustmentComplete={loadAccount}
-              />
-            </div>
-          )}
-        </div>
+        {/* Balance Adjustment */}
+        {account && (
+          <div className="mt-6 pt-6 border-t border-slate-200">
+            <BalanceAdjustment
+              currentBalance={(account as Account & { calculatedBalance?: number }).calculatedBalance || account.currentBalance}
+              currency={account.currency}
+              accountId={accountId}
+              onAdjustmentComplete={loadAccount}
+            />
+          </div>
+        )}
+      </div>
 
-        {/* Danger Zone - Account Deletion */}
-        <div className="mt-6 rounded-[26px] border border-red-200/80 bg-white/92 backdrop-blur-xs shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] overflow-hidden">
+      {/* Danger Zone - Account Deletion */}
+      <div className="mt-6 rounded-[26px] border border-red-200/80 bg-white/92 backdrop-blur-xs shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] overflow-hidden">
           <div className="bg-red-50 border-b border-red-200/80 px-6 py-4 flex items-center gap-2 text-red-800 font-semibold">
             <ExclamationTriangleIcon className="w-5 h-5" />
             {t('dangerZone')}
@@ -321,7 +320,6 @@ export default function EditAccountPage() {
               </div>
             </div>
           </div>
-        </div>
       </div>
     </AppLayout>
   );

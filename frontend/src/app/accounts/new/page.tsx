@@ -108,18 +108,16 @@ export default function NewAccountPage() {
       </div>
 
       {/* Account Form */}
-      <div className="max-w-2xl mx-auto">
-        <div className="rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92 p-6">
-          <AccountForm
-            variant="full"
-            initialData={{ currency: user?.currency || 'NZD' }}
-            onSubmit={handleSubmit}
-            onCancel={handleCancel}
-            loading={loading}
-            submitText={t('createAccount')}
-            showCancel={true}
-          />
-        </div>
+      <div className="rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92 p-6">
+        <AccountForm
+          variant="full"
+          initialData={{ currency: user?.currency || 'NZD' }}
+          onSubmit={handleSubmit}
+          onCancel={handleCancel}
+          loading={loading}
+          submitText={t('createAccount')}
+          showCancel={true}
+        />
       </div>
     </AppLayout>
   );
