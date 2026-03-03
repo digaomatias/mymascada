@@ -28,20 +28,31 @@ public class ExportTransactionsCsvQueryHandler : IRequestHandler<ExportTransacti
 
     public async Task<byte[]> Handle(ExportTransactionsCsvQuery request, CancellationToken cancellationToken)
     {
-        // Re-use the existing filtered query with a very large page to fetch all records
-        var query = new GetTransactionsQuery
-        {
-            UserId = request.UserId,
-            Page = 1,
-            PageSize = 100_000, // Practical upper limit for a single export
-            AccountId = request.AccountId,
-            StartDate = request.From,
-            EndDate = request.To,
-            SortBy = "TransactionDate",
-            SortDirection = "desc"
-        };
+        // Paginate through all transactions to ensure complete export regardless of count
+        const int pageSize = 1000;
+        var allTransactions = new List<Domain.Entities.Transaction>();
+        int page = 1;
+        int totalCount;
 
-        var (transactions, _) = await _transactionRepository.GetFilteredAsync(query);
+        do
+        {
+            var query = new GetTransactionsQuery
+            {
+                UserId = request.UserId,
+                Page = page,
+                PageSize = pageSize,
+                AccountId = request.AccountId,
+                StartDate = request.From,
+                EndDate = request.To,
+                SortBy = "TransactionDate",
+                SortDirection = "desc"
+            };
+
+            var (transactions, count) = await _transactionRepository.GetFilteredAsync(query);
+            totalCount = count;
+            allTransactions.AddRange(transactions);
+            page++;
+        } while (allTransactions.Count < totalCount);
 
         // Build CSV content
         var sb = new StringBuilder();
@@ -49,7 +60,7 @@ public class ExportTransactionsCsvQueryHandler : IRequestHandler<ExportTransacti
         // Header row
         sb.AppendLine("Date,Description,Amount,Currency,Category,Account,Notes,Type");
 
-        foreach (var t in transactions)
+        foreach (var t in allTransactions)
         {
             var date = t.TransactionDate.ToString("yyyy-MM-dd");
             var description = EscapeCsv(t.UserDescription ?? t.Description);
@@ -73,6 +84,11 @@ public class ExportTransactionsCsvQueryHandler : IRequestHandler<ExportTransacti
         if (string.IsNullOrEmpty(value))
             return "";
 
+        // Sanitize formula-triggering characters to prevent CSV injection
+        char[] formulaTriggers = { '=', '+', '-', '@' };
+        if (formulaTriggers.Any(c => value.StartsWith(c)))
+            value = "'" + value;
+
         // If value contains comma, double-quote, or newline, wrap in quotes and escape inner quotes
         if (value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r'))
         {
@@ -87,6 +103,6 @@ public class ExportTransactionsCsvQueryHandler : IRequestHandler<ExportTransacti
         TransactionType.Income => "Income",
         TransactionType.Expense => "Expense",
         TransactionType.TransferComponent => "Transfer",
-        _ => "Expense"
+        _ => throw new ArgumentOutOfRangeException(nameof(type), $"Not supported transaction type: {type}")
     };
 }

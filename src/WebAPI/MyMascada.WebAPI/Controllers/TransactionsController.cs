@@ -17,11 +17,13 @@ public class TransactionsController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ICurrentUserService _currentUserService;
+    private readonly ILogger<TransactionsController> _logger;
 
-    public TransactionsController(IMediator mediator, ICurrentUserService currentUserService)
+    public TransactionsController(IMediator mediator, ICurrentUserService currentUserService, ILogger<TransactionsController> logger)
     {
         _mediator = mediator;
         _currentUserService = currentUserService;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -507,8 +509,9 @@ public class TransactionsController : ControllerBase
 
             return File(csvBytes, "text/csv; charset=utf-8", fileName);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "An error occurred while exporting transactions for user {UserId}", userId);
             return StatusCode(500, "An error occurred while exporting transactions. Please try again later.");
         }
     }

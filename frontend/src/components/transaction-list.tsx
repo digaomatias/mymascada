@@ -532,7 +532,8 @@ export function TransactionList({
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       toast.success(t('exportCsvSuccess'));
-    } catch {
+    } catch (error) {
+      console.error("Failed to export CSV:", error);
       toast.error(t('exportCsvError'));
     } finally {
       setExportingCsv(false);
