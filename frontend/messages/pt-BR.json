@@ -3446,5 +3446,11 @@
     "submitting": "Salvando...",
     "skip": "Pular para o Painel",
     "skipping": "Pulando..."
+  },
+  "cookieConsent": {
+    "ariaLabel": "Consentimento de cookies",
+    "message": "Usamos apenas cookies essenciais — para sua sessão e preferência de idioma. Sem cookies de rastreamento ou publicidade.",
+    "learnMore": "Saiba mais",
+    "accept": "Entendido"
   }
 }
