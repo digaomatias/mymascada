@@ -42,6 +42,7 @@ export default function BudgetDetailPage() {
   const params = useParams();
   const router = useRouter();
   const t = useTranslations('budgets');
+  const tCommon = useTranslations('common');
   const budgetId = Number(params.id);
   const [budget, setBudget] = useState<BudgetDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -119,7 +120,8 @@ export default function BudgetDetailPage() {
               className="inline-flex items-center text-sm font-medium text-slate-500 transition-colors hover:text-violet-700"
             >
               <ArrowLeftIcon className="mr-1.5 h-4 w-4" />
-              {t('backToBudgets')}
+              <span className="hidden sm:inline">{t('backToBudgets')}</span>
+              <span className="sm:hidden">{tCommon('back')}</span>
             </Link>
 
             <h1 className="mt-2 font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">

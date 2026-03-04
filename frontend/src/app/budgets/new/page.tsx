@@ -186,7 +186,8 @@ export default function CreateBudgetPage() {
           <Link href={BUDGET_BASE}>
             <Button variant="secondary" size="sm" className="flex items-center gap-2">
               <ArrowLeftIcon className="h-4 w-4" />
-              {t('backToBudgets')}
+              <span className="hidden sm:inline">{t('backToBudgets')}</span>
+              <span className="sm:hidden">{tCommon('back')}</span>
             </Button>
           </Link>
         </div>

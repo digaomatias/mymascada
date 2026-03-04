@@ -1970,6 +1970,7 @@
       "unavailable": "Unavailable"
     },
     "bankConnections": {
+      "backToSettings": "Back to Settings",
       "title": "Bank Connections",
       "subtitle": "Connect your bank accounts to automatically import transactions",
       "loading": "Loading bank connections...",
@@ -2982,6 +2983,7 @@
   "budgets": {
     "title": "Budgets",
     "backToBudgets": "Back to Budgets",
+    "backToBudget": "Back to Budget",
     "subtitle": "Manage your spending limits by category",
     "noBudgets": "No budgets yet",
     "noBudgetsDescription": "Create your first budget to start tracking spending against your goals.",

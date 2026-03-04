@@ -275,7 +275,8 @@ export default function EditBudgetPage() {
             className="inline-flex items-center text-sm font-medium text-slate-500 transition-colors hover:text-violet-700"
           >
             <ArrowLeftIcon className="mr-1.5 h-4 w-4" />
-            {tCommon('back')}
+            <span className="hidden sm:inline">{t('backToBudget')}</span>
+            <span className="sm:hidden">{tCommon('back')}</span>
           </Link>
           <h1 className="mt-2 font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
             {t('editBudget')}

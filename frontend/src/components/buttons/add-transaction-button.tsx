@@ -22,6 +22,7 @@ export function AddTransactionButton({
   children
 }: AddTransactionButtonProps) {
   const t = useTranslations('transactions');
+  const tCommon = useTranslations('common');
   const [showModal, setShowModal] = useState(false);
   const { isMobile } = useDeviceDetect();
   const router = useRouter();
@@ -54,7 +55,12 @@ export function AddTransactionButton({
         className={className}
       >
         <PlusIcon className="w-5 h-5 mr-2" />
-        {children || t('addTransaction')}
+        {children || (
+          <>
+            <span className="hidden sm:inline">{t('addTransaction')}</span>
+            <span className="sm:hidden">{tCommon('add')}</span>
+          </>
+        )}
       </Button>
 
       {/* Desktop Modal */}

@@ -128,7 +128,8 @@ export default function PrivacySettingsPage() {
         <div className="mb-6 lg:mb-8">
           <Link href="/settings" className="inline-flex items-center gap-2 text-sm text-violet-600 hover:text-violet-800 mb-4">
             <ArrowLeftIcon className="w-4 h-4" />
-            {t('backToSettings')}
+            <span className="hidden sm:inline">{t('backToSettings')}</span>
+            <span className="sm:hidden">{tCommon('back')}</span>
           </Link>
           <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
             {t('title')}

@@ -44,6 +44,7 @@ export default function CategoryTrendsPage() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const t = useTranslations('analytics');
+  const tCommon = useTranslations('common');
   const [loading, setLoading] = useState(true);
   const [trendData, setTrendData] = useState<CategoryTrendsResponse | null>(null);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
@@ -165,7 +166,8 @@ export default function CategoryTrendsPage() {
           className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-violet-700"
         >
           <ArrowLeftIcon className="h-4 w-4" />
-          <span>{t('categoryTrends.backToAnalytics')}</span>
+          <span className="hidden sm:inline">{t('categoryTrends.backToAnalytics')}</span>
+          <span className="sm:hidden">{tCommon('back')}</span>
         </Link>
 
         <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">

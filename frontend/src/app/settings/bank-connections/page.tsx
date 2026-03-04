@@ -25,6 +25,7 @@ export default function BankConnectionsPage() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const t = useTranslations('settings.bankConnections');
+  const tCommon = useTranslations('common');
   const tNav = useTranslations('nav');
 
   const [connections, setConnections] = useState<BankConnection[]>([]);
@@ -206,15 +207,14 @@ export default function BankConnectionsPage() {
     <AppLayout>
       {/* Header */}
         <div className="mb-6 lg:mb-8">
-          <div className="flex items-center gap-2 mb-2">
-            <Link
-              href="/settings"
-              className="p-1 hover:bg-white/50 rounded-lg transition-colors"
-            >
-              <ArrowLeftIcon className="w-5 h-5 text-slate-600" />
-            </Link>
-            <span className="text-sm text-slate-500">{tNav('settings')}</span>
-          </div>
+          <Link
+            href="/settings"
+            className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 mb-4"
+          >
+            <ArrowLeftIcon className="w-4 h-4" />
+            <span className="hidden sm:inline">{t('backToSettings')}</span>
+            <span className="sm:hidden">{tCommon('back')}</span>
+          </Link>
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>

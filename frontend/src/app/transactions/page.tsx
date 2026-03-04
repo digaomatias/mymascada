@@ -56,7 +56,6 @@ import { ContextualTransactionLink } from '@/components/ui/contextual-transactio
 import { useTransactionFilters, SortField, SortDirection } from '@/hooks/use-transaction-filters';
 import { InlineTransferCreator } from '@/components/forms/inline-transfer-creator';
 import { useTranslations } from 'next-intl';
-import { FloatingActionButton } from '@/components/ui/floating-action-button';
 import { MobileActionsOverflow } from '@/components/ui/mobile-actions-overflow';
 
 interface Transaction {
@@ -700,7 +699,7 @@ function TransactionsPageContent() {
     <AppLayout>
         {/* Header */}
         <div className="mb-5">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
                 {t('title')}
@@ -716,8 +715,14 @@ function TransactionsPageContent() {
                 )}
               </div>
             </div>
-            
-            <div className="flex gap-2">
+            {!isSelectionMode && (
+              <AddTransactionButton
+                onSuccess={() => fetchTransactions(currentPage, searchTerm, transferFilter, selectedCategoryId, selectedAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter, sortBy, sortDirection)}
+              />
+            )}
+          </div>
+
+          <div className="mt-3 flex gap-2">
               {!isSelectionMode ? (
                 <>
                   {/* Desktop: Full layout with all buttons visible */}
@@ -811,11 +816,6 @@ function TransactionsPageContent() {
                         )}
                       </DropdownMenuContent>
                     </DropdownMenu>
-
-                    <AddTransactionButton
-                      onSuccess={() => fetchTransactions(currentPage, searchTerm, transferFilter, selectedCategoryId, selectedAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter, sortBy, sortDirection)}
-                      className="btn-sm"
-                    />
                   </div>
 
                   {/* Mobile: Compact layout with filter button and overflow menu */}
@@ -922,7 +922,6 @@ function TransactionsPageContent() {
                   </Button>
                 </>
               )}
-            </div>
           </div>
 
           {/* Search Bar */}
@@ -1719,15 +1718,6 @@ function TransactionsPageContent() {
             </CardContent>
           )}
         </Card>
-      {/* Floating Action Button - Mobile only, hidden in selection mode */}
-      {!isSelectionMode && (
-        <FloatingActionButton
-          onClick={() => router.push('/transactions/new')}
-          icon={<PlusIcon className="w-6 h-6" />}
-          label={t('addTransaction')}
-        />
-      )}
-
       {/* Confirmation Dialogs */}
 
       {/* Bulk Delete Confirmation Dialog */}

@@ -659,8 +659,10 @@ export default function ReconcileAccountPage() {
 
               <div className="flex justify-center">
                 <Link href={`/accounts/${accountId}`}>
-                  <Button>
-                    {t('backToAccount')}
+                  <Button className="flex items-center gap-2">
+                    <ArrowLeftIcon className="w-4 h-4" />
+                    <span className="hidden sm:inline">{t('backToAccount')}</span>
+                    <span className="sm:hidden">{tCommon('back')}</span>
                   </Button>
                 </Link>
               </div>
@@ -732,7 +734,8 @@ export default function ReconcileAccountPage() {
         <Link href={`/accounts/${accountId}`}>
           <Button variant="secondary" size="sm" className="flex items-center gap-2">
             <ArrowLeftIcon className="w-4 h-4" />
-            {t('backToAccount')}
+            <span className="hidden sm:inline">{t('backToAccount')}</span>
+            <span className="sm:hidden">{tCommon('back')}</span>
           </Button>
         </Link>
       </header>

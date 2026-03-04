@@ -67,6 +67,7 @@ function formatDateRange(startDate: string, endDate: string) {
 export default function BudgetsPage() {
   const { shouldRender, isAuthResolved } = useAuthGuard();
   const t = useTranslations('budgets');
+  const tCommon = useTranslations('common');
   const [budgets, setBudgets] = useState<BudgetSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showInactive, setShowInactive] = useState(false);
@@ -98,46 +99,44 @@ export default function BudgetsPage() {
 
   return (
     <AppLayout>
-      <header className="flex flex-wrap items-end justify-between gap-4 mb-5">
+      <header className="mb-5">
+        <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
               {t('title')}
             </h1>
             <p className="mt-1.5 text-[15px] text-slate-500">{t('subtitle')}</p>
           </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-4 text-sm">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="showInactive"
-                  checked={showInactive}
-                  onCheckedChange={(checked) => setShowInactive(checked === true)}
-                />
-                <Label htmlFor="showInactive" className="text-sm text-slate-600">
-                  {t('filters.showInactive')}
-                </Label>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="currentPeriodOnly"
-                  checked={currentPeriodOnly}
-                  onCheckedChange={(checked) => setCurrentPeriodOnly(checked === true)}
-                />
-                <Label htmlFor="currentPeriodOnly" className="text-sm text-slate-600">
-                  {t('filters.currentPeriodOnly')}
-                </Label>
-              </div>
-            </div>
-
-            <Link href={`${BUDGET_BASE}/new`}>
-              <Button>
-                <PlusIcon className="mr-1.5 h-4 w-4" />
-                {t('createBudget')}
-              </Button>
-            </Link>
+          <Link href={`${BUDGET_BASE}/new`}>
+            <Button>
+              <PlusIcon className="mr-1.5 h-4 w-4" />
+              <span className="hidden sm:inline">{t('createBudget')}</span>
+              <span className="sm:hidden">{tCommon('add')}</span>
+            </Button>
+          </Link>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="showInactive"
+              checked={showInactive}
+              onCheckedChange={(checked) => setShowInactive(checked === true)}
+            />
+            <Label htmlFor="showInactive" className="text-sm text-slate-600">
+              {t('filters.showInactive')}
+            </Label>
           </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="currentPeriodOnly"
+              checked={currentPeriodOnly}
+              onCheckedChange={(checked) => setCurrentPeriodOnly(checked === true)}
+            />
+            <Label htmlFor="currentPeriodOnly" className="text-sm text-slate-600">
+              {t('filters.currentPeriodOnly')}
+            </Label>
+          </div>
+        </div>
       </header>
 
       <div className="space-y-5">

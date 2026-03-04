@@ -174,7 +174,8 @@ export default function GoalDetailPage() {
               className="inline-flex items-center gap-1 text-sm text-slate-500 transition-colors hover:text-violet-700"
             >
               <ArrowLeftIcon className="h-4 w-4" />
-              {t('backToGoals')}
+              <span className="hidden sm:inline">{t('backToGoals')}</span>
+              <span className="sm:hidden">{tCommon('back')}</span>
             </Link>
 
             {/* Title row */}

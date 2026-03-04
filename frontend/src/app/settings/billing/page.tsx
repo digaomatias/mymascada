@@ -128,7 +128,8 @@ export default function BillingPage() {
         className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4"
       >
         <ArrowLeftIcon className="w-4 h-4" />
-        {t('backToSettings')}
+        <span className="hidden sm:inline">{t('backToSettings')}</span>
+        <span className="sm:hidden">{tCommon('back')}</span>
       </Link>
 
       {/* Header */}

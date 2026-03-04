@@ -293,7 +293,8 @@ export default function CategorizePage() {
             onClick={() => router.back()}
           >
             <ArrowLeftIcon className="w-4 h-4" />
-            <span className="hidden sm:inline">{tCommon('back')}</span>
+            <span className="hidden sm:inline">{t('backToTransactions')}</span>
+            <span className="sm:hidden">{tCommon('back')}</span>
           </Button>
         </header>
 
@@ -445,7 +446,8 @@ export default function CategorizePage() {
                     <Link href="/transactions">
                       <Button className="flex items-center gap-2">
                         <ArrowLeftIcon className="w-4 h-4" />
-                        {t('backToTransactions')}
+                        <span className="hidden sm:inline">{t('backToTransactions')}</span>
+                        <span className="sm:hidden">{tCommon('back')}</span>
                       </Button>
                     </Link>
                   </div>
@@ -477,7 +479,8 @@ export default function CategorizePage() {
                     <Link href="/transactions">
                       <Button className="flex items-center gap-2">
                         <ArrowLeftIcon className="w-4 h-4" />
-                        {t('backToTransactions')}
+                        <span className="hidden sm:inline">{t('backToTransactions')}</span>
+                        <span className="sm:hidden">{tCommon('back')}</span>
                       </Button>
                     </Link>
                   </div>
