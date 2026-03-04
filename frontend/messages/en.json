@@ -3350,7 +3350,8 @@
       "progressHelp": "Enter the current saved amount toward your goal of {target}."
     },
     "edit": {
-      "title": "Edit Goal",
+      "title": "Edit {name}",
+      "subtitle": "Update your goal details and track your progress",
       "saving": "Saving...",
       "saveChanges": "Save Changes"
     }
