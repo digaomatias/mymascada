@@ -3350,7 +3350,7 @@
       "progressHelp": "Digite o valor atual economizado para sua meta de {target}."
     },
     "edit": {
-      "title": "Editar Meta",
+      "title": "Editar {name}",
       "subtitle": "Atualize os detalhes da sua meta e acompanhe seu progresso",
       "saving": "Salvando...",
       "saveChanges": "Salvar Alterações"

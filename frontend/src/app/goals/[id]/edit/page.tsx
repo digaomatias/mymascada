@@ -135,7 +135,7 @@ export default function EditGoalPage() {
         </div>
 
         <div>
-          <h2 className="text-[1.65rem] font-semibold tracking-[-0.03em] text-slate-900">{t('edit.title')}</h2>
+          <h2 className="text-[1.65rem] font-semibold tracking-[-0.03em] text-slate-900">{t('edit.title', { name })}</h2>
           <p className="mt-1 text-sm text-slate-500">{t('edit.subtitle')}</p>
         </div>
 
@@ -263,7 +263,7 @@ export default function EditGoalPage() {
                 </Button>
               </Link>
               <Button type="submit" disabled={!canSubmit || isSubmitting}>
-                {isSubmitting ? tCommon('saving') : tCommon('save')}
+                {isSubmitting ? t('edit.saving') : t('edit.saveChanges')}
               </Button>
             </div>
           </form>
