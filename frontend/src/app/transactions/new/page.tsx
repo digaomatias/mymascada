@@ -97,7 +97,7 @@ function NewTransactionPageContent() {
   if (success) {
     return (
       <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
-        <div className="mx-4 max-w-md w-full rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92 p-8 text-center">
+        <div className="mx-4 max-w-md w-full form-card p-8 text-center">
           <div className="w-16 h-16 bg-gradient-to-br from-success-500 to-success-600 rounded-2xl shadow-2xl flex items-center justify-center mx-auto mb-6">
             <CheckIcon className="w-8 h-8 text-white" />
           </div>
@@ -135,18 +135,16 @@ function NewTransactionPageContent() {
       </div>
 
       {/* Transaction Form */}
-      <div className="max-w-2xl mx-auto">
-        <div className="rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92 p-6">
-          <div className="flex items-center gap-2 mb-5">
-            <BanknotesIcon className="w-5 h-5 text-primary-600" />
-            <h2 className="text-base font-semibold text-slate-900">{t('transactionDetails')}</h2>
-          </div>
-          <TransactionForm
-            initialData={accountIdFromUrl ? { accountId: accountIdFromUrl } : undefined}
-            onSubmit={handleSubmit}
-            onCancel={() => router.push('/transactions')}
-          />
+      <div className="form-card p-6">
+        <div className="flex items-center gap-2 mb-5">
+          <BanknotesIcon className="w-5 h-5 text-primary-600" />
+          <h2 className="text-base font-semibold text-slate-900">{t('transactionDetails')}</h2>
         </div>
+        <TransactionForm
+          initialData={accountIdFromUrl ? { accountId: accountIdFromUrl } : undefined}
+          onSubmit={handleSubmit}
+          onCancel={() => router.push('/transactions')}
+        />
       </div>
     </AppLayout>
   );

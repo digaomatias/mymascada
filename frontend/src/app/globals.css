@@ -157,6 +157,11 @@
   @apply card transition-all duration-200 hover:shadow-[0_24px_56px_-28px_rgba(76,29,149,0.4)] cursor-pointer;
 }
 
+@utility form-card {
+  /* Form card — slightly different from card: tighter radius, stronger shadow, lighter blur */
+  @apply rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92;
+}
+
 @utility table {
   /* Table Styles */
   @apply w-full border-collapse;
