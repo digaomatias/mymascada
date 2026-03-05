@@ -7,6 +7,8 @@ import { apiClient } from '@/lib/api-client';
 import { formatCurrency, cn } from '@/lib/utils';
 
 type Period = 'month' | 'quarter';
+type MonthlySummary = { totalIncome: number; totalExpenses: number };
+const emptySummary: MonthlySummary = { totalIncome: 0, totalExpenses: 0 };
 
 interface RunwayData {
   totalBalance: number;
@@ -33,14 +35,33 @@ export function FinancialRunwayCard() {
         const now = new Date();
         const currentMonth = now.getMonth() + 1;
         const currentYear = now.getFullYear();
+        const dayOfMonth = now.getDate();
+        const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
 
-        const [accounts, summary] = await Promise.all([
+        // Build list of previous 3 complete months
+        const prevMonths: { year: number; month: number }[] = [];
+        for (let i = 1; i <= 3; i++) {
+          let m = currentMonth - i;
+          let y = currentYear;
+          if (m <= 0) {
+            m += 12;
+            y -= 1;
+          }
+          prevMonths.push({ year: y, month: m });
+        }
+
+        const [accounts, currentSummary, ...prevSummaries] = await Promise.all([
           apiClient.getAccountsWithBalances() as Promise<
             { calculatedBalance: number }[]
           >,
           apiClient.getMonthlySummary(currentYear, currentMonth).catch(
-            () => ({ totalIncome: 0, totalExpenses: 0 }),
-          ) as Promise<{ totalIncome: number; totalExpenses: number }>,
+            () => emptySummary,
+          ) as Promise<MonthlySummary>,
+          ...prevMonths.map(({ year, month }) =>
+            apiClient.getMonthlySummary(year, month).catch(
+              () => emptySummary,
+            ) as Promise<MonthlySummary>,
+          ),
         ]);
 
         const totalBalance =
@@ -49,8 +70,32 @@ export function FinancialRunwayCard() {
             0,
           ) || 0;
 
-        let income = summary?.totalIncome || 0;
-        let expenses = summary?.totalExpenses || 0;
+        // Use complete months that have data
+        const validMonths: MonthlySummary[] = prevSummaries.filter(
+          (s) => (s?.totalIncome || 0) > 0 || (s?.totalExpenses || 0) > 0,
+        );
+
+        // If fewer than 3 complete months, project current partial month
+        // Only project if enough days have passed to avoid volatile early-month estimates
+        if (validMonths.length < 3 && dayOfMonth > 5) {
+          const curIncome = currentSummary?.totalIncome || 0;
+          const curExpenses = currentSummary?.totalExpenses || 0;
+          if (curIncome > 0 || curExpenses > 0) {
+            const factor = daysInMonth / dayOfMonth;
+            validMonths.push({
+              totalIncome: curIncome * factor,
+              totalExpenses: curExpenses * factor,
+            });
+          }
+        }
+
+        // Average monthly income/expenses across available months
+        let income = 0;
+        let expenses = 0;
+        if (validMonths.length > 0) {
+          income = validMonths.reduce((sum, s) => sum + (s.totalIncome || 0), 0) / validMonths.length;
+          expenses = validMonths.reduce((sum, s) => sum + (s.totalExpenses || 0), 0) / validMonths.length;
+        }
 
         if (period === 'quarter') {
           income *= 3;
