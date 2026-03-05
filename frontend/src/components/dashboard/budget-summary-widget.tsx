@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { BudgetProgressBar } from '@/components/budget/budget-progress-bar';
 import { apiClient } from '@/lib/api-client';
 import { BudgetSummary, formatCurrency } from '@/types/budget';
+import type { BudgetHealthSummaryResponse } from '@/types/api-responses';
 import {
   WalletIcon,
   ChevronRightIcon,
@@ -21,18 +22,23 @@ export function BudgetSummaryWidget() {
   const t = useTranslations('budgets');
   const tDashboard = useTranslations('dashboard');
   const [budgets, setBudgets] = useState<BudgetSummary[]>([]);
+  const [healthData, setHealthData] = useState<BudgetHealthSummaryResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadBudgets = async () => {
       try {
         setLoading(true);
-        // Get only current period, active budgets
-        const data = await apiClient.getBudgets({
-          includeInactive: false,
-          onlyCurrentPeriod: true,
-        });
-        setBudgets(data);
+        // Fetch both: budget list for row display and health summary for aggregations
+        const [budgetList, health] = await Promise.all([
+          apiClient.getBudgets({
+            includeInactive: false,
+            onlyCurrentPeriod: true,
+          }),
+          apiClient.getBudgetHealthSummary().catch(() => null),
+        ]);
+        setBudgets(budgetList);
+        setHealthData(health);
       } catch (error) {
         console.error('Failed to load budgets:', error);
         setBudgets([]);
@@ -44,12 +50,12 @@ export function BudgetSummaryWidget() {
     loadBudgets();
   }, []);
 
-  // Calculate overall budget health
-  const totalBudgeted = budgets.reduce((sum, b) => sum + b.totalBudgeted, 0);
-  const totalSpent = budgets.reduce((sum, b) => sum + b.totalSpent, 0);
-  const overallPercentage = totalBudgeted > 0 ? (totalSpent / totalBudgeted) * 100 : 0;
-  const budgetsOverLimit = budgets.filter(b => b.usedPercentage >= 100).length;
-  const budgetsApproaching = budgets.filter(b => b.usedPercentage >= 80 && b.usedPercentage < 100).length;
+  // Use pre-computed aggregations from health API when available, fall back to client-side
+  const totalBudgeted = healthData?.totalBudgeted ?? budgets.reduce((sum, b) => sum + b.totalBudgeted, 0);
+  const totalSpent = healthData?.totalSpent ?? budgets.reduce((sum, b) => sum + b.totalSpent, 0);
+  const overallPercentage = healthData?.overallPercentage ?? (totalBudgeted > 0 ? (totalSpent / totalBudgeted) * 100 : 0);
+  const budgetsOverLimit = healthData?.budgetsOverLimit ?? budgets.filter(b => b.usedPercentage >= 100).length;
+  const budgetsApproaching = healthData?.budgetsApproaching ?? budgets.filter(b => b.usedPercentage >= 80 && b.usedPercentage < 100).length;
 
   if (loading) {
     return (

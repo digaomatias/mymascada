@@ -130,6 +130,37 @@ public class GetCategoryTrendsQueryHandler : IRequestHandler<GetCategoryTrendsQu
                 });
             }
 
+            // Compute 3-month rolling average trend
+            var orderedPeriods = periods.OrderBy(p => p.PeriodStart).ToList();
+            var periodCount = orderedPeriods.Count;
+
+            decimal trendPercentage = 0;
+            string trend = "stable";
+
+            if (periodCount >= 6)
+            {
+                var last3 = orderedPeriods.Skip(periodCount - 3).Take(3);
+                var prev3 = orderedPeriods.Skip(periodCount - 6).Take(3);
+                var last3Avg = last3.Average(p => p.Amount);
+                var prev3Avg = prev3.Average(p => p.Amount);
+
+                if (prev3Avg > 0)
+                {
+                    trendPercentage = ((last3Avg - prev3Avg) / prev3Avg) * 100;
+                }
+
+                trend = trendPercentage > 5 ? "up" : trendPercentage < -5 ? "down" : "stable";
+            }
+
+            // Find highest and lowest spending months
+            var periodsWithSpending = periods.Where(p => p.Amount > 0).ToList();
+            PeriodAmountDto? highestMonth = periodsWithSpending.Count > 0
+                ? periodsWithSpending.OrderByDescending(p => p.Amount).First()
+                : null;
+            PeriodAmountDto? lowestMonth = periodsWithSpending.Count > 0
+                ? periodsWithSpending.OrderBy(p => p.Amount).First()
+                : null;
+
             categories.Add(new CategoryTrendDto
             {
                 CategoryId = cat.CategoryId,
@@ -137,7 +168,11 @@ public class GetCategoryTrendsQueryHandler : IRequestHandler<GetCategoryTrendsQu
                 CategoryColor = cat.CategoryColor,
                 TotalSpent = cat.TotalSpent,
                 AverageMonthlySpent = monthCount > 0 ? cat.TotalSpent / monthCount : 0,
-                Periods = periods
+                Periods = periods,
+                Trend = trend,
+                TrendPercentage = Math.Round(trendPercentage, 2),
+                HighestMonth = highestMonth,
+                LowestMonth = lowestMonth
             });
         }
 
@@ -161,12 +196,17 @@ public class GetCategoryTrendsQueryHandler : IRequestHandler<GetCategoryTrendsQu
             };
         }).ToList();
 
+        var totalSpending = categories.Sum(c => c.TotalSpent);
+        var avgMonthlySpending = monthCount > 0 ? totalSpending / monthCount : 0;
+
         return new CategoryTrendsResponseDto
         {
             StartDate = startDate,
             EndDate = endDate,
             Categories = categories,
-            PeriodSummaries = periodSummaries
+            PeriodSummaries = periodSummaries,
+            TotalSpending = totalSpending,
+            AvgMonthlySpending = avgMonthlySpending
         };
     }
 }

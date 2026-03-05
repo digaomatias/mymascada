@@ -15,6 +15,12 @@ public class GoalSummaryDto
     public int? DaysRemaining { get; set; }
     public string? LinkedAccountName { get; set; }
     public bool IsPinned { get; set; }
+    public string TrackingState { get; set; } = string.Empty;
+    public string JourneyStage { get; set; } = string.Empty;
+    public int JourneyPriority { get; set; }
+    public int SortOrder { get; set; }
+    public int? CurrentMilestone { get; set; }
+    public int? NextMilestone { get; set; }
 }
 
 public class GoalDetailDto

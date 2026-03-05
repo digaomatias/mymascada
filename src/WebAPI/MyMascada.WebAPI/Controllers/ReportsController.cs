@@ -94,6 +94,35 @@ public class ReportsController : ControllerBase
     }
 
     /// <summary>
+    /// Get cashflow history (income, expenses, net) per month
+    /// </summary>
+    /// <param name="months">Number of months to return (default: 7, max: 24)</param>
+    [HttpGet("cashflow-history")]
+    public async Task<ActionResult<CashflowHistoryDto>> GetCashflowHistory([FromQuery] int months = 7)
+    {
+        try
+        {
+            if (months < 1 || months > 24)
+            {
+                return BadRequest("months must be between 1 and 24");
+            }
+
+            var query = new GetCashflowHistoryQuery
+            {
+                UserId = _currentUserService.GetUserId(),
+                Months = months
+            };
+
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, "An error occurred while processing the request");
+        }
+    }
+
+    /// <summary>
     /// Get category spending trends over time
     /// </summary>
     /// <param name="startDate">Start date for the trend period (defaults to 12 months ago)</param>
@@ -128,6 +157,54 @@ public class ReportsController : ControllerBase
                 EndDate = endDate,
                 CategoryIds = categoryIdList,
                 Limit = limit
+            };
+
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, "An error occurred while processing the request");
+        }
+    }
+
+    /// <summary>
+    /// Get analytics summary with trends, savings rate, and yearly comparisons
+    /// </summary>
+    /// <param name="period">Period type: "year", "quarter", "month", or "all"</param>
+    /// <param name="year">Optional year (defaults to current year)</param>
+    /// <param name="month">Optional month (defaults to current month, used for month/quarter period)</param>
+    [HttpGet("analytics-summary")]
+    public async Task<ActionResult<AnalyticsSummaryDto>> GetAnalyticsSummary(
+        [FromQuery] string period = "year",
+        [FromQuery] int? year = null,
+        [FromQuery] int? month = null)
+    {
+        try
+        {
+            // Validate period
+            var validPeriods = new[] { "year", "quarter", "month", "all" };
+            if (!validPeriods.Contains(period.ToLowerInvariant()))
+            {
+                return BadRequest($"Invalid period: {period}. Must be one of: year, quarter, month, all.");
+            }
+
+            if (year.HasValue && (year.Value < 1900 || year.Value > 3000))
+            {
+                return BadRequest($"Invalid year: {year}. Year must be between 1900 and 3000.");
+            }
+
+            if (month.HasValue && (month.Value < 1 || month.Value > 12))
+            {
+                return BadRequest($"Invalid month: {month}. Month must be between 1 and 12.");
+            }
+
+            var query = new GetAnalyticsSummaryQuery
+            {
+                UserId = _currentUserService.GetUserId(),
+                Period = period,
+                Year = year,
+                Month = month
             };
 
             var result = await _mediator.Send(query);

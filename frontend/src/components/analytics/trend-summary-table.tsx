@@ -11,6 +11,14 @@ interface TrendSummaryTableProps {
   selectedCategoryIds: number[];
 }
 
+// Enriched fields that may be present from the API
+interface EnrichedCategoryTrendData extends CategoryTrendData {
+  trend?: string;
+  trendPercentage?: number;
+  highestMonth?: { periodLabel: string; amount: number };
+  lowestMonth?: { periodLabel: string; amount: number };
+}
+
 interface CategoryWithTrend extends CategoryTrendData {
   trend: 'up' | 'down' | 'stable';
   trendPercentage: number;
@@ -20,19 +28,31 @@ interface CategoryWithTrend extends CategoryTrendData {
 
 export function TrendSummaryTable({ categories, selectedCategoryIds }: TrendSummaryTableProps) {
   const t = useTranslations('analytics.categoryTrends');
-  // Filter and calculate trends for selected categories
+  // Filter and use API trend data when available, fall back to client-side calculation
   const categoriesWithTrend = useMemo<CategoryWithTrend[]>(() => {
     return categories
       .filter((cat) => selectedCategoryIds.includes(cat.categoryId))
       .map((cat) => {
+        const enriched = cat as EnrichedCategoryTrendData;
         const periods = cat.periods;
 
-        // Calculate 3-month rolling average trend
+        // Use API-provided trend data if available
         let trend: 'up' | 'down' | 'stable' = 'stable';
         let trendPercentage = 0;
 
-        if (periods.length >= 3) {
-          // Compare last 3 months average to previous 3 months average
+        if (enriched.trend !== undefined && enriched.trendPercentage !== undefined) {
+          // Use enriched API fields
+          const apiTrend = enriched.trend.toLowerCase();
+          if (apiTrend === 'up' || apiTrend === 'increasing') {
+            trend = 'up';
+          } else if (apiTrend === 'down' || apiTrend === 'decreasing') {
+            trend = 'down';
+          } else {
+            trend = 'stable';
+          }
+          trendPercentage = enriched.trendPercentage;
+        } else if (periods.length >= 3) {
+          // Fallback: Calculate 3-month rolling average trend
           const last3 = periods.slice(-3);
           const prev3 = periods.slice(-6, -3);
 
@@ -51,18 +71,35 @@ export function TrendSummaryTable({ categories, selectedCategoryIds }: TrendSumm
           }
         }
 
-        // Find highest and lowest months
+        // Use API-provided highest/lowest months if available
         let highestMonth = { label: '', amount: 0 };
         let lowestMonth = { label: '', amount: Infinity };
 
-        periods.forEach((p) => {
-          if (p.amount > highestMonth.amount) {
-            highestMonth = { label: p.periodLabel, amount: p.amount };
-          }
-          if (p.amount < lowestMonth.amount && p.amount > 0) {
-            lowestMonth = { label: p.periodLabel, amount: p.amount };
-          }
-        });
+        if (enriched.highestMonth) {
+          highestMonth = {
+            label: enriched.highestMonth.periodLabel,
+            amount: enriched.highestMonth.amount,
+          };
+        } else {
+          periods.forEach((p) => {
+            if (p.amount > highestMonth.amount) {
+              highestMonth = { label: p.periodLabel, amount: p.amount };
+            }
+          });
+        }
+
+        if (enriched.lowestMonth) {
+          lowestMonth = {
+            label: enriched.lowestMonth.periodLabel,
+            amount: enriched.lowestMonth.amount,
+          };
+        } else {
+          periods.forEach((p) => {
+            if (p.amount < lowestMonth.amount && p.amount > 0) {
+              lowestMonth = { label: p.periodLabel, amount: p.amount };
+            }
+          });
+        }
 
         // Handle case where all months are 0
         if (lowestMonth.amount === Infinity) {

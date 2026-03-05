@@ -7,6 +7,23 @@ public class DashboardSummaryDto
     public decimal MonthlyExpenses { get; set; }
     public int TransactionCount { get; set; }
     public List<RecentTransactionDto> RecentTransactions { get; set; } = new();
+
+    // M1: Runway & savings metrics
+    public decimal RunwayMonths { get; set; }
+    public decimal SavingsRate { get; set; }
+    public decimal NetSaved { get; set; }
+    public decimal AvgMonthlyIncome { get; set; }
+    public decimal AvgMonthlyExpenses { get; set; }
+
+    // M1: Net worth breakdown
+    public decimal TotalAssets { get; set; }
+    public decimal TotalLiabilities { get; set; }
+    public decimal NetWorth { get; set; }
+
+    // M1: Fallback month indicator
+    public bool IsUsingFallbackMonth { get; set; }
+    public int DisplayMonth { get; set; }
+    public int DisplayYear { get; set; }
 }
 
 public class RecentTransactionDto

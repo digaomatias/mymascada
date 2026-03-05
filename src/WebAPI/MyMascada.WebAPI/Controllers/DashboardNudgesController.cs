@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.DashboardNudges.Commands;
+using MyMascada.Application.Features.DashboardNudges.DTOs;
 using MyMascada.Application.Features.DashboardNudges.Queries;
 
 namespace MyMascada.WebAPI.Controllers;
@@ -19,6 +20,25 @@ public class DashboardNudgesController : ControllerBase
     {
         _mediator = mediator;
         _currentUserService = currentUserService;
+    }
+
+    [HttpGet("attention-items")]
+    public async Task<ActionResult<AttentionItemsDto>> GetAttentionItems()
+    {
+        try
+        {
+            var query = new GetAttentionItemsQuery
+            {
+                UserId = _currentUserService.GetUserId()
+            };
+
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while retrieving attention items." });
+        }
     }
 
     [HttpGet("dismissed")]

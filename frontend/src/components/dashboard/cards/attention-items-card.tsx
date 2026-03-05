@@ -12,6 +12,7 @@ import {
   CalendarDaysIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
+import type { AttentionItemDto } from '@/types/api-responses';
 
 interface AttentionItem {
   text: string;
@@ -34,64 +35,15 @@ export function AttentionItemsCard() {
         setLoading(true);
         setError(null);
 
-        const [uncategorizedResponse, billsResponse, budgetsResponse] =
-          await Promise.all([
-            apiClient
-              .getTransactions({ categoryId: -1, pageSize: 1 })
-              .catch(() => ({ totalCount: 0 })) as Promise<{ totalCount: number }>,
-            apiClient.getUpcomingBills(7).catch(() => ({ bills: [] })) as Promise<{
-              bills: { merchantName: string; expectedAmount: number; daysUntilDue: number }[];
-            }>,
-            apiClient
-              .getBudgets({ includeInactive: false, onlyCurrentPeriod: true })
-              .catch(() => []) as Promise<
-              { name: string; usedPercentage: number; totalSpent: number; totalBudgeted: number }[]
-            >,
-          ]);
-
+        const response = await apiClient.getAttentionItems();
         const attentionItems: AttentionItem[] = [];
 
-        // Uncategorized transactions
-        const uncategorizedCount = uncategorizedResponse?.totalCount || 0;
-        if (uncategorizedCount > 0) {
-          attentionItems.push({
-            text: t('uncategorized', { count: uncategorizedCount }),
-            detail: t('uncategorizedDetail'),
-            category: t('categoryHygiene'),
-            tag: t('tagMinutes'),
-            severity: 'info',
-            href: '/transactions?filter=uncategorized',
-          });
+        for (const item of response.items) {
+          const mapped = mapAttentionItem(item, t);
+          if (mapped) {
+            attentionItems.push(mapped);
+          }
         }
-
-        // Upcoming bills
-        const bills = billsResponse?.bills || [];
-        bills.slice(0, 2).forEach((bill) => {
-          attentionItems.push({
-            text: `${bill.merchantName} ${t('dueSoon')}`,
-            detail: t('billDetail', { amount: Math.abs(bill.expectedAmount).toFixed(2) }),
-            category: t('categoryFixed'),
-            tag: bill.daysUntilDue <= 1 ? t('tagDueSoon') : t('tagDueIn', { days: bill.daysUntilDue }),
-            severity: 'warn',
-            href: '/transactions',
-          });
-        });
-
-        // Over-budget items
-        const overBudget = (budgetsResponse || []).filter(
-          (b) => b.usedPercentage >= 100,
-        );
-        overBudget.forEach((budget) => {
-          const overAmount = budget.totalSpent - budget.totalBudgeted;
-          attentionItems.push({
-            text: t('overBudget', { name: budget.name, amount: overAmount.toFixed(0) }),
-            detail: t('overBudgetDetail', { amount: (overAmount * 12).toFixed(0) }),
-            category: t('categoryVariable'),
-            tag: t('tagOverLimit'),
-            severity: 'error',
-            href: '/budgets',
-          });
-        });
 
         setItems(attentionItems.slice(0, 4));
       } catch (err) {
@@ -186,4 +138,59 @@ export function AttentionItemsCard() {
       </div>
     </DashboardCard>
   );
+}
+
+function mapAttentionItem(
+  item: AttentionItemDto,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: (key: string, params?: Record<string, any>) => string,
+): AttentionItem | null {
+  const severity = mapSeverity(item.severity);
+
+  switch (item.type) {
+    case 'UncategorizedTransactions':
+      return {
+        text: t('uncategorized', { count: item.count ?? 0 }),
+        detail: t('uncategorizedDetail'),
+        category: t('categoryHygiene'),
+        tag: t('tagMinutes'),
+        severity,
+        href: '/transactions?filter=uncategorized',
+      };
+    case 'UpcomingBill':
+      return {
+        text: `${item.entityName ?? ''} ${t('dueSoon')}`,
+        detail: t('billDetail', { amount: Math.abs(item.amount ?? 0).toFixed(2) }),
+        category: t('categoryFixed'),
+        tag: item.daysUntilDue !== undefined && item.daysUntilDue <= 1
+          ? t('tagDueSoon')
+          : t('tagDueIn', { days: item.daysUntilDue ?? 0 }),
+        severity,
+        href: '/transactions',
+      };
+    case 'OverBudget':
+      return {
+        text: t('overBudget', { name: item.entityName ?? '', amount: (item.amount ?? 0).toFixed(0) }),
+        detail: t('overBudgetDetail', { amount: (item.annualizedAmount ?? 0).toFixed(0) }),
+        category: t('categoryVariable'),
+        tag: t('tagOverLimit'),
+        severity,
+        href: '/budgets',
+      };
+    default:
+      return null;
+  }
+}
+
+function mapSeverity(severity: string): 'error' | 'warn' | 'info' {
+  switch (severity.toLowerCase()) {
+    case 'error':
+    case 'critical':
+      return 'error';
+    case 'warn':
+    case 'warning':
+      return 'warn';
+    default:
+      return 'info';
+  }
 }
