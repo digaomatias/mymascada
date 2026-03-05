@@ -4,16 +4,14 @@ import { useAuth } from '@/contexts/auth-context';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
 import { AppLayout } from '@/components/app-layout';
-import { Button } from '@/components/ui/button';
 import { TransactionForm, TransactionFormData } from '@/components/forms/transaction-form';
 import { apiClient } from '@/lib/api-client';
-import Link from 'next/link';
 import { toast } from 'sonner';
 import {
-  ArrowLeftIcon,
   BanknotesIcon,
   CheckIcon
 } from '@heroicons/react/24/outline';
+import { BackButton } from '@/components/ui/back-button';
 import { useTranslations } from 'next-intl';
 
 function NewTransactionPageContent() {
@@ -115,13 +113,7 @@ function NewTransactionPageContent() {
     <AppLayout>
       {/* Header */}
       <header className="flex flex-wrap items-center justify-between gap-4 mb-5">
-        <Link href="/transactions">
-          <Button variant="secondary" size="sm" className="flex items-center gap-2">
-            <ArrowLeftIcon className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('backToTransactions')}</span>
-            <span className="sm:hidden">{tCommon('back')}</span>
-          </Button>
-        </Link>
+        <BackButton href="/transactions" label={t('backToTransactions')} />
       </header>
 
       {/* Page Title */}

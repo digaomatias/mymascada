@@ -37,6 +37,7 @@ import { useAuthGuard } from '@/hooks/use-auth-guard';
 export default function GoalsPage() {
   const { shouldRender, isAuthResolved } = useAuthGuard();
   const t = useTranslations('goals');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const [goals, setGoals] = useState<GoalSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -167,32 +168,33 @@ export default function GoalsPage() {
   return (
     <AppLayout>
       {/* Header */}
-      <header className="flex flex-wrap items-end justify-between gap-4 mb-5">
-        <div>
-          <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
-            {t('title')}
-          </h1>
-          <p className="mt-1.5 text-[15px] text-slate-500">
-            {t('journeySubtitle')}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="showCompleted"
-              checked={showCompleted}
-              onCheckedChange={(checked) => setShowCompleted(checked === true)}
-            />
-            <Label htmlFor="showCompleted" className="text-sm text-slate-600">
-              {t('filters.showCompleted')}
-            </Label>
+      <header className="mb-5">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
+              {t('title')}
+            </h1>
+            <p className="mt-1.5 text-[15px] text-slate-500">
+              {t('journeySubtitle')}
+            </p>
           </div>
           <Link href="/goals/new">
             <Button>
               <PlusIcon className="mr-1.5 h-4 w-4" />
-              {t('createGoal')}
+              <span className="hidden sm:inline">{t('createGoal')}</span>
+              <span className="sm:hidden">{tCommon('add')}</span>
             </Button>
           </Link>
+        </div>
+        <div className="mt-3 flex items-center gap-2">
+          <Checkbox
+            id="showCompleted"
+            checked={showCompleted}
+            onCheckedChange={(checked) => setShowCompleted(checked === true)}
+          />
+          <Label htmlFor="showCompleted" className="text-sm text-slate-600">
+            {t('filters.showCompleted')}
+          </Label>
         </div>
       </header>
 

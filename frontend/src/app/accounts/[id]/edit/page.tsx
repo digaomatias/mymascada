@@ -12,12 +12,12 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import {
-  ArrowLeftIcon,
   BuildingOffice2Icon,
   CheckIcon,
   ExclamationTriangleIcon,
   TrashIcon
 } from '@heroicons/react/24/outline';
+import { BackButton } from '@/components/ui/back-button';
 
 export default function EditAccountPage() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -174,13 +174,7 @@ export default function EditAccountPage() {
     <AppLayout>
       {/* Header */}
       <header className="flex flex-wrap items-center justify-between gap-4 mb-5">
-        <Link href="/accounts">
-          <Button variant="secondary" size="sm" className="flex items-center gap-2">
-            <ArrowLeftIcon className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('backToAccounts')}</span>
-            <span className="sm:hidden">{t('back')}</span>
-          </Button>
-        </Link>
+        <BackButton href="/accounts" label={t('backToAccounts')} />
       </header>
 
       {/* Page Title */}

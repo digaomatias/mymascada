@@ -10,11 +10,11 @@ import { Input } from '@/components/ui/input';
 import { apiClient } from '@/lib/api-client';
 import Link from 'next/link';
 import {
-  ArrowLeftIcon,
   TagIcon,
   CheckIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
+import { BackButton } from '@/components/ui/back-button';
 import { useTranslations } from 'next-intl';
 
 interface Category {
@@ -175,13 +175,7 @@ export default function NewCategoryPage() {
         <div className="mb-6 lg:mb-8">
           {/* Navigation Bar */}
           <div className="flex items-center justify-between mb-6">
-            <Link href="/categories">
-              <Button variant="secondary" size="sm" className="flex items-center gap-2">
-                <ArrowLeftIcon className="w-4 h-4" />
-                <span className="hidden sm:inline">{t('details.backToCategories')}</span>
-                <span className="sm:hidden">{tCommon('back')}</span>
-              </Button>
-            </Link>
+            <BackButton href="/categories" label={t('details.backToCategories')} />
           </div>
 
           {/* Page Title */}

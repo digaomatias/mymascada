@@ -1970,6 +1970,7 @@
       "unavailable": "Indisponível"
     },
     "bankConnections": {
+      "backToSettings": "Voltar para Configurações",
       "title": "Conexões Bancárias",
       "subtitle": "Conecte suas contas bancárias para importar transações automaticamente",
       "loading": "Carregando conexões bancárias...",
@@ -2982,6 +2983,7 @@
   "budgets": {
     "title": "Orçamentos",
     "backToBudgets": "Voltar para Orçamentos",
+    "backToBudget": "Voltar para Orçamento",
     "subtitle": "Gerencie seus limites de gastos por categoria",
     "noBudgets": "Nenhum orçamento ainda",
     "noBudgetsDescription": "Crie seu primeiro orçamento para começar a acompanhar gastos em relação às suas metas.",

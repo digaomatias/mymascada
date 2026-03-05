@@ -9,11 +9,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { apiClient } from '@/lib/api-client';
 import Link from 'next/link';
-import { 
-  ArrowLeftIcon,
+import {
   TagIcon,
   CheckIcon
 } from '@heroicons/react/24/outline';
+import { BackButton } from '@/components/ui/back-button';
 import { renderCategoryIcon } from '@/lib/category-icons';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
@@ -215,13 +215,7 @@ export default function EditCategoryPage() {
         <div className="mb-6 lg:mb-8">
           {/* Navigation Bar */}
           <div className="flex items-center justify-between mb-6">
-            <Link href={`/categories/${categoryId}`}>
-              <Button variant="secondary" size="sm" className="flex items-center gap-2">
-                <ArrowLeftIcon className="w-4 h-4" />
-                <span className="hidden sm:inline">{t('edit.backToCategory')}</span>
-                <span className="sm:hidden">{tCommon('back')}</span>
-              </Button>
-            </Link>
+            <BackButton href={`/categories/${categoryId}`} label={t('edit.backToCategory')} />
           </div>
 
           {/* Page Title */}

@@ -11,9 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { apiClient } from '@/lib/api-client';
-import Link from 'next/link';
 import {
-  ArrowLeftIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
   CalendarIcon,
@@ -27,6 +25,7 @@ import {
 import { CategoryPicker } from '@/components/forms/category-picker';
 import { CategorizationRibbon } from '@/components/forms/categorization-ribbon';
 import { Pagination, usePagination } from '@/components/ui/pagination';
+import { BackButton } from '@/components/ui/back-button';
 import { useDeviceDetect } from '@/hooks/use-device-detect';
 import { useTransactionCandidates } from '@/hooks/use-transaction-candidates';
 import { toast } from 'sonner';
@@ -286,15 +285,7 @@ export default function CategorizePage() {
       <AiSuggestionsProvider>
         {/* Header */}
         <header className="flex flex-wrap items-center justify-between gap-4 mb-5">
-          <Button
-            variant="secondary"
-            size="sm"
-            className="flex items-center gap-2"
-            onClick={() => router.back()}
-          >
-            <ArrowLeftIcon className="w-4 h-4" />
-            <span className="hidden sm:inline">{tCommon('back')}</span>
-          </Button>
+          <BackButton label={t('backToTransactions')} onClick={() => router.back()} />
         </header>
 
         {/* Page Title */}
@@ -442,12 +433,7 @@ export default function CategorizePage() {
                     }
                   </p>
                   <div className="flex justify-center">
-                    <Link href="/transactions">
-                      <Button className="flex items-center gap-2">
-                        <ArrowLeftIcon className="w-4 h-4" />
-                        {t('backToTransactions')}
-                      </Button>
-                    </Link>
+                    <BackButton href="/transactions" label={t('backToTransactions')} />
                   </div>
                 </>
               ) : (
@@ -474,12 +460,7 @@ export default function CategorizePage() {
                     >
                       {t('clearFilters')}
                     </Button>
-                    <Link href="/transactions">
-                      <Button className="flex items-center gap-2">
-                        <ArrowLeftIcon className="w-4 h-4" />
-                        {t('backToTransactions')}
-                      </Button>
-                    </Link>
+                    <BackButton href="/transactions" label={t('backToTransactions')} />
                   </div>
                 </>
               )}

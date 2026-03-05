@@ -9,7 +9,6 @@ import {
   CheckCircleIcon,
   ArrowPathIcon,
   ScaleIcon,
-  ArrowLeftIcon,
   CloudArrowDownIcon,
   DocumentArrowUpIcon,
   LinkIcon
@@ -25,6 +24,7 @@ import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
+import { BackButton } from '@/components/ui/back-button';
 
 type ReconciliationStep = 'initiate' | 'import' | 'matching' | 'review' | 'complete';
 type ImportSource = 'file' | 'akahu';
@@ -658,11 +658,7 @@ export default function ReconcileAccountPage() {
               </div>
 
               <div className="flex justify-center">
-                <Link href={`/accounts/${accountId}`}>
-                  <Button>
-                    {t('backToAccount')}
-                  </Button>
-                </Link>
+                <BackButton href={`/accounts/${accountId}`} label={t('backToAccount')} />
               </div>
             </div>
           </div>
@@ -729,12 +725,7 @@ export default function ReconcileAccountPage() {
     <AppLayout>
       {/* Header */}
       <header className="flex flex-wrap items-center justify-between gap-4 mb-5">
-        <Link href={`/accounts/${accountId}`}>
-          <Button variant="secondary" size="sm" className="flex items-center gap-2">
-            <ArrowLeftIcon className="w-4 h-4" />
-            {t('backToAccount')}
-          </Button>
-        </Link>
+        <BackButton href={`/accounts/${accountId}`} label={t('backToAccount')} />
       </header>
 
       {/* Page Title */}

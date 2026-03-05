@@ -24,7 +24,6 @@ import { apiClient, GoalDetail, OnboardingStatusResponse } from '@/lib/api-clien
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
 import {
-  ArrowLeftIcon,
   PencilIcon,
   TrashIcon,
   ArrowTrendingUpIcon,
@@ -32,6 +31,7 @@ import {
   CalendarDaysIcon,
   LinkIcon,
 } from '@heroicons/react/24/outline';
+import { BackButton } from '@/components/ui/back-button';
 import { MapPinIcon as MapPinSolidIcon } from '@heroicons/react/24/solid';
 import {
   getGoalTypeConfig,
@@ -169,13 +169,7 @@ export default function GoalDetailPage() {
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-3">
-            <Link
-              href="/goals"
-              className="inline-flex items-center gap-1 text-sm text-slate-500 transition-colors hover:text-violet-700"
-            >
-              <ArrowLeftIcon className="h-4 w-4" />
-              {t('backToGoals')}
-            </Link>
+            <BackButton variant="link" href="/goals" label={t('backToGoals')} />
 
             {/* Title row */}
             <div className="flex items-center gap-3">

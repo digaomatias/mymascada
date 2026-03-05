@@ -8,14 +8,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import Link from 'next/link';
 import {
   SparklesIcon,
-  ArrowLeftIcon,
   CheckCircleIcon,
   ExclamationCircleIcon,
   InformationCircleIcon,
 } from '@heroicons/react/24/outline';
+import { BackButton } from '@/components/ui/back-button';
 import { useTranslations } from 'next-intl';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
@@ -286,13 +285,7 @@ export default function AiSettingsPage() {
   return (
     <AppLayout>
       {/* Back link */}
-        <Link
-          href="/settings"
-          className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 mb-4"
-        >
-          <ArrowLeftIcon className="w-4 h-4" />
-          {t('backToSettings')}
-        </Link>
+        <BackButton variant="link" href="/settings" label={t('backToSettings')} />
 
         {/* Header */}
         <div className="mb-6 lg:mb-8">

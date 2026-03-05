@@ -11,13 +11,12 @@ import { LinkAccountDialog } from '@/components/bank-connections/link-account-di
 import { AkahuSetupDialog } from '@/components/bank-connections/akahu-setup-dialog';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
-import Link from 'next/link';
 import {
   BuildingLibraryIcon,
   PlusIcon,
-  ArrowLeftIcon,
   InformationCircleIcon
 } from '@heroicons/react/24/outline';
+import { BackButton } from '@/components/ui/back-button';
 import { useTranslations } from 'next-intl';
 import type { BankConnection, BankProviderInfo, AkahuAccount } from '@/types/bank-connections';
 
@@ -25,7 +24,6 @@ export default function BankConnectionsPage() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const t = useTranslations('settings.bankConnections');
-  const tNav = useTranslations('nav');
 
   const [connections, setConnections] = useState<BankConnection[]>([]);
   const [providers, setProviders] = useState<BankProviderInfo[]>([]);
@@ -206,15 +204,7 @@ export default function BankConnectionsPage() {
     <AppLayout>
       {/* Header */}
         <div className="mb-6 lg:mb-8">
-          <div className="flex items-center gap-2 mb-2">
-            <Link
-              href="/settings"
-              className="p-1 hover:bg-white/50 rounded-lg transition-colors"
-            >
-              <ArrowLeftIcon className="w-5 h-5 text-slate-600" />
-            </Link>
-            <span className="text-sm text-slate-500">{tNav('settings')}</span>
-          </div>
+          <BackButton variant="link" href="/settings" label={t('backToSettings')} />
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>

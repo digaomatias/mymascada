@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { AppLayout } from '@/components/app-layout';
@@ -13,13 +12,13 @@ import { apiClient, CategoryTrendsResponse } from '@/lib/api-client';
 import { formatCurrency } from '@/lib/utils';
 import { useAuth } from '@/contexts/auth-context';
 import {
-  ArrowLeftIcon,
   ArrowPathIcon,
   BanknotesIcon,
   CalendarIcon,
   ChartBarIcon,
   SparklesIcon,
 } from '@heroicons/react/24/outline';
+import { BackButton } from '@/components/ui/back-button';
 
 const PANEL_CLASS =
   'rounded-[26px] border border-violet-100/70 bg-white/92 p-5 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs';
@@ -160,13 +159,7 @@ export default function CategoryTrendsPage() {
   return (
     <AppLayout>
       <header className="mb-5">
-        <Link
-          href="/analytics"
-          className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-violet-700"
-        >
-          <ArrowLeftIcon className="h-4 w-4" />
-          <span>{t('categoryTrends.backToAnalytics')}</span>
-        </Link>
+        <BackButton variant="link" href="/analytics" label={t('categoryTrends.backToAnalytics')} />
 
         <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
           {t('categoryTrends.title')}

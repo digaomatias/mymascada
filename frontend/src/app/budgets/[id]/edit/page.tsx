@@ -16,12 +16,12 @@ import type { BudgetDetail, BudgetSuggestion } from '@/types/budget';
 import { formatCurrency } from '@/types/budget';
 import { toast } from 'sonner';
 import {
-  ArrowLeftIcon,
   LightBulbIcon,
   MagnifyingGlassIcon,
   PlusIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
+import { BackButton } from '@/components/ui/back-button';
 import { renderCategoryIcon } from '@/lib/category-icons';
 
 const BUDGET_BASE = '/budgets';
@@ -270,13 +270,7 @@ export default function EditBudgetPage() {
     <AppLayout>
       <div>
         <header className="mb-5">
-          <Link
-            href={`${BUDGET_BASE}/${budget.id}`}
-            className="inline-flex items-center text-sm font-medium text-slate-500 transition-colors hover:text-violet-700"
-          >
-            <ArrowLeftIcon className="mr-1.5 h-4 w-4" />
-            {tCommon('back')}
-          </Link>
+          <BackButton variant="link" href={`${BUDGET_BASE}/${budget.id}`} label={t('backToBudget')} />
           <h1 className="mt-2 font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
             {t('editBudget')}
           </h1>
