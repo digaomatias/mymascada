@@ -9,6 +9,8 @@ public class CategoryTrendsResponseDto
     public DateTime EndDate { get; set; }
     public List<CategoryTrendDto> Categories { get; set; } = new();
     public List<TrendPeriodSummaryDto> PeriodSummaries { get; set; } = new();
+    public decimal TotalSpending { get; set; }
+    public decimal AvgMonthlySpending { get; set; }
 }
 
 /// <summary>
@@ -22,6 +24,10 @@ public class CategoryTrendDto
     public decimal TotalSpent { get; set; }
     public decimal AverageMonthlySpent { get; set; }
     public List<PeriodAmountDto> Periods { get; set; } = new();
+    public string Trend { get; set; } = "stable";
+    public decimal TrendPercentage { get; set; }
+    public PeriodAmountDto? HighestMonth { get; set; }
+    public PeriodAmountDto? LowestMonth { get; set; }
 }
 
 /// <summary>

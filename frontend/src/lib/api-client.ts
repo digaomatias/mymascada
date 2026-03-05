@@ -40,6 +40,14 @@ import type {
   SaveTelegramSettingsRequest,
   TelegramTestResult,
 } from '@/types/telegram-settings';
+import type {
+  DashboardSummaryResponse,
+  CashflowHistoryResponse,
+  AnalyticsSummaryResponse,
+  AttentionItemsResponse,
+  BudgetHealthSummaryResponse,
+  CoachingInsightResponse,
+} from '@/types/api-responses';
 
 class ApiClient {
   private baseURL: string;
@@ -543,6 +551,39 @@ class ApiClient {
     const endpoint = `/api/reports/category-trends${queryString ? `?${queryString}` : ''}`;
 
     return this.request(endpoint);
+  }
+
+  async getDashboardSummary(): Promise<DashboardSummaryResponse> {
+    return this.request('/api/reports/dashboard-summary');
+  }
+
+  async getCashflowHistory(months: number = 7): Promise<CashflowHistoryResponse> {
+    return this.request(`/api/reports/cashflow-history?months=${months}`);
+  }
+
+  async getAnalyticsSummary(params?: {
+    period?: string;
+    year?: number;
+    month?: number;
+  }): Promise<AnalyticsSummaryResponse> {
+    const queryParams = new URLSearchParams();
+    if (params?.period) queryParams.append('period', params.period);
+    if (params?.year) queryParams.append('year', params.year.toString());
+    if (params?.month) queryParams.append('month', params.month.toString());
+    const qs = queryParams.toString();
+    return this.request(`/api/reports/analytics-summary${qs ? `?${qs}` : ''}`);
+  }
+
+  async getAttentionItems(): Promise<AttentionItemsResponse> {
+    return this.request('/api/dashboard-nudges/attention-items');
+  }
+
+  async getBudgetHealthSummary(): Promise<BudgetHealthSummaryResponse> {
+    return this.request('/api/budgets/health-summary');
+  }
+
+  async getCoachingInsight(): Promise<CoachingInsightResponse> {
+    return this.request('/api/goals/coaching-insight');
   }
 
   // Account methods

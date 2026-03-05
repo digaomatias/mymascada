@@ -5,10 +5,9 @@ import { useTranslations } from 'next-intl';
 import { DashboardCard } from '@/components/dashboard/dashboard-card';
 import { apiClient } from '@/lib/api-client';
 import { formatCurrency, cn } from '@/lib/utils';
+import type { DashboardSummaryResponse } from '@/types/api-responses';
 
 type Period = 'month' | 'quarter';
-type MonthlySummary = { totalIncome: number; totalExpenses: number };
-const emptySummary: MonthlySummary = { totalIncome: 0, totalExpenses: 0 };
 
 interface RunwayData {
   totalBalance: number;
@@ -23,6 +22,7 @@ export function FinancialRunwayCard() {
   const [period, setPeriod] = useState<Period>('month');
   const t = useTranslations('dashboard.cards.runway');
   const [data, setData] = useState<RunwayData | null>(null);
+  const [summaryData, setSummaryData] = useState<DashboardSummaryResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,89 +32,25 @@ export function FinancialRunwayCard() {
         setLoading(true);
         setError(null);
 
-        const now = new Date();
-        const currentMonth = now.getMonth() + 1;
-        const currentYear = now.getFullYear();
-        const dayOfMonth = now.getDate();
-        const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
-
-        // Build list of previous 3 complete months
-        const prevMonths: { year: number; month: number }[] = [];
-        for (let i = 1; i <= 3; i++) {
-          let m = currentMonth - i;
-          let y = currentYear;
-          if (m <= 0) {
-            m += 12;
-            y -= 1;
-          }
-          prevMonths.push({ year: y, month: m });
+        // Only fetch from the API once; reuse on period toggle
+        let summary = summaryData;
+        if (!summary) {
+          summary = await apiClient.getDashboardSummary();
+          setSummaryData(summary);
         }
 
-        const [accounts, currentSummary, ...prevSummaries] = await Promise.all([
-          apiClient.getAccountsWithBalances() as Promise<
-            { calculatedBalance: number }[]
-          >,
-          apiClient.getMonthlySummary(currentYear, currentMonth).catch(
-            () => emptySummary,
-          ) as Promise<MonthlySummary>,
-          ...prevMonths.map(({ year, month }) =>
-            apiClient.getMonthlySummary(year, month).catch(
-              () => emptySummary,
-            ) as Promise<MonthlySummary>,
-          ),
-        ]);
-
-        const totalBalance =
-          accounts?.reduce(
-            (sum, a) => sum + (a.calculatedBalance || 0),
-            0,
-          ) || 0;
-
-        // Use complete months that have data
-        const validMonths: MonthlySummary[] = prevSummaries.filter(
-          (s) => (s?.totalIncome || 0) > 0 || (s?.totalExpenses || 0) > 0,
-        );
-
-        // If fewer than 3 complete months, project current partial month
-        // Only project if enough days have passed to avoid volatile early-month estimates
-        if (validMonths.length < 3 && dayOfMonth > 5) {
-          const curIncome = currentSummary?.totalIncome || 0;
-          const curExpenses = currentSummary?.totalExpenses || 0;
-          if (curIncome > 0 || curExpenses > 0) {
-            const factor = daysInMonth / dayOfMonth;
-            validMonths.push({
-              totalIncome: curIncome * factor,
-              totalExpenses: curExpenses * factor,
-            });
-          }
-        }
-
-        // Average monthly income/expenses across available months
-        let income = 0;
-        let expenses = 0;
-        if (validMonths.length > 0) {
-          income = validMonths.reduce((sum, s) => sum + (s.totalIncome || 0), 0) / validMonths.length;
-          expenses = validMonths.reduce((sum, s) => sum + (s.totalExpenses || 0), 0) / validMonths.length;
-        }
-
-        if (period === 'quarter') {
-          income *= 3;
-          expenses *= 3;
-        }
-
-        const monthlyExpenses = period === 'quarter' ? expenses / 3 : expenses;
-        const runwayMonths =
-          monthlyExpenses > 0
-            ? Math.round((totalBalance / monthlyExpenses) * 10) / 10
-            : 0;
+        // The API returns monthly averages; for quarter view, multiply by 3
+        const multiplier = period === 'quarter' ? 3 : 1;
+        const income = summary.avgMonthlyIncome * multiplier;
+        const expenses = summary.avgMonthlyExpenses * multiplier;
         const netSaved = income - expenses;
         const savingsRate = income > 0 ? Math.round((netSaved / income) * 100) : 0;
 
         setData({
-          totalBalance,
+          totalBalance: summary.totalBalance,
           monthlyExpenses: expenses,
           monthlyIncome: income,
-          runwayMonths,
+          runwayMonths: summary.runwayMonths,
           savingsRate,
           netSaved,
         });
@@ -127,7 +63,7 @@ export function FinancialRunwayCard() {
     };
 
     load();
-  }, [period]);
+  }, [period, summaryData]);
 
   const tDashboard = useTranslations('dashboard');
 

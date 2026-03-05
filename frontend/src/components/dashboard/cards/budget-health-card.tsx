@@ -13,6 +13,7 @@ import {
   WalletIcon,
 } from '@heroicons/react/24/outline';
 
+
 interface BudgetRow {
   id: number;
   name: string;
@@ -26,6 +27,9 @@ const BAR_COLORS = ['#10b981', '#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4
 export function BudgetHealthCard() {
   const t = useTranslations('dashboard.cards.budget');
   const [budgets, setBudgets] = useState<BudgetRow[]>([]);
+  const [overCount, setOverCount] = useState(0);
+  const [topOverBudget, setTopOverBudget] = useState<BudgetRow | null>(null);
+  const [overAmount, setOverAmount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,19 +37,27 @@ export function BudgetHealthCard() {
     const load = async () => {
       try {
         setLoading(true);
-        const data = await apiClient.getBudgets({
-          includeInactive: false,
-          onlyCurrentPeriod: true,
-        });
-        setBudgets(
-          (data || []).map((b) => ({
-            id: b.id,
-            name: b.name,
-            totalSpent: b.totalSpent,
-            totalBudgeted: b.totalBudgeted,
-            usedPercentage: b.usedPercentage,
-          })),
-        );
+        const [data, budgetList] = await Promise.all([
+          apiClient.getBudgetHealthSummary(),
+          apiClient.getBudgets({ includeInactive: false, onlyCurrentPeriod: true }),
+        ]);
+
+        // Use the health summary aggregate data
+        setOverCount(data.overCount);
+
+        const rows = (budgetList || []).map((b) => ({
+          id: b.id,
+          name: b.name,
+          totalSpent: b.totalSpent,
+          totalBudgeted: b.totalBudgeted,
+          usedPercentage: b.usedPercentage,
+        }));
+
+        setBudgets(rows);
+
+        const firstOver = rows.find((b) => b.usedPercentage >= 100) ?? null;
+        setTopOverBudget(firstOver);
+        setOverAmount(firstOver ? firstOver.totalSpent - firstOver.totalBudgeted : 0);
       } catch (err) {
         console.error('Failed to load budgets:', err);
         setError('Failed to load budget data');
@@ -55,12 +67,6 @@ export function BudgetHealthCard() {
     };
     load();
   }, []);
-
-  const overCount = budgets.filter((b) => b.usedPercentage >= 100).length;
-  const topOverBudget = budgets.find((b) => b.usedPercentage >= 100);
-  const overAmount = topOverBudget
-    ? topOverBudget.totalSpent - topOverBudget.totalBudgeted
-    : 0;
 
   return (
     <DashboardCard cardId="budget-health" loading={loading} error={error}>

@@ -10,6 +10,7 @@ import { PeriodSelector, PeriodType } from '@/components/analytics/period-select
 import { apiClient } from '@/lib/api-client';
 import { cn, formatCurrency } from '@/lib/utils';
 import { useAuthGuard } from '@/hooks/use-auth-guard';
+import type { AnalyticsSummaryResponse } from '@/types/api-responses';
 import {
   ArrowRightIcon,
   ArrowTrendingDownIcon,
@@ -107,12 +108,12 @@ export default function AnalyticsPage() {
   const t = useTranslations('analytics');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [analyticsSummary, setAnalyticsSummary] = useState<AnalyticsSummaryResponse | null>(null);
   const [monthlyTrends, setMonthlyTrends] = useState<MonthlyTrend[]>([]);
   const [yearlyData, setYearlyData] = useState<YearlyComparison[]>([]);
   const [categoryData, setCategoryData] = useState<MonthlySummaryCategory[]>([]);
   const [loadingTrends, setLoadingTrends] = useState(true);
   const [loadingCategories, setLoadingCategories] = useState(true);
-  const [loadingYearly, setLoadingYearly] = useState(true);
   const [timeRange, setTimeRange] = useState<PeriodType>('year');
 
   useEffect(() => {
@@ -122,78 +123,40 @@ export default function AnalyticsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthResolved, selectedYear, selectedMonth, timeRange]);
 
-  const loadTrendsData = async (
+  const loadAnalyticsSummary = async (
     range: PeriodType,
     year: number,
     month: number,
   ) => {
     setLoadingTrends(true);
     try {
-      const selectedQuarter = Math.ceil(month / 3);
-      const quarterStartMonth = (selectedQuarter - 1) * 3 + 1;
-
-      let monthsToLoad: number;
-      let startMonth: number;
-      let startYear: number;
-
-      switch (range) {
-        case 'month':
-          monthsToLoad = 1;
-          startMonth = month;
-          startYear = year;
-          break;
-        case 'quarter':
-          monthsToLoad = 3;
-          startMonth = quarterStartMonth;
-          startYear = year;
-          break;
-        case 'year':
-          monthsToLoad = 12;
-          startMonth = 1;
-          startYear = year;
-          break;
-        case 'all':
-        default:
-          monthsToLoad = 24;
-          startMonth = 1;
-          startYear = year - 1;
-          break;
-      }
-
-      const monthParams = Array.from({ length: monthsToLoad }, (_, i) => {
-        let m = startMonth + i;
-        let y = startYear;
-        while (m > 12) {
-          m -= 12;
-          y += 1;
-        }
-        return { year: y, month: m };
+      const summary = await apiClient.getAnalyticsSummary({
+        period: range,
+        year,
+        month,
       });
 
-      const results = await Promise.allSettled(
-        monthParams.map(({ year: y, month: m }) => apiClient.getMonthlySummary(y, m)),
-      );
+      setAnalyticsSummary(summary);
 
-      const trends: MonthlyTrend[] = [];
-      results.forEach((result, i) => {
-        if (result.status === 'fulfilled') {
-          const summary = result.value as MonthlySummary;
-          const { year: y, month: m } = monthParams[i];
-          trends.push({
-            month: new Date(y, m - 1).toLocaleDateString('en-US', {
-              month: 'short',
-              year: '2-digit',
-            }),
-            income: summary.totalIncome || 0,
-            expenses: Math.abs(summary.totalExpenses || 0),
-            net: summary.netAmount || 0,
-          });
-        }
-      });
-
+      // Map monthly trends from API response
+      const trends: MonthlyTrend[] = (summary.monthlyTrends || []).map((mt) => ({
+        month: mt.label,
+        income: mt.income,
+        expenses: Math.abs(mt.expenses),
+        net: mt.net,
+      }));
       setMonthlyTrends(trends);
+
+      // Map yearly comparisons from API response
+      const yearly: YearlyComparison[] = (summary.yearlyComparisons || []).map((yc) => ({
+        year: yc.year,
+        totalIncome: yc.totalIncome,
+        totalExpenses: Math.abs(yc.totalExpenses),
+        netIncome: yc.netAmount,
+      }));
+      setYearlyData(yearly);
     } catch (error) {
-      console.error('Failed to load trends data:', error);
+      console.error('Failed to load analytics summary:', error);
     } finally {
       setLoadingTrends(false);
     }
@@ -214,54 +177,9 @@ export default function AnalyticsPage() {
     }
   };
 
-  const loadYearlyData = async (year: number) => {
-    setLoadingYearly(true);
-    try {
-      const years = [year - 2, year - 1, year];
-      const allParams = years.flatMap((y) =>
-        Array.from({ length: 12 }, (_, i) => ({ year: y, month: i + 1 })),
-      );
-
-      const results = await Promise.allSettled(
-        allParams.map(({ year: y, month: m }) => apiClient.getMonthlySummary(y, m)),
-      );
-
-      const yearTotals = new Map<number, { income: number; expenses: number }>(
-        years.map((y) => [y, { income: 0, expenses: 0 }]),
-      );
-
-      results.forEach((result, i) => {
-        if (result.status === 'fulfilled') {
-          const summary = result.value as MonthlySummary;
-          const { year: y } = allParams[i];
-          const totals = yearTotals.get(y)!;
-          totals.income += summary.totalIncome || 0;
-          totals.expenses += Math.abs(summary.totalExpenses || 0);
-        }
-      });
-
-      const yearlyComparison: YearlyComparison[] = years.map((y) => {
-        const totals = yearTotals.get(y)!;
-        return {
-          year: y,
-          totalIncome: totals.income,
-          totalExpenses: totals.expenses,
-          netIncome: totals.income - totals.expenses,
-        };
-      });
-
-      setYearlyData(yearlyComparison);
-    } catch (error) {
-      console.error('Failed to load yearly data:', error);
-    } finally {
-      setLoadingYearly(false);
-    }
-  };
-
   const loadAnalyticsData = () => {
-    loadTrendsData(timeRange, selectedYear, selectedMonth);
+    loadAnalyticsSummary(timeRange, selectedYear, selectedMonth);
     loadCategoryData(timeRange, selectedYear, selectedMonth);
-    loadYearlyData(selectedYear);
   };
 
   const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string }) => {
@@ -280,36 +198,31 @@ export default function AnalyticsPage() {
     return null;
   };
 
-  const totalIncome = monthlyTrends.reduce((sum, m) => sum + m.income, 0);
-  const totalExpenses = monthlyTrends.reduce((sum, m) => sum + m.expenses, 0);
-  const avgMonthlyIncome = monthlyTrends.length > 0 ? totalIncome / monthlyTrends.length : 0;
-  const avgMonthlyExpenses = monthlyTrends.length > 0 ? totalExpenses / monthlyTrends.length : 0;
-  const netAmount = totalIncome - totalExpenses;
-  const savingsRate = totalIncome > 0 ? (netAmount / totalIncome) * 100 : 0;
+  // Use pre-computed values from the API when available
+  const avgMonthlyIncome = analyticsSummary?.avgMonthlyIncome ?? 0;
+  const avgMonthlyExpenses = analyticsSummary?.avgMonthlyExpenses ?? 0;
+  const netAmount = analyticsSummary?.netAmount ?? 0;
+  const savingsRate = analyticsSummary?.savingsRate ?? 0;
   const totalCategorySpend = categoryData.reduce((sum, item) => sum + Math.abs(item.amount), 0);
 
-  const bestMonth = useMemo(
-    () => (monthlyTrends.length > 0 ? monthlyTrends.reduce((best, cur) => (cur.net > best.net ? cur : best)) : null),
-    [monthlyTrends],
-  );
+  const bestMonth = analyticsSummary?.bestMonth
+    ? { month: analyticsSummary.bestMonth.label, net: analyticsSummary.bestMonth.netAmount }
+    : null;
 
-  const lowestMonth = useMemo(
-    () =>
-      monthlyTrends.length > 0
-        ? monthlyTrends.reduce((worst, cur) => (cur.net < worst.net ? cur : worst))
-        : null,
-    [monthlyTrends],
-  );
+  const lowestMonth = analyticsSummary?.worstMonth
+    ? { month: analyticsSummary.worstMonth.label, net: analyticsSummary.worstMonth.netAmount }
+    : null;
 
-  const bestYear = useMemo(
-    () => (yearlyData.length > 0 ? yearlyData.reduce((best, cur) => (cur.netIncome > best.netIncome ? cur : best)) : null),
-    [yearlyData],
-  );
+  const bestYear = useMemo(() =>
+    yearlyData.length > 0
+      ? yearlyData.reduce((best, cur) => (cur.netIncome > best.netIncome ? cur : best))
+      : null,
+    [yearlyData]);
 
   // Initial load: no data yet. Filter change: data exists, show stale while reloading.
   const initialTrends = loadingTrends && monthlyTrends.length === 0;
   const initialCategories = loadingCategories && categoryData.length === 0;
-  const initialYearly = loadingYearly && yearlyData.length === 0;
+  const initialYearly = loadingTrends && yearlyData.length === 0;
 
   const insightTone = netAmount >= 0 ? 'emerald' : 'amber';
 
@@ -376,7 +289,7 @@ export default function AnalyticsPage() {
             </div>
 
             <p className="text-xs font-medium uppercase tracking-[0.08em] text-slate-500">
-              {t('dateRange')} • {monthlyTrends.length}
+              {t('dateRange')} • {analyticsSummary?.monthCount ?? monthlyTrends.length}
             </p>
           </div>
         </section>
@@ -566,7 +479,7 @@ export default function AnalyticsPage() {
         {initialYearly ? (
           <div className={cn(SKELETON_PANEL_CLASS, 'h-[390px] animate-pulse')} />
         ) : (
-          <section className={cn(PANEL_CLASS, loadingYearly && 'opacity-60 transition-opacity duration-200')}>
+          <section className={cn(PANEL_CLASS, loadingTrends && 'opacity-60 transition-opacity duration-200')}>
             <div className="flex items-center justify-between gap-3">
               <h2 className="font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900">
                 {t('charts.yearlyComparison')}

@@ -45,7 +45,24 @@ public class GetGoalsQueryHandler : IRequestHandler<GetGoalsQuery, IEnumerable<G
             accountBalances = await _transactionRepository.GetAccountBalancesAsync(request.UserId);
         }
 
-        return goalsList.Select(g => MapToSummaryDto(g, accountBalances)).ToList();
+        var dtos = goalsList.Select(g => MapToSummaryDto(g, accountBalances)).ToList();
+
+        // Server-side sort: inactive last, pinned first, journeyPriority, state urgency, daysRemaining
+        var sorted = dtos
+            .OrderBy(d => IsInactiveState(d.TrackingState) ? 1 : 0)
+            .ThenByDescending(d => d.IsPinned)
+            .ThenBy(d => d.JourneyPriority)
+            .ThenBy(d => GetStateUrgency(d.TrackingState))
+            .ThenBy(d => d.DaysRemaining.HasValue ? 0 : 1)
+            .ThenBy(d => d.DaysRemaining ?? int.MaxValue)
+            .ToList();
+
+        for (var i = 0; i < sorted.Count; i++)
+        {
+            sorted[i].SortOrder = i;
+        }
+
+        return sorted;
     }
 
     private static GoalSummaryDto MapToSummaryDto(Goal goal, Dictionary<int, decimal> accountBalances)
@@ -67,6 +84,12 @@ public class GetGoalsQueryHandler : IRequestHandler<GetGoalsQuery, IEnumerable<G
 
         var remainingAmount = Math.Max(goal.TargetAmount - currentAmount, 0);
 
+        var status = goal.Status.ToString();
+        var trackingState = GetTrackingState(status, goal.Deadline, daysRemaining, progressPercentage);
+        var (journeyStage, journeyPriority) = GetJourney(goal.GoalType);
+        var currentMilestone = GetCurrentMilestone(progressPercentage);
+        var nextMilestone = currentMilestone < 100 ? currentMilestone + 25 : (int?)null;
+
         return new GoalSummaryDto
         {
             Id = goal.Id,
@@ -77,11 +100,64 @@ public class GetGoalsQueryHandler : IRequestHandler<GetGoalsQuery, IEnumerable<G
             ProgressPercentage = progressPercentage,
             RemainingAmount = remainingAmount,
             GoalType = goal.GoalType.ToString(),
-            Status = goal.Status.ToString(),
+            Status = status,
             Deadline = goal.Deadline,
             DaysRemaining = daysRemaining,
             LinkedAccountName = goal.Account?.Name,
-            IsPinned = goal.IsPinned
+            IsPinned = goal.IsPinned,
+            TrackingState = trackingState,
+            JourneyStage = journeyStage,
+            JourneyPriority = journeyPriority,
+            CurrentMilestone = currentMilestone > 0 ? currentMilestone : null,
+            NextMilestone = nextMilestone
         };
     }
+
+    private static string GetTrackingState(string status, DateTime? deadline, int? daysRemaining, decimal progressPercentage)
+    {
+        if (status == "Completed") return "completed";
+        if (status is "Paused" or "Abandoned") return "paused";
+
+        if (deadline.HasValue && daysRemaining.HasValue && daysRemaining.Value <= 0)
+            return "overdue";
+
+        if (deadline.HasValue && daysRemaining.HasValue && daysRemaining.Value > 0)
+        {
+            var remainingPct = 100m - progressPercentage;
+            if ((remainingPct / daysRemaining.Value > 2.0m) ||
+                (daysRemaining.Value <= 14 && progressPercentage < 80))
+            {
+                return "behind";
+            }
+
+            return "onTrack";
+        }
+
+        return "noDeadline";
+    }
+
+    private static (string Stage, int Priority) GetJourney(GoalType goalType) => goalType switch
+    {
+        GoalType.EmergencyFund => ("foundation", 1),
+        GoalType.DebtPayoff => ("freedom", 2),
+        GoalType.Investment or GoalType.Savings => ("growth", 3),
+        _ => ("dreams", 4)
+    };
+
+    private static int GetCurrentMilestone(decimal progressPercentage)
+    {
+        return (int)(Math.Floor(progressPercentage / 25m) * 25);
+    }
+
+    private static bool IsInactiveState(string trackingState) =>
+        trackingState is "completed" or "paused";
+
+    private static int GetStateUrgency(string trackingState) => trackingState switch
+    {
+        "overdue" => 0,
+        "behind" => 1,
+        "onTrack" => 2,
+        "noDeadline" => 3,
+        _ => 4
+    };
 }

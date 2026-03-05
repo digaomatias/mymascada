@@ -26,6 +26,32 @@ public class BudgetsController : ControllerBase
     }
 
     /// <summary>
+    /// Get a health summary of all active budgets
+    /// </summary>
+    [HttpGet("health-summary")]
+    public async Task<ActionResult<BudgetHealthSummaryDto>> GetHealthSummary()
+    {
+        try
+        {
+            var query = new GetBudgetHealthSummaryQuery
+            {
+                UserId = _currentUserService.GetUserId()
+            };
+
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while retrieving budget health summary." });
+        }
+    }
+
+    /// <summary>
     /// Get all budgets for the current user
     /// </summary>
     [HttpGet]

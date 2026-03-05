@@ -26,6 +26,32 @@ public class GoalsController : ControllerBase
     }
 
     /// <summary>
+    /// Get a coaching insight based on current financial state
+    /// </summary>
+    [HttpGet("coaching-insight")]
+    public async Task<ActionResult<CoachingInsightDto>> GetCoachingInsight()
+    {
+        try
+        {
+            var query = new GetCoachingInsightQuery
+            {
+                UserId = _currentUserService.GetUserId()
+            };
+
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while generating coaching insight." });
+        }
+    }
+
+    /// <summary>
     /// Get all goals for the current user
     /// </summary>
     [HttpGet]

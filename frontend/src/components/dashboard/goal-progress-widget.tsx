@@ -53,6 +53,7 @@ export function GoalProgressWidget({ heroMode = true }: GoalProgressWidgetProps)
       try {
         setLoading(true);
         const data = await apiClient.getGoals({ includeCompleted: false });
+        // Goals are pre-sorted by the API (by journey priority, tracking state, etc.)
         setGoals(data);
       } catch (error) {
         console.error('Failed to load goals:', error);
@@ -142,13 +143,10 @@ export function GoalProgressWidget({ heroMode = true }: GoalProgressWidgetProps)
     );
   }
 
-  // Sort by progress desc
-  const sorted = [...goals].sort(
-    (a, b) => b.progressPercentage - a.progressPercentage,
-  );
-  const topGoals = sorted.slice(0, 3);
-  const primary = sorted[0];
-  const others = sorted.slice(1, 3);
+  // Goals are pre-sorted by API; use as-is
+  const topGoals = goals.slice(0, 3);
+  const primary = goals[0];
+  const others = goals.slice(1, 3);
 
   // Classic mode: compact card with progress bars
   if (!heroMode) {

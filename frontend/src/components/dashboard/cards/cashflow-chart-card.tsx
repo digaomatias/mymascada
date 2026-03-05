@@ -99,8 +99,6 @@ function CashflowChart({ data }: { data: MonthData[] }) {
   );
 }
 
-const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
 export function CashflowChartCard() {
   const t = useTranslations('dashboard.cards.cashflow');
   const [chartData, setChartData] = useState<MonthData[]>([]);
@@ -113,31 +111,12 @@ export function CashflowChartCard() {
         setLoading(true);
         setError(null);
 
-        const now = new Date();
-        const promises: Promise<{ totalIncome: number; totalExpenses: number; month: number; year: number }>[] = [];
+        const response = await apiClient.getCashflowHistory(7);
 
-        // Load last 7 months
-        for (let i = 6; i >= 0; i--) {
-          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-          const year = d.getFullYear();
-          const month = d.getMonth() + 1;
-          promises.push(
-            apiClient
-              .getMonthlySummary(year, month)
-              .then((s) => ({
-                ...(s as { totalIncome: number; totalExpenses: number }),
-                month,
-                year,
-              }))
-              .catch(() => ({ totalIncome: 0, totalExpenses: 0, month, year })),
-          );
-        }
-
-        const results = await Promise.all(promises);
-        const data: MonthData[] = results.map((r) => ({
-          label: MONTH_LABELS[r.month - 1],
-          income: r.totalIncome || 0,
-          expenses: r.totalExpenses || 0,
+        const data: MonthData[] = (response.months || []).map((m) => ({
+          label: m.label,
+          income: m.income || 0,
+          expenses: m.expenses || 0,
         }));
 
         setChartData(data);
