@@ -7,6 +7,8 @@ import { apiClient } from '@/lib/api-client';
 import { formatCurrency, cn } from '@/lib/utils';
 
 type Period = 'month' | 'quarter';
+type MonthlySummary = { totalIncome: number; totalExpenses: number };
+const emptySummary: MonthlySummary = { totalIncome: 0, totalExpenses: 0 };
 
 interface RunwayData {
   totalBalance: number;
@@ -48,9 +50,6 @@ export function FinancialRunwayCard() {
           prevMonths.push({ year: y, month: m });
         }
 
-        type MonthlySummary = { totalIncome: number; totalExpenses: number };
-        const emptySummary: MonthlySummary = { totalIncome: 0, totalExpenses: 0 };
-
         const [accounts, currentSummary, ...prevSummaries] = await Promise.all([
           apiClient.getAccountsWithBalances() as Promise<
             { calculatedBalance: number }[]
@@ -77,7 +76,8 @@ export function FinancialRunwayCard() {
         );
 
         // If fewer than 3 complete months, project current partial month
-        if (validMonths.length < 3 && dayOfMonth > 0) {
+        // Only project if enough days have passed to avoid volatile early-month estimates
+        if (validMonths.length < 3 && dayOfMonth > 5) {
           const curIncome = currentSummary?.totalIncome || 0;
           const curExpenses = currentSummary?.totalExpenses || 0;
           if (curIncome > 0 || curExpenses > 0) {
