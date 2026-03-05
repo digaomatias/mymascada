@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyMascada.Application.Common.Interfaces;
@@ -7,6 +8,8 @@ using MyMascada.Domain.Entities;
 namespace MyMascada.WebAPI.Controllers;
 
 [ApiController]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/ai-settings")]
 [Route("api/ai-settings")]
 [Authorize]
 public class AiSettingsController : ControllerBase

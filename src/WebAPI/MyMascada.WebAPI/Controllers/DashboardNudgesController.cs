@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +9,8 @@ using MyMascada.Application.Features.DashboardNudges.Queries;
 namespace MyMascada.WebAPI.Controllers;
 
 [ApiController]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/dashboard-nudges")]
 [Route("api/dashboard-nudges")]
 [Authorize]
 public class DashboardNudgesController : ControllerBase

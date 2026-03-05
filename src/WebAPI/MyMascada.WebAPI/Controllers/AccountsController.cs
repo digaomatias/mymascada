@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -12,6 +13,8 @@ using MyMascada.Domain.Enums;
 namespace MyMascada.WebAPI.Controllers;
 
 [ApiController]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Route("api/[controller]")]
 [Authorize]
 public class AccountsController : ControllerBase

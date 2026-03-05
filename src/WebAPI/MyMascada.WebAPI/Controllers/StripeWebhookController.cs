@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -8,6 +9,8 @@ using Stripe;
 namespace MyMascada.WebAPI.Controllers;
 
 [ApiController]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/webhooks/stripe")]
 [Route("api/webhooks/stripe")]
 [AllowAnonymous]
 public class StripeWebhookController : ControllerBase
