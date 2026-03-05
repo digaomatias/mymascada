@@ -29,28 +29,52 @@ public static class RateLimitingServiceExtensions
         public const string ReadOnly = "readonly";
     }
 
+    private static class ConfigKeys
+    {
+        public const string Section = "RateLimiting";
+
+        public const string GlobalPermitLimit = "Global:PermitLimit";
+        public const string GlobalWindowMinutes = "Global:WindowMinutes";
+
+        public const string AuthenticationPermitLimit = "Authentication:PermitLimit";
+        public const string AuthenticationWindowMinutes = "Authentication:WindowMinutes";
+        public const string AuthenticationQueueLimit = "Authentication:QueueLimit";
+
+        public const string AuthenticatedPermitLimit = "Authenticated:PermitLimit";
+        public const string AuthenticatedWindowMinutes = "Authenticated:WindowMinutes";
+        public const string AuthenticatedQueueLimit = "Authenticated:QueueLimit";
+
+        public const string AnonymousPermitLimit = "Anonymous:PermitLimit";
+        public const string AnonymousWindowMinutes = "Anonymous:WindowMinutes";
+        public const string AnonymousQueueLimit = "Anonymous:QueueLimit";
+
+        public const string ReadOnlyPermitLimit = "ReadOnly:PermitLimit";
+        public const string ReadOnlyWindowMinutes = "ReadOnly:WindowMinutes";
+        public const string ReadOnlyQueueLimit = "ReadOnly:QueueLimit";
+    }
+
     public static IServiceCollection AddRateLimitingConfiguration(this IServiceCollection services, IConfiguration configuration)
     {
-        var rateLimitSection = configuration.GetSection("RateLimiting");
+        var rateLimitSection = configuration.GetSection(ConfigKeys.Section);
 
-        var globalLimit = rateLimitSection.GetValue("Global:PermitLimit", 1000);
-        var globalWindowMinutes = rateLimitSection.GetValue("Global:WindowMinutes", 1);
+        var globalLimit = rateLimitSection.GetValue(ConfigKeys.GlobalPermitLimit, 1000);
+        var globalWindowMinutes = rateLimitSection.GetValue(ConfigKeys.GlobalWindowMinutes, 1);
 
-        var authNLimit = rateLimitSection.GetValue("Authentication:PermitLimit", 10);
-        var authNWindowMinutes = rateLimitSection.GetValue("Authentication:WindowMinutes", 1);
-        var authNQueueLimit = rateLimitSection.GetValue("Authentication:QueueLimit", 0);
+        var authNLimit = rateLimitSection.GetValue(ConfigKeys.AuthenticationPermitLimit, 10);
+        var authNWindowMinutes = rateLimitSection.GetValue(ConfigKeys.AuthenticationWindowMinutes, 1);
+        var authNQueueLimit = rateLimitSection.GetValue(ConfigKeys.AuthenticationQueueLimit, 0);
 
-        var authenticatedLimit = rateLimitSection.GetValue("Authenticated:PermitLimit", 100);
-        var authenticatedWindowMinutes = rateLimitSection.GetValue("Authenticated:WindowMinutes", 1);
-        var authenticatedQueueLimit = rateLimitSection.GetValue("Authenticated:QueueLimit", 2);
+        var authenticatedLimit = rateLimitSection.GetValue(ConfigKeys.AuthenticatedPermitLimit, 100);
+        var authenticatedWindowMinutes = rateLimitSection.GetValue(ConfigKeys.AuthenticatedWindowMinutes, 1);
+        var authenticatedQueueLimit = rateLimitSection.GetValue(ConfigKeys.AuthenticatedQueueLimit, 2);
 
-        var anonymousLimit = rateLimitSection.GetValue("Anonymous:PermitLimit", 30);
-        var anonymousWindowMinutes = rateLimitSection.GetValue("Anonymous:WindowMinutes", 1);
-        var anonymousQueueLimit = rateLimitSection.GetValue("Anonymous:QueueLimit", 2);
+        var anonymousLimit = rateLimitSection.GetValue(ConfigKeys.AnonymousPermitLimit, 30);
+        var anonymousWindowMinutes = rateLimitSection.GetValue(ConfigKeys.AnonymousWindowMinutes, 1);
+        var anonymousQueueLimit = rateLimitSection.GetValue(ConfigKeys.AnonymousQueueLimit, 2);
 
-        var readOnlyLimit = rateLimitSection.GetValue("ReadOnly:PermitLimit", 200);
-        var readOnlyWindowMinutes = rateLimitSection.GetValue("ReadOnly:WindowMinutes", 1);
-        var readOnlyQueueLimit = rateLimitSection.GetValue("ReadOnly:QueueLimit", 5);
+        var readOnlyLimit = rateLimitSection.GetValue(ConfigKeys.ReadOnlyPermitLimit, 200);
+        var readOnlyWindowMinutes = rateLimitSection.GetValue(ConfigKeys.ReadOnlyWindowMinutes, 1);
+        var readOnlyQueueLimit = rateLimitSection.GetValue(ConfigKeys.ReadOnlyQueueLimit, 5);
 
         services.AddRateLimiter(options =>
         {
@@ -93,14 +117,18 @@ public static class RateLimitingServiceExtensions
                 var partitionKey = userId ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
                 var isAuthenticated = userId != null;
 
+                var permitLimit = isAuthenticated ? authenticatedLimit : anonymousLimit;
+                var windowMinutes = isAuthenticated ? authenticatedWindowMinutes : anonymousWindowMinutes;
+                var queueLimit = isAuthenticated ? authenticatedQueueLimit : anonymousQueueLimit;
+
                 return RateLimitPartition.GetFixedWindowLimiter(
                     partitionKey: partitionKey,
                     factory: _ => new FixedWindowRateLimiterOptions
                     {
-                        PermitLimit = isAuthenticated ? authenticatedLimit : anonymousLimit,
-                        Window = TimeSpan.FromMinutes(isAuthenticated ? authenticatedWindowMinutes : anonymousWindowMinutes),
+                        PermitLimit = permitLimit,
+                        Window = TimeSpan.FromMinutes(windowMinutes),
                         QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                        QueueLimit = isAuthenticated ? authenticatedQueueLimit : anonymousQueueLimit
+                        QueueLimit = queueLimit
                     });
             });
 
