@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { AppLayout } from '@/components/app-layout';
@@ -213,9 +213,11 @@ export default function AnalyticsPage() {
     ? { month: analyticsSummary.worstMonth.label, net: analyticsSummary.worstMonth.netAmount }
     : null;
 
-  const bestYear = yearlyData.length > 0
-    ? yearlyData.reduce((best, cur) => (cur.netIncome > best.netIncome ? cur : best))
-    : null;
+  const bestYear = useMemo(() =>
+    yearlyData.length > 0
+      ? yearlyData.reduce((best, cur) => (cur.netIncome > best.netIncome ? cur : best))
+      : null,
+    [yearlyData]);
 
   // Initial load: no data yet. Filter change: data exists, show stale while reloading.
   const initialTrends = loadingTrends && monthlyTrends.length === 0;

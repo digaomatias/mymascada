@@ -71,34 +71,23 @@ export function TrendSummaryTable({ categories, selectedCategoryIds }: TrendSumm
           }
         }
 
-        // Use API-provided highest/lowest months if available
-        let highestMonth = { label: '', amount: 0 };
-        let lowestMonth = { label: '', amount: Infinity };
+        // Use API-provided highest/lowest months if available, else single-pass fallback
+        let highestMonth = enriched.highestMonth
+          ? { label: enriched.highestMonth.periodLabel, amount: enriched.highestMonth.amount }
+          : { label: '', amount: 0 };
+        let lowestMonth = enriched.lowestMonth
+          ? { label: enriched.lowestMonth.periodLabel, amount: enriched.lowestMonth.amount }
+          : { label: '', amount: Infinity };
 
-        if (enriched.highestMonth) {
-          highestMonth = {
-            label: enriched.highestMonth.periodLabel,
-            amount: enriched.highestMonth.amount,
-          };
-        } else {
-          periods.forEach((p) => {
-            if (p.amount > highestMonth.amount) {
+        if (!enriched.highestMonth || !enriched.lowestMonth) {
+          for (const p of periods) {
+            if (!enriched.highestMonth && p.amount > highestMonth.amount) {
               highestMonth = { label: p.periodLabel, amount: p.amount };
             }
-          });
-        }
-
-        if (enriched.lowestMonth) {
-          lowestMonth = {
-            label: enriched.lowestMonth.periodLabel,
-            amount: enriched.lowestMonth.amount,
-          };
-        } else {
-          periods.forEach((p) => {
-            if (p.amount < lowestMonth.amount && p.amount > 0) {
+            if (!enriched.lowestMonth && p.amount < lowestMonth.amount && p.amount > 0) {
               lowestMonth = { label: p.periodLabel, amount: p.amount };
             }
-          });
+          }
         }
 
         // Handle case where all months are 0

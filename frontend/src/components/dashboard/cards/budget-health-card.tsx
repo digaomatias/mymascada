@@ -12,7 +12,7 @@ import {
   PlusIcon,
   WalletIcon,
 } from '@heroicons/react/24/outline';
-import type { BudgetHealthSummaryResponse } from '@/types/api-responses';
+
 
 interface BudgetRow {
   id: number;
@@ -37,16 +37,13 @@ export function BudgetHealthCard() {
     const load = async () => {
       try {
         setLoading(true);
-        const data: BudgetHealthSummaryResponse = await apiClient.getBudgetHealthSummary();
+        const [data, budgetList] = await Promise.all([
+          apiClient.getBudgetHealthSummary(),
+          apiClient.getBudgets({ includeInactive: false, onlyCurrentPeriod: true }),
+        ]);
 
         // Use the health summary aggregate data
         setOverCount(data.overCount);
-
-        // Also load the budgets for row-level display
-        const budgetList = await apiClient.getBudgets({
-          includeInactive: false,
-          onlyCurrentPeriod: true,
-        });
 
         const rows = (budgetList || []).map((b) => ({
           id: b.id,

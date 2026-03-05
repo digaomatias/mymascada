@@ -1,6 +1,5 @@
 using MediatR;
 using MyMascada.Application.Common.Interfaces;
-using MyMascada.Application.Features.Budgets.Services;
 using MyMascada.Application.Features.DashboardNudges.DTOs;
 using MyMascada.Application.Features.UpcomingBills.Queries;
 
@@ -15,18 +14,15 @@ public class GetAttentionItemsQueryHandler : IRequestHandler<GetAttentionItemsQu
 {
     private readonly ITransactionRepository _transactionRepository;
     private readonly IBudgetRepository _budgetRepository;
-    private readonly IBudgetCalculationService _budgetCalculationService;
     private readonly IMediator _mediator;
 
     public GetAttentionItemsQueryHandler(
         ITransactionRepository transactionRepository,
         IBudgetRepository budgetRepository,
-        IBudgetCalculationService budgetCalculationService,
         IMediator mediator)
     {
         _transactionRepository = transactionRepository;
         _budgetRepository = budgetRepository;
-        _budgetCalculationService = budgetCalculationService;
         _mediator = mediator;
     }
 
@@ -108,31 +104,55 @@ public class GetAttentionItemsQueryHandler : IRequestHandler<GetAttentionItemsQu
 
     private async Task<List<AttentionItemDto>> GetOverBudgetItemsAsync(Guid userId, CancellationToken cancellationToken)
     {
-        var activeBudgets = await _budgetRepository.GetActiveBudgetsForUserAsync(userId, cancellationToken);
+        var activeBudgets = (await _budgetRepository.GetActiveBudgetsForUserAsync(userId, cancellationToken)).ToList();
+        if (activeBudgets.Count == 0) return new();
+
+        // Batch-load all transactions across all budget date ranges in a single query
+        var minStart = activeBudgets.Min(b => b.StartDate);
+        var maxEnd = activeBudgets.Max(b => b.GetPeriodEndDate());
+        var allTransactions = (await _transactionRepository.GetByDateRangeAsync(userId, minStart, maxEnd))
+            .Where(t => t.Amount < 0 && t.CategoryId.HasValue && !t.TransferId.HasValue)
+            .ToList();
+
         var items = new List<AttentionItemDto>();
 
         foreach (var budget in activeBudgets)
         {
-            var summary = await _budgetCalculationService.ToBudgetSummaryAsync(budget, userId, cancellationToken);
+            var periodStart = budget.StartDate;
+            var periodEnd = budget.GetPeriodEndDate();
+            var categoryIds = budget.BudgetCategories
+                .Where(bc => !bc.IsDeleted)
+                .Select(bc => bc.CategoryId)
+                .ToHashSet();
 
-            if (summary.UsedPercentage >= 100)
+            var totalSpent = allTransactions
+                .Where(t => t.TransactionDate >= periodStart && t.TransactionDate <= periodEnd
+                         && categoryIds.Contains(t.CategoryId!.Value))
+                .Sum(t => Math.Abs(t.Amount));
+
+            var totalBudgeted = budget.GetTotalBudgetedAmount();
+            var usedPercentage = totalBudgeted > 0
+                ? totalSpent / totalBudgeted * 100
+                : 0m;
+
+            if (usedPercentage >= 100)
             {
                 items.Add(new AttentionItemDto
                 {
                     Type = "over_budget",
                     Severity = "error",
-                    EntityName = summary.Name,
-                    Amount = summary.TotalSpent - summary.TotalBudgeted
+                    EntityName = budget.Name,
+                    Amount = totalSpent - totalBudgeted
                 });
             }
-            else if (summary.UsedPercentage >= 90)
+            else if (usedPercentage >= 90)
             {
                 items.Add(new AttentionItemDto
                 {
                     Type = "approaching_budget",
                     Severity = "warn",
-                    EntityName = summary.Name,
-                    Amount = summary.TotalRemaining
+                    EntityName = budget.Name,
+                    Amount = totalBudgeted - totalSpent
                 });
             }
         }

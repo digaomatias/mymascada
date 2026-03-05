@@ -35,15 +35,12 @@ public class GetBudgetHealthSummaryQueryHandler : IRequestHandler<GetBudgetHealt
 
         foreach (var budget in budgetList)
         {
-            var loaded = await _budgetRepository.GetBudgetByIdAsync(budget.Id, request.UserId, cancellationToken);
-            if (loaded == null) continue;
-
-            var summary = await _calculationService.ToBudgetSummaryAsync(loaded, request.UserId, cancellationToken);
+            var summary = await _calculationService.ToBudgetSummaryAsync(budget, request.UserId, cancellationToken);
 
             var riskState = GetRiskState(summary.UsedPercentage, summary.IsActive);
             var priorityScore = GetPriorityScore(riskState);
 
-            var periodElapsed = loaded.GetPeriodElapsedPercentage();
+            var periodElapsed = budget.GetPeriodElapsedPercentage();
             var expectedSpent = summary.TotalBudgeted * (periodElapsed / 100m);
             var variance = summary.TotalSpent - expectedSpent;
             var variancePercentage = expectedSpent > 0
@@ -92,7 +89,7 @@ public class GetBudgetHealthSummaryQueryHandler : IRequestHandler<GetBudgetHealt
             OnTrackCount = items.Count(i => i.RiskState == "onTrack"),
             InactiveCount = items.Count(i => i.RiskState == "inactive"),
             NearestDeadlineDays = nearestDeadlineDays,
-            Items = sortedItems
+            Budgets = sortedItems
         };
     }
 

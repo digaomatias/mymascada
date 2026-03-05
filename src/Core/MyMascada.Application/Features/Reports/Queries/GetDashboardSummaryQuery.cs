@@ -153,7 +153,15 @@ public class GetDashboardSummaryQueryHandler : IRequestHandler<GetDashboardSumma
     private async Task<(decimal avgIncome, decimal avgExpenses)> CalculateRollingAveragesAsync(
         Guid userId, DateTime now)
     {
-        // Load last 3 complete months (month-1, month-2, month-3)
+        // Load last 3 complete months in a single query
+        var threeMonthsAgoDate = now.AddMonths(-3);
+        var rangeStart = new DateTime(threeMonthsAgoDate.Year, threeMonthsAgoDate.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var lastMonthDate = now.AddMonths(-1);
+        var rangeEnd = new DateTime(lastMonthDate.Year, lastMonthDate.Month, 1, 0, 0, 0, DateTimeKind.Utc).AddMonths(1).AddTicks(-1);
+
+        var allTransactions = (await _transactionRepository.GetByDateRangeAsync(
+            userId, rangeStart, rangeEnd)).ToList();
+
         var monthlySummaries = new List<(decimal income, decimal expenses)>();
 
         for (var i = 1; i <= 3; i++)
@@ -162,8 +170,9 @@ public class GetDashboardSummaryQueryHandler : IRequestHandler<GetDashboardSumma
             var monthStart = new DateTime(monthDate.Year, monthDate.Month, 1, 0, 0, 0, DateTimeKind.Utc);
             var monthEnd = monthStart.AddMonths(1).AddTicks(-1);
 
-            var transactions = (await _transactionRepository.GetByDateRangeAsync(
-                userId, monthStart, monthEnd)).ToList();
+            var transactions = allTransactions
+                .Where(t => t.TransactionDate >= monthStart && t.TransactionDate <= monthEnd)
+                .ToList();
 
             var income = transactions
                 .Where(t => t.Amount > 0 && !t.TransferId.HasValue)

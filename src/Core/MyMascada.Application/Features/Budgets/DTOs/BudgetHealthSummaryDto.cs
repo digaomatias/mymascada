@@ -12,7 +12,7 @@ public class BudgetHealthSummaryDto
     public int OnTrackCount { get; set; }
     public int InactiveCount { get; set; }
     public int? NearestDeadlineDays { get; set; }
-    public List<BudgetRiskItemDto> Items { get; set; } = new();
+    public List<BudgetRiskItemDto> Budgets { get; set; } = new();
 }
 
 public class BudgetRiskItemDto
