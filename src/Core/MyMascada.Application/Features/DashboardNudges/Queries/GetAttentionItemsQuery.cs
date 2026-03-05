@@ -28,21 +28,18 @@ public class GetAttentionItemsQueryHandler : IRequestHandler<GetAttentionItemsQu
 
     public async Task<AttentionItemsDto> Handle(GetAttentionItemsQuery request, CancellationToken cancellationToken)
     {
-        // Run 3 queries in parallel
-        var uncategorizedTask = GetUncategorizedItemAsync(request.UserId, cancellationToken);
-        var upcomingBillsTask = GetUpcomingBillsItemsAsync(request.UserId, cancellationToken);
-        var overBudgetTask = GetOverBudgetItemsAsync(request.UserId, cancellationToken);
-
-        await Task.WhenAll(uncategorizedTask, upcomingBillsTask, overBudgetTask);
+        // Run sequentially — all queries share the same scoped DbContext which is not thread-safe
+        var uncategorized = await GetUncategorizedItemAsync(request.UserId, cancellationToken);
+        var upcomingBills = await GetUpcomingBillsItemsAsync(request.UserId, cancellationToken);
+        var overBudget = await GetOverBudgetItemsAsync(request.UserId, cancellationToken);
 
         var items = new List<AttentionItemDto>();
 
-        var uncategorized = await uncategorizedTask;
         if (uncategorized != null)
             items.Add(uncategorized);
 
-        items.AddRange(await upcomingBillsTask);
-        items.AddRange(await overBudgetTask);
+        items.AddRange(upcomingBills);
+        items.AddRange(overBudget);
 
         // Sort by severity (error > warn > info) then take max 4
         var severityOrder = new Dictionary<string, int>

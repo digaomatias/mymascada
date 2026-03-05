@@ -148,7 +148,7 @@ function mapAttentionItem(
   const severity = mapSeverity(item.severity);
 
   switch (item.type) {
-    case 'UncategorizedTransactions':
+    case 'uncategorized_transactions':
       return {
         text: t('uncategorized', { count: item.count ?? 0 }),
         detail: t('uncategorizedDetail'),
@@ -157,7 +157,7 @@ function mapAttentionItem(
         severity,
         href: '/transactions?filter=uncategorized',
       };
-    case 'UpcomingBill':
+    case 'upcoming_bill':
       return {
         text: `${item.entityName ?? ''} ${t('dueSoon')}`,
         detail: t('billDetail', { amount: Math.abs(item.amount ?? 0).toFixed(2) }),
@@ -168,7 +168,8 @@ function mapAttentionItem(
         severity,
         href: '/transactions',
       };
-    case 'OverBudget':
+    case 'over_budget':
+    case 'approaching_budget':
       return {
         text: t('overBudget', { name: item.entityName ?? '', amount: (item.amount ?? 0).toFixed(0) }),
         detail: t('overBudgetDetail', { amount: (item.annualizedAmount ?? 0).toFixed(0) }),
