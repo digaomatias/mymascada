@@ -15,28 +15,70 @@ public static class RateLimitingServiceExtensions
     {
         /// <summary>
         /// Strict rate limiting for authentication endpoints (login, register, password reset).
-        /// 5 requests per minute per IP.
         /// </summary>
         public const string Authentication = "authentication";
 
         /// <summary>
         /// Standard rate limiting for general API endpoints.
-        /// 100 requests per minute per user, 30 requests per minute for anonymous.
         /// </summary>
         public const string Standard = "standard";
 
         /// <summary>
         /// Relaxed rate limiting for read-only endpoints.
-        /// 200 requests per minute per user.
         /// </summary>
         public const string ReadOnly = "readonly";
     }
 
-    public static IServiceCollection AddRateLimitingConfiguration(this IServiceCollection services)
+    private static class ConfigKeys
     {
+        public const string Section = "RateLimiting";
+
+        public const string GlobalPermitLimit = "Global:PermitLimit";
+        public const string GlobalWindowMinutes = "Global:WindowMinutes";
+
+        public const string AuthenticationPermitLimit = "Authentication:PermitLimit";
+        public const string AuthenticationWindowMinutes = "Authentication:WindowMinutes";
+        public const string AuthenticationQueueLimit = "Authentication:QueueLimit";
+
+        public const string AuthenticatedPermitLimit = "Authenticated:PermitLimit";
+        public const string AuthenticatedWindowMinutes = "Authenticated:WindowMinutes";
+        public const string AuthenticatedQueueLimit = "Authenticated:QueueLimit";
+
+        public const string AnonymousPermitLimit = "Anonymous:PermitLimit";
+        public const string AnonymousWindowMinutes = "Anonymous:WindowMinutes";
+        public const string AnonymousQueueLimit = "Anonymous:QueueLimit";
+
+        public const string ReadOnlyPermitLimit = "ReadOnly:PermitLimit";
+        public const string ReadOnlyWindowMinutes = "ReadOnly:WindowMinutes";
+        public const string ReadOnlyQueueLimit = "ReadOnly:QueueLimit";
+    }
+
+    public static IServiceCollection AddRateLimitingConfiguration(this IServiceCollection services, IConfiguration configuration)
+    {
+        var rateLimitSection = configuration.GetSection(ConfigKeys.Section);
+
+        var globalLimit = rateLimitSection.GetValue(ConfigKeys.GlobalPermitLimit, 1000);
+        var globalWindowMinutes = rateLimitSection.GetValue(ConfigKeys.GlobalWindowMinutes, 1);
+
+        var authNLimit = rateLimitSection.GetValue(ConfigKeys.AuthenticationPermitLimit, 10);
+        var authNWindowMinutes = rateLimitSection.GetValue(ConfigKeys.AuthenticationWindowMinutes, 1);
+        var authNQueueLimit = rateLimitSection.GetValue(ConfigKeys.AuthenticationQueueLimit, 0);
+
+        var authenticatedLimit = rateLimitSection.GetValue(ConfigKeys.AuthenticatedPermitLimit, 100);
+        var authenticatedWindowMinutes = rateLimitSection.GetValue(ConfigKeys.AuthenticatedWindowMinutes, 1);
+        var authenticatedQueueLimit = rateLimitSection.GetValue(ConfigKeys.AuthenticatedQueueLimit, 2);
+
+        var anonymousLimit = rateLimitSection.GetValue(ConfigKeys.AnonymousPermitLimit, 30);
+        var anonymousWindowMinutes = rateLimitSection.GetValue(ConfigKeys.AnonymousWindowMinutes, 1);
+        var anonymousQueueLimit = rateLimitSection.GetValue(ConfigKeys.AnonymousQueueLimit, 2);
+
+        var readOnlyLimit = rateLimitSection.GetValue(ConfigKeys.ReadOnlyPermitLimit, 200);
+        var readOnlyWindowMinutes = rateLimitSection.GetValue(ConfigKeys.ReadOnlyWindowMinutes, 1);
+        var readOnlyQueueLimit = rateLimitSection.GetValue(ConfigKeys.ReadOnlyQueueLimit, 5);
+
         services.AddRateLimiter(options =>
         {
-            // Global limiter as fallback - 1000 requests per minute per IP
+            // Global limiter as fallback
             options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
             {
                 var remoteIp = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
@@ -45,8 +87,8 @@ public static class RateLimitingServiceExtensions
                     partitionKey: remoteIp,
                     factory: _ => new FixedWindowRateLimiterOptions
                     {
-                        PermitLimit = 1000,
-                        Window = TimeSpan.FromMinutes(1),
+                        PermitLimit = globalLimit,
+                        Window = TimeSpan.FromMinutes(globalWindowMinutes),
                         QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                         QueueLimit = 0
                     });
@@ -61,29 +103,32 @@ public static class RateLimitingServiceExtensions
                     partitionKey: remoteIp,
                     factory: _ => new FixedWindowRateLimiterOptions
                     {
-                        PermitLimit = 5,
-                        Window = TimeSpan.FromMinutes(1),
+                        PermitLimit = authNLimit,
+                        Window = TimeSpan.FromMinutes(authNWindowMinutes),
                         QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                        QueueLimit = 0
+                        QueueLimit = authNQueueLimit
                     });
             });
 
             // Standard API endpoints - moderate limits per user
             options.AddPolicy(Policies.Standard, context =>
             {
-                // Use user ID if authenticated, otherwise IP address
                 var userId = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
                 var partitionKey = userId ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-                var limit = userId != null ? 100 : 30; // More generous for authenticated users
+                var isAuthenticated = userId != null;
+
+                var permitLimit = isAuthenticated ? authenticatedLimit : anonymousLimit;
+                var windowMinutes = isAuthenticated ? authenticatedWindowMinutes : anonymousWindowMinutes;
+                var queueLimit = isAuthenticated ? authenticatedQueueLimit : anonymousQueueLimit;
 
                 return RateLimitPartition.GetFixedWindowLimiter(
                     partitionKey: partitionKey,
                     factory: _ => new FixedWindowRateLimiterOptions
                     {
-                        PermitLimit = limit,
-                        Window = TimeSpan.FromMinutes(1),
+                        PermitLimit = permitLimit,
+                        Window = TimeSpan.FromMinutes(windowMinutes),
                         QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                        QueueLimit = 2
+                        QueueLimit = queueLimit
                     });
             });
 
@@ -97,10 +142,10 @@ public static class RateLimitingServiceExtensions
                     partitionKey: partitionKey,
                     factory: _ => new FixedWindowRateLimiterOptions
                     {
-                        PermitLimit = 200,
-                        Window = TimeSpan.FromMinutes(1),
+                        PermitLimit = readOnlyLimit,
+                        Window = TimeSpan.FromMinutes(readOnlyWindowMinutes),
                         QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                        QueueLimit = 5
+                        QueueLimit = readOnlyQueueLimit
                     });
             });
 
@@ -125,7 +170,6 @@ public static class RateLimitingServiceExtensions
 
                 await context.HttpContext.Response.WriteAsJsonAsync(response, cancellationToken);
 
-                // Log the rate limit hit
                 var logger = context.HttpContext.RequestServices.GetService<ILogger<Program>>();
                 var remoteIp = context.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
                 var path = context.HttpContext.Request.Path;

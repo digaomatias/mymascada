@@ -134,7 +134,7 @@ builder.Services.AddEmailServices(builder.Configuration);
 builder.Services.AddHealthCheckServices(builder.Configuration);
 builder.Services.AddBackgroundJobs(builder.Configuration);
 builder.Services.AddCorsConfiguration(builder.Configuration);
-builder.Services.AddRateLimitingConfiguration();
+builder.Services.AddRateLimitingConfiguration(builder.Configuration);
 builder.Services.AddAiChatServices();
 builder.Services.AddTelegramServices();
 builder.Services.AddBillingServices(builder.Configuration);
