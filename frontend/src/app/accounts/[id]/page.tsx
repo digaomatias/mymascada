@@ -15,11 +15,11 @@ import {
   BuildingOffice2Icon,
   CalendarIcon,
   PencilIcon,
-  ArrowLeftIcon,
 
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
 } from '@heroicons/react/24/outline';
+import { BackButton } from '@/components/ui/back-button';
 import { AddTransactionButton } from '@/components/buttons/add-transaction-button';
 import { ReconcileAccountButton } from '@/components/buttons/reconcile-account-button';
 import { TransactionList } from '@/components/transaction-list';
@@ -126,13 +126,7 @@ function AccountDetailsPageContent() {
     <AppLayout>
       {/* Navigation Bar */}
       <header className="flex flex-wrap items-center justify-between gap-4 mb-5">
-        <Link href="/accounts">
-          <Button variant="secondary" size="sm" className="flex items-center gap-2">
-            <ArrowLeftIcon className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('backToAccounts')}</span>
-            <span className="sm:hidden">{t('back')}</span>
-          </Button>
-        </Link>
+        <BackButton href="/accounts" label={t('backToAccounts')} />
 
         <div className="flex items-center gap-2">
           <ReconcileAccountButton

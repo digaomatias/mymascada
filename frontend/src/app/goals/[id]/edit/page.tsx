@@ -13,7 +13,7 @@ import { Select } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { apiClient, UpdateGoalRequest } from '@/lib/api-client';
 import { toast } from 'sonner';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { BackButton } from '@/components/ui/back-button';
 
 interface Account {
   id: number;
@@ -125,13 +125,7 @@ export default function EditGoalPage() {
     <AppLayout>
       <div className="space-y-5">
         <div className="flex items-center justify-between">
-          <Link href={`/goals/${goalId}`}>
-            <Button variant="secondary" size="sm" className="flex items-center gap-2">
-              <ArrowLeftIcon className="h-4 w-4" />
-              <span className="hidden sm:inline">{t('backToGoals')}</span>
-              <span className="sm:hidden">{tCommon('back')}</span>
-            </Button>
-          </Link>
+          <BackButton href={`/goals/${goalId}`} label={t('backToGoals')} />
         </div>
 
         <div>

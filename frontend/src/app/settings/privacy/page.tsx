@@ -6,14 +6,13 @@ import { useEffect, useState } from 'react';
 import { AppLayout } from '@/components/app-layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 import {
   ShieldCheckIcon,
-  ArrowLeftIcon,
   ArrowDownTrayIcon,
   TrashIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
+import { BackButton } from '@/components/ui/back-button';
 import { useTranslations } from 'next-intl';
 import { apiClient, UserDataSummary } from '@/lib/api-client';
 import { toast } from 'sonner';
@@ -126,11 +125,7 @@ export default function PrivacySettingsPage() {
     <AppLayout>
       {/* Header */}
         <div className="mb-6 lg:mb-8">
-          <Link href="/settings" className="inline-flex items-center gap-2 text-sm text-violet-600 hover:text-violet-800 mb-4">
-            <ArrowLeftIcon className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('backToSettings')}</span>
-            <span className="sm:hidden">{tCommon('back')}</span>
-          </Link>
+          <BackButton variant="link" href="/settings" label={t('backToSettings')} />
           <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
             {t('title')}
           </h1>

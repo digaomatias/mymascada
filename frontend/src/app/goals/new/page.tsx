@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select } from '@/components/ui/select';
 import { apiClient, CreateGoalRequest } from '@/lib/api-client';
 import { toast } from 'sonner';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { BackButton } from '@/components/ui/back-button';
 
 interface Account {
   id: number;
@@ -84,13 +84,7 @@ export default function CreateGoalPage() {
     <AppLayout>
       <div className="space-y-5">
         <div className="flex items-center justify-between">
-          <Link href="/goals">
-            <Button variant="secondary" size="sm" className="flex items-center gap-2">
-              <ArrowLeftIcon className="h-4 w-4" />
-              <span className="hidden sm:inline">{t('backToGoals')}</span>
-              <span className="sm:hidden">{tCommon('back')}</span>
-            </Button>
-          </Link>
+          <BackButton href="/goals" label={t('backToGoals')} />
         </div>
 
         <div>

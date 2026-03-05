@@ -12,12 +12,12 @@ import type { BudgetDetail } from '@/types/budget';
 import { formatCurrency } from '@/types/budget';
 import { toast } from 'sonner';
 import {
-  ArrowLeftIcon,
   CalendarDaysIcon,
   PencilSquareIcon,
   PlusIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
+import { BackButton } from '@/components/ui/back-button';
 import { cn } from '@/lib/utils';
 import { BudgetHealthInsight } from '@/components/budget/budget-health-insight';
 import { BudgetDeleteDialog } from '@/components/budget/budget-delete-dialog';
@@ -42,7 +42,6 @@ export default function BudgetDetailPage() {
   const params = useParams();
   const router = useRouter();
   const t = useTranslations('budgets');
-  const tCommon = useTranslations('common');
   const budgetId = Number(params.id);
   const [budget, setBudget] = useState<BudgetDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -115,14 +114,7 @@ export default function BudgetDetailPage() {
     <AppLayout>
       <header className="flex flex-wrap items-start justify-between gap-4 mb-5">
           <div>
-            <Link
-              href={BUDGET_BASE}
-              className="inline-flex items-center text-sm font-medium text-slate-500 transition-colors hover:text-violet-700"
-            >
-              <ArrowLeftIcon className="mr-1.5 h-4 w-4" />
-              <span className="hidden sm:inline">{t('backToBudgets')}</span>
-              <span className="sm:hidden">{tCommon('back')}</span>
-            </Link>
+            <BackButton variant="link" href={BUDGET_BASE} label={t('backToBudgets')} />
 
             <h1 className="mt-2 font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
               {budget.name}

@@ -2,10 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { AppLayout } from '@/components/app-layout';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -22,12 +20,12 @@ import type {
 import { formatCurrency } from '@/types/budget';
 import { toast } from 'sonner';
 import {
-  ArrowLeftIcon,
   LightBulbIcon,
   MagnifyingGlassIcon,
   PlusIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
+import { BackButton } from '@/components/ui/back-button';
 import { renderCategoryIcon } from '@/lib/category-icons';
 import { BudgetWizardStepShell } from '@/components/budget/budget-wizard-step-shell';
 
@@ -183,13 +181,7 @@ export default function CreateBudgetPage() {
     <AppLayout>
       <div className="space-y-5">
         <div className="flex items-center justify-between">
-          <Link href={BUDGET_BASE}>
-            <Button variant="secondary" size="sm" className="flex items-center gap-2">
-              <ArrowLeftIcon className="h-4 w-4" />
-              <span className="hidden sm:inline">{t('backToBudgets')}</span>
-              <span className="sm:hidden">{tCommon('back')}</span>
-            </Button>
-          </Link>
+          <BackButton href={BUDGET_BASE} label={t('backToBudgets')} />
         </div>
 
         {step === 1 ? (

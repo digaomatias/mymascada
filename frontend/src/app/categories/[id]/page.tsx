@@ -8,11 +8,11 @@ import { Button } from '@/components/ui/button';
 import { apiClient } from '@/lib/api-client';
 import Link from 'next/link';
 import {
-  ArrowLeftIcon,
   PencilIcon,
   TrashIcon,
   TagIcon,
 } from '@heroicons/react/24/outline';
+import { BackButton } from '@/components/ui/back-button';
 import { renderCategoryIcon } from '@/lib/category-icons';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -224,13 +224,7 @@ export default function CategoryDetailsPage() {
     <AppLayout>
       {/* Navigation Bar */}
       <header className="flex flex-wrap items-center justify-between gap-4 mb-5">
-        <Link href="/categories">
-          <Button variant="secondary" size="sm" className="flex items-center gap-2">
-            <ArrowLeftIcon className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('details.backToCategories')}</span>
-            <span className="sm:hidden">{tCommon('back')}</span>
-          </Button>
-        </Link>
+        <BackButton href="/categories" label={t('details.backToCategories')} />
 
         {!category.isSystemCategory && (
           <div className="flex items-center gap-2">

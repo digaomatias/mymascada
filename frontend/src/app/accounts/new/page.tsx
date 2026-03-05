@@ -4,16 +4,14 @@ import { useAuth } from '@/contexts/auth-context';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { AppLayout } from '@/components/app-layout';
-import { Button } from '@/components/ui/button';
 import AccountForm, { Account } from '@/components/forms/account-form';
 import { apiClient } from '@/lib/api-client';
-import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import {
-  ArrowLeftIcon,
   BuildingOffice2Icon,
   CheckIcon
 } from '@heroicons/react/24/outline';
+import { BackButton } from '@/components/ui/back-button';
 
 export default function NewAccountPage() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -88,13 +86,7 @@ export default function NewAccountPage() {
     <AppLayout>
       {/* Header */}
       <header className="flex flex-wrap items-center justify-between gap-4 mb-5">
-        <Link href="/accounts">
-          <Button variant="secondary" size="sm" className="flex items-center gap-2">
-            <ArrowLeftIcon className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('backToAccounts')}</span>
-            <span className="sm:hidden">{t('back')}</span>
-          </Button>
-        </Link>
+        <BackButton href="/accounts" label={t('backToAccounts')} />
       </header>
 
       {/* Page Title */}
