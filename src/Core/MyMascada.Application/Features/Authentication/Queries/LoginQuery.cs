@@ -21,6 +21,7 @@ public class LoginQueryHandler : IRequestHandler<LoginQuery, AuthenticationRespo
 
     private readonly IUserRepository _userRepository;
     private readonly IAuthenticationService _authenticationService;
+    private readonly ITokenService _tokenService;
     private readonly IUserFinancialProfileRepository _financialProfileRepository;
     private readonly IUserAiSettingsRepository _aiSettingsRepository;
     private readonly IAccountRepository _accountRepository;
@@ -31,6 +32,7 @@ public class LoginQueryHandler : IRequestHandler<LoginQuery, AuthenticationRespo
     public LoginQueryHandler(
         IUserRepository userRepository,
         IAuthenticationService authenticationService,
+        ITokenService tokenService,
         IUserFinancialProfileRepository financialProfileRepository,
         IUserAiSettingsRepository aiSettingsRepository,
         IAccountRepository accountRepository,
@@ -40,6 +42,7 @@ public class LoginQueryHandler : IRequestHandler<LoginQuery, AuthenticationRespo
     {
         _userRepository = userRepository;
         _authenticationService = authenticationService;
+        _tokenService = tokenService;
         _financialProfileRepository = financialProfileRepository;
         _aiSettingsRepository = aiSettingsRepository;
         _accountRepository = accountRepository;
@@ -147,15 +150,15 @@ public class LoginQueryHandler : IRequestHandler<LoginQuery, AuthenticationRespo
         await _userRepository.UpdateAsync(user);
 
         // Generate JWT token and refresh token
-        var token = await _authenticationService.GenerateJwtTokenAsync(user);
-        var refreshToken = await _authenticationService.GenerateRefreshTokenAsync(user, "0.0.0.0"); // Default IP for command handler
+        var token = await _tokenService.GenerateJwtTokenAsync(user);
+        var refreshTokenResult = await _tokenService.GenerateRefreshTokenAsync(user, "0.0.0.0"); // Default IP for command handler
         var expiresAt = request.RememberMe ? DateTime.UtcNow.AddDays(30) : DateTime.UtcNow.AddDays(7);
 
         response.IsSuccess = true;
         response.Token = token;
         response.ExpiresAt = expiresAt;
-        response.RefreshToken = refreshToken.Token;
-        response.RefreshTokenExpiresAt = refreshToken.ExpiryDate;
+        response.RefreshToken = refreshTokenResult.RawToken;
+        response.RefreshTokenExpiresAt = refreshTokenResult.ExpiresAt;
         // Check if user has AI configured (own key or global key)
         var aiSettings = await _aiSettingsRepository.GetByUserIdAsync(user.Id);
         var hasAiConfigured = (aiSettings != null && !string.IsNullOrEmpty(aiSettings.EncryptedApiKey))

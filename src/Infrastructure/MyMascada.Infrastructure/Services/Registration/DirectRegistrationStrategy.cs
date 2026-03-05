@@ -11,16 +11,16 @@ namespace MyMascada.Infrastructure.Services.Registration;
 /// </summary>
 public class DirectRegistrationStrategy : IRegistrationStrategy
 {
-    private readonly IAuthenticationService _authenticationService;
+    private readonly ITokenService _tokenService;
     private readonly ILogger<DirectRegistrationStrategy> _logger;
 
     public bool AutoConfirmEmail => true;
 
     public DirectRegistrationStrategy(
-        IAuthenticationService authenticationService,
+        ITokenService tokenService,
         ILogger<DirectRegistrationStrategy> logger)
     {
-        _authenticationService = authenticationService;
+        _tokenService = tokenService;
         _logger = logger;
     }
 
@@ -32,16 +32,16 @@ public class DirectRegistrationStrategy : IRegistrationStrategy
     {
         _logger.LogInformation("Email not configured — issuing JWT directly for user {UserId}", user.Id);
 
-        var token = await _authenticationService.GenerateJwtTokenAsync(user);
-        var refreshToken = await _authenticationService.GenerateRefreshTokenAsync(user, ipAddress ?? "0.0.0.0");
+        var token = await _tokenService.GenerateJwtTokenAsync(user);
+        var refreshTokenResult = await _tokenService.GenerateRefreshTokenAsync(user, ipAddress ?? "0.0.0.0");
 
         return new AuthenticationResponse
         {
             IsSuccess = true,
             RequiresEmailVerification = false,
             Token = token,
-            RefreshToken = refreshToken.Token,
-            RefreshTokenExpiresAt = refreshToken.ExpiryDate,
+            RefreshToken = refreshTokenResult.RawToken,
+            RefreshTokenExpiresAt = refreshTokenResult.ExpiresAt,
             Message = "Registration successful!",
             User = MapUser(user)
         };

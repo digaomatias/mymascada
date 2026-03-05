@@ -1,10 +1,6 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using System.Security.Cryptography;
-using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using MyMascada.Application.Common.Configuration;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Authentication.DTOs;
@@ -17,54 +13,25 @@ public class AuthenticationService : IAuthenticationService
 {
     private readonly IConfiguration _configuration;
     private readonly IUserRepository _userRepository;
-    private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly ICategorySeedingService _categorySeedingService;
     private readonly IInviteCodeValidationService _inviteCodeValidationService;
+    private readonly ITokenService _tokenService;
     private readonly BetaAccessOptions _betaAccessOptions;
 
     public AuthenticationService(
         IConfiguration configuration,
         IUserRepository userRepository,
-        IRefreshTokenRepository refreshTokenRepository,
         ICategorySeedingService categorySeedingService,
         IInviteCodeValidationService inviteCodeValidationService,
+        ITokenService tokenService,
         IOptions<BetaAccessOptions> betaAccessOptions)
     {
         _configuration = configuration;
         _userRepository = userRepository;
-        _refreshTokenRepository = refreshTokenRepository;
         _categorySeedingService = categorySeedingService;
         _inviteCodeValidationService = inviteCodeValidationService;
+        _tokenService = tokenService;
         _betaAccessOptions = betaAccessOptions.Value;
-    }
-
-    public async Task<string> GenerateJwtTokenAsync(User user)
-    {
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured"));
-        
-        var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Email, user.Email),
-            new Claim(ClaimTypes.Name, user.UserName),
-            new Claim(ClaimTypes.GivenName, user.FirstName),
-            new Claim(ClaimTypes.Surname, user.LastName),
-            new Claim("Currency", user.Currency),
-            new Claim("TimeZone", user.TimeZone)
-        };
-
-        var tokenDescriptor = new SecurityTokenDescriptor
-        {
-            Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.SpecifyKind(DateTime.UtcNow.AddDays(7), DateTimeKind.Utc),
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
-            Issuer = _configuration["Jwt:Issuer"],
-            Audience = _configuration["Jwt:Audience"]
-        };
-
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-        return await Task.FromResult(tokenHandler.WriteToken(token));
     }
 
     private const int CurrentIterations = 600000;
@@ -149,10 +116,10 @@ public class AuthenticationService : IAuthenticationService
         try
         {
             const string defaultIpAddress = "0.0.0.0"; // Default for OAuth flows
-            
+
             // Check if user exists by email
             var existingUser = await _userRepository.GetByEmailAsync(email);
-            
+
             // Also check if someone already has this email as their username
             if (existingUser == null)
             {
@@ -166,7 +133,7 @@ public class AuthenticationService : IAuthenticationService
                     };
                 }
             }
-            
+
             if (existingUser != null)
             {
                 // Update Google ID if not set
@@ -176,16 +143,16 @@ public class AuthenticationService : IAuthenticationService
                     await _userRepository.UpdateAsync(existingUser);
                 }
 
-                var token = await GenerateJwtTokenAsync(existingUser);
-                var refreshToken = await GenerateRefreshTokenAsync(existingUser, defaultIpAddress);
+                var token = await _tokenService.GenerateJwtTokenAsync(existingUser);
+                var refreshTokenResult = await _tokenService.GenerateRefreshTokenAsync(existingUser, defaultIpAddress);
 
                 return new AuthenticationResponse
                 {
                     IsSuccess = true,
                     Token = token,
                     ExpiresAt = DateTime.SpecifyKind(DateTime.UtcNow.AddDays(7), DateTimeKind.Utc),
-                    RefreshToken = refreshToken.Token,
-                    RefreshTokenExpiresAt = refreshToken.ExpiryDate,
+                    RefreshToken = refreshTokenResult.RawToken,
+                    RefreshTokenExpiresAt = refreshTokenResult.ExpiresAt,
                     User = new UserDto
                     {
                         Id = existingUser.Id,
@@ -247,17 +214,17 @@ public class AuthenticationService : IAuthenticationService
 
                 // Seed default categories for new OAuth user
                 await _categorySeedingService.CreateDefaultCategoriesAsync(newUser.Id);
-                
-                var newUserToken = await GenerateJwtTokenAsync(newUser);
-                var newUserRefreshToken = await GenerateRefreshTokenAsync(newUser, defaultIpAddress);
+
+                var newUserToken = await _tokenService.GenerateJwtTokenAsync(newUser);
+                var newUserRefreshTokenResult = await _tokenService.GenerateRefreshTokenAsync(newUser, defaultIpAddress);
 
                 return new AuthenticationResponse
                 {
                     IsSuccess = true,
                     Token = newUserToken,
                     ExpiresAt = DateTime.SpecifyKind(DateTime.UtcNow.AddDays(7), DateTimeKind.Utc),
-                    RefreshToken = newUserRefreshToken.Token,
-                    RefreshTokenExpiresAt = newUserRefreshToken.ExpiryDate,
+                    RefreshToken = newUserRefreshTokenResult.RawToken,
+                    RefreshTokenExpiresAt = newUserRefreshTokenResult.ExpiresAt,
                     User = new UserDto
                     {
                         Id = newUser.Id,
@@ -277,10 +244,10 @@ public class AuthenticationService : IAuthenticationService
                 // Log the full exception details for debugging
                 var innerMessage = dbEx.InnerException?.Message ?? "No inner exception";
                 var fullMessage = $"Database error: {dbEx.Message}. Inner: {innerMessage}";
-                
+
                 Console.WriteLine($"[GOOGLE AUTH ERROR] {fullMessage}");
                 Console.WriteLine($"[GOOGLE AUTH ERROR] Stack trace: {dbEx.StackTrace}");
-                
+
                 return new AuthenticationResponse
                 {
                     IsSuccess = false,
@@ -292,7 +259,7 @@ public class AuthenticationService : IAuthenticationService
                 // Log all other exceptions with full details
                 Console.WriteLine($"[GOOGLE AUTH ERROR] General exception: {innerEx.Message}");
                 Console.WriteLine($"[GOOGLE AUTH ERROR] Stack trace: {innerEx.StackTrace}");
-                
+
                 return new AuthenticationResponse
                 {
                     IsSuccess = false,
@@ -305,13 +272,23 @@ public class AuthenticationService : IAuthenticationService
             // Log outer exception details
             Console.WriteLine($"[GOOGLE AUTH ERROR] Outer exception: {ex.Message}");
             Console.WriteLine($"[GOOGLE AUTH ERROR] Outer stack trace: {ex.StackTrace}");
-            
+
             return new AuthenticationResponse
             {
                 IsSuccess = false,
                 Errors = new List<string> { $"Google authentication failed: {ex.Message}" }
             };
         }
+    }
+
+    public async Task<AuthenticationResponse> RefreshTokenAsync(string rawToken, string ipAddress)
+    {
+        return await _tokenService.RefreshTokenAsync(rawToken, ipAddress);
+    }
+
+    public async Task RevokeRefreshTokenAsync(string rawToken, string ipAddress)
+    {
+        await _tokenService.RevokeRefreshTokenAsync(rawToken, ipAddress);
     }
 
     public async Task<AuthenticationResponse> GoogleTokenLoginAsync(string idToken)
@@ -345,110 +322,5 @@ public class AuthenticationService : IAuthenticationService
                 Errors = new List<string> { "Invalid Google token", ex.Message }
             };
         }
-    }
-
-    public async Task<RefreshToken> GenerateRefreshTokenAsync(User user, string ipAddress)
-    {
-        // Generate a cryptographically secure random token
-        var randomBytes = new byte[64];
-        using var rng = RandomNumberGenerator.Create();
-        rng.GetBytes(randomBytes);
-        
-        var refreshToken = new RefreshToken
-        {
-            Id = Guid.NewGuid(),
-            Token = Convert.ToBase64String(randomBytes),
-            ExpiryDate = DateTime.SpecifyKind(DateTime.UtcNow.AddDays(30), DateTimeKind.Utc), // 30 days expiry
-            UserId = user.Id,
-            CreatedByIp = ipAddress,
-            CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
-            UpdatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc)
-        };
-
-        await _refreshTokenRepository.AddAsync(refreshToken);
-        return refreshToken;
-    }
-
-    public async Task<RefreshToken?> ValidateRefreshTokenAsync(string token)
-    {
-        var refreshToken = await _refreshTokenRepository.GetByTokenAsync(token);
-        
-        if (refreshToken == null || !refreshToken.IsActive)
-        {
-            return null;
-        }
-
-        return refreshToken;
-    }
-
-    public async Task<AuthenticationResponse> RefreshTokenAsync(string refreshToken, string ipAddress)
-    {
-        try
-        {
-            var token = await ValidateRefreshTokenAsync(refreshToken);
-            
-            if (token == null)
-            {
-                return new AuthenticationResponse
-                {
-                    IsSuccess = false,
-                    Errors = new List<string> { "Invalid or expired refresh token" }
-                };
-            }
-
-            var user = token.User;
-            
-            // Generate new tokens
-            var newJwtToken = await GenerateJwtTokenAsync(user);
-            var newRefreshToken = await GenerateRefreshTokenAsync(user, ipAddress);
-            
-            // Revoke the old refresh token
-            token.Revoke(ipAddress, newRefreshToken.Token);
-            await _refreshTokenRepository.UpdateAsync(token);
-
-            return new AuthenticationResponse
-            {
-                IsSuccess = true,
-                Token = newJwtToken,
-                RefreshToken = newRefreshToken.Token,
-                RefreshTokenExpiresAt = newRefreshToken.ExpiryDate,
-                User = new UserDto
-                {
-                    Id = user.Id,
-                    Email = user.Email,
-                    UserName = user.UserName,
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    FullName = $"{user.FirstName} {user.LastName}".Trim(),
-                    Currency = user.Currency,
-                    TimeZone = user.TimeZone,
-                    AiDescriptionCleaning = user.AiDescriptionCleaning
-                }
-            };
-        }
-        catch (Exception ex)
-        {
-            return new AuthenticationResponse
-            {
-                IsSuccess = false,
-                Errors = new List<string> { ex.Message }
-            };
-        }
-    }
-
-    public async Task RevokeRefreshTokenAsync(string token, string ipAddress, string? replacedByToken = null)
-    {
-        var refreshToken = await _refreshTokenRepository.GetByTokenAsync(token);
-        
-        if (refreshToken != null && refreshToken.IsActive)
-        {
-            refreshToken.Revoke(ipAddress, replacedByToken);
-            await _refreshTokenRepository.UpdateAsync(refreshToken);
-        }
-    }
-
-    public async Task RevokeAllUserRefreshTokensAsync(Guid userId, string ipAddress)
-    {
-        await _refreshTokenRepository.RevokeAllUserTokensAsync(userId, ipAddress);
     }
 }
