@@ -36,9 +36,11 @@ export function BackButton({ href, onClick, label, variant = 'button', className
       );
     }
 
+    if (!href) return null;
+
     return (
       <Link
-        href={href!}
+        href={href}
         className={cn('inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 mb-4', className)}
       >
         {icon}
@@ -58,8 +60,10 @@ export function BackButton({ href, onClick, label, variant = 'button', className
     );
   }
 
+  if (!href) return null;
+
   return (
-    <Link href={href!}>
+    <Link href={href}>
       <Button variant="secondary" size="sm" className={cn('flex items-center gap-2', className)}>
         {icon}
         {desktopText}
