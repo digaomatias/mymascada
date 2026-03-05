@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Authentication.DTOs;
@@ -14,13 +15,16 @@ public class TokenService : ITokenService
 {
     private readonly IConfiguration _configuration;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly ILogger<TokenService> _logger;
 
     public TokenService(
         IConfiguration configuration,
-        IRefreshTokenRepository refreshTokenRepository)
+        IRefreshTokenRepository refreshTokenRepository,
+        ILogger<TokenService> logger)
     {
         _configuration = configuration;
         _refreshTokenRepository = refreshTokenRepository;
+        _logger = logger;
     }
 
     public Task<string> GenerateJwtTokenAsync(User user)
@@ -42,7 +46,7 @@ public class TokenService : ITokenService
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.SpecifyKind(DateTime.UtcNow.AddDays(7), DateTimeKind.Utc),
+            Expires = DateTime.SpecifyKind(DateTime.UtcNow.AddMinutes(15), DateTimeKind.Utc),
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
             Issuer = _configuration["Jwt:Issuer"],
             Audience = _configuration["Jwt:Audience"]
@@ -65,7 +69,8 @@ public class TokenService : ITokenService
         {
             Id = Guid.NewGuid(),
             Token = tokenHash,
-            ExpiryDate = DateTime.SpecifyKind(DateTime.UtcNow.AddDays(30), DateTimeKind.Utc),
+            ExpiryDate = DateTime.SpecifyKind(DateTime.UtcNow.AddDays(
+                _configuration.GetValue("Jwt:RefreshTokenExpiryDays", 30)), DateTimeKind.Utc),
             UserId = user.Id,
             CreatedByIp = ipAddress,
             CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
@@ -137,10 +142,11 @@ public class TokenService : ITokenService
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "An error occurred while refreshing the token");
             return new AuthenticationResponse
             {
                 IsSuccess = false,
-                Errors = new List<string> { ex.Message }
+                Errors = new List<string> { "An error occurred while refreshing the token. Please try again." }
             };
         }
     }
