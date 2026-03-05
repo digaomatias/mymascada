@@ -17,7 +17,10 @@ public static class HealthCheckServiceExtensions
     /// </summary>
     public static IServiceCollection AddHealthCheckServices(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var connectionString = configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException(
+                "Connection string 'DefaultConnection' is not configured. " +
+                "Ensure it is set in appsettings.json or environment variables.");
 
         services.AddHealthChecks()
             // EF Core connectivity check — fast, uses DbContext.Database.CanConnectAsync()
@@ -27,7 +30,7 @@ public static class HealthCheckServiceExtensions
                 tags: new[] { "ready" })
             // Npgsql raw connectivity check
             .AddNpgSql(
-                connectionString!,
+                connectionString,
                 name: "database-npgsql",
                 failureStatus: HealthStatus.Unhealthy,
                 tags: new[] { "ready" })

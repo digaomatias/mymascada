@@ -421,10 +421,10 @@ app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.Health
     ResponseWriter = WriteHealthCheckResponse
 });
 
-// Public health check endpoint — includes version and timestamp
+// Public health check endpoint — minimal response, no dependency checks exposed
 app.MapHealthChecks("/api/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
 {
-    Predicate = check => check.Tags.Contains("ready"),
+    Predicate = _ => false, // no dependency checks — prevents leaking infrastructure details
     ResponseWriter = async (context, report) =>
     {
         context.Response.ContentType = "application/json";
