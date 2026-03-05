@@ -9,7 +9,6 @@ import {
   CheckCircleIcon,
   ArrowPathIcon,
   ScaleIcon,
-  ArrowLeftIcon,
   CloudArrowDownIcon,
   DocumentArrowUpIcon,
   LinkIcon
@@ -659,13 +658,7 @@ export default function ReconcileAccountPage() {
               </div>
 
               <div className="flex justify-center">
-                <Link href={`/accounts/${accountId}`}>
-                  <Button className="flex items-center gap-2">
-                    <ArrowLeftIcon className="w-4 h-4" />
-                    <span className="hidden sm:inline">{t('backToAccount')}</span>
-                    <span className="sm:hidden">{tCommon('back')}</span>
-                  </Button>
-                </Link>
+                <BackButton href={`/accounts/${accountId}`} label={t('backToAccount')} />
               </div>
             </div>
           </div>
