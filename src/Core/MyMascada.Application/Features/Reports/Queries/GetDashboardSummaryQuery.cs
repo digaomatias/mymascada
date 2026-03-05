@@ -104,7 +104,7 @@ public class GetDashboardSummaryQueryHandler : IRequestHandler<GetDashboardSumma
 
         var netSaved = avgMonthlyIncome - avgMonthlyExpenses;
         var runwayMonths = avgMonthlyExpenses > 0
-            ? Math.Round(totalBalance / avgMonthlyExpenses, 1)
+            ? Math.Max(0m, Math.Round(totalBalance / avgMonthlyExpenses, 1))
             : 0m;
         var savingsRate = avgMonthlyIncome > 0
             ? Math.Round((netSaved / avgMonthlyIncome) * 100, 0)
