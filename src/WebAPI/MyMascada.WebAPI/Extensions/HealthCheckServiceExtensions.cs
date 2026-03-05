@@ -1,3 +1,4 @@
+using HealthChecks.NpgSql;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using MyMascada.Infrastructure.Data;
 using MyMascada.Infrastructure.Services.Health;
@@ -14,12 +15,20 @@ public static class HealthCheckServiceExtensions
     /// Liveness checks (tag "live") verify the app process is running.
     /// Readiness checks (tag "ready") verify downstream dependencies are reachable.
     /// </summary>
-    public static IServiceCollection AddHealthCheckServices(this IServiceCollection services)
+    public static IServiceCollection AddHealthCheckServices(this IServiceCollection services, IConfiguration configuration)
     {
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
+
         services.AddHealthChecks()
             // EF Core connectivity check — fast, uses DbContext.Database.CanConnectAsync()
             .AddDbContextCheck<ApplicationDbContext>(
                 name: "database-ef",
+                failureStatus: HealthStatus.Unhealthy,
+                tags: new[] { "ready" })
+            // Npgsql raw connectivity check
+            .AddNpgSql(
+                connectionString!,
+                name: "database-npgsql",
                 failureStatus: HealthStatus.Unhealthy,
                 tags: new[] { "ready" })
             // Custom database health check (existing)

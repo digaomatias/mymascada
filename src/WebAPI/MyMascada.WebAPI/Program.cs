@@ -131,7 +131,7 @@ builder.Services.AddCategorizationServices(builder.Configuration);
 builder.Services.AddDescriptionCleaningServices(builder.Configuration);
 builder.Services.AddBankProviderServices(builder.Configuration);
 builder.Services.AddEmailServices(builder.Configuration);
-builder.Services.AddHealthCheckServices();
+builder.Services.AddHealthCheckServices(builder.Configuration);
 builder.Services.AddBackgroundJobs(builder.Configuration);
 builder.Services.AddCorsConfiguration(builder.Configuration);
 builder.Services.AddRateLimitingConfiguration();
@@ -420,6 +420,25 @@ app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.Health
     Predicate = check => check.Tags.Contains("ready"),
     ResponseWriter = WriteHealthCheckResponse
 });
+
+// Public health check endpoint — includes version and timestamp
+app.MapHealthChecks("/api/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready"),
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+        var version = assembly.GetName().Version;
+        var result = new
+        {
+            status = report.Status.ToString().ToLowerInvariant(),
+            version = version?.ToString(3) ?? "0.0.0",
+            timestamp = DateTimeOffset.UtcNow
+        };
+        await context.Response.WriteAsJsonAsync(result);
+    }
+}).AllowAnonymous();
 
 // Add a simple test endpoint
 app.MapGet("/", () => "MyMascada API is running!");
