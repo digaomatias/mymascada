@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +12,8 @@ namespace MyMascada.WebAPI.Controllers;
 /// Controller for handling OFX file imports
 /// </summary>
 [ApiController]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/ofx-import")]
 [Route("api/ofx-import")]
 [Authorize]
 public class OfxImportController : ControllerBase

@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using MediatR;
 using MyMascada.Application.Features.Testing.Commands;
@@ -9,6 +10,8 @@ namespace MyMascada.WebAPI.Controllers;
 /// Only available in development environment
 /// </summary>
 [ApiController]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Route("api/[controller]")]
 public class TestingController : ControllerBase
 {

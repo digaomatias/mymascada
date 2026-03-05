@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using MyMascada.Application.Common.Interfaces;
@@ -8,6 +9,8 @@ using MyMascada.WebAPI.Filters;
 namespace MyMascada.WebAPI.Controllers;
 
 [ApiController]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/admin")]
 [Route("api/admin")]
 [AdminApiKey]
 public class AdminController : ControllerBase

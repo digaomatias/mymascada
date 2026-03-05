@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyMascada.Application.Common.Interfaces;
@@ -6,6 +7,8 @@ namespace MyMascada.WebAPI.Controllers;
 
 [Authorize]
 [ApiController]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/description-cleaning")]
 [Route("api/description-cleaning")]
 public class DescriptionCleaningController : ControllerBase
 {

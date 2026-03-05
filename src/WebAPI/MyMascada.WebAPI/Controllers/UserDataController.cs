@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +16,8 @@ namespace MyMascada.WebAPI.Controllers;
 /// Controller for LGPD/GDPR compliance features including data export and account deletion.
 /// </summary>
 [ApiController]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Route("api/[controller]")]
 [Authorize]
 public class UserDataController : ControllerBase

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyMascada.Application.Common.Interfaces;
@@ -8,6 +9,8 @@ using MyMascada.Infrastructure.Services.Telegram.Models;
 namespace MyMascada.WebAPI.Controllers;
 
 [ApiController]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/telegram/webhook")]
 [Route("api/telegram/webhook")]
 [AllowAnonymous]
 public class TelegramWebhookController : ControllerBase

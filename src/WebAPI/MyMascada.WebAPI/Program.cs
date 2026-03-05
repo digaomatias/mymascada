@@ -6,6 +6,7 @@ using MyMascada.WebAPI.Extensions;
 using MyMascada.WebAPI.Middleware;
 using MyMascada.WebAPI.Services;
 using MediatR;
+using Asp.Versioning;
 using Serilog;
 using Serilog.Events;
 using Hangfire;
@@ -77,6 +78,20 @@ builder.Services.AddSwaggerGen(options =>
     // Configure Swagger to use string values for enums
     options.UseInlineDefinitionsForEnums();
     options.CustomSchemaIds(type => type.FullName);
+});
+
+// Add API versioning (URL segment: /api/v1/...)
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+    options.ApiVersionReader = new UrlSegmentApiVersionReader();
+})
+.AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
 });
 
 // Add HTTP context accessor and current user service
