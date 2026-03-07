@@ -1,0 +1,36 @@
+# MyMascada API — Fly.io configuration
+# Deploy: flyctl deploy --config deploy/fly/fly.api.toml --dockerfile src/Dockerfile.api
+app = "mymascada-api"
+primary_region = "syd"
+
+[build]
+  dockerfile = "src/Dockerfile.api"
+
+[env]
+  ASPNETCORE_ENVIRONMENT = "Production"
+  ASPNETCORE_URLS = "http://+:5126"
+
+[http_service]
+  internal_port = 5126
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 250
+    soft_limit = 200
+
+[[http_service.checks]]
+  grace_period = "10s"
+  interval = "30s"
+  method = "GET"
+  path = "/health"
+  timeout = "5s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+  processes = ["app"]
