@@ -209,17 +209,24 @@ public class BudgetRepository : IBudgetRepository
     {
         var today = DateTimeProvider.UtcNow;
 
-        // Get all active budgets with their categories (not just rollover ones)
-        var budgets = await _context.Budgets
+        // Get expired active budgets with their categories, filtering at database level
+        return await _context.Budgets
             .Include(b => b.BudgetCategories.Where(bc => !bc.IsDeleted))
                 .ThenInclude(bc => bc.Category)
             .Where(b => b.UserId == userId
                         && b.Status == BudgetStatus.Active
-                        && !b.IsDeleted)
+                        && !b.IsDeleted
+                        && (
+                            // Custom periods with explicit EndDate
+                            (b.EndDate != null && b.EndDate < today) ||
+                            // Recurring periods without EndDate - calculate expiration
+                            (b.EndDate == null && (
+                                (b.PeriodType == BudgetPeriodType.Weekly && b.StartDate.AddDays(7).AddSeconds(-1) < today) ||
+                                (b.PeriodType == BudgetPeriodType.Biweekly && b.StartDate.AddDays(14).AddSeconds(-1) < today) ||
+                                (b.PeriodType == BudgetPeriodType.Monthly && b.StartDate.AddMonths(1).AddSeconds(-1) < today)
+                            ))
+                        ))
             .ToListAsync(cancellationToken);
-
-        // Filter to budgets whose period has ended
-        return budgets.Where(b => b.GetPeriodEndDate() < today);
     }
 
     public async Task<IEnumerable<Budget>> GetBudgetsByStatusAsync(Guid userId, BudgetStatus status, CancellationToken cancellationToken = default)
@@ -234,16 +241,25 @@ public class BudgetRepository : IBudgetRepository
 
     public async Task<IEnumerable<Guid>> GetUserIdsWithExpiredActiveBudgetsAsync(CancellationToken cancellationToken = default)
     {
-        // Get all active budgets and check in memory which have expired
-        var activeBudgets = await _context.Budgets
-            .Where(b => b.Status == BudgetStatus.Active && !b.IsDeleted)
-            .ToListAsync(cancellationToken);
-
         var today = DateTimeProvider.UtcNow;
-        return activeBudgets
-            .Where(b => b.GetPeriodEndDate() < today)
+
+        // Get user IDs with expired active budgets, filtering at database level
+        return await _context.Budgets
+            .Where(b => b.Status == BudgetStatus.Active
+                        && !b.IsDeleted
+                        && (
+                            // Custom periods with explicit EndDate
+                            (b.EndDate != null && b.EndDate < today) ||
+                            // Recurring periods without EndDate - calculate expiration
+                            (b.EndDate == null && (
+                                (b.PeriodType == BudgetPeriodType.Weekly && b.StartDate.AddDays(7).AddSeconds(-1) < today) ||
+                                (b.PeriodType == BudgetPeriodType.Biweekly && b.StartDate.AddDays(14).AddSeconds(-1) < today) ||
+                                (b.PeriodType == BudgetPeriodType.Monthly && b.StartDate.AddMonths(1).AddSeconds(-1) < today)
+                            ))
+                        ))
             .Select(b => b.UserId)
-            .Distinct();
+            .Distinct()
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<bool> BudgetNameExistsAsync(Guid userId, string name, int? excludeBudgetId = null, CancellationToken cancellationToken = default)
