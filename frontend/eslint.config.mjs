@@ -2,6 +2,7 @@ import nextConfig from "eslint-config-next";
 import coreWebVitals from "eslint-config-next/core-web-vitals";
 import typescript from "eslint-config-next/typescript";
 
+/** @type {import("eslint").Linter.Config[]} */
 const eslintConfig = [
   {
     ignores: [
@@ -17,20 +18,30 @@ const eslintConfig = [
       "node_modules/",
       ".env*",
       "*.log",
+      "public/**",
+      "tests/**",
     ],
   },
   ...nextConfig,
   ...coreWebVitals,
   ...typescript,
   {
+    // CommonJS config files at project root
+    files: ["*.js"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
+  {
     rules: {
       "@typescript-eslint/no-unused-vars": "error",
       "@typescript-eslint/no-explicit-any": "warn",
       "prefer-const": "error",
-      "react-compiler/react-compiler": "off",
-      "react-hooks/set-state-in-effect": "off",
-      "react-hooks/static-components": "off",
-      "react-hooks/preserve-manual-memoization": "off",
+      // Downgrade new react-hooks v7 rules to warnings for now.
+      // These flag pre-existing patterns that should be cleaned up separately.
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/static-components": "warn",
+      "react-hooks/preserve-manual-memoization": "warn",
     },
   },
 ];
