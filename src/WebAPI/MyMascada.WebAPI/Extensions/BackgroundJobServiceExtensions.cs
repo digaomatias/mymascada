@@ -36,6 +36,10 @@ public static class BackgroundJobServiceExtensions
         services.AddScoped<MyMascada.Application.BackgroundJobs.IRecurringPatternJobService,
             MyMascada.Infrastructure.BackgroundJobs.RecurringPatternJobService>();
 
+        // Expired budget job service
+        services.AddScoped<MyMascada.Application.BackgroundJobs.IExpiredBudgetJobService,
+            MyMascada.Infrastructure.BackgroundJobs.ExpiredBudgetJobService>();
+
         return services;
     }
 }

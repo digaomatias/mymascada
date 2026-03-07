@@ -49,9 +49,24 @@ public class Budget : BaseEntity
     public bool IsRecurring { get; set; } = true;
 
     /// <summary>
-    /// Whether this budget is currently active
+    /// Lifecycle status of this budget (Active, Completed, Cancelled).
+    /// This is the source of truth for budget state.
     /// </summary>
-    public bool IsActive { get; set; } = true;
+    public BudgetStatus Status { get; set; } = BudgetStatus.Active;
+
+    /// <summary>
+    /// Whether this budget is currently active. Kept in sync with Status for backward compatibility.
+    /// </summary>
+    public bool IsActive
+    {
+        get => Status == BudgetStatus.Active;
+        set => Status = value ? BudgetStatus.Active : BudgetStatus.Completed;
+    }
+
+    /// <summary>
+    /// Timestamp when the expired budget job processed this budget (audit trail)
+    /// </summary>
+    public DateTime? RolloverProcessedAt { get; set; }
 
     // Navigation properties
 

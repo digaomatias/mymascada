@@ -4,6 +4,7 @@ using MyMascada.Application.Features.Budgets.Commands;
 using MyMascada.Application.Features.Budgets.DTOs;
 using MyMascada.Application.Features.Budgets.Services;
 using MyMascada.Domain.Entities;
+using MediatR;
 using NSubstitute;
 
 namespace MyMascada.Tests.Unit.Commands;
@@ -12,25 +13,52 @@ public class ProcessBudgetRolloversCommandTests
 {
     private readonly IBudgetRepository _budgetRepository;
     private readonly IBudgetCalculationService _calculationService;
-    private readonly ProcessBudgetRolloversCommandHandler _handler;
+    private readonly ProcessExpiredBudgetsCommandHandler _handler;
     private readonly Guid _userId;
 
     public ProcessBudgetRolloversCommandTests()
     {
         _budgetRepository = Substitute.For<IBudgetRepository>();
         _calculationService = Substitute.For<IBudgetCalculationService>();
-        _handler = new ProcessBudgetRolloversCommandHandler(_budgetRepository, _calculationService);
+        _handler = new ProcessExpiredBudgetsCommandHandler(_budgetRepository, _calculationService);
         _userId = Guid.NewGuid();
     }
 
-    #region No Budgets Needing Rollover
+    #region Legacy Wrapper Tests
 
     [Fact]
-    public async Task Handle_NoBudgetsNeedingRollover_ShouldReturnEmptyResult()
+    public async Task LegacyCommand_ShouldDelegateToProcessExpiredBudgets()
     {
         // Arrange
-        var command = new ProcessBudgetRolloversCommand { UserId = _userId };
-        _budgetRepository.GetBudgetsNeedingRolloverAsync(_userId, Arg.Any<CancellationToken>())
+        var mediator = Substitute.For<IMediator>();
+        var legacyHandler = new ProcessBudgetRolloversCommandHandler(mediator);
+        var command = new ProcessBudgetRolloversCommand { UserId = _userId, PreviewOnly = true };
+        var expectedResult = new BudgetRolloverResultDto { Message = "test" };
+
+        mediator.Send(Arg.Any<ProcessExpiredBudgetsCommand>(), Arg.Any<CancellationToken>())
+            .Returns(expectedResult);
+
+        // Act
+        var result = await legacyHandler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.Should().Be(expectedResult);
+        await mediator.Received(1).Send(
+            Arg.Is<ProcessExpiredBudgetsCommand>(c =>
+                c.UserId == _userId && c.PreviewOnly == true),
+            Arg.Any<CancellationToken>());
+    }
+
+    #endregion
+
+    #region No Expired Budgets
+
+    [Fact]
+    public async Task Handle_NoExpiredBudgets_ShouldReturnEmptyResult()
+    {
+        // Arrange
+        var command = new ProcessExpiredBudgetsCommand { UserId = _userId };
+        _budgetRepository.GetExpiredActiveBudgetsAsync(_userId, Arg.Any<CancellationToken>())
             .Returns(Enumerable.Empty<Budget>());
 
         // Act
@@ -42,7 +70,7 @@ public class ProcessBudgetRolloversCommandTests
         result.NewBudgetsCreated.Should().Be(0);
         result.TotalRolloverAmount.Should().Be(0);
         result.ProcessedBudgets.Should().BeEmpty();
-        result.Message.Should().Contain("No budgets");
+        result.Message.Should().Contain("No expired budgets");
     }
 
     #endregion
@@ -54,13 +82,13 @@ public class ProcessBudgetRolloversCommandTests
     {
         // Arrange
         var budget = CreateTestBudget(isRecurring: true);
-        var command = new ProcessBudgetRolloversCommand
+        var command = new ProcessExpiredBudgetsCommand
         {
             UserId = _userId,
             PreviewOnly = true
         };
 
-        _budgetRepository.GetBudgetsNeedingRolloverAsync(_userId, Arg.Any<CancellationToken>())
+        _budgetRepository.GetExpiredActiveBudgetsAsync(_userId, Arg.Any<CancellationToken>())
             .Returns(new[] { budget });
 
         SetupCalculationServiceMock(budget, spent: 400m, budgeted: 500m);
@@ -88,13 +116,13 @@ public class ProcessBudgetRolloversCommandTests
         groceriesCategory.AllowRollover = true;
         groceriesCategory.BudgetedAmount = 500m;
 
-        var command = new ProcessBudgetRolloversCommand
+        var command = new ProcessExpiredBudgetsCommand
         {
             UserId = _userId,
             PreviewOnly = true
         };
 
-        _budgetRepository.GetBudgetsNeedingRolloverAsync(_userId, Arg.Any<CancellationToken>())
+        _budgetRepository.GetExpiredActiveBudgetsAsync(_userId, Arg.Any<CancellationToken>())
             .Returns(new[] { budget });
 
         // Spent $300 of $500 budget - $200 remaining to roll over
@@ -113,10 +141,10 @@ public class ProcessBudgetRolloversCommandTests
 
     #endregion
 
-    #region Actual Rollover Processing
+    #region Actual Processing
 
     [Fact]
-    public async Task Handle_RecurringBudget_ShouldCreateNewBudgetWithRollover()
+    public async Task Handle_RecurringBudget_ShouldCreateNewPeriodAndMarkCompleted()
     {
         // Arrange
         var budget = CreateTestBudget(isRecurring: true);
@@ -124,13 +152,13 @@ public class ProcessBudgetRolloversCommandTests
         groceriesCategory.AllowRollover = true;
         groceriesCategory.BudgetedAmount = 500m;
 
-        var command = new ProcessBudgetRolloversCommand
+        var command = new ProcessExpiredBudgetsCommand
         {
             UserId = _userId,
             PreviewOnly = false
         };
 
-        _budgetRepository.GetBudgetsNeedingRolloverAsync(_userId, Arg.Any<CancellationToken>())
+        _budgetRepository.GetExpiredActiveBudgetsAsync(_userId, Arg.Any<CancellationToken>())
             .Returns(new[] { budget });
 
         SetupCalculationServiceMock(budget, spent: 400m, budgeted: 500m);
@@ -156,27 +184,60 @@ public class ProcessBudgetRolloversCommandTests
             Arg.Is<Budget>(b => b.IsRecurring == true),
             Arg.Any<CancellationToken>());
 
-        // Verify old budget was marked inactive
+        // Verify old budget was marked Completed (not just IsActive=false)
         await _budgetRepository.Received(1).UpdateBudgetAsync(
-            Arg.Is<Budget>(b => b.IsActive == false),
+            Arg.Is<Budget>(b => b.Status == BudgetStatus.Completed && b.RolloverProcessedAt != null),
             Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task Handle_NonRecurringBudget_ShouldNotCreateNewBudget()
+    public async Task Handle_RecurringBudgetWithNoRolloverCategories_ShouldStillCreateNewPeriod()
     {
-        // Arrange
-        var budget = CreateTestBudget(isRecurring: false);
-        var groceriesCategory = budget.BudgetCategories.First();
-        groceriesCategory.AllowRollover = true;
+        // Arrange - recurring budget where NO categories have AllowRollover
+        var budget = CreateTestBudget(isRecurring: true);
+        budget.BudgetCategories.First().AllowRollover = false;
 
-        var command = new ProcessBudgetRolloversCommand
+        var command = new ProcessExpiredBudgetsCommand
         {
             UserId = _userId,
             PreviewOnly = false
         };
 
-        _budgetRepository.GetBudgetsNeedingRolloverAsync(_userId, Arg.Any<CancellationToken>())
+        _budgetRepository.GetExpiredActiveBudgetsAsync(_userId, Arg.Any<CancellationToken>())
+            .Returns(new[] { budget });
+
+        SetupCalculationServiceMock(budget, spent: 400m, budgeted: 500m);
+
+        var newBudget = CreateTestBudget(isRecurring: true);
+        newBudget.Id = 999;
+        _budgetRepository.CreateBudgetAsync(Arg.Any<Budget>(), Arg.Any<CancellationToken>())
+            .Returns(newBudget);
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert - should STILL create a new period even without rollover categories
+        result.NewBudgetsCreated.Should().Be(1);
+        result.ProcessedBudgets[0].NewBudgetCreated.Should().BeTrue();
+        result.ProcessedBudgets[0].CategoryRollovers.Should().BeEmpty(); // No rollover amounts
+
+        await _budgetRepository.Received(1).CreateBudgetAsync(
+            Arg.Any<Budget>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_NonRecurringBudget_ShouldMarkCompletedWithoutNewPeriod()
+    {
+        // Arrange
+        var budget = CreateTestBudget(isRecurring: false);
+
+        var command = new ProcessExpiredBudgetsCommand
+        {
+            UserId = _userId,
+            PreviewOnly = false
+        };
+
+        _budgetRepository.GetExpiredActiveBudgetsAsync(_userId, Arg.Any<CancellationToken>())
             .Returns(new[] { budget });
 
         SetupCalculationServiceMock(budget, spent: 400m, budgeted: 500m);
@@ -190,6 +251,11 @@ public class ProcessBudgetRolloversCommandTests
 
         // Verify no budget was created
         await _budgetRepository.DidNotReceive().CreateBudgetAsync(Arg.Any<Budget>(), Arg.Any<CancellationToken>());
+
+        // Verify old budget was marked Completed
+        await _budgetRepository.Received(1).UpdateBudgetAsync(
+            Arg.Is<Budget>(b => b.Status == BudgetStatus.Completed),
+            Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -205,13 +271,13 @@ public class ProcessBudgetRolloversCommandTests
         category.AllowRollover = true;
         category.BudgetedAmount = 500m;
 
-        var command = new ProcessBudgetRolloversCommand
+        var command = new ProcessExpiredBudgetsCommand
         {
             UserId = _userId,
             PreviewOnly = true
         };
 
-        _budgetRepository.GetBudgetsNeedingRolloverAsync(_userId, Arg.Any<CancellationToken>())
+        _budgetRepository.GetExpiredActiveBudgetsAsync(_userId, Arg.Any<CancellationToken>())
             .Returns(new[] { budget });
 
         // Spent $300, $200 remaining
@@ -236,13 +302,13 @@ public class ProcessBudgetRolloversCommandTests
         category.CarryOverspend = true;
         category.BudgetedAmount = 500m;
 
-        var command = new ProcessBudgetRolloversCommand
+        var command = new ProcessExpiredBudgetsCommand
         {
             UserId = _userId,
             PreviewOnly = true
         };
 
-        _budgetRepository.GetBudgetsNeedingRolloverAsync(_userId, Arg.Any<CancellationToken>())
+        _budgetRepository.GetExpiredActiveBudgetsAsync(_userId, Arg.Any<CancellationToken>())
             .Returns(new[] { budget });
 
         // Spent $600, $100 over budget
@@ -267,13 +333,13 @@ public class ProcessBudgetRolloversCommandTests
         category.CarryOverspend = false; // Don't carry overspend
         category.BudgetedAmount = 500m;
 
-        var command = new ProcessBudgetRolloversCommand
+        var command = new ProcessExpiredBudgetsCommand
         {
             UserId = _userId,
             PreviewOnly = true
         };
 
-        _budgetRepository.GetBudgetsNeedingRolloverAsync(_userId, Arg.Any<CancellationToken>())
+        _budgetRepository.GetExpiredActiveBudgetsAsync(_userId, Arg.Any<CancellationToken>())
             .Returns(new[] { budget });
 
         // Spent $600, $100 over budget
@@ -293,13 +359,13 @@ public class ProcessBudgetRolloversCommandTests
         // Arrange
         var budget = CreateTestBudgetWithMultipleCategories();
 
-        var command = new ProcessBudgetRolloversCommand
+        var command = new ProcessExpiredBudgetsCommand
         {
             UserId = _userId,
             PreviewOnly = true
         };
 
-        _budgetRepository.GetBudgetsNeedingRolloverAsync(_userId, Arg.Any<CancellationToken>())
+        _budgetRepository.GetExpiredActiveBudgetsAsync(_userId, Arg.Any<CancellationToken>())
             .Returns(new[] { budget });
 
         SetupCalculationServiceMockForMultipleCategories(budget);
@@ -340,13 +406,13 @@ public class ProcessBudgetRolloversCommandTests
         budget2.Id = 2;
         budget2.BudgetCategories.First().AllowRollover = true;
 
-        var command = new ProcessBudgetRolloversCommand
+        var command = new ProcessExpiredBudgetsCommand
         {
             UserId = _userId,
             PreviewOnly = true
         };
 
-        _budgetRepository.GetBudgetsNeedingRolloverAsync(_userId, Arg.Any<CancellationToken>())
+        _budgetRepository.GetExpiredActiveBudgetsAsync(_userId, Arg.Any<CancellationToken>())
             .Returns(new[] { budget1, budget2 });
 
         SetupCalculationServiceMock(budget1, spent: 400m, budgeted: 500m);
@@ -394,7 +460,7 @@ public class ProcessBudgetRolloversCommandTests
             StartDate = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc),
             EndDate = null, // Monthly will calculate end date
             IsRecurring = isRecurring,
-            IsActive = true,
+            Status = BudgetStatus.Active,
             BudgetCategories = new List<BudgetCategory> { budgetCategory }
         };
     }
@@ -447,7 +513,7 @@ public class ProcessBudgetRolloversCommandTests
             PeriodType = BudgetPeriodType.Monthly,
             StartDate = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc),
             IsRecurring = true,
-            IsActive = true,
+            Status = BudgetStatus.Active,
             BudgetCategories = budgetCategories
         };
     }

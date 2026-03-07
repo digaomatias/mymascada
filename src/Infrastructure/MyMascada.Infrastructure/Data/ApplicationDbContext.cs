@@ -547,9 +547,13 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.UserId).IsRequired();
             entity.Property(e => e.StartDate).IsRequired();
 
+            // Status is the persisted column; IsActive is a computed property backed by Status
+            entity.Property(e => e.Status).IsRequired().HasDefaultValue(MyMascada.Domain.Enums.BudgetStatus.Active);
+            entity.Ignore(e => e.IsActive);
+
             // Index for efficient querying by user
             entity.HasIndex(e => e.UserId);
-            entity.HasIndex(e => new { e.UserId, e.IsActive });
+            entity.HasIndex(e => new { e.UserId, e.Status });
             entity.HasIndex(e => new { e.UserId, e.StartDate });
 
             // One-to-many relationship with BudgetCategory

@@ -2,6 +2,7 @@ using MediatR;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Budgets.DTOs;
 using MyMascada.Application.Features.Budgets.Services;
+using MyMascada.Domain.Enums;
 
 namespace MyMascada.Application.Features.Budgets.Queries;
 
@@ -29,10 +30,15 @@ public class GetBudgetsQueryHandler : IRequestHandler<GetBudgetsQuery, IEnumerab
     {
         var budgets = await _budgetRepository.GetBudgetsForUserAsync(request.UserId, cancellationToken);
 
-        // Filter by active status
+        // Filter by active status — exclude Cancelled by default, include Completed only when requested
         if (!request.IncludeInactive)
         {
-            budgets = budgets.Where(b => b.IsActive);
+            budgets = budgets.Where(b => b.Status == BudgetStatus.Active);
+        }
+        else
+        {
+            // Even when including inactive, always exclude Cancelled budgets
+            budgets = budgets.Where(b => b.Status != BudgetStatus.Cancelled);
         }
 
         // Filter to current period only

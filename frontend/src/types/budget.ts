@@ -1,5 +1,7 @@
 // Budget Types
 
+export type BudgetLifecycleStatus = 'Active' | 'Completed' | 'Cancelled';
+
 export interface BudgetSummary {
   id: number;
   name: string;
@@ -9,6 +11,7 @@ export interface BudgetSummary {
   endDate: string;
   isRecurring: boolean;
   isActive: boolean;
+  status: BudgetLifecycleStatus;
   categoryCount: number;
   totalBudgeted: number;
   totalSpent: number;
@@ -27,6 +30,7 @@ export interface BudgetDetail {
   endDate: string;
   isRecurring: boolean;
   isActive: boolean;
+  status: BudgetLifecycleStatus;
   totalBudgeted: number;
   totalSpent: number;
   totalRemaining: number;

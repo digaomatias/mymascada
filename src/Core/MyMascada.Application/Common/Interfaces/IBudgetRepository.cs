@@ -1,4 +1,5 @@
 using MyMascada.Domain.Entities;
+using MyMascada.Domain.Enums;
 
 namespace MyMascada.Application.Common.Interfaces;
 
@@ -72,9 +73,26 @@ public interface IBudgetRepository
     Task RemoveBudgetCategoryAsync(int budgetId, int categoryId, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets budgets that need rollover calculation (previous periods that have ended)
+    /// Gets budgets that need rollover calculation (previous periods that have ended).
+    /// Kept for backward compatibility - delegates to GetExpiredActiveBudgetsAsync.
     /// </summary>
     Task<IEnumerable<Budget>> GetBudgetsNeedingRolloverAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all active budgets whose period has ended (regardless of rollover settings)
+    /// </summary>
+    Task<IEnumerable<Budget>> GetExpiredActiveBudgetsAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets budgets by status for a user
+    /// </summary>
+    Task<IEnumerable<Budget>> GetBudgetsByStatusAsync(Guid userId, BudgetStatus status, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all distinct user IDs that have active budgets with expired periods.
+    /// Used by the daily Hangfire job to process expired budgets.
+    /// </summary>
+    Task<IEnumerable<Guid>> GetUserIdsWithExpiredActiveBudgetsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Checks if a budget name already exists for the user
