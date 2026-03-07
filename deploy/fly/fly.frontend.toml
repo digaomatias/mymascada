@@ -1,0 +1,42 @@
+# MyMascada Frontend — Fly.io configuration
+# Deploy: flyctl deploy --config deploy/fly/fly.frontend.toml --dockerfile frontend/Dockerfile
+app = "mymascada-web"
+primary_region = "syd"
+
+[build]
+  dockerfile = "frontend/Dockerfile"
+
+  [build.args]
+    NEXT_PUBLIC_API_URL = "https://mymascada-api.fly.dev"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "3000"
+  HOSTNAME = "0.0.0.0"
+  # Internal API URL for server-side rewrites (Fly internal DNS)
+  INTERNAL_API_URL = "http://mymascada-api.internal:5126"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 250
+    soft_limit = 200
+
+[[http_service.checks]]
+  grace_period = "15s"
+  interval = "30s"
+  method = "GET"
+  path = "/"
+  timeout = "5s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
+  processes = ["app"]
