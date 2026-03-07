@@ -137,6 +137,26 @@ UI labels, buttons, headings, validation messages, error messages, toasts, empty
 ### What NOT to Localize
 Log messages, code comments, technical errors, API endpoints, DB field names.
 
+## Data Access & Query Standards
+
+### Database-Level Filtering (MANDATORY)
+**ALL filtering and querying MUST happen at the database level via EF Core LINQ expressions.** Never load entire tables/collections into memory and filter with C#.
+
+✅ **Correct:**
+```csharp
+await _context.Budgets
+    .Where(b => b.Status == BudgetStatus.Active && b.StartDate < today)
+    .ToListAsync(cancellationToken);
+```
+
+❌ **Wrong:**
+```csharp
+var allBudgets = await _context.Budgets.ToListAsync(cancellationToken);
+return allBudgets.Where(b => b.Status == BudgetStatus.Active && b.StartDate < today);
+```
+
+**Exception:** Complex filtering that would cause Cartesian Explosion (e.g., multiple collection Includes with cross-filtering) may be done in memory, but must be documented with a comment explaining why.
+
 ## Coding Standards
 
 ### Development Workflow
