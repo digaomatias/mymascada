@@ -13,6 +13,7 @@ public class BudgetSummaryDto
     public DateTime EndDate { get; set; }
     public bool IsRecurring { get; set; }
     public bool IsActive { get; set; }
+    public string Status { get; set; } = "Active";
     public int CategoryCount { get; set; }
     public decimal TotalBudgeted { get; set; }
     public decimal TotalSpent { get; set; }
@@ -35,6 +36,7 @@ public class BudgetDetailDto
     public DateTime EndDate { get; set; }
     public bool IsRecurring { get; set; }
     public bool IsActive { get; set; }
+    public string Status { get; set; } = "Active";
     public decimal TotalBudgeted { get; set; }
     public decimal TotalSpent { get; set; }
     public decimal TotalRemaining { get; set; }

@@ -352,4 +352,123 @@ public class BudgetTests
         budget.CreatedAt.Should().Be(now);
         budget.UpdatedAt.Should().Be(now);
     }
+
+    #region Status and IsActive
+
+    [Fact]
+    public void Status_ShouldDefaultToActive()
+    {
+        // Act
+        var budget = new Budget();
+
+        // Assert
+        budget.Status.Should().Be(BudgetStatus.Active);
+    }
+
+    [Fact]
+    public void IsActive_WhenStatusIsActive_ShouldReturnTrue()
+    {
+        // Arrange
+        var budget = new Budget { Status = BudgetStatus.Active };
+
+        // Assert
+        budget.IsActive.Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData(BudgetStatus.Completed)]
+    [InlineData(BudgetStatus.Cancelled)]
+    public void IsActive_WhenStatusIsNotActive_ShouldReturnFalse(BudgetStatus status)
+    {
+        // Arrange
+        var budget = new Budget { Status = status };
+
+        // Assert
+        budget.IsActive.Should().BeFalse();
+    }
+
+    [Fact]
+    public void IsActive_SetToFalse_ShouldSetStatusToCompleted()
+    {
+        // Arrange
+        var budget = new Budget();
+
+        // Act
+        budget.IsActive = false;
+
+        // Assert
+        budget.Status.Should().Be(BudgetStatus.Completed);
+    }
+
+    [Fact]
+    public void IsActive_SetToTrue_ShouldSetStatusToActive()
+    {
+        // Arrange
+        var budget = new Budget { Status = BudgetStatus.Completed };
+
+        // Act
+        budget.IsActive = true;
+
+        // Assert
+        budget.Status.Should().Be(BudgetStatus.Active);
+    }
+
+    [Theory]
+    [InlineData(BudgetStatus.Active)]
+    [InlineData(BudgetStatus.Completed)]
+    [InlineData(BudgetStatus.Cancelled)]
+    public void Status_ShouldAcceptAllValidValues(BudgetStatus status)
+    {
+        // Arrange
+        var budget = new Budget();
+
+        // Act
+        budget.Status = status;
+
+        // Assert
+        budget.Status.Should().Be(status);
+    }
+
+    [Fact]
+    public void RolloverProcessedAt_ShouldBeNullByDefault()
+    {
+        // Act
+        var budget = new Budget();
+
+        // Assert
+        budget.RolloverProcessedAt.Should().BeNull();
+    }
+
+    [Fact]
+    public void RolloverProcessedAt_ShouldBeSettable()
+    {
+        // Arrange
+        var budget = new Budget();
+        var now = DateTime.UtcNow;
+
+        // Act
+        budget.RolloverProcessedAt = now;
+
+        // Assert
+        budget.RolloverProcessedAt.Should().Be(now);
+    }
+
+    [Fact]
+    public void SoftDelete_WithCancelledStatus_ShouldReflectInIsActive()
+    {
+        // Arrange
+        var budget = new Budget { Status = BudgetStatus.Active };
+
+        // Act - simulate soft-delete
+        budget.Status = BudgetStatus.Cancelled;
+        budget.IsDeleted = true;
+        budget.DeletedAt = DateTime.UtcNow;
+
+        // Assert
+        budget.IsActive.Should().BeFalse();
+        budget.IsDeleted.Should().BeTrue();
+        budget.Status.Should().Be(BudgetStatus.Cancelled);
+    }
+
+    #endregion
 }

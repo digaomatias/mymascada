@@ -400,6 +400,11 @@ recurringJobManager.AddOrUpdate<MyMascada.Application.BackgroundJobs.IRecurringP
     service => service.ProcessAllUsersAsync(null),
     Hangfire.Cron.Daily(2, 0)); // Run daily at 2:00 AM
 
+recurringJobManager.AddOrUpdate<MyMascada.Application.BackgroundJobs.IExpiredBudgetJobService>(
+    "daily-expired-budget-processing",
+    service => service.ProcessAllUsersAsync(null),
+    Hangfire.Cron.Daily(1, 0)); // Run daily at 1:00 AM
+
 // Map controllers
 app.MapControllers();
 

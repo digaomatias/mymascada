@@ -2917,6 +2917,7 @@
     "disconnected": "Disconnected",
     "lastSync": "Last synced {time}",
     "syncNow": "Sync Now",
+    "syncing": "Syncing...",
     "disconnect": "Disconnect",
     "reconnect": "Reconnect",
     "connectionExpired": "Connection expired. Please reconnect.",
