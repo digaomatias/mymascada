@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 import { ImportReviewScreen } from '@/components/import-review/import-review-screen';
 import { ImportAnalysisResult, ConflictType, ConflictResolution, TransactionSource } from '@/types/import-review';
 import * as apiClient from '@/lib/api-client';

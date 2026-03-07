@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 import { ConflictResolutionCard } from '../conflict-resolution-card';
 import { ImportReviewItem, ConflictType, ConflictResolution, TransactionSource } from '@/types/import-review';
 
