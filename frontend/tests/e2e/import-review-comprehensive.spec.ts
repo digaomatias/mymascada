@@ -75,7 +75,7 @@ test.describe('Import Review System - Comprehensive E2E Tests', () => {
         const token = localStorage.getItem('auth_token');
         
         // Create test account
-        const accountResponse = await fetch('https://localhost:5126/api/accounts', {
+        const accountResponse = await fetch('https://localhost:5126/api/v1/accounts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -90,7 +90,7 @@ test.describe('Import Review System - Comprehensive E2E Tests', () => {
         const account = await accountResponse.json();
         
         // Create existing transaction that will conflict
-        await fetch('https://localhost:5126/api/transactions', {
+        await fetch('https://localhost:5126/api/v1/transactions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -467,7 +467,7 @@ And missing structure`;
     await page.evaluate(async () => {
       const token = localStorage.getItem('auth_token');
       
-      const accountResponse = await fetch('https://localhost:5126/api/accounts', {
+      const accountResponse = await fetch('https://localhost:5126/api/v1/accounts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -482,7 +482,7 @@ And missing structure`;
       const account = await accountResponse.json();
       
       // Create existing transaction for conflict
-      await fetch('https://localhost:5126/api/transactions', {
+      await fetch('https://localhost:5126/api/v1/transactions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -540,7 +540,7 @@ test.describe('Import Review System - Performance Tests', () => {
         const token = localStorage.getItem('auth_token');
         const start = performance.now();
         
-        const response = await fetch('https://localhost:5126/api/ImportReview/analyze', {
+        const response = await fetch('https://localhost:5126/api/v1/ImportReview/analyze', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,

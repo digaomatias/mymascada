@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Backend Connectivity', () => {
   test('should connect to backend API health endpoint', async ({ request }) => {
-    const response = await request.get('https://localhost:5126/api/auth/health', {
+    const response = await request.get('https://localhost:5126/api/v1/auth/health', {
       ignoreHTTPSErrors: true,
     });
     
@@ -21,7 +21,7 @@ test.describe('Backend Connectivity', () => {
     };
 
     // Register user
-    const registerResponse = await request.post('https://localhost:5126/api/auth/register', {
+    const registerResponse = await request.post('https://localhost:5126/api/v1/auth/register', {
       data: testUser,
       ignoreHTTPSErrors: true,
     });
@@ -39,7 +39,7 @@ test.describe('Backend Connectivity', () => {
     console.log('✅ Registration successful');
 
     // Login with same user
-    const loginResponse = await request.post('https://localhost:5126/api/auth/login', {
+    const loginResponse = await request.post('https://localhost:5126/api/v1/auth/login', {
       data: {
         email: testUser.email,
         password: testUser.password

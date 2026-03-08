@@ -191,7 +191,7 @@ test.describe('Authentication Flow', () => {
     const meResponse = await page.evaluate(async () => {
       const token = localStorage.getItem('auth_token');
       try {
-        const response = await fetch('https://localhost:5126/api/auth/me', {
+        const response = await fetch('https://localhost:5126/api/v1/auth/me', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',

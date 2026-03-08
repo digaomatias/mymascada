@@ -16,7 +16,7 @@ test.describe('Comprehensive Account Management Tests', () => {
       // Create checking account
       const accountResponse = await page.evaluate(async () => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/accounts', {
+        const response = await fetch('https://localhost:5126/api/v1/accounts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -56,7 +56,7 @@ test.describe('Comprehensive Account Management Tests', () => {
       // Create savings account
       const accountResponse = await page.evaluate(async () => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/accounts', {
+        const response = await fetch('https://localhost:5126/api/v1/accounts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -93,7 +93,7 @@ test.describe('Comprehensive Account Management Tests', () => {
       // Create credit card account
       const accountResponse = await page.evaluate(async () => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/accounts', {
+        const response = await fetch('https://localhost:5126/api/v1/accounts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -130,7 +130,7 @@ test.describe('Comprehensive Account Management Tests', () => {
       // Create investment account
       const accountResponse = await page.evaluate(async () => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/accounts', {
+        const response = await fetch('https://localhost:5126/api/v1/accounts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -167,7 +167,7 @@ test.describe('Comprehensive Account Management Tests', () => {
       // Create loan account
       const accountResponse = await page.evaluate(async () => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/accounts', {
+        const response = await fetch('https://localhost:5126/api/v1/accounts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -204,7 +204,7 @@ test.describe('Comprehensive Account Management Tests', () => {
       // Create cash account
       const accountResponse = await page.evaluate(async () => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/accounts', {
+        const response = await fetch('https://localhost:5126/api/v1/accounts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -241,7 +241,7 @@ test.describe('Comprehensive Account Management Tests', () => {
       // Try to create account without name
       const accountResponse = await page.evaluate(async () => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/accounts', {
+        const response = await fetch('https://localhost:5126/api/v1/accounts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -271,7 +271,7 @@ test.describe('Comprehensive Account Management Tests', () => {
       // Create account (API ignores initial balance, so test account creation)
       const accountResponse = await page.evaluate(async () => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/accounts', {
+        const response = await fetch('https://localhost:5126/api/v1/accounts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -311,7 +311,7 @@ test.describe('Comprehensive Account Management Tests', () => {
       const xssPayload = '<script>alert("xss")</script>Evil Account';
       const accountResponse = await page.evaluate(async (xssName) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/accounts', {
+        const response = await fetch('https://localhost:5126/api/v1/accounts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -375,7 +375,7 @@ test.describe('Comprehensive Account Management Tests', () => {
       // Create initial account
       const accountResponse = await page.evaluate(async () => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/accounts', {
+        const response = await fetch('https://localhost:5126/api/v1/accounts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -394,7 +394,7 @@ test.describe('Comprehensive Account Management Tests', () => {
       // Update account details
       const updateResponse = await page.evaluate(async (accountId) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch(`https://localhost:5126/api/accounts/${accountId}`, {
+        const response = await fetch(`https://localhost:5126/api/v1/accounts/${accountId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -430,7 +430,7 @@ test.describe('Comprehensive Account Management Tests', () => {
       // Create account
       const accountResponse = await page.evaluate(async () => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/accounts', {
+        const response = await fetch('https://localhost:5126/api/v1/accounts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -449,7 +449,7 @@ test.describe('Comprehensive Account Management Tests', () => {
       // Retrieve account details
       const getResponse = await page.evaluate(async (accountId) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch(`https://localhost:5126/api/accounts/${accountId}`, {
+        const response = await fetch(`https://localhost:5126/api/v1/accounts/${accountId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -479,7 +479,7 @@ test.describe('Comprehensive Account Management Tests', () => {
       for (const name of accountNames) {
         const accountResponse = await page.evaluate(async (accountName) => {
           const token = localStorage.getItem('auth_token');
-          const response = await fetch('https://localhost:5126/api/accounts', {
+          const response = await fetch('https://localhost:5126/api/v1/accounts', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -500,7 +500,7 @@ test.describe('Comprehensive Account Management Tests', () => {
       // List all accounts
       const listResponse = await page.evaluate(async () => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/accounts', {
+        const response = await fetch('https://localhost:5126/api/v1/accounts', {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -551,7 +551,7 @@ test.describe('Comprehensive Account Management Tests', () => {
       // Create an account via API so we have something to display
       await page.evaluate(async () => {
         const token = localStorage.getItem('auth_token');
-        await fetch('https://localhost:5126/api/accounts', {
+        await fetch('https://localhost:5126/api/v1/accounts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -590,7 +590,7 @@ test.describe('Comprehensive Account Management Tests', () => {
       for (const currency of currencies) {
         const accountResponse = await page.evaluate(async (data) => {
           const token = localStorage.getItem('auth_token');
-          const response = await fetch('https://localhost:5126/api/accounts', {
+          const response = await fetch('https://localhost:5126/api/v1/accounts', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -627,7 +627,7 @@ test.describe('Comprehensive Account Management Tests', () => {
       
       const account1Response = await page1.evaluate(async () => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/accounts', {
+        const response = await fetch('https://localhost:5126/api/v1/accounts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -650,7 +650,7 @@ test.describe('Comprehensive Account Management Tests', () => {
       // Try to access first user's account from second user
       const unauthorizedAccessResponse = await page2.evaluate(async (accountId) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch(`https://localhost:5126/api/accounts/${accountId}`, {
+        const response = await fetch(`https://localhost:5126/api/v1/accounts/${accountId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
