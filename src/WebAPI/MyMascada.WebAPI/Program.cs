@@ -322,6 +322,21 @@ if (app.Environment.IsDevelopment())
 // Use forwarded headers (must be first, before any middleware that needs Request.Scheme/Host)
 app.UseForwardedHeaders();
 
+// API version backward compatibility — rewrite /api/* to /api/v1/*
+// This allows older clients (or Next.js rewrites) that haven't migrated to /v1 yet.
+app.Use(async (context, next) =>
+{
+    var path = context.Request.Path.Value;
+    if (path != null
+        && path.StartsWith("/api/", StringComparison.OrdinalIgnoreCase)
+        && !path.StartsWith("/api/v", StringComparison.OrdinalIgnoreCase))
+    {
+        // Rewrite /api/foo → /api/v1/foo
+        context.Request.Path = "/api/v1" + path[4..];
+    }
+    await next();
+});
+
 // Correlation ID — propagate or generate X-Correlation-Id, enrich Serilog context
 app.UseCorrelationId();
 
