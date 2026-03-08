@@ -24,9 +24,13 @@ public static class EmailServiceExtensions
 
         if (FeatureFlagsExtensions.IsEmailConfigured(configuration))
         {
+            // Register named HttpClient for Resend provider
+            services.AddHttpClient("Resend");
+
             // Real providers — factory auto-discovers via IEnumerable<IEmailService>
             services.AddScoped<IEmailService, SmtpEmailService>();
             services.AddScoped<IEmailService, PostmarkEmailService>();
+            services.AddScoped<IEmailService, ResendEmailService>();
             services.AddScoped<IEmailServiceFactory, EmailServiceFactory>();
         }
         else

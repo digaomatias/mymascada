@@ -56,7 +56,7 @@ public class PostmarkEmailService : IEmailService
         {
             var postmarkMessage = new PostmarkMessage
             {
-                To = message.ToName != null ? $"{message.ToName} <{message.To}>" : message.To,
+                To = BuildEmailAddress(message.To, message.ToName),
                 From = BuildFromAddress(message),
                 Subject = message.Subject,
                 HtmlBody = message.IsHtml ? message.Body : null,
@@ -174,11 +174,37 @@ public class PostmarkEmailService : IEmailService
         var fromEmail = message.From ?? _options.DefaultFromEmail;
         var fromName = message.FromName ?? _options.DefaultFromName;
 
-        if (!string.IsNullOrEmpty(fromName))
+        return BuildEmailAddress(fromEmail, fromName);
+    }
+
+    private static string BuildEmailAddress(string email, string? name)
+    {
+        if (string.IsNullOrEmpty(name))
         {
-            return $"{fromName} <{fromEmail}>";
+            return email;
         }
 
-        return fromEmail;
+        // Sanitize display name per RFC 5322 to prevent email header injection
+        var sanitizedName = SanitizeDisplayName(name);
+        return $"\"{sanitizedName}\" <{email}>";
+    }
+
+    private static string SanitizeDisplayName(string displayName)
+    {
+        if (string.IsNullOrEmpty(displayName))
+        {
+            return string.Empty;
+        }
+
+        // Remove or replace control characters that could cause header injection
+        var sanitized = System.Text.RegularExpressions.Regex.Replace(displayName, @"[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]", "");
+
+        // Escape any embedded quotes
+        sanitized = sanitized.Replace("\"", "\\\"");
+
+        // Remove line breaks that could cause header injection
+        sanitized = sanitized.Replace("\r", "").Replace("\n", "");
+
+        return sanitized;
     }
 }
