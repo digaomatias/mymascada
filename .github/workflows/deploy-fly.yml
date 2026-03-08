@@ -3,28 +3,18 @@ name: Deploy to Fly.io
 on:
   push:
     branches: [main]
-  workflow_dispatch:
-    inputs:
-      service:
-        description: 'Service to deploy'
-        required: true
-        type: choice
-        options:
-          - all
-          - api
-          - frontend
 
 concurrency:
-  group: fly-deploy
+  group: deploy-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
+  # Detect which apps need deploying based on changed files
   changes:
-    name: Detect changes
     runs-on: ubuntu-latest
     outputs:
       api: ${{ steps.filter.outputs.api }}
-      frontend: ${{ steps.filter.outputs.frontend }}
+      web: ${{ steps.filter.outputs.web }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -33,43 +23,29 @@ jobs:
           filters: |
             api:
               - 'src/**'
-              - 'deploy/fly/fly.api.toml'
-            frontend:
+              - 'fly.toml'
+            web:
               - 'frontend/**'
-              - 'deploy/fly/fly.frontend.toml'
 
   deploy-api:
-    name: Deploy API
     needs: changes
-    if: |
-      github.event_name == 'workflow_dispatch' && (github.event.inputs.service == 'all' || github.event.inputs.service == 'api') ||
-      github.event_name == 'push' && needs.changes.outputs.api == 'true'
+    if: needs.changes.outputs.api == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: superfly/flyctl-actions/setup-flyctl@master
-
-      - run: flyctl deploy --config deploy/fly/fly.api.toml --remote-only
+      - uses: superfly/flyctl-action/setup-flyctl@master
+      - run: flyctl deploy --config fly.toml --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
-  deploy-frontend:
-    name: Deploy Frontend
-    needs: [changes, deploy-api]
-    if: |
-      always() &&
-      (needs.deploy-api.result == 'success' || needs.deploy-api.result == 'skipped') &&
-      (
-        github.event_name == 'workflow_dispatch' && (github.event.inputs.service == 'all' || github.event.inputs.service == 'frontend') ||
-        github.event_name == 'push' && needs.changes.outputs.frontend == 'true'
-      )
+  deploy-web:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: superfly/flyctl-actions/setup-flyctl@master
-
-      - run: flyctl deploy --config deploy/fly/fly.frontend.toml --remote-only
+      - uses: superfly/flyctl-action/setup-flyctl@master
+      - run: flyctl deploy --remote-only
+        working-directory: frontend
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
