@@ -52,7 +52,7 @@ describe('API Client - Import Review', () => {
 
       const result = await apiClient.analyzeImportForReview(mockAnalysisRequest);
 
-      expect(fetch).toHaveBeenCalledWith('/api/ImportReview/analyze', {
+      expect(fetch).toHaveBeenCalledWith('/api/latest/ImportReview/analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -138,7 +138,7 @@ describe('API Client - Import Review', () => {
 
       const result = await apiClient.executeImportReview(mockExecutionRequest);
 
-      expect(fetch).toHaveBeenCalledWith('/api/ImportReview/execute', {
+      expect(fetch).toHaveBeenCalledWith('/api/latest/ImportReview/execute', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -247,7 +247,7 @@ describe('API Client - Import Review', () => {
 
       // Verify the endpoint uses PascalCase to match backend routing
       expect(fetch).toHaveBeenCalledWith(
-        '/api/ImportReview/analyze',
+        '/api/latest/ImportReview/analyze',
         expect.any(Object)
       );
     });
@@ -267,7 +267,7 @@ describe('API Client - Import Review', () => {
       await apiClient.executeImportReview(mockRequest);
 
       expect(fetch).toHaveBeenCalledWith(
-        '/api/ImportReview/execute',
+        '/api/latest/ImportReview/execute',
         expect.any(Object)
       );
     });

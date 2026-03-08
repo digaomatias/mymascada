@@ -11,7 +11,7 @@ namespace MyMascada.WebAPI.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/telegram/webhook")]
-[Route("api/telegram/webhook")]
+[Route("api/latest/telegram/webhook")]
 [AllowAnonymous]
 public class TelegramWebhookController : ControllerBase
 {

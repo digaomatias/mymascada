@@ -13,7 +13,7 @@ namespace MyMascada.WebAPI.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}")]
-[Route("api")]
+[Route("api/latest")]
 [Authorize]
 public class AccountSharingController : ControllerBase
 {

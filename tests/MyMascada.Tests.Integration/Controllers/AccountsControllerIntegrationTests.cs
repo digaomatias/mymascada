@@ -32,7 +32,7 @@ public class AccountsControllerIntegrationTests : IntegrationTestBase
         };
 
         // Act
-        var response = await Client.PostAsJsonAsync("/api/accounts", createAccountDto);
+        var response = await Client.PostAsJsonAsync("/api/latest/accounts", createAccountDto);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -71,7 +71,7 @@ public class AccountsControllerIntegrationTests : IntegrationTestBase
         };
 
         // Act - This should fail if the API doesn't handle the field mapping correctly
-        var response = await Client.PostAsJsonAsync("/api/accounts", requestData);
+        var response = await Client.PostAsJsonAsync("/api/latest/accounts", requestData);
 
         // Assert - This will reveal if there's a field mapping issue
         if (response.StatusCode == HttpStatusCode.BadRequest)
@@ -109,7 +109,7 @@ public class AccountsControllerIntegrationTests : IntegrationTestBase
         };
 
         // Act
-        var response = await Client.PostAsJsonAsync("/api/accounts", requestData);
+        var response = await Client.PostAsJsonAsync("/api/latest/accounts", requestData);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -143,7 +143,7 @@ public class AccountsControllerIntegrationTests : IntegrationTestBase
         await DbContext.SaveChangesAsync();
 
         // Act
-        var response = await Client.GetAsync("/api/accounts");
+        var response = await Client.GetAsync("/api/latest/accounts");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -163,7 +163,7 @@ public class AccountsControllerIntegrationTests : IntegrationTestBase
         var account = await CreateTestAccountAsync("Test Account", 1500m);
 
         // Act
-        var response = await Client.GetAsync($"/api/accounts/{account.Id}");
+        var response = await Client.GetAsync($"/api/latest/accounts/{account.Id}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -181,7 +181,7 @@ public class AccountsControllerIntegrationTests : IntegrationTestBase
         await CreateTestUserAsync();
 
         // Act
-        var response = await Client.GetAsync("/api/accounts/999");
+        var response = await Client.GetAsync("/api/latest/accounts/999");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -206,7 +206,7 @@ public class AccountsControllerIntegrationTests : IntegrationTestBase
         };
 
         // Act
-        var response = await Client.PutAsJsonAsync($"/api/accounts/{account.Id}", updateDto);
+        var response = await Client.PutAsJsonAsync($"/api/latest/accounts/{account.Id}", updateDto);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -236,7 +236,7 @@ public class AccountsControllerIntegrationTests : IntegrationTestBase
         var account = await CreateTestAccountAsync("Account to Archive");
 
         // Act
-        var response = await Client.PatchAsync($"/api/accounts/{account.Id}/archive", null);
+        var response = await Client.PatchAsync($"/api/latest/accounts/{account.Id}/archive", null);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -255,7 +255,7 @@ public class AccountsControllerIntegrationTests : IntegrationTestBase
         await CreateTestTransactionAsync(account.Id, 100m, "Test Transaction");
 
         // Act
-        var response = await Client.PatchAsync($"/api/accounts/{account.Id}/archive", null);
+        var response = await Client.PatchAsync($"/api/latest/accounts/{account.Id}/archive", null);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -276,7 +276,7 @@ public class AccountsControllerIntegrationTests : IntegrationTestBase
         await CreateTestTransactionAsync(account1.Id, -50m, "Withdrawal");
 
         // Act
-        var response = await Client.GetAsync("/api/accounts/with-balances");
+        var response = await Client.GetAsync("/api/latest/accounts/with-balances");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -303,7 +303,7 @@ public class AccountsControllerIntegrationTests : IntegrationTestBase
         await CreateTestTransactionAsync(account.Id, 100m, "Test Transaction");
 
         // Act
-        var response = await Client.GetAsync($"/api/accounts/{account.Id}/has-transactions");
+        var response = await Client.GetAsync($"/api/latest/accounts/{account.Id}/has-transactions");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -322,7 +322,7 @@ public class AccountsControllerIntegrationTests : IntegrationTestBase
         var account = await CreateTestAccountAsync("Account without Transactions");
 
         // Act
-        var response = await Client.GetAsync($"/api/accounts/{account.Id}/has-transactions");
+        var response = await Client.GetAsync($"/api/latest/accounts/{account.Id}/has-transactions");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -345,7 +345,7 @@ public class AccountsControllerIntegrationTests : IntegrationTestBase
         };
 
         // Act
-        var response = await Client.PostAsJsonAsync("/api/accounts", invalidDto);
+        var response = await Client.PostAsJsonAsync("/api/latest/accounts", invalidDto);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -366,7 +366,7 @@ public class AccountsControllerIntegrationTests : IntegrationTestBase
         };
 
         // Act
-        var response = await Client.PostAsJsonAsync("/api/accounts", createAccountDto);
+        var response = await Client.PostAsJsonAsync("/api/latest/accounts", createAccountDto);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);

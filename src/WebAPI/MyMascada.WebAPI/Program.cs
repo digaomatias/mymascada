@@ -323,13 +323,15 @@ if (app.Environment.IsDevelopment())
 app.UseForwardedHeaders();
 
 // API version backward compatibility — rewrite /api/* to /api/v1/*
-// This allows older clients (or Next.js rewrites) that haven't migrated to /v1 yet.
+// This allows older clients that haven't migrated to /v1 or /latest yet.
+// Excludes /api/v* (already versioned) and /api/latest/* (new web-app prefix).
 app.Use(async (context, next) =>
 {
     var path = context.Request.Path.Value;
     if (path != null
         && path.StartsWith("/api/", StringComparison.OrdinalIgnoreCase)
-        && !path.StartsWith("/api/v", StringComparison.OrdinalIgnoreCase))
+        && !path.StartsWith("/api/v", StringComparison.OrdinalIgnoreCase)
+        && !path.StartsWith("/api/latest/", StringComparison.OrdinalIgnoreCase))
     {
         // Rewrite /api/foo → /api/v1/foo
         context.Request.Path = "/api/v1" + path[4..];

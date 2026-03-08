@@ -11,7 +11,7 @@ namespace MyMascada.WebAPI.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
-[Route("api/[controller]")]
+[Route("api/latest/[controller]")]
 public class LlmCategorizationController : ControllerBase
 {
     private readonly IMediator _mediator;

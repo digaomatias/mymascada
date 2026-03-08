@@ -9,7 +9,7 @@ namespace MyMascada.WebAPI.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/description-cleaning")]
-[Route("api/description-cleaning")]
+[Route("api/latest/description-cleaning")]
 public class DescriptionCleaningController : ControllerBase
 {
     private readonly IDescriptionCleaningService _descriptionCleaningService;

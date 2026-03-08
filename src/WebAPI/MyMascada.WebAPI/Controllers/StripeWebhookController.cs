@@ -11,7 +11,7 @@ namespace MyMascada.WebAPI.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/webhooks/stripe")]
-[Route("api/webhooks/stripe")]
+[Route("api/latest/webhooks/stripe")]
 [AllowAnonymous]
 public class StripeWebhookController : ControllerBase
 {

@@ -297,7 +297,7 @@ test.describe('Rules System End-to-End Tests', () => {
     await navigateToRules(page);
     
     // Intercept API calls and simulate network error
-    await page.route('**/api/rules', (route) => {
+    await page.route('**/api/latest/rules', (route) => {
       route.abort('failed');
     });
     

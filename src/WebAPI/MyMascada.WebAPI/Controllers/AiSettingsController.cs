@@ -10,7 +10,7 @@ namespace MyMascada.WebAPI.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/ai-settings")]
-[Route("api/ai-settings")]
+[Route("api/latest/ai-settings")]
 [Authorize]
 public class AiSettingsController : ControllerBase
 {

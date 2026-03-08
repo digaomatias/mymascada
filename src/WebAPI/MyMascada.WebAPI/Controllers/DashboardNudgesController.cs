@@ -12,7 +12,7 @@ namespace MyMascada.WebAPI.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/dashboard-nudges")]
-[Route("api/dashboard-nudges")]
+[Route("api/latest/dashboard-nudges")]
 [Authorize]
 public class DashboardNudgesController : ControllerBase
 {
