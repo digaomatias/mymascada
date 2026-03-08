@@ -14,7 +14,7 @@ namespace MyMascada.WebAPI.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/ai-chat")]
-[Route("api/ai-chat")]
+[Route("api/latest/ai-chat")]
 [Authorize]
 public class AiChatController : ControllerBase
 {

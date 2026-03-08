@@ -14,7 +14,7 @@ namespace MyMascada.WebAPI.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/telegram/settings")]
-[Route("api/telegram/settings")]
+[Route("api/latest/telegram/settings")]
 [Authorize]
 public class TelegramSettingsController : ControllerBase
 {

@@ -36,7 +36,7 @@ public class FieldMappingValidationTests : IntegrationTestBase
         };
 
         // Act
-        var response = await Client.PostAsJsonAsync("/api/accounts", createAccountDto);
+        var response = await Client.PostAsJsonAsync("/api/latest/accounts", createAccountDto);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -78,7 +78,7 @@ public class FieldMappingValidationTests : IntegrationTestBase
         };
 
         // Act
-        var response = await Client.PostAsJsonAsync("/api/accounts", wrongFieldRequest);
+        var response = await Client.PostAsJsonAsync("/api/latest/accounts", wrongFieldRequest);
 
         // Assert
         if (response.StatusCode == HttpStatusCode.Created)
@@ -130,7 +130,7 @@ public class FieldMappingValidationTests : IntegrationTestBase
         };
 
         // Act
-        var response = await Client.PostAsJsonAsync("/api/accounts", mappedRequest);
+        var response = await Client.PostAsJsonAsync("/api/latest/accounts", mappedRequest);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -161,7 +161,7 @@ public class FieldMappingValidationTests : IntegrationTestBase
         };
 
         // Act
-        var response = await Client.PostAsJsonAsync("/api/accounts", invalidRequest);
+        var response = await Client.PostAsJsonAsync("/api/latest/accounts", invalidRequest);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -184,7 +184,7 @@ public class FieldMappingValidationTests : IntegrationTestBase
         };
 
         // Act
-        var response = await Client.PostAsJsonAsync("/api/accounts", invalidRequest);
+        var response = await Client.PostAsJsonAsync("/api/latest/accounts", invalidRequest);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -207,7 +207,7 @@ public class FieldMappingValidationTests : IntegrationTestBase
         };
 
         // Act
-        var response = await Client.PostAsJsonAsync("/api/accounts", invalidRequest);
+        var response = await Client.PostAsJsonAsync("/api/latest/accounts", invalidRequest);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);

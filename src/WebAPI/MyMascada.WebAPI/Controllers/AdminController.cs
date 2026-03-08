@@ -11,7 +11,7 @@ namespace MyMascada.WebAPI.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/admin")]
-[Route("api/admin")]
+[Route("api/latest/admin")]
 [AdminApiKey]
 public class AdminController : ControllerBase
 {
