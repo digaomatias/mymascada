@@ -63,7 +63,7 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: `${rewriteTarget}/api/:path*`,
+        destination: `${rewriteTarget}/api/v1/:path*`,
       },
     ];
   },

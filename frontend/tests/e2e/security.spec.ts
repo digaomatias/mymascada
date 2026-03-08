@@ -166,7 +166,7 @@ test.describe('Security & Authentication Edge Cases', () => {
     // Create an account first
     const accountResponse = await page.evaluate(async () => {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch('https://localhost:5126/api/accounts', {
+      const response = await fetch('https://localhost:5126/api/v1/accounts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -186,7 +186,7 @@ test.describe('Security & Authentication Edge Cases', () => {
     
     const transactionResponse = await page.evaluate(async (data) => {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch('https://localhost:5126/api/transactions', {
+      const response = await fetch('https://localhost:5126/api/v1/transactions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -280,7 +280,7 @@ test.describe('Security & Authentication Edge Cases', () => {
     // Create an account with limited balance
     const accountResponse = await page.evaluate(async () => {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch('https://localhost:5126/api/accounts', {
+      const response = await fetch('https://localhost:5126/api/v1/accounts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -298,7 +298,7 @@ test.describe('Security & Authentication Edge Cases', () => {
     // Try to create transaction exceeding balance
     const overdraftResponse = await page.evaluate(async (data) => {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch('https://localhost:5126/api/transactions', {
+      const response = await fetch('https://localhost:5126/api/v1/transactions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -325,7 +325,7 @@ test.describe('Security & Authentication Edge Cases', () => {
       // Check if account balance went negative (might be allowed with overdraft protection)
       const accountCheck = await page.evaluate(async (accountId) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch(`https://localhost:5126/api/accounts/${accountId}`, {
+        const response = await fetch(`https://localhost:5126/api/v1/accounts/${accountId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -372,7 +372,7 @@ test.describe('Security & Authentication Edge Cases', () => {
     // Create an account
     const accountResponse = await page.evaluate(async () => {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch('https://localhost:5126/api/accounts', {
+      const response = await fetch('https://localhost:5126/api/v1/accounts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -400,7 +400,7 @@ test.describe('Security & Authentication Edge Cases', () => {
       
       // Create multiple simultaneous requests
       const promises = Array.from({ length: 3 }, () => 
-        fetch('https://localhost:5126/api/transactions', {
+        fetch('https://localhost:5126/api/v1/transactions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -460,7 +460,7 @@ test.describe('Security & Authentication Edge Cases', () => {
     // Create an account
     const accountResponse = await page.evaluate(async () => {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch('https://localhost:5126/api/accounts', {
+      const response = await fetch('https://localhost:5126/api/v1/accounts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -478,7 +478,7 @@ test.describe('Security & Authentication Edge Cases', () => {
     // Create a transaction in the account
     const transactionResponse = await page.evaluate(async (accountId) => {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch('https://localhost:5126/api/transactions', {
+      const response = await fetch('https://localhost:5126/api/v1/transactions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -502,7 +502,7 @@ test.describe('Security & Authentication Edge Cases', () => {
     // Try to delete the account that has transactions
     const deletionResponse = await page.evaluate(async (accountId) => {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`https://localhost:5126/api/accounts/${accountId}`, {
+      const response = await fetch(`https://localhost:5126/api/v1/accounts/${accountId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -529,7 +529,7 @@ test.describe('Security & Authentication Edge Cases', () => {
       // Check if transactions are still accessible or properly handled
       const transactionCheck = await page.evaluate(async () => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/transactions', {
+        const response = await fetch('https://localhost:5126/api/v1/transactions', {
           headers: {
             'Authorization': `Bearer ${token}`,
           },

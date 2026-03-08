@@ -248,7 +248,7 @@ export class TestUtils {
     const token = await this.page.evaluate(() => localStorage.getItem('auth_token'));
     if (!token) throw new Error('No auth token found');
 
-    const response = await this.page.request.post('https://localhost:5126/api/accounts', {
+    const response = await this.page.request.post('https://localhost:5126/api/v1/accounts', {
       data: defaultAccount,
       headers: {
         'Content-Type': 'application/json',
@@ -296,7 +296,7 @@ export class TestUtils {
 
     console.log('Creating transaction with data:', requestData);
 
-    const response = await this.page.request.post('https://localhost:5126/api/transactions', {
+    const response = await this.page.request.post('https://localhost:5126/api/v1/transactions', {
       data: requestData,
       headers: {
         'Content-Type': 'application/json',

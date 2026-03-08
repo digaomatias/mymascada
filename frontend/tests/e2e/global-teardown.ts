@@ -18,7 +18,7 @@ async function globalTeardown(config: FullConfig) {
       console.log('👤 Cleaning up test data...');
       
       // Login to get auth token
-      const loginResponse = await page.request.post(`${apiBaseUrl}/api/auth/login`, {
+      const loginResponse = await page.request.post(`${apiBaseUrl}/api/v1/auth/login`, {
         data: {
           email: 'automation@example.com',
           password: 'SecureLogin123!'
@@ -33,7 +33,7 @@ async function globalTeardown(config: FullConfig) {
         // Clean up test rules
         console.log('🧹 Cleaning up test rules...');
         try {
-          const rulesResponse = await page.request.get(`${apiBaseUrl}/api/rules`, {
+          const rulesResponse = await page.request.get(`${apiBaseUrl}/api/v1/rules`, {
             headers: {
               'Authorization': `Bearer ${token}`
             },
@@ -64,7 +64,7 @@ async function globalTeardown(config: FullConfig) {
             for (const rule of rules) {
               if (testRulePatterns.some(pattern => rule.name?.includes(pattern))) {
                 console.log(`🗑️ Deleting test rule: ${rule.name}`);
-                await page.request.delete(`${apiBaseUrl}/api/rules/${rule.id}`, {
+                await page.request.delete(`${apiBaseUrl}/api/v1/rules/${rule.id}`, {
                   headers: {
                     'Authorization': `Bearer ${token}`
                   },
@@ -80,7 +80,7 @@ async function globalTeardown(config: FullConfig) {
         // Clean up test transactions
         console.log('🧹 Cleaning up test transactions...');
         try {
-          const transactionsResponse = await page.request.get(`${apiBaseUrl}/api/transactions`, {
+          const transactionsResponse = await page.request.get(`${apiBaseUrl}/api/v1/transactions`, {
             headers: {
               'Authorization': `Bearer ${token}`
             },
@@ -108,7 +108,7 @@ async function globalTeardown(config: FullConfig) {
             for (const transaction of transactions) {
               if (testTransactionPatterns.includes(transaction.description)) {
                 console.log(`🗑️ Deleting test transaction: ${transaction.description}`);
-                await page.request.delete(`${apiBaseUrl}/api/transactions/${transaction.id}`, {
+                await page.request.delete(`${apiBaseUrl}/api/v1/transactions/${transaction.id}`, {
                   headers: {
                     'Authorization': `Bearer ${token}`
                   },
@@ -124,7 +124,7 @@ async function globalTeardown(config: FullConfig) {
         // Clean up test accounts
         console.log('🧹 Cleaning up test accounts...');
         try {
-          const accountsResponse = await page.request.get(`${apiBaseUrl}/api/accounts`, {
+          const accountsResponse = await page.request.get(`${apiBaseUrl}/api/v1/accounts`, {
             headers: {
               'Authorization': `Bearer ${token}`
             },
@@ -143,7 +143,7 @@ async function globalTeardown(config: FullConfig) {
             for (const account of accounts) {
               if (testAccountPatterns.some(pattern => account.name?.includes(pattern))) {
                 console.log(`🗑️ Deleting test account: ${account.name}`);
-                await page.request.delete(`${apiBaseUrl}/api/accounts/${account.id}`, {
+                await page.request.delete(`${apiBaseUrl}/api/v1/accounts/${account.id}`, {
                   headers: {
                     'Authorization': `Bearer ${token}`
                   },

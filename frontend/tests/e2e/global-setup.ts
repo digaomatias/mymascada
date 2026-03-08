@@ -31,7 +31,7 @@ async function globalSetup(config: FullConfig) {
     
     while (!apiReady && attempts < maxAttempts) {
       try {
-        await page.request.get(`${apiBaseUrl}/api/auth/health`, {
+        await page.request.get(`${apiBaseUrl}/api/v1/auth/health`, {
           ignoreHTTPSErrors: true,
           timeout: 5000
         });
@@ -52,7 +52,7 @@ async function globalSetup(config: FullConfig) {
     console.log('👤 Ensuring test user exists...');
     try {
       // Try to login first to see if user exists
-      const loginResponse = await page.request.post(`${apiBaseUrl}/api/auth/login`, {
+      const loginResponse = await page.request.post(`${apiBaseUrl}/api/v1/auth/login`, {
         data: {
           email: 'automation@example.com',
           password: 'SecureLogin123!'
@@ -63,7 +63,7 @@ async function globalSetup(config: FullConfig) {
       if (!loginResponse.ok()) {
         // User doesn't exist, create it
         console.log('👤 Creating test user...');
-        const registerResponse = await page.request.post(`${apiBaseUrl}/api/auth/register`, {
+        const registerResponse = await page.request.post(`${apiBaseUrl}/api/v1/auth/register`, {
           data: {
             email: 'automation@example.com',
             username: 'automation',
@@ -93,7 +93,7 @@ async function globalSetup(config: FullConfig) {
       console.log('🧹 Cleaning up existing test data...');
       try {
         // Login to get auth token
-        const loginResponse = await page.request.post(`${apiBaseUrl}/api/auth/login`, {
+        const loginResponse = await page.request.post(`${apiBaseUrl}/api/v1/auth/login`, {
           data: {
             email: 'automation@example.com',
             password: 'SecureLogin123!'

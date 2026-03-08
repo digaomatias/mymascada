@@ -16,7 +16,7 @@ test.describe('Comprehensive Transaction Management Tests', () => {
       // Create an account first
       const accountResponse = await page.evaluate(async () => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/accounts', {
+        const response = await fetch('https://localhost:5126/api/v1/accounts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -34,7 +34,7 @@ test.describe('Comprehensive Transaction Management Tests', () => {
       // Create income transaction
       const transactionResponse = await page.evaluate(async (accountId) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/transactions', {
+        const response = await fetch('https://localhost:5126/api/v1/transactions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -68,7 +68,7 @@ test.describe('Comprehensive Transaction Management Tests', () => {
       // Create an account with initial balance
       const accountResponse = await page.evaluate(async () => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/accounts', {
+        const response = await fetch('https://localhost:5126/api/v1/accounts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -86,7 +86,7 @@ test.describe('Comprehensive Transaction Management Tests', () => {
       // Create expense transaction
       const transactionResponse = await page.evaluate(async (accountId) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/transactions', {
+        const response = await fetch('https://localhost:5126/api/v1/transactions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -120,7 +120,7 @@ test.describe('Comprehensive Transaction Management Tests', () => {
       // Create source account
       const sourceAccountResponse = await page.evaluate(async () => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/accounts', {
+        const response = await fetch('https://localhost:5126/api/v1/accounts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -138,7 +138,7 @@ test.describe('Comprehensive Transaction Management Tests', () => {
       // Create destination account  
       const destAccountResponse = await page.evaluate(async () => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/accounts', {
+        const response = await fetch('https://localhost:5126/api/v1/accounts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -156,7 +156,7 @@ test.describe('Comprehensive Transaction Management Tests', () => {
       // Create transfer
       const transferResponse = await page.evaluate(async (data) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/transfer', {
+        const response = await fetch('https://localhost:5126/api/v1/transfer', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -190,7 +190,7 @@ test.describe('Comprehensive Transaction Management Tests', () => {
       // Create account
       const accountResponse = await page.evaluate(async () => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/accounts', {
+        const response = await fetch('https://localhost:5126/api/v1/accounts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -208,7 +208,7 @@ test.describe('Comprehensive Transaction Management Tests', () => {
       // Try to create transaction with invalid amount (zero)
       const transactionResponse = await page.evaluate(async (accountId) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/transactions', {
+        const response = await fetch('https://localhost:5126/api/v1/transactions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -240,7 +240,7 @@ test.describe('Comprehensive Transaction Management Tests', () => {
       // Try to create transaction without description
       const transactionResponse = await page.evaluate(async () => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/transactions', {
+        const response = await fetch('https://localhost:5126/api/v1/transactions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -270,7 +270,7 @@ test.describe('Comprehensive Transaction Management Tests', () => {
       // Create account
       const accountResponse = await page.evaluate(async () => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/accounts', {
+        const response = await fetch('https://localhost:5126/api/v1/accounts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -289,7 +289,7 @@ test.describe('Comprehensive Transaction Management Tests', () => {
       const xssPayload = '<script>alert("xss")</script>Evil Transaction';
       const transactionResponse = await page.evaluate(async (data) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/transactions', {
+        const response = await fetch('https://localhost:5126/api/v1/transactions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -356,7 +356,7 @@ test.describe('Comprehensive Transaction Management Tests', () => {
       // Create account and some transactions
       const accountResponse = await page.evaluate(async () => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/accounts', {
+        const response = await fetch('https://localhost:5126/api/v1/accounts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -381,7 +381,7 @@ test.describe('Comprehensive Transaction Management Tests', () => {
       for (const tx of transactions) {
         await page.evaluate(async (data) => {
           const token = localStorage.getItem('auth_token');
-          await fetch('https://localhost:5126/api/transactions', {
+          await fetch('https://localhost:5126/api/v1/transactions', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -417,7 +417,7 @@ test.describe('Comprehensive Transaction Management Tests', () => {
       // Create account and transaction
       const accountResponse = await page.evaluate(async () => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/accounts', {
+        const response = await fetch('https://localhost:5126/api/v1/accounts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -434,7 +434,7 @@ test.describe('Comprehensive Transaction Management Tests', () => {
 
       const transactionResponse = await page.evaluate(async (accountId) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/transactions', {
+        const response = await fetch('https://localhost:5126/api/v1/transactions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -453,7 +453,7 @@ test.describe('Comprehensive Transaction Management Tests', () => {
       // Mark transaction as reviewed
       const reviewResponse = await page.evaluate(async (transactionId) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch(`https://localhost:5126/api/transactions/${transactionId}/review`, {
+        const response = await fetch(`https://localhost:5126/api/v1/transactions/${transactionId}/review`, {
           method: 'PATCH',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -476,7 +476,7 @@ test.describe('Comprehensive Transaction Management Tests', () => {
       // Create account
       const accountResponse = await page.evaluate(async () => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/accounts', {
+        const response = await fetch('https://localhost:5126/api/v1/accounts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -495,7 +495,7 @@ test.describe('Comprehensive Transaction Management Tests', () => {
       for (let i = 0; i < 3; i++) {
         await page.evaluate(async (data) => {
           const token = localStorage.getItem('auth_token');
-          await fetch('https://localhost:5126/api/transactions', {
+          await fetch('https://localhost:5126/api/v1/transactions', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -514,7 +514,7 @@ test.describe('Comprehensive Transaction Management Tests', () => {
       // Review all transactions
       const reviewAllResponse = await page.evaluate(async () => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/transactions/review-all', {
+        const response = await fetch('https://localhost:5126/api/v1/transactions/review-all', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -540,7 +540,7 @@ test.describe('Comprehensive Transaction Management Tests', () => {
       const initialBalance = 1000.00;
       const accountResponse = await page.evaluate(async (balance) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/accounts', {
+        const response = await fetch('https://localhost:5126/api/v1/accounts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -568,7 +568,7 @@ test.describe('Comprehensive Transaction Management Tests', () => {
       for (const tx of transactions) {
         await page.evaluate(async (data) => {
           const token = localStorage.getItem('auth_token');
-          await fetch('https://localhost:5126/api/transactions', {
+          await fetch('https://localhost:5126/api/v1/transactions', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -589,7 +589,7 @@ test.describe('Comprehensive Transaction Management Tests', () => {
       // Get final account balance
       const finalAccountResponse = await page.evaluate(async (accountId) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch(`https://localhost:5126/api/accounts/${accountId}`, {
+        const response = await fetch(`https://localhost:5126/api/v1/accounts/${accountId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -611,7 +611,7 @@ test.describe('Comprehensive Transaction Management Tests', () => {
       // Create account
       const accountResponse = await page.evaluate(async () => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/accounts', {
+        const response = await fetch('https://localhost:5126/api/v1/accounts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -637,7 +637,7 @@ test.describe('Comprehensive Transaction Management Tests', () => {
       for (const amount of precisionAmounts) {
         const transactionResponse = await page.evaluate(async (data) => {
           const token = localStorage.getItem('auth_token');
-          const response = await fetch('https://localhost:5126/api/transactions', {
+          const response = await fetch('https://localhost:5126/api/v1/transactions', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

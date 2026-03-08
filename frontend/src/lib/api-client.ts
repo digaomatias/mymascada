@@ -358,7 +358,7 @@ class ApiClient {
     if (params?.to) queryParams.append('to', params.to);
     if (params?.accountId) queryParams.append('accountId', params.accountId.toString());
 
-    const url = `${this.baseURL}/api/transactions/export/csv${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const url = `${this.baseURL}/api/v1/transactions/export/csv${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
 
     const token = this.getToken();
     const headers: HeadersInit = {};
@@ -985,7 +985,7 @@ class ApiClient {
 
 
   async downloadCsvTemplate(format: string): Promise<Blob> {
-    const url = `${this.baseURL}/api/CsvImport/template?format=${format}`;
+    const url = `${this.baseURL}/api/v1/CsvImport/template?format=${format}`;
     
     const config: RequestInit = {
       headers: {
@@ -1679,7 +1679,7 @@ class ApiClient {
   }
 
   async exportUserData(): Promise<Blob> {
-    const url = `${this.baseURL}/api/UserData/export`;
+    const url = `${this.baseURL}/api/v1/UserData/export`;
     const token = this.getToken();
 
     const response = await fetch(url, {
