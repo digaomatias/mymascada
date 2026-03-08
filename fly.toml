@@ -41,3 +41,7 @@ primary_region = 'syd'
 [[vm]]
   size = 'shared-cpu-1x'
   memory = '512mb'
+
+[[mounts]]
+  source = 'mymascada_data'
+  destination = '/app/data'
