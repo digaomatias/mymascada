@@ -11,7 +11,7 @@ public class EmailOptions
     public const string SectionName = "Email";
 
     /// <summary>
-    /// Active provider ID: "smtp" or "postmark"
+    /// Active provider ID: "smtp", "postmark" or "resend"
     /// </summary>
     public string Provider { get; set; } = "smtp";
 
@@ -44,6 +44,11 @@ public class EmailOptions
     /// Postmark-specific settings
     /// </summary>
     public PostmarkEmailOptions Postmark { get; set; } = new();
+
+    /// <summary>
+    /// Resend-specific settings
+    /// </summary>
+    public ResendEmailOptions Resend { get; set; } = new();
 }
 
 /// <summary>
@@ -101,4 +106,15 @@ public class PostmarkEmailOptions
     /// Message stream ID (e.g., "outbound" for transactional)
     /// </summary>
     public string MessageStream { get; set; } = "outbound";
+}
+
+/// <summary>
+/// Resend provider configuration
+/// </summary>
+public class ResendEmailOptions
+{
+    /// <summary>
+    /// Resend API key
+    /// </summary>
+    public string ApiKey { get; set; } = string.Empty;
 }

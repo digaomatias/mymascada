@@ -27,6 +27,7 @@ public static class EmailServiceExtensions
             // Real providers — factory auto-discovers via IEnumerable<IEmailService>
             services.AddScoped<IEmailService, SmtpEmailService>();
             services.AddScoped<IEmailService, PostmarkEmailService>();
+            services.AddScoped<IEmailService, ResendEmailService>();
             services.AddScoped<IEmailServiceFactory, EmailServiceFactory>();
         }
         else
