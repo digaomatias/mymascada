@@ -23,12 +23,12 @@ async function globalSetup(config: FullConfig) {
     
     console.log('⏳ Waiting for backend API to be ready...');
     const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://localhost:5126';
-    
+
     // Test backend health endpoint
     let apiReady = false;
     let attempts = 0;
     const maxAttempts = 30;
-    
+
     while (!apiReady && attempts < maxAttempts) {
       try {
         await page.request.get(`${apiBaseUrl}/api/v1/auth/health`, {

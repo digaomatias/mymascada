@@ -547,7 +547,8 @@ public class AuthController : ControllerBase
         // Protect the payload
         var protectedState = _dataProtector.Protect(JsonSerializer.Serialize(statePayload));
 
-        var redirectUri = $"https://{Request.Host}/api/v1/auth/google-response";
+        var apiBase = !string.IsNullOrEmpty(_appOptions.ApiBaseUrl) ? _appOptions.ApiBaseUrl.TrimEnd('/') : $"https://{Request.Host}";
+        var redirectUri = $"{apiBase}/api/v1/auth/google-response";
         var authorizationEndpoint = "https://accounts.google.com/o/oauth2/v2/auth";
         var queryParams = new Dictionary<string, string>
         {
@@ -806,7 +807,8 @@ public class AuthController : ControllerBase
     private async Task<TokenResponse?> ExchangeCodeForTokensAsync(string code, string clientId, string clientSecret)
     {
         var tokenEndpoint = "https://oauth2.googleapis.com/token";
-        var redirectUri = $"https://{Request.Host}/api/v1/auth/google-response";
+        var apiBase = !string.IsNullOrEmpty(_appOptions.ApiBaseUrl) ? _appOptions.ApiBaseUrl.TrimEnd('/') : $"https://{Request.Host}";
+        var redirectUri = $"{apiBase}/api/v1/auth/google-response";
 
         var tokenRequest = new Dictionary<string, string>
         {
