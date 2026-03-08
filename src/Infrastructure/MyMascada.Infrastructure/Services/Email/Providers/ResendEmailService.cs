@@ -66,7 +66,7 @@ public class ResendEmailService : IEmailService
             var payload = new ResendEmailPayload
             {
                 From = BuildFromAddress(message),
-                To = [message.ToName != null ? $"{message.ToName} <{message.To}>" : message.To],
+                To = [BuildToAddress(message.To, message.ToName)],
                 Subject = message.Subject,
                 Html = message.IsHtml ? message.Body : null,
                 Text = message.IsHtml ? null : message.Body,
@@ -172,9 +172,43 @@ public class ResendEmailService : IEmailService
         var fromEmail = message.From ?? _options.DefaultFromEmail;
         var fromName = message.FromName ?? _options.DefaultFromName;
 
-        return !string.IsNullOrEmpty(fromName)
-            ? $"{fromName} <{fromEmail}>"
-            : fromEmail;
+        return BuildEmailAddress(fromEmail, fromName);
+    }
+
+    private string BuildToAddress(string email, string? name)
+    {
+        return BuildEmailAddress(email, name);
+    }
+
+    private static string BuildEmailAddress(string email, string? name)
+    {
+        if (string.IsNullOrEmpty(name))
+        {
+            return email;
+        }
+
+        // Sanitize display name per RFC 5322 to prevent email header injection
+        var sanitizedName = SanitizeDisplayName(name);
+        return $"\"{sanitizedName}\" <{email}>";
+    }
+
+    private static string SanitizeDisplayName(string displayName)
+    {
+        if (string.IsNullOrEmpty(displayName))
+        {
+            return string.Empty;
+        }
+
+        // Remove or replace control characters that could cause header injection
+        var sanitized = System.Text.RegularExpressions.Regex.Replace(displayName, @"[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]", "");
+
+        // Escape any embedded quotes
+        sanitized = sanitized.Replace("\"", "\\\"");
+
+        // Remove line breaks that could cause header injection
+        sanitized = sanitized.Replace("\r", "").Replace("\n", "");
+
+        return sanitized;
     }
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -201,7 +235,7 @@ public class ResendEmailService : IEmailService
     {
         public string Content { get; set; } = default!;
         public string Filename { get; set; } = default!;
-        [JsonPropertyName("type")]
+        [JsonPropertyName("content_type")]
         public string? ContentType { get; set; }
     }
 
