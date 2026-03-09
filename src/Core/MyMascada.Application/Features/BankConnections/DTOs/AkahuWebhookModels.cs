@@ -71,17 +71,3 @@ public static class AkahuWebhookCodes
     public const string InitialUpdate = "INITIAL_UPDATE";
     public const string DefaultUpdate = "DEFAULT_UPDATE";
 }
-
-/// <summary>
-/// Represents an Akahu webhook subscription.
-/// </summary>
-public record AkahuWebhookSubscription
-{
-    [JsonPropertyName("_id")]
-    public string Id { get; init; } = string.Empty;
-
-    [JsonPropertyName("webhook_type")]
-    public string WebhookType { get; init; } = string.Empty;
-
-    public string? State { get; init; }
-}

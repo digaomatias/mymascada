@@ -17,6 +17,7 @@ public interface ITransactionRepository
     Task<Transaction> AddAsync(Transaction transaction);
     Task UpdateAsync(Transaction transaction);
     Task DeleteAsync(Transaction transaction);
+    Task DeleteByExternalIdsAsync(IEnumerable<string> externalIds, CancellationToken ct = default);
     Task DeleteByAccountIdAsync(int accountId, Guid userId);
     Task<decimal> GetAccountBalanceAsync(int accountId, Guid userId);
     Task<IEnumerable<Transaction>> GetRecentTransactionsAsync(Guid userId, int count = 10, CancellationToken cancellationToken = default);

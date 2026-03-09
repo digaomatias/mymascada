@@ -174,6 +174,20 @@ public class TransactionRepository : ITransactionRepository
         await _context.SaveChangesAsync();
     }
 
+    public async Task DeleteByExternalIdsAsync(IEnumerable<string> externalIds, CancellationToken ct = default)
+    {
+        var idList = externalIds.ToList();
+        if (idList.Count == 0)
+            return;
+
+        var now = DateTime.UtcNow;
+        await _context.Transactions
+            .Where(t => t.ExternalId != null && idList.Contains(t.ExternalId) && !t.IsDeleted)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(t => t.IsDeleted, true)
+                .SetProperty(t => t.DeletedAt, now), ct);
+    }
+
     public async Task DeleteByAccountIdAsync(int accountId, Guid userId)
     {
         if (!await _accountAccess.IsOwnerAsync(userId, accountId))

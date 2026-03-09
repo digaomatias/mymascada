@@ -50,8 +50,7 @@ public static class BankProviderServiceExtensions
         services.AddScoped<IBankProvider, AkahuBankProvider>();
 
         // Akahu webhook signature verification
-        services.AddHttpClient<AkahuWebhookSignatureService>();
-        services.AddScoped<IAkahuWebhookSignatureService>(sp => sp.GetRequiredService<AkahuWebhookSignatureService>());
+        services.AddHttpClient<IAkahuWebhookSignatureService, AkahuWebhookSignatureService>();
 
         return services;
     }

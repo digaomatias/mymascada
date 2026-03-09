@@ -38,9 +38,13 @@ public class ProcessAkahuWebhookCommandHandler : IRequestHandler<ProcessAkahuWeb
     {
         var payload = request.Payload;
 
+        var safeItemId = payload.WebhookType == AkahuWebhookTypes.Token
+            ? MaskSensitiveValue(payload.ItemId)
+            : payload.ItemId;
+
         _logger.LogInformation(
             "Processing Akahu webhook: type={WebhookType}, code={WebhookCode}, itemId={ItemId}, state={State}",
-            payload.WebhookType, payload.WebhookCode, payload.ItemId, payload.State);
+            payload.WebhookType, payload.WebhookCode, safeItemId, payload.State);
 
         switch (payload.WebhookType)
         {
@@ -191,19 +195,7 @@ public class ProcessAkahuWebhookCommandHandler : IRequestHandler<ProcessAkahuWeb
 
         _logger.LogInformation("Akahu transaction delete: removing {Count} transactions", payload.RemovedTransactions.Length);
 
-        foreach (var externalId in payload.RemovedTransactions)
-        {
-            var transaction = await _transactionRepository.GetByExternalIdAsync(externalId);
-            if (transaction != null)
-            {
-                await _transactionRepository.DeleteAsync(transaction);
-                _logger.LogDebug("Deleted transaction with external ID {ExternalId}", externalId);
-            }
-            else
-            {
-                _logger.LogDebug("Transaction with external ID {ExternalId} not found locally, skipping", externalId);
-            }
-        }
+        await _transactionRepository.DeleteByExternalIdsAsync(payload.RemovedTransactions, ct);
     }
 
     private async Task<Domain.Entities.BankConnection?> FindConnectionByExternalIdAsync(string? externalAccountId, CancellationToken ct)
@@ -226,5 +218,14 @@ public class ProcessAkahuWebhookCommandHandler : IRequestHandler<ProcessAkahuWeb
     {
         userId = Guid.Empty;
         return !string.IsNullOrEmpty(state) && Guid.TryParse(state, out userId);
+    }
+
+    private static string MaskSensitiveValue(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return "[empty]";
+        if (value.Length <= 4)
+            return "***";
+        return $"***{value[^4..]}";
     }
 }

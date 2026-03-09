@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using MyMascada.Application.Common.Interfaces;
@@ -11,7 +12,7 @@ namespace MyMascada.Infrastructure.Services.BankIntegration.Providers;
 /// Verifies Akahu webhook signatures by fetching RSA public keys from Akahu's API.
 /// Keys are cached for the configured duration (default 24 hours).
 /// </summary>
-public class AkahuWebhookSignatureService : IAkahuWebhookSignatureService
+public partial class AkahuWebhookSignatureService : IAkahuWebhookSignatureService
 {
     private readonly HttpClient _httpClient;
     private readonly IMemoryCache _cache;
@@ -19,6 +20,10 @@ public class AkahuWebhookSignatureService : IAkahuWebhookSignatureService
     private readonly IApplicationLogger<AkahuWebhookSignatureService> _logger;
 
     private const string CacheKeyPrefix = "akahu_signing_key_";
+    private const int MaxKeyIdLength = 64;
+
+    [GeneratedRegex(@"^[a-zA-Z0-9_\-]+$")]
+    private static partial Regex KeyIdFormatRegex();
 
     public AkahuWebhookSignatureService(
         HttpClient httpClient,
@@ -34,6 +39,12 @@ public class AkahuWebhookSignatureService : IAkahuWebhookSignatureService
 
     public async Task<bool> VerifySignatureAsync(string body, string signature, string keyId, CancellationToken ct = default)
     {
+        if (!IsValidKeyId(keyId))
+        {
+            _logger.LogWarning("Invalid keyId format rejected");
+            return false;
+        }
+
         try
         {
             var publicKey = await GetSigningKeyAsync(keyId, ct);
@@ -43,14 +54,8 @@ public class AkahuWebhookSignatureService : IAkahuWebhookSignatureService
                 return false;
             }
 
-            var formattedPublicKey = publicKey
-                .Replace("\n", "")
-                .Replace("-----BEGIN RSA PUBLIC KEY-----", "")
-                .Replace("-----END RSA PUBLIC KEY-----", "");
-
-            var rsa = RSA.Create();
-            var pubKeyBytes = Convert.FromBase64String(formattedPublicKey);
-            rsa.ImportRSAPublicKey(pubKeyBytes, out _);
+            using var rsa = RSA.Create();
+            rsa.ImportFromPem(publicKey);
 
             return rsa.VerifyData(
                 Encoding.UTF8.GetBytes(body),
@@ -75,11 +80,13 @@ public class AkahuWebhookSignatureService : IAkahuWebhookSignatureService
         try
         {
             var baseUrl = _options.ApiBaseUrl.TrimEnd('/');
-            var response = await _httpClient.GetAsync($"{baseUrl}/keys/{keyId}", ct);
+            var escapedKeyId = Uri.EscapeDataString(keyId);
+            var response = await _httpClient.GetAsync($"{baseUrl}/keys/{escapedKeyId}", ct);
 
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning("Failed to fetch signing key {KeyId}: {StatusCode}", keyId, response.StatusCode);
+                CacheNullResult(cacheKey);
                 return null;
             }
 
@@ -89,6 +96,7 @@ public class AkahuWebhookSignatureService : IAkahuWebhookSignatureService
             if (!doc.RootElement.TryGetProperty("success", out var success) || !success.GetBoolean())
             {
                 _logger.LogWarning("Akahu keys endpoint returned success=false for key {KeyId}", keyId);
+                CacheNullResult(cacheKey);
                 return null;
             }
 
@@ -96,10 +104,10 @@ public class AkahuWebhookSignatureService : IAkahuWebhookSignatureService
             if (string.IsNullOrEmpty(publicKey))
             {
                 _logger.LogWarning("Signing key {KeyId} had empty key value", keyId);
+                CacheNullResult(cacheKey);
                 return null;
             }
 
-            // Cache the key, evicting on expiry
             var cacheOptions = new MemoryCacheEntryOptions
             {
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(_options.WebhookSigningKeysCacheMinutes)
@@ -112,7 +120,24 @@ public class AkahuWebhookSignatureService : IAkahuWebhookSignatureService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error fetching Akahu signing key {KeyId}", keyId);
+            CacheNullResult(cacheKey);
             return null;
         }
+    }
+
+    private static bool IsValidKeyId(string? keyId)
+    {
+        return !string.IsNullOrEmpty(keyId)
+            && keyId.Length <= MaxKeyIdLength
+            && KeyIdFormatRegex().IsMatch(keyId);
+    }
+
+    private void CacheNullResult(string cacheKey)
+    {
+        var cacheOptions = new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+        };
+        _cache.Set<string?>(cacheKey, null, cacheOptions);
     }
 }

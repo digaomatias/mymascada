@@ -290,14 +290,8 @@ public class AkahuApiClient : IAkahuApiClient
     public async Task SubscribeToWebhookAsync(string appIdToken, string userToken, string webhookType, string? state = null, CancellationToken ct = default)
     {
         var request = CreateAuthenticatedRequest(HttpMethod.Post, "webhooks", appIdToken, userToken);
-        var payload = new Dictionary<string, string> { ["webhook_type"] = webhookType };
-        if (!string.IsNullOrEmpty(state))
-            payload["state"] = state;
-
-        request.Content = new StringContent(
-            JsonSerializer.Serialize(payload, JsonOptions),
-            System.Text.Encoding.UTF8,
-            "application/json");
+        var payload = new { webhook_type = webhookType, state };
+        request.Content = JsonContent.Create(payload, options: JsonOptions);
 
         var response = await _httpClient.SendAsync(request, ct);
         await EnsureSuccessAsync(response, $"Subscribe to webhook ({webhookType})", ct);
