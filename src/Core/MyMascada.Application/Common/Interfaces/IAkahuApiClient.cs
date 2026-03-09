@@ -71,6 +71,44 @@ public interface IAkahuApiClient
     /// <param name="accessToken">User's access token to revoke</param>
     /// <param name="ct">Cancellation token</param>
     Task RevokeTokenAsync(string accessToken, CancellationToken ct = default);
+
+    /// <summary>
+    /// Subscribes to an Akahu webhook type for the given user.
+    /// </summary>
+    /// <param name="appIdToken">Akahu App ID Token</param>
+    /// <param name="userToken">User's access token</param>
+    /// <param name="webhookType">Webhook type (TOKEN, ACCOUNT, TRANSACTION)</param>
+    /// <param name="state">State value passed back in webhook events (e.g. user ID)</param>
+    /// <param name="ct">Cancellation token</param>
+    Task SubscribeToWebhookAsync(string appIdToken, string userToken, string webhookType, string? state = null, CancellationToken ct = default);
+
+    /// <summary>
+    /// Unsubscribes from an Akahu webhook.
+    /// </summary>
+    /// <param name="appIdToken">Akahu App ID Token</param>
+    /// <param name="userToken">User's access token</param>
+    /// <param name="webhookId">The webhook subscription ID to remove</param>
+    /// <param name="ct">Cancellation token</param>
+    Task UnsubscribeFromWebhookAsync(string appIdToken, string userToken, string webhookId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Lists all webhook subscriptions for the user.
+    /// </summary>
+    /// <param name="appIdToken">Akahu App ID Token</param>
+    /// <param name="userToken">User's access token</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>List of webhook subscriptions</returns>
+    Task<IReadOnlyList<AkahuWebhookSubscriptionInfo>> ListWebhooksAsync(string appIdToken, string userToken, CancellationToken ct = default);
+}
+
+/// <summary>
+/// Represents an Akahu webhook subscription returned by the API.
+/// </summary>
+public record AkahuWebhookSubscriptionInfo
+{
+    public string Id { get; init; } = string.Empty;
+    public string WebhookType { get; init; } = string.Empty;
+    public string? State { get; init; }
 }
 
 /// <summary>
