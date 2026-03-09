@@ -52,9 +52,62 @@ import type {
 class ApiClient {
   private baseURL: string;
   private static readonly API_PREFIX = '/api/latest';
-  
+
+  // Refresh token state — prevents multiple concurrent refresh calls
+  private refreshPromise: Promise<boolean> | null = null;
+  // Called when refresh fails and user must re-authenticate
+  private onLogout?: () => void;
+
   constructor() {
     this.baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5126';
+  }
+
+  /**
+   * Register a logout callback so the api client can trigger logout
+   * when a token refresh fails. Call this from AuthProvider.
+   */
+  setLogoutCallback(cb: () => void): void {
+    this.onLogout = cb;
+  }
+
+  /**
+   * Attempt to refresh the access token using the HttpOnly refresh token cookie.
+   * Returns true if successful, false if the session is truly expired.
+   * Deduplicates concurrent refresh calls.
+   */
+  private async tryRefreshToken(): Promise<boolean> {
+    // Deduplicate: if a refresh is already in flight, wait for it
+    if (this.refreshPromise) {
+      return this.refreshPromise;
+    }
+
+    this.refreshPromise = (async () => {
+      try {
+        const url = `${this.baseURL}${ApiClient.API_PREFIX}/auth/refresh`;
+        const response = await fetch(url, {
+          method: 'POST',
+          credentials: 'include', // sends the HttpOnly refresh_token cookie
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (!response.ok) {
+          return false;
+        }
+
+        const data = await response.json().catch(() => null);
+        if (data?.isSuccess && data?.token) {
+          this.setToken(data.token);
+          return true;
+        }
+        return false;
+      } catch {
+        return false;
+      } finally {
+        this.refreshPromise = null;
+      }
+    })();
+
+    return this.refreshPromise;
   }
 
   async get<T>(endpoint: string): Promise<T> {
@@ -83,7 +136,8 @@ class ApiClient {
 
   async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    _isRetry = false
   ): Promise<T> {
     // Rewrite /api/... → /api/latest/... so the web app always targets the latest API version
     const resolvedEndpoint = endpoint.replace(/^\/api\//, `${ApiClient.API_PREFIX}/`);
@@ -111,6 +165,28 @@ class ApiClient {
       const response = await fetch(url, config);
       
       if (!response.ok) {
+        // Auto-refresh on 401, but not for auth endpoints themselves and not on retry
+        if (
+          response.status === 401 &&
+          !_isRetry &&
+          !endpoint.includes('/api/auth/refresh') &&
+          !endpoint.includes('/api/auth/login') &&
+          !endpoint.includes('/api/auth/register')
+        ) {
+          const refreshed = await this.tryRefreshToken();
+          if (refreshed) {
+            // Retry the original request with the new token
+            return this.request<T>(endpoint, options, true);
+          } else {
+            // Refresh failed — session truly expired
+            this.removeToken();
+            this.onLogout?.();
+            const error = new Error('Session expired. Please log in again.') as Error & { status?: number };
+            error.status = 401;
+            throw error;
+          }
+        }
+
         const errorData = await response.json().catch(() => ({}));
         // For auth endpoints, preserve the error structure
         if (endpoint.includes('/api/auth/') && errorData.errors) {

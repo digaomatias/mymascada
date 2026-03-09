@@ -30,6 +30,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const isAuthenticated = !!user && hasToken;
 
+  // Register logout callback with api client so it can trigger logout on failed refresh
+  useEffect(() => {
+    apiClient.setLogoutCallback(() => {
+      apiClient.removeToken();
+      setUser(null);
+      setHasToken(false);
+    });
+  }, []);
+
   // Initialize auth state
   useEffect(() => {
     if (typeof window === 'undefined') {
