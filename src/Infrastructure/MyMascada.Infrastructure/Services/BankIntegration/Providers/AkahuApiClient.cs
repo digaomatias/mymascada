@@ -284,6 +284,53 @@ public class AkahuApiClient : IAkahuApiClient
         }
     }
 
+    /// <summary>
+    /// Subscribe to an Akahu webhook type for the given user.
+    /// </summary>
+    public async Task SubscribeToWebhookAsync(string appIdToken, string userToken, string webhookType, string? state = null, CancellationToken ct = default)
+    {
+        var request = CreateAuthenticatedRequest(HttpMethod.Post, "webhooks", appIdToken, userToken);
+        var payload = new { webhook_type = webhookType, state };
+        request.Content = JsonContent.Create(payload, options: JsonOptions);
+
+        var response = await _httpClient.SendAsync(request, ct);
+        await EnsureSuccessAsync(response, $"Subscribe to webhook ({webhookType})", ct);
+
+        _logger.LogInformation("Subscribed to Akahu {WebhookType} webhook", webhookType);
+    }
+
+    /// <summary>
+    /// Unsubscribe from an Akahu webhook.
+    /// </summary>
+    public async Task UnsubscribeFromWebhookAsync(string appIdToken, string userToken, string webhookId, CancellationToken ct = default)
+    {
+        var request = CreateAuthenticatedRequest(HttpMethod.Delete, $"webhooks/{webhookId}", appIdToken, userToken);
+        var response = await _httpClient.SendAsync(request, ct);
+        await EnsureSuccessAsync(response, $"Unsubscribe from webhook ({webhookId})", ct);
+
+        _logger.LogInformation("Unsubscribed from Akahu webhook {WebhookId}", webhookId);
+    }
+
+    /// <summary>
+    /// List all webhook subscriptions for the user.
+    /// </summary>
+    public async Task<IReadOnlyList<AkahuWebhookSubscriptionInfo>> ListWebhooksAsync(string appIdToken, string userToken, CancellationToken ct = default)
+    {
+        var request = CreateAuthenticatedRequest(HttpMethod.Get, "webhooks", appIdToken, userToken);
+        var response = await _httpClient.SendAsync(request, ct);
+        await EnsureSuccessAsync(response, "List webhooks", ct);
+
+        var result = await response.Content.ReadFromJsonAsync<AkahuListResponse<AkahuWebhookSubscriptionResponse>>(JsonOptions, ct);
+        return (result?.Items ?? Array.Empty<AkahuWebhookSubscriptionResponse>())
+            .Select(w => new AkahuWebhookSubscriptionInfo
+            {
+                Id = w.Id,
+                WebhookType = w.WebhookType,
+                State = w.State
+            })
+            .ToList();
+    }
+
     private HttpRequestMessage CreateAuthenticatedRequest(HttpMethod method, string path, string appIdToken, string userToken)
     {
         // Build absolute URL to avoid HttpClient BaseAddress resolution issues
@@ -448,4 +495,13 @@ public record AkahuPendingTransaction
     public string Type { get; init; } = string.Empty;
     [JsonPropertyName("updated_at")]
     public DateTime UpdatedAt { get; init; }
+}
+
+public record AkahuWebhookSubscriptionResponse
+{
+    [JsonPropertyName("_id")]
+    public string Id { get; init; } = string.Empty;
+    [JsonPropertyName("webhook_type")]
+    public string WebhookType { get; init; } = string.Empty;
+    public string? State { get; init; }
 }

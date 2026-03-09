@@ -67,4 +67,10 @@ public class AkahuOptions
     /// Akahu OAuth base URL.
     /// </summary>
     public string OAuthBaseUrl { get; set; } = "https://oauth.akahu.nz";
+
+    /// <summary>
+    /// How long to cache webhook signing keys, in minutes.
+    /// Default: 1440 (24 hours).
+    /// </summary>
+    public int WebhookSigningKeysCacheMinutes { get; set; } = 1440;
 }

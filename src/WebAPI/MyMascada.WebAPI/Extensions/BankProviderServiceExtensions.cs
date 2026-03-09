@@ -49,6 +49,9 @@ public static class BankProviderServiceExtensions
         // Register Akahu as a bank provider (factory will auto-discover via DI)
         services.AddScoped<IBankProvider, AkahuBankProvider>();
 
+        // Akahu webhook signature verification
+        services.AddHttpClient<IAkahuWebhookSignatureService, AkahuWebhookSignatureService>();
+
         return services;
     }
 }
