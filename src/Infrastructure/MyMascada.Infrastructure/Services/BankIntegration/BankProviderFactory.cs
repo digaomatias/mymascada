@@ -10,12 +10,15 @@ namespace MyMascada.Infrastructure.Services.BankIntegration;
 public class BankProviderFactory : IBankProviderFactory
 {
     private readonly Dictionary<string, IBankProvider> _providers;
+    private readonly IBankProviderModeResolver _modeResolver;
     private readonly IApplicationLogger<BankProviderFactory> _logger;
 
     public BankProviderFactory(
         IEnumerable<IBankProvider> providers,
+        IBankProviderModeResolver modeResolver,
         IApplicationLogger<BankProviderFactory> logger)
     {
+        _modeResolver = modeResolver;
         _logger = logger;
         _providers = providers.ToDictionary(
             p => p.ProviderId,
@@ -56,12 +59,18 @@ public class BankProviderFactory : IBankProviderFactory
     public IReadOnlyList<BankProviderInfo> GetAvailableProviders()
     {
         return _providers.Values
-            .Select(p => new BankProviderInfo
+            .Select(p =>
             {
-                ProviderId = p.ProviderId,
-                DisplayName = p.DisplayName,
-                SupportsWebhooks = p.SupportsWebhooks,
-                SupportsBalanceFetch = p.SupportsBalanceFetch
+                var modeResolution = _modeResolver.Resolve(p.ProviderId);
+                return new BankProviderInfo
+                {
+                    ProviderId = p.ProviderId,
+                    DisplayName = p.DisplayName,
+                    SupportsWebhooks = p.SupportsWebhooks,
+                    SupportsBalanceFetch = p.SupportsBalanceFetch,
+                    SupportedAuthModes = modeResolution.SupportedModes,
+                    DefaultAuthMode = modeResolution.DefaultMode
+                };
             })
             .OrderBy(p => p.DisplayName)
             .ToList();

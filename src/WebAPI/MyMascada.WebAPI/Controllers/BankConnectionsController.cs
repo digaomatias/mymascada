@@ -7,6 +7,8 @@ using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.BankConnections.Commands;
 using MyMascada.Application.Features.BankConnections.DTOs;
 using MyMascada.Application.Features.BankConnections.Queries;
+using MyMascada.Infrastructure.Services.BankIntegration.Providers;
+using Microsoft.Extensions.Options;
 
 namespace MyMascada.WebAPI.Controllers;
 
@@ -24,11 +26,13 @@ public class BankConnectionsController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ICurrentUserService _currentUserService;
+    private readonly AkahuOptions _akahuOptions;
 
-    public BankConnectionsController(IMediator mediator, ICurrentUserService currentUserService)
+    public BankConnectionsController(IMediator mediator, ICurrentUserService currentUserService, IOptions<AkahuOptions> akahuOptions)
     {
         _mediator = mediator;
         _currentUserService = currentUserService;
+        _akahuOptions = akahuOptions.Value;
     }
 
     /// <summary>
@@ -202,7 +206,11 @@ public class BankConnectionsController : ControllerBase
             return BadRequest(new { message = "State parameter is required" });
         }
 
-        if (string.IsNullOrWhiteSpace(request.AppIdToken))
+        var appIdToken = !string.IsNullOrWhiteSpace(request.AppIdToken)
+            ? request.AppIdToken
+            : _akahuOptions.AppIdToken;
+
+        if (string.IsNullOrWhiteSpace(appIdToken))
         {
             return BadRequest(new { message = "App Token is required for OAuth mode" });
         }
@@ -213,7 +221,7 @@ public class BankConnectionsController : ControllerBase
                 _currentUserService.GetUserId(),
                 request.Code,
                 request.State,
-                request.AppIdToken
+                appIdToken
             );
             var result = await _mediator.Send(query);
             return Ok(new ExchangeAkahuCodeResponse(result.Accounts, result.AccessToken));

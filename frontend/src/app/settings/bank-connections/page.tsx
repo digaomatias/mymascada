@@ -91,7 +91,12 @@ export default function BankConnectionsPage() {
     }
   };
 
-  const handleInitiateConnection = async () => {
+  const handleInitiateConnection = async (providerId: string) => {
+    if (providerId !== 'akahu') {
+      toast.info(`${providerId} is not available yet.`);
+      return;
+    }
+
     setIsInitiatingConnection(true);
     try {
       const result = await apiClient.initiateAkahuConnection();
@@ -198,7 +203,11 @@ export default function BankConnectionsPage() {
     return null;
   }
 
-  const hasAkahuProvider = providers.some(p => p.providerId === 'akahu');
+  const primaryProvider = providers[0];
+  const canConnectProvider = !!primaryProvider;
+  const providerModeLabel = primaryProvider?.supportedAuthModes?.find(
+    mode => mode.modeId === primaryProvider.defaultAuthMode
+  )?.displayName;
 
   return (
     <AppLayout>
@@ -227,15 +236,18 @@ export default function BankConnectionsPage() {
                 </Button>
               )}
 
-              {hasAkahuProvider && (
+              {canConnectProvider && (
                 <Button
-                  onClick={handleInitiateConnection}
+                  onClick={() => handleInitiateConnection(primaryProvider.providerId)}
                   disabled={isInitiatingConnection}
                   className="flex items-center gap-2"
                 >
                   <PlusIcon className="w-4 h-4" />
                   {isInitiatingConnection ? t('connecting') : t('connectBank')}
                 </Button>
+              )}
+              {providerModeLabel && (
+                <span className="text-xs text-slate-500">{providerModeLabel}</span>
               )}
             </div>
           </div>
@@ -272,10 +284,10 @@ export default function BankConnectionsPage() {
               isLoading={loadingConnections}
             />
 
-            {connections.length === 0 && !loadingConnections && hasAkahuProvider && (
+            {connections.length === 0 && !loadingConnections && canConnectProvider && (
               <div className="mt-4 text-center">
                 <Button
-                  onClick={handleInitiateConnection}
+                  onClick={() => handleInitiateConnection(primaryProvider.providerId)}
                   disabled={isInitiatingConnection}
                   className="flex items-center gap-2 mx-auto"
                 >

@@ -23,6 +23,7 @@ public class InitiateAkahuConnectionCommandHandler : IRequestHandler<InitiateAka
     private readonly IAkahuUserCredentialRepository _credentialRepository;
     private readonly IBankConnectionRepository _bankConnectionRepository;
     private readonly ISettingsEncryptionService _encryptionService;
+    private readonly IBankProviderModeResolver _modeResolver;
     private readonly IApplicationLogger<InitiateAkahuConnectionCommandHandler> _logger;
 
     public InitiateAkahuConnectionCommandHandler(
@@ -30,18 +31,35 @@ public class InitiateAkahuConnectionCommandHandler : IRequestHandler<InitiateAka
         IAkahuUserCredentialRepository credentialRepository,
         IBankConnectionRepository bankConnectionRepository,
         ISettingsEncryptionService encryptionService,
+        IBankProviderModeResolver modeResolver,
         IApplicationLogger<InitiateAkahuConnectionCommandHandler> logger)
     {
         _akahuApiClient = akahuApiClient ?? throw new ArgumentNullException(nameof(akahuApiClient));
         _credentialRepository = credentialRepository ?? throw new ArgumentNullException(nameof(credentialRepository));
         _bankConnectionRepository = bankConnectionRepository ?? throw new ArgumentNullException(nameof(bankConnectionRepository));
         _encryptionService = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
+        _modeResolver = modeResolver ?? throw new ArgumentNullException(nameof(modeResolver));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task<InitiateConnectionResult> Handle(InitiateAkahuConnectionCommand request, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Initiating Akahu connection for user {UserId}", request.UserId);
+
+        var mode = _modeResolver.Resolve("akahu");
+        if (mode.DefaultMode == "hosted_oauth")
+        {
+            var state = Guid.NewGuid().ToString("N");
+            var authorizationUrl = _akahuApiClient.GetAuthorizationUrl(state, request.Email);
+
+            return new InitiateConnectionResult
+            {
+                IsPersonalAppMode = false,
+                RequiresCredentials = false,
+                State = state,
+                AuthorizationUrl = authorizationUrl
+            };
+        }
 
         // Check if user has stored credentials
         var credential = await _credentialRepository.GetByUserIdAsync(request.UserId, cancellationToken);

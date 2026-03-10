@@ -28,6 +28,7 @@ public static class BankProviderServiceExtensions
         services.AddScoped<ISettingsEncryptionService, SettingsEncryptionService>();
 
         // Core bank integration services
+        services.AddScoped<IBankProviderModeResolver, BankProviderModeResolver>();
         services.AddScoped<IBankProviderFactory, BankProviderFactory>();
         services.AddScoped<IBankSyncService, BankSyncService>();
 
