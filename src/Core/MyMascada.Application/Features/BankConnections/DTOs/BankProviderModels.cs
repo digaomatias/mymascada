@@ -275,6 +275,37 @@ public record BankProviderInfo
     /// Whether this provider can fetch account balances
     /// </summary>
     public bool SupportsBalanceFetch { get; init; }
+
+    /// <summary>
+    /// Available authentication modes supported by this provider (personal tokens, hosted OAuth, etc.).
+    /// </summary>
+    public IReadOnlyList<BankProviderAuthModeInfo> SupportedAuthModes { get; init; } = Array.Empty<BankProviderAuthModeInfo>();
+
+    /// <summary>
+    /// Default authentication mode to use for new connection attempts.
+    /// </summary>
+    public string DefaultAuthMode { get; init; } = "personal_tokens";
+}
+
+/// <summary>
+/// Metadata about a provider authentication mode.
+/// </summary>
+public record BankProviderAuthModeInfo
+{
+    /// <summary>
+    /// Stable identifier for the mode (e.g. "personal_tokens", "hosted_oauth").
+    /// </summary>
+    public string ModeId { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Human-friendly mode label for UI display.
+    /// </summary>
+    public string DisplayName { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Whether this mode requires the user to provide their own app/user credentials.
+    /// </summary>
+    public bool RequiresUserCredentials { get; init; }
 }
 
 /// <summary>

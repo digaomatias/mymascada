@@ -91,10 +91,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
               }
             }
           } else {
-            console.log('Token is expired or malformed, clearing token');
-            apiClient.removeToken();
-            setUser(null);
-            setHasToken(false);
+            console.log('Token is expired or malformed, attempting refresh...');
+            // The access token expired (e.g. during an OAuth redirect), but the
+            // HttpOnly refresh-token cookie may still be valid.
+            try {
+              const response = await apiClient.refreshToken();
+              if (response.isSuccess && response.token && response.user) {
+                console.log('Token refreshed successfully after expiry');
+                apiClient.setToken(response.token);
+                setUser(response.user);
+                setHasToken(true);
+              } else {
+                console.log('Refresh failed after token expiry, clearing token');
+                apiClient.removeToken();
+                setUser(null);
+                setHasToken(false);
+              }
+            } catch {
+              console.log('Refresh token is also invalid, clearing everything');
+              apiClient.removeToken();
+              setUser(null);
+              setHasToken(false);
+            }
           }
         }
       } catch (error) {

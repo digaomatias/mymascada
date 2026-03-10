@@ -63,7 +63,6 @@ export default function BankConnectionsPage() {
         }
         // Clear stored data
         localStorage.removeItem('akahu_oauth_state');
-        localStorage.removeItem('akahu_access_token');
         localStorage.removeItem('akahu_available_accounts');
       }
     }
@@ -91,7 +90,12 @@ export default function BankConnectionsPage() {
     }
   };
 
-  const handleInitiateConnection = async () => {
+  const handleInitiateConnection = async (providerId: string) => {
+    if (providerId !== 'akahu') {
+      toast.info(`${providerId} is not available yet.`);
+      return;
+    }
+
     setIsInitiatingConnection(true);
     try {
       const result = await apiClient.initiateAkahuConnection();
@@ -198,8 +202,8 @@ export default function BankConnectionsPage() {
     return null;
   }
 
-  const hasAkahuProvider = providers.some(p => p.providerId === 'akahu');
-
+  const primaryProvider = providers.find(p => p.providerId === 'akahu');
+  const canConnectProvider = !!primaryProvider;
   return (
     <AppLayout>
       {/* Header */}
@@ -227,9 +231,9 @@ export default function BankConnectionsPage() {
                 </Button>
               )}
 
-              {hasAkahuProvider && (
+              {canConnectProvider && (
                 <Button
-                  onClick={handleInitiateConnection}
+                  onClick={() => handleInitiateConnection(primaryProvider.providerId)}
                   disabled={isInitiatingConnection}
                   className="flex items-center gap-2"
                 >
@@ -272,10 +276,10 @@ export default function BankConnectionsPage() {
               isLoading={loadingConnections}
             />
 
-            {connections.length === 0 && !loadingConnections && hasAkahuProvider && (
+            {connections.length === 0 && !loadingConnections && canConnectProvider && (
               <div className="mt-4 text-center">
                 <Button
-                  onClick={handleInitiateConnection}
+                  onClick={() => handleInitiateConnection(primaryProvider.providerId)}
                   disabled={isInitiatingConnection}
                   className="flex items-center gap-2 mx-auto"
                 >

@@ -117,6 +117,7 @@ services:
 
       # Bank Sync - Akahu (optional - enables bank sync feature)
       Akahu__Enabled: ${AKAHU_ENABLED:-false}
+      Akahu__AppIdToken: ${AKAHU_APP_ID_TOKEN:-}
       Akahu__AppSecret: ${AKAHU_APP_SECRET:-}
       Akahu__RedirectUri: ${FRONTEND_URL:-http://localhost:3000}/settings/bank-connections/callback
 

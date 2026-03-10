@@ -1546,10 +1546,10 @@ class ApiClient {
   }
 
   // Note: This is for Production App OAuth mode only, not Personal App mode
-  async exchangeAkahuCode(code: string, state: string, appIdToken?: string): Promise<{ accounts: AkahuAccount[]; accessToken: string }> {
+  async exchangeAkahuCode(code: string, state?: string, appIdToken?: string): Promise<{ accounts: AkahuAccount[]; accessToken: string }> {
     return this.request('/api/BankConnections/akahu/exchange', {
       method: 'POST',
-      body: JSON.stringify({ code, state, appIdToken: appIdToken || '' }),
+      body: JSON.stringify({ code, state: state ?? null, appIdToken: appIdToken || '' }),
     });
   }
 

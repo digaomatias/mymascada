@@ -22,6 +22,7 @@ public class DisconnectBankConnectionCommandHandler : IRequestHandler<Disconnect
     private readonly IBankConnectionRepository _bankConnectionRepository;
     private readonly IBankSyncLogRepository _syncLogRepository;
     private readonly IAkahuApiClient _akahuApiClient;
+    private readonly IAkahuUserCredentialRepository _credentialRepository;
     private readonly ISettingsEncryptionService _encryptionService;
     private readonly IApplicationLogger<DisconnectBankConnectionCommandHandler> _logger;
 
@@ -29,12 +30,14 @@ public class DisconnectBankConnectionCommandHandler : IRequestHandler<Disconnect
         IBankConnectionRepository bankConnectionRepository,
         IBankSyncLogRepository syncLogRepository,
         IAkahuApiClient akahuApiClient,
+        IAkahuUserCredentialRepository credentialRepository,
         ISettingsEncryptionService encryptionService,
         IApplicationLogger<DisconnectBankConnectionCommandHandler> logger)
     {
         _bankConnectionRepository = bankConnectionRepository ?? throw new ArgumentNullException(nameof(bankConnectionRepository));
         _syncLogRepository = syncLogRepository ?? throw new ArgumentNullException(nameof(syncLogRepository));
         _akahuApiClient = akahuApiClient ?? throw new ArgumentNullException(nameof(akahuApiClient));
+        _credentialRepository = credentialRepository ?? throw new ArgumentNullException(nameof(credentialRepository));
         _encryptionService = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -64,17 +67,24 @@ public class DisconnectBankConnectionCommandHandler : IRequestHandler<Disconnect
             throw new UnauthorizedAccessException("You do not have access to this bank connection");
         }
 
-        // 3. Revoke the provider token if applicable
-        if (connection.ProviderId == AkahuProviderId && !string.IsNullOrEmpty(connection.EncryptedSettings))
+        // 3. Revoke the provider token if applicable.
+        // Tokens are stored per-user in AkahuUserCredential, not per-connection.
+        if (connection.ProviderId == AkahuProviderId)
         {
             try
             {
-                var settings = _encryptionService.DecryptSettings<AkahuConnectionSettings>(connection.EncryptedSettings);
-                if (settings != null && !string.IsNullOrEmpty(settings.AccessToken))
+                var credential = await _credentialRepository.GetByUserIdAsync(request.UserId, cancellationToken);
+                if (credential != null)
                 {
-                    _logger.LogDebug("Revoking Akahu access token for connection {ConnectionId}", request.BankConnectionId);
-                    await _akahuApiClient.RevokeTokenAsync(settings.AccessToken, cancellationToken);
-                    _logger.LogDebug("Successfully revoked Akahu access token");
+                    var appIdToken = _encryptionService.DecryptSettings<string>(credential.EncryptedAppToken);
+                    var accessToken = _encryptionService.DecryptSettings<string>(credential.EncryptedUserToken);
+
+                    if (!string.IsNullOrEmpty(appIdToken) && !string.IsNullOrEmpty(accessToken))
+                    {
+                        _logger.LogDebug("Revoking Akahu access token for connection {ConnectionId}", request.BankConnectionId);
+                        await _akahuApiClient.RevokeTokenAsync(appIdToken, accessToken, cancellationToken);
+                        _logger.LogDebug("Successfully revoked Akahu access token");
+                    }
                 }
             }
             catch (Exception ex)
@@ -94,17 +104,5 @@ public class DisconnectBankConnectionCommandHandler : IRequestHandler<Disconnect
             request.BankConnectionId, request.UserId);
 
         return true;
-    }
-
-    /// <summary>
-    /// Settings class for Akahu connections.
-    /// </summary>
-    private class AkahuConnectionSettings
-    {
-        public string AccessToken { get; set; } = string.Empty;
-        public DateTime? ExpiresAt { get; set; }
-        public string AkahuAccountId { get; set; } = string.Empty;
-        public string? LastSyncedTransactionId { get; set; }
-        public DateTime? LastSyncTimestamp { get; set; }
     }
 }

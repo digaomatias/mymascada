@@ -38,11 +38,19 @@ export interface BankSyncResult {
   transactionsSkipped: number;
 }
 
+export interface BankProviderAuthModeInfo {
+  modeId: string;
+  displayName: string;
+  requiresUserCredentials: boolean;
+}
+
 export interface BankProviderInfo {
   providerId: string;
   displayName: string;
   supportsWebhooks: boolean;
   supportsBalanceFetch: boolean;
+  supportedAuthModes?: BankProviderAuthModeInfo[];
+  defaultAuthMode?: string;
 }
 
 export interface AkahuAccount {

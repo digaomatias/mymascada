@@ -7,6 +7,8 @@ using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.BankConnections.Commands;
 using MyMascada.Application.Features.BankConnections.DTOs;
 using MyMascada.Application.Features.BankConnections.Queries;
+using MyMascada.Infrastructure.Services.BankIntegration.Providers;
+using Microsoft.Extensions.Options;
 
 namespace MyMascada.WebAPI.Controllers;
 
@@ -24,11 +26,13 @@ public class BankConnectionsController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ICurrentUserService _currentUserService;
+    private readonly AkahuOptions _akahuOptions;
 
-    public BankConnectionsController(IMediator mediator, ICurrentUserService currentUserService)
+    public BankConnectionsController(IMediator mediator, ICurrentUserService currentUserService, IOptions<AkahuOptions> akahuOptions)
     {
         _mediator = mediator;
         _currentUserService = currentUserService;
+        _akahuOptions = akahuOptions.Value;
     }
 
     /// <summary>
@@ -197,12 +201,7 @@ public class BankConnectionsController : ControllerBase
             return BadRequest(new { message = "Authorization code is required" });
         }
 
-        if (string.IsNullOrWhiteSpace(request.State))
-        {
-            return BadRequest(new { message = "State parameter is required" });
-        }
-
-        if (string.IsNullOrWhiteSpace(request.AppIdToken))
+        if (string.IsNullOrWhiteSpace(_akahuOptions.AppIdToken))
         {
             return BadRequest(new { message = "App Token is required for OAuth mode" });
         }
@@ -213,7 +212,7 @@ public class BankConnectionsController : ControllerBase
                 _currentUserService.GetUserId(),
                 request.Code,
                 request.State,
-                request.AppIdToken
+                _akahuOptions.AppIdToken
             );
             var result = await _mediator.Send(query);
             return Ok(new ExchangeAkahuCodeResponse(result.Accounts, result.AccessToken));
@@ -225,6 +224,24 @@ public class BankConnectionsController : ControllerBase
         catch (InvalidOperationException ex)
         {
             return BadRequest(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            // Akahu rejected the code or credentials — surface as a business error,
+            // NOT as HTTP 401 (which the frontend interprets as a JWT session issue).
+            return BadRequest(new { message = $"Bank provider rejected the authorization: {ex.Message}" });
+        }
+        catch (AkahuApiException ex)
+        {
+            // Akahu returned a non-success HTTP status (e.g. 400 invalid_request for expired code).
+            // This is a client/business error — surface as 400.
+            return BadRequest(new { message = $"Bank provider request failed: {ex.Message}" });
+        }
+        catch (HttpRequestException ex)
+        {
+            // Transport-level failure (DNS error, network unreachable, timeout, etc.).
+            // This is an upstream/gateway failure — surface as 502.
+            return StatusCode(StatusCodes.Status502BadGateway, new { message = $"Bank provider unavailable: {ex.Message}" });
         }
     }
 
@@ -406,6 +423,7 @@ public record CompleteAkahuRequest(
 
 /// <summary>
 /// Request DTO for exchanging an OAuth code for Akahu accounts (Production App mode).
+/// The App Token is always taken from server configuration; clients do not supply it.
 /// </summary>
 public record ExchangeAkahuCodeRequest(
     /// <summary>
@@ -414,14 +432,9 @@ public record ExchangeAkahuCodeRequest(
     [property: JsonPropertyName("code")] string Code,
 
     /// <summary>
-    /// The state parameter returned from Akahu OAuth callback (for CSRF validation).
+    /// The optional state parameter returned from Akahu OAuth callback.
     /// </summary>
-    [property: JsonPropertyName("state")] string State,
-
-    /// <summary>
-    /// The Akahu App Token for authentication.
-    /// </summary>
-    [property: JsonPropertyName("appIdToken")] string AppIdToken
+    [property: JsonPropertyName("state")] string? State
 );
 
 /// <summary>

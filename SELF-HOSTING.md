@@ -142,14 +142,41 @@ Set the authorized redirect URI in the Google Cloud Console to:
 
 | Variable | Required | Description | Default |
 |---|---|---|---|
-| `AKAHU_ENABLED` | No | Set to `true` to enable the Akahu bank sync feature. Each user enters their own tokens via Settings. | `false` |
-| `AKAHU_APP_SECRET` | No | Akahu App Secret -- only needed for Production App OAuth flow | -- |
+| `AKAHU_ENABLED` | No | Set to `true` to enable the Akahu bank sync feature. | `false` |
+| `AKAHU_APP_ID_TOKEN` | No | Akahu App ID Token (`app_token_...`). Required for first-party hosted OAuth mode. | -- |
+| `AKAHU_APP_SECRET` | No | Akahu App Secret. Required for first-party hosted OAuth mode. | -- |
+| `AKAHU_OAUTH_BASE_URL` | No | Override OAuth base URL (e.g. `https://next.oauth.akahu.nz` for dev/sandbox). | `https://oauth.akahu.nz` |
+| `AKAHU_REDIRECT_URI` | No | Override OAuth callback URI if needed. | `http://localhost:3000/settings/bank-connections/callback` |
 
 Akahu provides live bank account syncing for New Zealand banks. To enable it, set
 the flag in `.env`:
 
 ```
 AKAHU_ENABLED=true
+```
+
+Choose one auth mode:
+
+1. **Personal tokens (default / backward-compatible)**
+   - Leave `AKAHU_APP_ID_TOKEN` and `AKAHU_APP_SECRET` empty.
+   - Users enter their own App Token + User Token in Settings.
+
+2. **First-party hosted OAuth**
+   - Set both values below:
+
+```env
+AKAHU_APP_ID_TOKEN=app_token_...
+AKAHU_APP_SECRET=...
+# Optional dev OAuth host
+AKAHU_OAUTH_BASE_URL=https://next.oauth.akahu.nz
+# Callback URL (must match Akahu app settings)
+AKAHU_REDIRECT_URI=http://localhost:3000/settings/bank-connections/callback
+```
+
+Example OAuth URL shape (do not hardcode secrets):
+
+```text
+https://next.oauth.akahu.nz/?client_id=app_token_...&scope=ENDURING_CONSENT&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fsettings%2Fbank-connections%2Fcallback&response_type=code
 ```
 
 After changing the setting, restart the API container:
