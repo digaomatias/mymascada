@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { apiClient } from '@/lib/api-client';
+import { useAuth } from '@/contexts/auth-context';
 import { toast } from 'sonner';
 import {
   BuildingLibraryIcon,
@@ -17,13 +18,28 @@ function CallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations('settings.bankConnections.callback');
+  const { isAuthenticated, isLoading } = useAuth();
   const [status, setStatus] = useState<CallbackStatus>('processing');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const hasProcessedRef = useRef(false);
 
   useEffect(() => {
     const handleCallback = async () => {
+      if (isLoading || hasProcessedRef.current) {
+        return;
+      }
+
+      if (!isAuthenticated) {
+        setStatus('error');
+        setErrorMessage(t('errors.sessionExpired'));
+        return;
+      }
+
+      hasProcessedRef.current = true;
+
       const code = searchParams.get('code');
       const state = searchParams.get('state');
+      const event = searchParams.get('event');
       const error = searchParams.get('error');
       const errorDescription = searchParams.get('error_description');
 
@@ -35,27 +51,33 @@ function CallbackContent() {
         return;
       }
 
+      if (event && event !== 'ACCEPT') {
+        setStatus('error');
+        setErrorMessage(t('errors.denied'));
+        return;
+      }
+
       // Validate required params
-      if (!code || !state) {
+      if (!code) {
         setStatus('error');
         setErrorMessage(t('errors.missingParams'));
         return;
       }
 
-      // Verify state matches what we stored
+      // Verify state when Akahu returns it. Some hosted OAuth callbacks only
+      // include code/source/event, so we allow the flow to continue without it.
       const storedState = localStorage.getItem('akahu_oauth_state');
-      if (!storedState || storedState !== state) {
+      if (state && storedState && storedState !== state) {
         setStatus('error');
         setErrorMessage(t('errors.securityFailed'));
         return;
       }
 
       try {
-        // Exchange the code for an access token and get available accounts
-        const result = await apiClient.exchangeAkahuCode(code, state);
+        // Exchange the code, persist credentials server-side, and get available accounts.
+        const result = await apiClient.exchangeAkahuCode(code, state || undefined);
 
-        // Store the access token and accounts for the bank connections page
-        localStorage.setItem('akahu_access_token', result.accessToken);
+        // Store accounts for the bank connections page.
         localStorage.setItem('akahu_available_accounts', JSON.stringify(result.accounts));
 
         setStatus('success');
@@ -67,13 +89,18 @@ function CallbackContent() {
       } catch (err) {
         console.error('Callback processing failed:', err);
         setStatus('error');
-        setErrorMessage(t('errors.processingFailed'));
+        const status = (err as { status?: number }).status;
+        setErrorMessage(
+          status === 401 || status === 403
+            ? t('errors.sessionExpired')
+            : t('errors.processingFailed')
+        );
       }
     };
 
     handleCallback();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, router]);
+  }, [searchParams, router, isAuthenticated, isLoading]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200 flex items-center justify-center p-4">

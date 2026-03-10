@@ -28,7 +28,7 @@ public class BankConnectionsControllerTests
 
         var controller = new BankConnectionsController(mediator, currentUserService, options);
 
-        var response = await controller.ExchangeAkahuCode(new ExchangeAkahuCodeRequest("code-1", "state-1", ""));
+        var response = await controller.ExchangeAkahuCode(new ExchangeAkahuCodeRequest("code-1", null, ""));
 
         response.Result.Should().BeOfType<OkObjectResult>();
 
@@ -36,7 +36,7 @@ public class BankConnectionsControllerTests
             Arg.Is<ExchangeAkahuCodeQuery>(q =>
                 q.UserId == userId &&
                 q.Code == "code-1" &&
-                q.State == "state-1" &&
+                q.State == null &&
                 q.AppIdToken == "app_token_from_config"),
             Arg.Any<CancellationToken>());
     }
@@ -50,7 +50,7 @@ public class BankConnectionsControllerTests
 
         var controller = new BankConnectionsController(mediator, currentUserService, options);
 
-        var response = await controller.ExchangeAkahuCode(new ExchangeAkahuCodeRequest("code-1", "state-1", ""));
+        var response = await controller.ExchangeAkahuCode(new ExchangeAkahuCodeRequest("code-1", null, ""));
 
         response.Result.Should().BeOfType<BadRequestObjectResult>();
         await mediator.DidNotReceive().Send(Arg.Any<ExchangeAkahuCodeQuery>(), Arg.Any<CancellationToken>());

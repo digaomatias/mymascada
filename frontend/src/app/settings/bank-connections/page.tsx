@@ -63,7 +63,6 @@ export default function BankConnectionsPage() {
         }
         // Clear stored data
         localStorage.removeItem('akahu_oauth_state');
-        localStorage.removeItem('akahu_access_token');
         localStorage.removeItem('akahu_available_accounts');
       }
     }
@@ -205,10 +204,6 @@ export default function BankConnectionsPage() {
 
   const primaryProvider = providers[0];
   const canConnectProvider = !!primaryProvider;
-  const providerModeLabel = primaryProvider?.supportedAuthModes?.find(
-    mode => mode.modeId === primaryProvider.defaultAuthMode
-  )?.displayName;
-
   return (
     <AppLayout>
       {/* Header */}
@@ -245,9 +240,6 @@ export default function BankConnectionsPage() {
                   <PlusIcon className="w-4 h-4" />
                   {isInitiatingConnection ? t('connecting') : t('connectBank')}
                 </Button>
-              )}
-              {providerModeLabel && (
-                <span className="text-xs text-slate-500">{providerModeLabel}</span>
               )}
             </div>
           </div>

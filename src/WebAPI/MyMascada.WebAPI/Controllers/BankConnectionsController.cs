@@ -201,11 +201,6 @@ public class BankConnectionsController : ControllerBase
             return BadRequest(new { message = "Authorization code is required" });
         }
 
-        if (string.IsNullOrWhiteSpace(request.State))
-        {
-            return BadRequest(new { message = "State parameter is required" });
-        }
-
         var appIdToken = !string.IsNullOrWhiteSpace(request.AppIdToken)
             ? request.AppIdToken
             : _akahuOptions.AppIdToken;
@@ -233,6 +228,17 @@ public class BankConnectionsController : ControllerBase
         catch (InvalidOperationException ex)
         {
             return BadRequest(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            // Akahu rejected the code or credentials — surface as a business error,
+            // NOT as HTTP 401 (which the frontend interprets as a JWT session issue).
+            return BadRequest(new { message = $"Bank provider rejected the authorization: {ex.Message}" });
+        }
+        catch (HttpRequestException ex)
+        {
+            // Akahu returned a non-success status (e.g. 400 invalid_request for expired code)
+            return BadRequest(new { message = $"Bank provider request failed: {ex.Message}" });
         }
     }
 
@@ -422,9 +428,9 @@ public record ExchangeAkahuCodeRequest(
     [property: JsonPropertyName("code")] string Code,
 
     /// <summary>
-    /// The state parameter returned from Akahu OAuth callback (for CSRF validation).
+    /// The optional state parameter returned from Akahu OAuth callback.
     /// </summary>
-    [property: JsonPropertyName("state")] string State,
+    [property: JsonPropertyName("state")] string? State,
 
     /// <summary>
     /// The Akahu App Token for authentication.

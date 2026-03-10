@@ -13,7 +13,7 @@ namespace MyMascada.Application.Features.BankConnections.Queries;
 public record ExchangeAkahuCodeQuery(
     Guid UserId,
     string Code,
-    string State,
+    string? State,
     string AppIdToken
 ) : IRequest<ExchangeAkahuCodeResult>;
 
@@ -35,16 +35,22 @@ public class ExchangeAkahuCodeQueryHandler : IRequestHandler<ExchangeAkahuCodeQu
     private const string AkahuProviderId = "akahu";
 
     private readonly IAkahuApiClient _akahuApiClient;
+    private readonly IAkahuUserCredentialRepository _credentialRepository;
     private readonly IBankConnectionRepository _bankConnectionRepository;
+    private readonly ISettingsEncryptionService _encryptionService;
     private readonly IApplicationLogger<ExchangeAkahuCodeQueryHandler> _logger;
 
     public ExchangeAkahuCodeQueryHandler(
         IAkahuApiClient akahuApiClient,
+        IAkahuUserCredentialRepository credentialRepository,
         IBankConnectionRepository bankConnectionRepository,
+        ISettingsEncryptionService encryptionService,
         IApplicationLogger<ExchangeAkahuCodeQueryHandler> logger)
     {
         _akahuApiClient = akahuApiClient ?? throw new ArgumentNullException(nameof(akahuApiClient));
+        _credentialRepository = credentialRepository ?? throw new ArgumentNullException(nameof(credentialRepository));
         _bankConnectionRepository = bankConnectionRepository ?? throw new ArgumentNullException(nameof(bankConnectionRepository));
+        _encryptionService = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -59,11 +65,6 @@ public class ExchangeAkahuCodeQueryHandler : IRequestHandler<ExchangeAkahuCodeQu
             throw new ArgumentException("Authorization code is required");
         }
 
-        if (string.IsNullOrWhiteSpace(request.State))
-        {
-            throw new ArgumentException("State parameter is required");
-        }
-
         if (string.IsNullOrWhiteSpace(request.AppIdToken))
         {
             throw new ArgumentException("AppIdToken is required for OAuth mode");
@@ -75,6 +76,34 @@ public class ExchangeAkahuCodeQueryHandler : IRequestHandler<ExchangeAkahuCodeQu
         if (string.IsNullOrEmpty(tokenResponse.AccessToken))
         {
             throw new InvalidOperationException("Failed to obtain access token from Akahu");
+        }
+
+        // Persist the OAuth token so the existing account-linking and sync flows
+        // can use the same per-user credential store as personal-token mode.
+        var encryptedAppToken = _encryptionService.EncryptSettings(request.AppIdToken);
+        var encryptedUserToken = _encryptionService.EncryptSettings(tokenResponse.AccessToken);
+        var existingCredential = await _credentialRepository.GetByUserIdAsync(request.UserId, cancellationToken);
+
+        if (existingCredential != null)
+        {
+            existingCredential.EncryptedAppToken = encryptedAppToken;
+            existingCredential.EncryptedUserToken = encryptedUserToken;
+            existingCredential.LastValidatedAt = DateTime.UtcNow;
+            existingCredential.LastValidationError = null;
+            existingCredential.UpdatedAt = DateTime.UtcNow;
+            await _credentialRepository.UpdateAsync(existingCredential, cancellationToken);
+        }
+        else
+        {
+            await _credentialRepository.AddAsync(new MyMascada.Domain.Entities.AkahuUserCredential
+            {
+                UserId = request.UserId,
+                EncryptedAppToken = encryptedAppToken,
+                EncryptedUserToken = encryptedUserToken,
+                LastValidatedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            }, cancellationToken);
         }
 
         // 2. Get all Akahu accounts using the app's token and the OAuth access token

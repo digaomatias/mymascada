@@ -42,13 +42,32 @@ public class AkahuApiClient : IAkahuApiClient
     /// </summary>
     public string GetAuthorizationUrl(string state, string? email = null)
     {
-        var scopes = string.Join(" ", _options.DefaultScopes);
-        var url = $"{_options.OAuthBaseUrl}/authorize?client_id={_options.AppIdToken}&redirect_uri={Uri.EscapeDataString(_options.RedirectUri)}&response_type=code&scope={Uri.EscapeDataString(scopes)}&state={Uri.EscapeDataString(state)}";
+        var scopes = _options.DefaultScopes
+            .Where(scope => !string.IsNullOrWhiteSpace(scope))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        var effectiveScopes = scopes.Length > 0
+            ? string.Join(" ", scopes)
+            : "ENDURING_CONSENT";
+
+        var uriBuilder = new UriBuilder(_options.OAuthBaseUrl.TrimEnd('/'))
+        {
+            Path = string.Empty,
+            Query =
+                $"client_id={Uri.EscapeDataString(_options.AppIdToken)}" +
+                $"&redirect_uri={Uri.EscapeDataString(_options.RedirectUri)}" +
+                "&response_type=code" +
+                $"&scope={Uri.EscapeDataString(effectiveScopes)}" +
+                $"&state={Uri.EscapeDataString(state)}"
+        };
 
         if (!string.IsNullOrEmpty(email))
-            url += $"&email={Uri.EscapeDataString(email)}";
+        {
+            uriBuilder.Query += $"&email={Uri.EscapeDataString(email)}";
+        }
 
-        return url;
+        return uriBuilder.Uri.ToString();
     }
 
     /// <summary>
@@ -132,15 +151,33 @@ public class AkahuApiClient : IAkahuApiClient
     /// </summary>
     public async Task<AkahuTokenResponse> ExchangeCodeForTokenInternalAsync(string code, CancellationToken ct = default)
     {
-        var request = new HttpRequestMessage(HttpMethod.Post, $"{_options.OAuthBaseUrl}/token");
-        request.Content = new FormUrlEncodedContent(new Dictionary<string, string>
+        // Token exchange goes to the API base (e.g. api.akahu.io/v1/token),
+        // NOT the OAuth consent page (oauth.akahu.nz).
+        var baseUrl = _options.ApiBaseUrl.TrimEnd('/');
+        var fullUrl = $"{baseUrl}/token";
+
+        var request = new HttpRequestMessage(HttpMethod.Post, fullUrl);
+
+        // Akahu requires Basic Auth: base64(app_token:app_secret)
+        var credentials = Convert.ToBase64String(
+            System.Text.Encoding.UTF8.GetBytes($"{_options.AppIdToken}:{_options.AppSecret}"));
+        request.Headers.Authorization = new AuthenticationHeaderValue("Basic", credentials);
+
+        // Akahu requires X-Akahu-Id header
+        request.Headers.Add("X-Akahu-Id", _options.AppIdToken);
+
+        // Akahu requires JSON body with all OAuth fields
+        request.Content = JsonContent.Create(new
         {
-            ["grant_type"] = "authorization_code",
-            ["code"] = code,
-            ["redirect_uri"] = _options.RedirectUri,
-            ["client_id"] = _options.AppIdToken,
-            ["client_secret"] = _options.AppSecret
-        });
+            grant_type = "authorization_code",
+            code,
+            redirect_uri = _options.RedirectUri,
+            client_id = _options.AppIdToken,
+            client_secret = _options.AppSecret
+        }, options: JsonOptions);
+
+        _logger.LogDebug("Akahu token exchange: POST {Url}, redirect_uri={RedirectUri}, code_length={CodeLength}",
+            fullUrl, _options.RedirectUri, code?.Length ?? 0);
 
         var response = await _httpClient.SendAsync(request, ct);
         await EnsureSuccessAsync(response, "Token exchange", ct);
@@ -273,9 +310,13 @@ public class AkahuApiClient : IAkahuApiClient
     /// </summary>
     public async Task RevokeTokenAsync(string accessToken, CancellationToken ct = default)
     {
-        // For revocation, we don't need the app token - just delete the token
-        var request = new HttpRequestMessage(HttpMethod.Delete, "token");
+        var baseUrl = _options.ApiBaseUrl.TrimEnd('/');
+        var fullUrl = $"{baseUrl}/token";
+
+        var request = new HttpRequestMessage(HttpMethod.Delete, fullUrl);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        request.Headers.Add("X-Akahu-Id", _options.AppIdToken);
+
         var response = await _httpClient.SendAsync(request, ct);
         // Don't throw on failure - token may already be revoked
         if (!response.IsSuccessStatusCode)

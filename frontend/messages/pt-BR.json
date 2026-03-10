@@ -2004,6 +2004,7 @@
           "denied": "Autorização foi negada",
           "missingParams": "Parâmetros de autorização ausentes",
           "securityFailed": "Validação de segurança falhou. Por favor, tente novamente.",
+          "sessionExpired": "Sua sessão expirou. Entre novamente e reconecte seu banco.",
           "processingFailed": "Falha ao processar autorização. Por favor, tente novamente."
         }
       }
