@@ -51,6 +51,20 @@ Notes:
 - `Akahu__RedirectUri` (used by OAuth URL/token exchange)
 - `Akahu__OAuthBaseUrl` and `Akahu__ApiBaseUrl` (optional overrides)
 
+Example (dev/sandbox OAuth host):
+
+```text
+https://next.oauth.akahu.nz/?client_id=app_token_...&scope=ENDURING_CONSENT&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fsettings%2Fbank-connections%2Fcallback&response_type=code
+```
+
+## Security + reliability decisions (aligned to Akahu best practices)
+- **Do not commit tokens/secrets**: examples use placeholders only.
+- **Revocation-aware behavior**: unauthorized responses from Akahu already trigger credential re-entry UX in personal mode.
+- **Account health handling**: inactive/non-active account states are surfaced as connection failures (prevents silent stale sync assumptions).
+- **Webhook-first freshness posture**: provider reports webhook capability; existing webhook processing pipeline remains in place and should be enabled in production.
+- **OAuth UX safety**: mode defaults to hosted OAuth only when both first-party credentials are present; otherwise personal mode remains active.
+- **Environment-driven OAuth host**: support for overriding OAuth base URL (e.g., `next.oauth.akahu.nz`) for dev/sandbox reliability.
+
 ## Follow-on opportunities
 - Add provider-agnostic connect endpoint (`/bankconnections/{providerId}/initiate`) once another connector is introduced.
 - Persist user-selected mode preference when both modes are available.
