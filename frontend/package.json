@@ -31,7 +31,7 @@
     "@types/react-dom": "^19.2.3",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
-    "eslint": "^9.29.0",
+    "eslint": "^10.0.3",
     "eslint-config-next": "^16.1.6",
     "google-auth-library": "^10.6.1",
     "lucide-react": "^0.576.0",
