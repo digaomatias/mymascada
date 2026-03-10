@@ -16,7 +16,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Postmark" Version="5.3.0" />
-    <PackageReference Include="Scriban" Version="6.5.2" />
+    <PackageReference Include="Scriban" Version="6.5.5" />
     <PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
