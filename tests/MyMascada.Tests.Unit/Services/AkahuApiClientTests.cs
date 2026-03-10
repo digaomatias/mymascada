@@ -115,7 +115,7 @@ public class AkahuApiClientTests
         var client = CreateClient(handler);
 
         // Act
-        await client.RevokeTokenAsync("user_token_to_revoke");
+        await client.RevokeTokenAsync(TestAppToken, "user_token_to_revoke");
 
         // Assert
         capturedRequest.Should().NotBeNull();
@@ -127,7 +127,7 @@ public class AkahuApiClientTests
         capturedRequest.Headers.Authorization!.Scheme.Should().Be("Bearer");
         capturedRequest.Headers.Authorization.Parameter.Should().Be("user_token_to_revoke");
 
-        // Assert - X-Akahu-Id header present
+        // Assert - X-Akahu-Id header uses the explicitly passed appIdToken, not config
         capturedRequest.Headers.GetValues("X-Akahu-Id").Should().ContainSingle()
             .Which.Should().Be(TestAppToken);
     }

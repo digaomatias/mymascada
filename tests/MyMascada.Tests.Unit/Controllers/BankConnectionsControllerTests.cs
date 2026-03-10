@@ -11,7 +11,7 @@ namespace MyMascada.Tests.Unit.Controllers;
 public class BankConnectionsControllerTests
 {
     [Fact]
-    public async Task ExchangeAkahuCode_UsesConfiguredAppIdToken_WhenRequestTokenMissing()
+    public async Task ExchangeAkahuCode_AlwaysUsesConfiguredAppIdToken()
     {
         var mediator = Substitute.For<IMediator>();
         var currentUserService = Substitute.For<ICurrentUserService>();
@@ -28,7 +28,7 @@ public class BankConnectionsControllerTests
 
         var controller = new BankConnectionsController(mediator, currentUserService, options);
 
-        var response = await controller.ExchangeAkahuCode(new ExchangeAkahuCodeRequest("code-1", null, ""));
+        var response = await controller.ExchangeAkahuCode(new ExchangeAkahuCodeRequest("code-1", null));
 
         response.Result.Should().BeOfType<OkObjectResult>();
 
@@ -42,7 +42,7 @@ public class BankConnectionsControllerTests
     }
 
     [Fact]
-    public async Task ExchangeAkahuCode_ReturnsBadRequest_WhenNoRequestOrConfiguredToken()
+    public async Task ExchangeAkahuCode_ReturnsBadRequest_WhenConfiguredTokenMissing()
     {
         var mediator = Substitute.For<IMediator>();
         var currentUserService = Substitute.For<ICurrentUserService>();
@@ -50,7 +50,7 @@ public class BankConnectionsControllerTests
 
         var controller = new BankConnectionsController(mediator, currentUserService, options);
 
-        var response = await controller.ExchangeAkahuCode(new ExchangeAkahuCodeRequest("code-1", null, ""));
+        var response = await controller.ExchangeAkahuCode(new ExchangeAkahuCodeRequest("code-1", null));
 
         response.Result.Should().BeOfType<BadRequestObjectResult>();
         await mediator.DidNotReceive().Send(Arg.Any<ExchangeAkahuCodeQuery>(), Arg.Any<CancellationToken>());

@@ -64,12 +64,17 @@ function CallbackContent() {
         return;
       }
 
-      // Verify state when Akahu returns it. Some hosted OAuth callbacks only
-      // include code/source/event, so we allow the flow to continue without it.
+      // Strict OAuth state validation to prevent CSRF.
+      // Both the URL state param and the stored state must be present and must match.
       const storedState = localStorage.getItem('akahu_oauth_state');
-      if (state && storedState && storedState !== state) {
+      if (!state || !storedState) {
         setStatus('error');
-        setErrorMessage(t('errors.securityFailed'));
+        setErrorMessage(t('errors.stateValidationFailed'));
+        return;
+      }
+      if (storedState !== state) {
+        setStatus('error');
+        setErrorMessage(t('errors.stateMismatch'));
         return;
       }
 

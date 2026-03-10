@@ -2004,6 +2004,8 @@
           "denied": "Authorization was denied",
           "missingParams": "Missing authorization parameters",
           "securityFailed": "Security validation failed. Please try again.",
+          "stateValidationFailed": "OAuth state validation failed. Please try connecting again.",
+          "stateMismatch": "OAuth state mismatch. Please try connecting again.",
           "sessionExpired": "Your session expired. Sign in again and reconnect your bank.",
           "processingFailed": "Failed to process authorization. Please try again."
         }

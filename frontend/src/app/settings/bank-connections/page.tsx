@@ -202,7 +202,7 @@ export default function BankConnectionsPage() {
     return null;
   }
 
-  const primaryProvider = providers[0];
+  const primaryProvider = providers.find(p => p.providerId === 'akahu');
   const canConnectProvider = !!primaryProvider;
   return (
     <AppLayout>

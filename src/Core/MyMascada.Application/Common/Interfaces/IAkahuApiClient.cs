@@ -68,9 +68,10 @@ public interface IAkahuApiClient
     /// <summary>
     /// Revokes the user's access token.
     /// </summary>
+    /// <param name="appIdToken">Akahu App ID Token used to authenticate the revocation request</param>
     /// <param name="accessToken">User's access token to revoke</param>
     /// <param name="ct">Cancellation token</param>
-    Task RevokeTokenAsync(string accessToken, CancellationToken ct = default);
+    Task RevokeTokenAsync(string appIdToken, string accessToken, CancellationToken ct = default);
 
     /// <summary>
     /// Subscribes to an Akahu webhook type for the given user.

@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -308,14 +309,14 @@ public class AkahuApiClient : IAkahuApiClient
     /// <summary>
     /// Revoke user access token
     /// </summary>
-    public async Task RevokeTokenAsync(string accessToken, CancellationToken ct = default)
+    public async Task RevokeTokenAsync(string appIdToken, string accessToken, CancellationToken ct = default)
     {
         var baseUrl = _options.ApiBaseUrl.TrimEnd('/');
         var fullUrl = $"{baseUrl}/token";
 
         var request = new HttpRequestMessage(HttpMethod.Delete, fullUrl);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-        request.Headers.Add("X-Akahu-Id", _options.AppIdToken);
+        request.Headers.Add("X-Akahu-Id", appIdToken);
 
         var response = await _httpClient.SendAsync(request, ct);
         // Don't throw on failure - token may already be revoked
@@ -396,11 +397,26 @@ public class AkahuApiClient : IAkahuApiClient
 
         throw response.StatusCode switch
         {
-            System.Net.HttpStatusCode.Unauthorized => new UnauthorizedAccessException($"Akahu: {operation} - Unauthorized. Token may be expired or revoked."),
-            System.Net.HttpStatusCode.Forbidden => new UnauthorizedAccessException($"Akahu: {operation} - Forbidden. Insufficient permissions."),
-            System.Net.HttpStatusCode.TooManyRequests => new InvalidOperationException($"Akahu: {operation} - Rate limit exceeded. Please try again later."),
-            _ => new HttpRequestException($"Akahu: {operation} failed with status {response.StatusCode}: {content}")
+            HttpStatusCode.Unauthorized => new UnauthorizedAccessException($"Akahu: {operation} - Unauthorized. Token may be expired or revoked."),
+            HttpStatusCode.Forbidden => new UnauthorizedAccessException($"Akahu: {operation} - Forbidden. Insufficient permissions."),
+            HttpStatusCode.TooManyRequests => new InvalidOperationException($"Akahu: {operation} - Rate limit exceeded. Please try again later."),
+            _ => new AkahuApiException($"Akahu: {operation} failed with status {response.StatusCode}: {content}", response.StatusCode)
         };
+    }
+}
+
+/// <summary>
+/// Exception thrown when the Akahu API returns a non-success HTTP status code.
+/// Distinguishes Akahu API errors (client/server errors from Akahu) from transport-level
+/// failures (DNS, network, timeout) which remain plain <see cref="HttpRequestException"/>.
+/// </summary>
+public class AkahuApiException : HttpRequestException
+{
+    public HttpStatusCode AkahuStatusCode { get; }
+
+    public AkahuApiException(string message, HttpStatusCode statusCode) : base(message)
+    {
+        AkahuStatusCode = statusCode;
     }
 }
 

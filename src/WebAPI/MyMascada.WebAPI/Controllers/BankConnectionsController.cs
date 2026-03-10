@@ -201,11 +201,7 @@ public class BankConnectionsController : ControllerBase
             return BadRequest(new { message = "Authorization code is required" });
         }
 
-        var appIdToken = !string.IsNullOrWhiteSpace(request.AppIdToken)
-            ? request.AppIdToken
-            : _akahuOptions.AppIdToken;
-
-        if (string.IsNullOrWhiteSpace(appIdToken))
+        if (string.IsNullOrWhiteSpace(_akahuOptions.AppIdToken))
         {
             return BadRequest(new { message = "App Token is required for OAuth mode" });
         }
@@ -216,7 +212,7 @@ public class BankConnectionsController : ControllerBase
                 _currentUserService.GetUserId(),
                 request.Code,
                 request.State,
-                appIdToken
+                _akahuOptions.AppIdToken
             );
             var result = await _mediator.Send(query);
             return Ok(new ExchangeAkahuCodeResponse(result.Accounts, result.AccessToken));
@@ -235,10 +231,17 @@ public class BankConnectionsController : ControllerBase
             // NOT as HTTP 401 (which the frontend interprets as a JWT session issue).
             return BadRequest(new { message = $"Bank provider rejected the authorization: {ex.Message}" });
         }
+        catch (AkahuApiException ex)
+        {
+            // Akahu returned a non-success HTTP status (e.g. 400 invalid_request for expired code).
+            // This is a client/business error — surface as 400.
+            return BadRequest(new { message = $"Bank provider request failed: {ex.Message}" });
+        }
         catch (HttpRequestException ex)
         {
-            // Akahu returned a non-success status (e.g. 400 invalid_request for expired code)
-            return BadRequest(new { message = $"Bank provider request failed: {ex.Message}" });
+            // Transport-level failure (DNS error, network unreachable, timeout, etc.).
+            // This is an upstream/gateway failure — surface as 502.
+            return StatusCode(StatusCodes.Status502BadGateway, new { message = $"Bank provider unavailable: {ex.Message}" });
         }
     }
 
@@ -420,6 +423,7 @@ public record CompleteAkahuRequest(
 
 /// <summary>
 /// Request DTO for exchanging an OAuth code for Akahu accounts (Production App mode).
+/// The App Token is always taken from server configuration; clients do not supply it.
 /// </summary>
 public record ExchangeAkahuCodeRequest(
     /// <summary>
@@ -430,12 +434,7 @@ public record ExchangeAkahuCodeRequest(
     /// <summary>
     /// The optional state parameter returned from Akahu OAuth callback.
     /// </summary>
-    [property: JsonPropertyName("state")] string? State,
-
-    /// <summary>
-    /// The Akahu App Token for authentication.
-    /// </summary>
-    [property: JsonPropertyName("appIdToken")] string AppIdToken
+    [property: JsonPropertyName("state")] string? State
 );
 
 /// <summary>

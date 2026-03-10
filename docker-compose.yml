@@ -119,8 +119,6 @@ services:
       Akahu__Enabled: ${AKAHU_ENABLED:-false}
       Akahu__AppIdToken: ${AKAHU_APP_ID_TOKEN:-}
       Akahu__AppSecret: ${AKAHU_APP_SECRET:-}
-      Akahu__OAuthBaseUrl: ${AKAHU_OAUTH_BASE_URL:-}
-      Akahu__RedirectUri: ${AKAHU_REDIRECT_URI:-}
       Akahu__RedirectUri: ${FRONTEND_URL:-http://localhost:3000}/settings/bank-connections/callback
 
       # Telegram Bot (optional - per-user bot token setup)
