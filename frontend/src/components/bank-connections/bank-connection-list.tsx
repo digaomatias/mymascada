@@ -9,7 +9,7 @@ interface BankConnectionListProps {
   connections: BankConnection[];
   onSync: (connectionId: number) => Promise<void>;
   onDisconnect: (connectionId: number) => Promise<void>;
-  onRefresh: () => void;
+  onRefresh: () => Promise<void>;
   isLoading?: boolean;
 }
 

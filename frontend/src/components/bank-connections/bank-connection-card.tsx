@@ -20,7 +20,7 @@ interface BankConnectionCardProps {
   connection: BankConnection;
   onSync: (connectionId: number) => Promise<void>;
   onDisconnect: (connectionId: number) => Promise<void>;
-  onRefresh: () => void;
+  onRefresh: () => Promise<void>;
 }
 
 export function BankConnectionCard({
@@ -40,7 +40,7 @@ export function BankConnectionCard({
     try {
       await onSync(connection.id);
       toast.success(tToasts('bankSyncSuccess'));
-      onRefresh();
+      await onRefresh();
     } catch (error) {
       console.error('Sync failed:', error);
       toast.error(tToasts('bankSyncFailed'));
@@ -53,7 +53,7 @@ export function BankConnectionCard({
     try {
       await onDisconnect(connection.id);
       toast.success(tToasts('bankConnectionRemoved'));
-      onRefresh();
+      await onRefresh();
     } catch (error) {
       console.error('Disconnect failed:', error);
       toast.error(tToasts('bankDisconnectFailed'));
