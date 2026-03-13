@@ -12,7 +12,7 @@ import { apiClient } from '@/lib/api-client';
 import { createTransactionDetailUrl } from '@/lib/navigation-utils';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { useRouter } from 'next/navigation';
-import { 
+import {
   MagnifyingGlassIcon,
   FunnelIcon,
   EllipsisVerticalIcon,
@@ -28,7 +28,8 @@ import {
   XMarkIcon,
   ArrowsRightLeftIcon,
   WalletIcon,
-  ArrowDownTrayIcon
+  ArrowDownTrayIcon,
+  CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 import {
   DropdownMenu,
@@ -540,6 +541,34 @@ export function TransactionList({
     }
   };
 
+  const handleBulkReview = async () => {
+    if (selectedTransactionIds.size === 0) return;
+
+    setBulkCategorizing(true);
+    try {
+      const result = await apiClient.bulkReviewTransactions(Array.from(selectedTransactionIds));
+
+      if (result.success) {
+        toast.success(t('transactionsReviewed', { count: result.reviewedCount }));
+      } else {
+        toast.error(t('bulkReviewFailed'));
+      }
+
+      await fetchTransactions(currentPage, searchTerm, transferFilter, effectiveCategoryId, effectiveAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter);
+      setSelectedTransactionIds(new Set());
+      setIsSelectionMode(false);
+
+      if (onTransactionUpdate) {
+        onTransactionUpdate();
+      }
+    } catch (err) {
+      console.error('Bulk review failed:', err);
+      toast.error(t('bulkReviewFailed'));
+    } finally {
+      setBulkCategorizing(false);
+    }
+  };
+
   const handleBulkDelete = () => {
     setShowBulkDeleteDialog(true);
   };
@@ -913,10 +942,23 @@ export function TransactionList({
                         />
                       </div>
                     </div>
-                    
-                    <Button 
-                      variant="secondary" 
-                      size="sm" 
+
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={handleBulkReview}
+                      disabled={transactions
+                        .filter(t => selectedTransactionIds.has(t.id))
+                        .every(t => t.isReviewed)}
+                      className="flex items-center gap-1 text-emerald-600 hover:text-emerald-700"
+                    >
+                      <CheckCircleIcon className="w-4 h-4" />
+                      {!isMobile && <span>{t('bulkReview')}</span>}
+                    </Button>
+
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={handleBulkDelete}
                       className="flex items-center gap-1 text-red-600 hover:text-red-700"
                     >

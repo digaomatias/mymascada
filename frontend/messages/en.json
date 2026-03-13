@@ -673,6 +673,8 @@
     "transferCreatedSuccess": "Transfer created successfully!",
     "transactionsReviewed": "{count} transactions marked as reviewed",
     "failedToReviewAll": "Failed to review all transactions",
+    "bulkReview": "Review",
+    "bulkReviewFailed": "Failed to review selected transactions",
     "applyFilters": "Apply Filters",
     "startDate": "Start date",
     "endDate": "End date",
