@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 
 /**
@@ -12,16 +12,20 @@ import { useAuth } from '@/contexts/auth-context';
 export function useAuthGuard() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Don't redirect to login while an OAuth code exchange is pending
+  const hasPendingOAuthCode = searchParams.get('code') !== null;
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading && !isAuthenticated && !hasPendingOAuthCode) {
       router.push('/auth/login');
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, hasPendingOAuthCode, router]);
 
   return {
-    /** true during auth loading AND when authenticated — only false during redirect */
-    shouldRender: isLoading || isAuthenticated,
+    /** true during auth loading, OAuth code exchange, AND when authenticated — only false during redirect */
+    shouldRender: isLoading || isAuthenticated || hasPendingOAuthCode,
     /** true only after auth is confirmed */
     isAuthResolved: !isLoading && isAuthenticated,
   };
