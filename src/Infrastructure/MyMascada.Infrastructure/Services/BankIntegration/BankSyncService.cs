@@ -212,8 +212,6 @@ public class BankSyncService : IBankSyncService
                     createdTransactions.Add(transaction);
                     if (mappingId.HasValue)
                         mappingIdsToRecord.Add(mappingId.Value);
-
-                    imported++;
                 }
                 catch (Exception ex)
                 {
@@ -231,11 +229,13 @@ public class BankSyncService : IBankSyncService
                 await _transactionRepository.SaveChangesAsync();
             }
 
+            imported = createdTransactions.Count;
+
             // IDs are now populated after SaveChanges
             var importedTransactionIds = createdTransactions.Select(t => t.Id).ToList();
 
             // Record mapping applications (after batch save to avoid premature flushes)
-            foreach (var mappingId in mappingIdsToRecord)
+            foreach (var mappingId in mappingIdsToRecord.Distinct())
             {
                 try
                 {

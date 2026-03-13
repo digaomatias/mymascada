@@ -182,7 +182,7 @@ export default function BankConnectionsPage() {
       } else {
         toast.warning(t('toasts.syncPartial', { successful, total: results.length }));
       }
-      loadConnections();
+      await loadConnections();
     } catch (error) {
       console.error('Failed to sync all:', error);
       toast.error(t('toasts.syncAllFailed'));
