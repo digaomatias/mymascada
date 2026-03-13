@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/contexts/auth-context';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AppLayout } from '@/components/app-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,6 +35,7 @@ export default function BankConnectionsPage() {
   const [credentialsError, setCredentialsError] = useState<string | undefined>(undefined);
   const [isInitiatingConnection, setIsInitiatingConnection] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const syncAllInFlightRef = useRef(false);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -170,7 +171,16 @@ export default function BankConnectionsPage() {
   };
 
   const handleSyncAll = async () => {
+    if (syncAllInFlightRef.current) {
+      return;
+    }
+
+    syncAllInFlightRef.current = true;
     setIsSyncing(true);
+
+    // Ensure loading state is painted before potentially heavy sync request starts
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
     toast.info(t('toasts.syncStarting'));
     try {
       const results = await apiClient.syncAllConnections();
@@ -187,6 +197,7 @@ export default function BankConnectionsPage() {
       console.error('Failed to sync all:', error);
       toast.error(t('toasts.syncAllFailed'));
     } finally {
+      syncAllInFlightRef.current = false;
       setIsSyncing(false);
     }
   };
