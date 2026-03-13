@@ -280,7 +280,26 @@ public class TransactionsController : ControllerBase
         };
 
         var result = await _mediator.Send(command);
-        
+
+        if (!result.Success)
+        {
+            return BadRequest(new { message = result.Message });
+        }
+
+        return Ok(result);
+    }
+
+    [HttpPost("bulk-review")]
+    public async Task<ActionResult<BulkReviewTransactionsResult>> BulkReviewTransactions([FromBody] BulkReviewTransactionsRequest request)
+    {
+        var command = new BulkReviewTransactionsCommand
+        {
+            UserId = _currentUserService.GetUserId(),
+            TransactionIds = request.TransactionIds
+        };
+
+        var result = await _mediator.Send(command);
+
         if (!result.Success)
         {
             return BadRequest(new { message = result.Message });

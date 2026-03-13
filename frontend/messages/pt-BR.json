@@ -673,6 +673,8 @@
     "transferCreatedSuccess": "Transferência criada com sucesso!",
     "transactionsReviewed": "{count} transações marcadas como revisadas",
     "failedToReviewAll": "Falha ao revisar todas as transações",
+    "bulkReview": "Revisar",
+    "bulkReviewFailed": "Falha ao revisar transações selecionadas",
     "applyFilters": "Aplicar Filtros",
     "startDate": "Data inicial",
     "endDate": "Data final",

@@ -66,6 +66,14 @@ public class BulkDeleteTransactionsRequest
 }
 
 /// <summary>
+/// Request to bulk review multiple transactions by their IDs
+/// </summary>
+public class BulkReviewTransactionsRequest
+{
+    public List<int> TransactionIds { get; set; } = new();
+}
+
+/// <summary>
 /// Response after bulk deleting transactions
 /// </summary>
 public class BulkDeleteTransactionsResponse

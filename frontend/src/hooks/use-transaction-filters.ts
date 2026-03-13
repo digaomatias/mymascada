@@ -29,7 +29,7 @@ export const useTransactionFilters = () => {
   const [endDate, setEndDate] = useState(searchParams.get('endDate') || '');
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedTransactionIds, setSelectedTransactionIds] = useState<Set<number>>(new Set());
-  const [bulkCategorizing, setBulkCategorizing] = useState(false);
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
   const [allCategories, setAllCategories] = useState<Array<{ id: number; name: string; fullPath?: string; type: number; parentId: number | null }>>([]);
   const [sortBy, setSortBy] = useState<SortField>((searchParams.get('sortBy') as SortField) || 'transactionDate');
@@ -116,8 +116,8 @@ export const useTransactionFilters = () => {
     setIsSelectionMode,
     selectedTransactionIds,
     setSelectedTransactionIds,
-    bulkCategorizing,
-    setBulkCategorizing,
+    isBulkProcessing,
+    setIsBulkProcessing,
     showBulkDeleteDialog,
     setShowBulkDeleteDialog,
     allCategories,

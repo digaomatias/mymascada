@@ -12,7 +12,7 @@ import { apiClient } from '@/lib/api-client';
 import { createTransactionDetailUrl } from '@/lib/navigation-utils';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { useRouter } from 'next/navigation';
-import { 
+import {
   MagnifyingGlassIcon,
   FunnelIcon,
   EllipsisVerticalIcon,
@@ -28,7 +28,8 @@ import {
   XMarkIcon,
   ArrowsRightLeftIcon,
   WalletIcon,
-  ArrowDownTrayIcon
+  ArrowDownTrayIcon,
+  CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 import {
   DropdownMenu,
@@ -121,8 +122,8 @@ export function TransactionList({
     setIsSelectionMode,
     selectedTransactionIds,
     setSelectedTransactionIds,
-    bulkCategorizing,
-    setBulkCategorizing,
+    isBulkProcessing,
+    setIsBulkProcessing,
     showBulkDeleteDialog,
     setShowBulkDeleteDialog,
     allCategories,
@@ -437,7 +438,7 @@ export function TransactionList({
   const handleBulkCategoryAssignment = async (categoryId: string | number) => {
     if (selectedTransactionIds.size === 0) return;
 
-    setBulkCategorizing(true);
+    setIsBulkProcessing(true);
     const selectedIds = Array.from(selectedTransactionIds);
     let successCount = 0;
     let errorCount = 0;
@@ -498,7 +499,7 @@ export function TransactionList({
       console.error('Bulk category assignment failed:', err);
       toast.error(tToasts('categoryAssignFailed'));
     } finally {
-      setBulkCategorizing(false);
+      setIsBulkProcessing(false);
     }
   };
 
@@ -540,12 +541,39 @@ export function TransactionList({
     }
   };
 
+  const handleBulkReview = async () => {
+    if (selectedTransactionIds.size === 0) return;
+
+    setIsBulkProcessing(true);
+    try {
+      const result = await apiClient.bulkReviewTransactions(Array.from(selectedTransactionIds));
+
+      if (result.success) {
+        toast.success(t('transactionsReviewed', { count: result.reviewedCount }));
+        await fetchTransactions(currentPage, searchTerm, transferFilter, effectiveCategoryId, effectiveAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter);
+        setSelectedTransactionIds(new Set());
+        setIsSelectionMode(false);
+
+        if (onTransactionUpdate) {
+          onTransactionUpdate();
+        }
+      } else {
+        toast.error(t('bulkReviewFailed'));
+      }
+    } catch (err) {
+      console.error('Bulk review failed:', err);
+      toast.error(t('bulkReviewFailed'));
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
   const handleBulkDelete = () => {
     setShowBulkDeleteDialog(true);
   };
 
   const confirmBulkDelete = async () => {
-    setBulkCategorizing(true);
+    setIsBulkProcessing(true);
     const selectedIds = Array.from(selectedTransactionIds);
     let successCount = 0;
     let errorCount = 0;
@@ -582,7 +610,7 @@ export function TransactionList({
       console.error('Bulk delete failed:', err);
       toast.error(tToasts('transactionsDeleteFailed'));
     } finally {
-      setBulkCategorizing(false);
+      setIsBulkProcessing(false);
       setShowBulkDeleteDialog(false);
     }
   };
@@ -891,7 +919,7 @@ export function TransactionList({
               </div>
               
               <div className="flex-1 flex items-center justify-end gap-2">
-                {bulkCategorizing ? (
+                {isBulkProcessing ? (
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
                     <span className={`${isMobile ? 'text-xs' : 'text-sm'} text-slate-600`}>
@@ -908,15 +936,26 @@ export function TransactionList({
                           onChange={handleBulkCategoryAssignment}
                           categories={allCategories}
                           placeholder={isMobile ? `${tCommon('category')}...` : t('chooseCategory')}
-                          disabled={bulkCategorizing}
+                          disabled={isBulkProcessing}
                           disableQuickPicks={true}
                         />
                       </div>
                     </div>
-                    
-                    <Button 
-                      variant="secondary" 
-                      size="sm" 
+
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={handleBulkReview}
+                      aria-label={t('bulkReview')}
+                      className="flex items-center gap-1 text-emerald-600 hover:text-emerald-700"
+                    >
+                      <CheckCircleIcon className="w-4 h-4" />
+                      {!isMobile && <span>{t('bulkReview')}</span>}
+                    </Button>
+
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={handleBulkDelete}
                       className="flex items-center gap-1 text-red-600 hover:text-red-700"
                     >

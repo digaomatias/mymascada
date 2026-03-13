@@ -470,21 +470,33 @@ class ApiClient {
     });
   }
 
-  async bulkReviewCategorized(accountId?: number, searchText?: string): Promise<{ 
-    reviewedCount: number; 
+  async bulkReviewCategorized(accountId?: number, searchText?: string): Promise<{
+    reviewedCount: number;
     totalProcessed: number;
-    success: boolean; 
-    message: string 
+    success: boolean;
+    message: string
   }> {
     const params = new URLSearchParams();
     if (accountId) params.append('accountId', accountId.toString());
     if (searchText) params.append('searchText', searchText);
-    
+
     const queryString = params.toString();
     const url = `/api/transactions/bulk-review-categorized${queryString ? `?${queryString}` : ''}`;
-    
+
     return this.request(url, {
       method: 'POST',
+    });
+  }
+
+  async bulkReviewTransactions(transactionIds: number[]): Promise<{
+    reviewedCount: number;
+    totalProcessed: number;
+    success: boolean;
+    message: string;
+  }> {
+    return this.request('/api/transactions/bulk-review', {
+      method: 'POST',
+      body: JSON.stringify({ transactionIds }),
     });
   }
 
