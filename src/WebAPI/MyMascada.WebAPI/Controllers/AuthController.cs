@@ -360,6 +360,21 @@ public class AuthController : ControllerBase
                 SetRefreshTokenCookie(result.RefreshToken, result.RefreshTokenExpiresAt ?? DateTime.UtcNow.AddDays(30));
             }
 
+            // Enrich User with fields the TokenService doesn't populate
+            // (IsOnboardingComplete, HasAiConfigured, Locale) to match /me response
+            if (result.User != null)
+            {
+                var userId = result.User.Id;
+                var aiSettings = await _aiSettingsRepository.GetByUserIdAsync(userId);
+                var globalApiKey = _configuration["LLM:OpenAI:ApiKey"];
+                result.User.HasAiConfigured = (aiSettings != null && !string.IsNullOrEmpty(aiSettings.EncryptedApiKey))
+                    || (!string.IsNullOrEmpty(globalApiKey) && globalApiKey != "YOUR_OPENAI_API_KEY");
+
+                var financialProfile = await _financialProfileRepository.GetByUserIdAsync(userId);
+                var hasAccounts = (await _accountRepository.GetByUserIdAsync(userId)).Any();
+                result.User.IsOnboardingComplete = (financialProfile != null && financialProfile.OnboardingCompleted) || hasAccounts;
+            }
+
             // Return response without refresh token (it's in cookie)
             var response = new AuthenticationResponse
             {
