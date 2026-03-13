@@ -118,8 +118,8 @@ function TransactionsPageContent() {
     setIsSelectionMode,
     selectedTransactionIds,
     setSelectedTransactionIds,
-    bulkCategorizing,
-    setBulkCategorizing,
+    isBulkProcessing,
+    setIsBulkProcessing,
     showBulkDeleteDialog,
     setShowBulkDeleteDialog,
     allCategories,
@@ -541,7 +541,7 @@ function TransactionsPageContent() {
   const handleBulkCategoryAssignment = async (categoryId: string | number) => {
     if (selectedTransactionIds.size === 0) return;
 
-    setBulkCategorizing(true);
+    setIsBulkProcessing(true);
     const selectedIds = Array.from(selectedTransactionIds);
     let successCount = 0;
     let errorCount = 0;
@@ -598,7 +598,7 @@ function TransactionsPageContent() {
       console.error('Bulk category assignment failed:', err);
       toast.error(tToasts('error.generic'));
     } finally {
-      setBulkCategorizing(false);
+      setIsBulkProcessing(false);
     }
   };
 
@@ -620,7 +620,7 @@ function TransactionsPageContent() {
   };
 
   const confirmBulkDelete = async () => {
-    setBulkCategorizing(true);
+    setIsBulkProcessing(true);
     const selectedIds = Array.from(selectedTransactionIds);
     let successCount = 0;
     let errorCount = 0;
@@ -653,7 +653,7 @@ function TransactionsPageContent() {
       console.error('Bulk delete failed:', err);
       toast.error(tToasts('error.generic'));
     } finally {
-      setBulkCategorizing(false);
+      setIsBulkProcessing(false);
       setShowBulkDeleteDialog(false);
     }
   };
@@ -1147,7 +1147,7 @@ function TransactionsPageContent() {
                 </div>
 
                 <div className="flex-1 flex items-center justify-end gap-2">
-                  {bulkCategorizing ? (
+                  {isBulkProcessing ? (
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
                       <span className={cn(isMobile ? 'text-xs' : 'text-sm', 'text-slate-600')}>
@@ -1165,7 +1165,7 @@ function TransactionsPageContent() {
                             onChange={handleBulkCategoryAssignment}
                             categories={allCategories}
                             placeholder={isMobile ? `${tCommon('category')}...` : t('chooseCategory')}
-                            disabled={bulkCategorizing}
+                            disabled={isBulkProcessing}
                             disableQuickPicks={true}
                           />
                         </div>

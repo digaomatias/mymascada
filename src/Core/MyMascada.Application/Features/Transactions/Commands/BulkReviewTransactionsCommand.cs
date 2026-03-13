@@ -52,23 +52,19 @@ public class BulkReviewTransactionsCommandHandler : IRequestHandler<BulkReviewTr
                 };
             }
 
+            // Batch fetch all transactions in one query (fixes N+1)
+            var transactions = (await _transactionRepository.GetTransactionsByIdsAsync(
+                request.TransactionIds, request.UserId, cancellationToken)).ToList();
+
             var reviewedCount = 0;
-            var totalProcessed = 0;
+            var now = DateTime.UtcNow;
 
-            foreach (var transactionId in request.TransactionIds)
+            foreach (var transaction in transactions)
             {
-                var transaction = await _transactionRepository.GetByIdAsync(transactionId, request.UserId);
-                if (transaction == null)
-                {
-                    continue;
-                }
-
                 if (!await _accountAccessService.CanModifyAccountAsync(request.UserId, transaction.AccountId))
                 {
                     continue;
                 }
-
-                totalProcessed++;
 
                 if (transaction.IsReviewed)
                 {
@@ -76,17 +72,19 @@ public class BulkReviewTransactionsCommandHandler : IRequestHandler<BulkReviewTr
                 }
 
                 transaction.IsReviewed = true;
-                transaction.UpdatedAt = DateTime.UtcNow;
-                await _transactionRepository.UpdateAsync(transaction);
+                transaction.UpdatedAt = now;
                 reviewedCount++;
             }
 
-            _logger.LogInformation("Successfully reviewed {ReviewedCount} of {TotalProcessed} transactions", reviewedCount, totalProcessed);
+            // Save all changes in one batch
+            await _transactionRepository.SaveChangesAsync();
+
+            _logger.LogInformation("Successfully reviewed {ReviewedCount} of {TotalProcessed} transactions", reviewedCount, transactions.Count);
 
             return new BulkReviewTransactionsResult
             {
                 ReviewedCount = reviewedCount,
-                TotalProcessed = totalProcessed,
+                TotalProcessed = transactions.Count,
                 Success = true,
                 Message = $"Successfully reviewed {reviewedCount} transaction{(reviewedCount != 1 ? "s" : "")}"
             };
