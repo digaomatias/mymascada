@@ -484,6 +484,7 @@ function TransactionsPageContent() {
   // Handle sync for mobile overflow menu
   const handleMobileSync = async () => {
     setIsSyncing(true);
+    toast.info(tToasts('syncStarting'));
     try {
       const results = await apiClient.syncAllConnections();
       const successful = results.filter((r: { isSuccess: boolean }) => r.isSuccess);

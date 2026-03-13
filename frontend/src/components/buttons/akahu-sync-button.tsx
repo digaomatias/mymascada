@@ -37,6 +37,7 @@ export function AkahuSyncButton({
 
   const handleSync = async () => {
     setIsSyncing(true);
+    toast.info(t('syncStarting'));
     try {
       const results: BankSyncResult[] = await apiClient.syncAllConnections();
 

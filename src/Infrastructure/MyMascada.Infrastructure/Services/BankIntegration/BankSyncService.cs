@@ -178,7 +178,8 @@ public class BankSyncService : IBankSyncService
             // 11. Auto-import clean transactions, skip duplicates
             var imported = 0;
             var skipped = 0;
-            var importedTransactionIds = new List<int>();
+            var createdTransactions = new List<Transaction>();
+            var mappingIdsToRecord = new List<int>();
 
             foreach (var item in analysisResult.ReviewItems)
             {
@@ -198,23 +199,19 @@ public class BankSyncService : IBankSyncService
                     continue;
                 }
 
-                // Create the transaction
+                // Add the transaction to the change tracker (no DB save yet)
                 try
                 {
-                    var transaction = await CreateTransactionFromCandidateAsync(
+                    var (transaction, mappingId) = await CreateTransactionFromCandidateAsync(
                         item.ImportCandidate,
                         connection.AccountId,
                         connection.UserId,
                         categoryMappings,
                         ct);
 
-                    importedTransactionIds.Add(transaction.Id);
-
-                    _logger.LogDebug(
-                        "Imported transaction {TransactionId}: {Description} ({Amount:C})",
-                        transaction.Id,
-                        transaction.Description,
-                        transaction.Amount);
+                    createdTransactions.Add(transaction);
+                    if (mappingId.HasValue)
+                        mappingIdsToRecord.Add(mappingId.Value);
 
                     imported++;
                 }
@@ -225,6 +222,28 @@ public class BankSyncService : IBankSyncService
                         item.ImportCandidate.Description,
                         item.ImportCandidate.Amount);
                     // Continue processing other transactions
+                }
+            }
+
+            // Batch save all transactions in a single DB round-trip
+            if (createdTransactions.Count > 0)
+            {
+                await _transactionRepository.SaveChangesAsync();
+            }
+
+            // IDs are now populated after SaveChanges
+            var importedTransactionIds = createdTransactions.Select(t => t.Id).ToList();
+
+            // Record mapping applications (after batch save to avoid premature flushes)
+            foreach (var mappingId in mappingIdsToRecord)
+            {
+                try
+                {
+                    await _categoryMappingService.RecordMappingApplicationAsync(mappingId, ct);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to record mapping application for mapping {MappingId}", mappingId);
                 }
             }
 
@@ -369,10 +388,11 @@ public class BankSyncService : IBankSyncService
     }
 
     /// <summary>
-    /// Creates a transaction entity from an import candidate.
-    /// Applies bank category mapping if available.
+    /// Creates a transaction entity from an import candidate and adds it to the change tracker.
+    /// Does NOT call SaveChangesAsync — caller is responsible for batching saves.
+    /// Returns the transaction and an optional mapping ID that should be recorded after save.
     /// </summary>
-    private async Task<Transaction> CreateTransactionFromCandidateAsync(
+    private async Task<(Transaction Transaction, int? MappingIdToRecord)> CreateTransactionFromCandidateAsync(
         ImportCandidateDto candidate,
         int accountId,
         Guid userId,
@@ -382,6 +402,7 @@ public class BankSyncService : IBankSyncService
         // Determine category and review status from bank category mapping
         int? categoryId = null;
         bool isReviewed = false;
+        int? mappingIdToRecord = null;
 
         if (!string.IsNullOrEmpty(candidate.Category) &&
             categoryMappings.TryGetValue(candidate.Category, out var mappingResult) &&
@@ -404,17 +425,10 @@ public class BankSyncService : IBankSyncService
                     categoryId, mappingResult.CategoryName, candidate.Description, mappingResult.ConfidenceScore);
             }
 
-            // Record the mapping application for stats tracking
+            // Collect mapping ID for batch recording after save
             if (mappingResult.Mapping != null)
             {
-                try
-                {
-                    await _categoryMappingService.RecordMappingApplicationAsync(mappingResult.Mapping.Id, ct);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to record mapping application for mapping {MappingId}", mappingResult.Mapping.Id);
-                }
+                mappingIdToRecord = mappingResult.Mapping.Id;
             }
         }
 
@@ -437,10 +451,10 @@ public class BankSyncService : IBankSyncService
             UpdatedAt = DateTime.UtcNow
         };
 
-        var savedTransaction = await _transactionRepository.AddAsync(transaction);
-        await _transactionRepository.SaveChangesAsync();
+        // Add to change tracker only — SaveChangesAsync is called by the caller in batch
+        var addedTransaction = await _transactionRepository.AddAsync(transaction);
 
-        return savedTransaction;
+        return (addedTransaction, mappingIdToRecord);
     }
 
     /// <summary>
