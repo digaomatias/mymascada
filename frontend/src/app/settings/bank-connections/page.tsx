@@ -14,7 +14,8 @@ import { toast } from 'sonner';
 import {
   BuildingLibraryIcon,
   PlusIcon,
-  InformationCircleIcon
+  InformationCircleIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import { BackButton } from '@/components/ui/back-button';
 import { useTranslations } from 'next-intl';
@@ -33,6 +34,7 @@ export default function BankConnectionsPage() {
   const [showSetupDialog, setShowSetupDialog] = useState(false);
   const [credentialsError, setCredentialsError] = useState<string | undefined>(undefined);
   const [isInitiatingConnection, setIsInitiatingConnection] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -168,6 +170,8 @@ export default function BankConnectionsPage() {
   };
 
   const handleSyncAll = async () => {
+    setIsSyncing(true);
+    toast.info(t('toasts.syncStarting'));
     try {
       const results = await apiClient.syncAllConnections();
       const successful = results.filter(r => r.isSuccess).length;
@@ -178,10 +182,12 @@ export default function BankConnectionsPage() {
       } else {
         toast.warning(t('toasts.syncPartial', { successful, total: results.length }));
       }
-      loadConnections();
+      await loadConnections();
     } catch (error) {
       console.error('Failed to sync all:', error);
       toast.error(t('toasts.syncAllFailed'));
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -225,9 +231,11 @@ export default function BankConnectionsPage() {
                 <Button
                   variant="outline"
                   onClick={handleSyncAll}
+                  disabled={isSyncing}
                   className="flex items-center gap-2"
                 >
-                  {t('syncAll')}
+                  <ArrowPathIcon className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                  {isSyncing ? t('syncing') : t('syncAll')}
                 </Button>
               )}
 
