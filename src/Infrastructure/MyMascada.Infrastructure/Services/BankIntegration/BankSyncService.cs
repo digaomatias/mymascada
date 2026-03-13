@@ -226,6 +226,11 @@ public class BankSyncService : IBankSyncService
             // Batch save all transactions in a single DB round-trip
             if (createdTransactions.Count > 0)
             {
+                _logger.LogDebug(
+                    "Saving {Count} created transactions for connection {ConnectionId}",
+                    createdTransactions.Count,
+                    bankConnectionId);
+
                 await _transactionRepository.SaveChangesAsync();
             }
 
