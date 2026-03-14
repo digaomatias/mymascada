@@ -36,27 +36,33 @@ public class BankSyncJobService : IBankSyncJobService
 
     public BankSyncJobAcceptedDto EnqueueConnectionSync(Guid userId, int connectionId)
     {
-        var jobId = _backgroundJobClient.Enqueue<BankSyncJobService>(
-            service => service.ProcessConnectionSyncJobAsync(connectionId, userId, null));
+        var trackingId = Guid.NewGuid().ToString("N");
+        var accepted = _tracker.Register(trackingId, userId, "connection", new[] { connectionId });
+
+        _backgroundJobClient.Enqueue<BankSyncJobService>(
+            service => service.ProcessConnectionSyncJobAsync(trackingId, connectionId, userId, null));
 
         _logger.LogInformation(
-            "Enqueued bank sync job {JobId} for connection {ConnectionId} and user {UserId}",
-            jobId, connectionId, userId);
+            "Enqueued bank sync job {TrackingId} for connection {ConnectionId} and user {UserId}",
+            trackingId, connectionId, userId);
 
-        return _tracker.Register(jobId, userId, "connection", new[] { connectionId });
+        return accepted;
     }
 
     public BankSyncJobAcceptedDto EnqueueAllConnectionsSync(Guid userId, IReadOnlyCollection<int> connectionIds)
     {
         var normalizedConnectionIds = connectionIds.Distinct().ToArray();
-        var jobId = _backgroundJobClient.Enqueue<BankSyncJobService>(
-            service => service.ProcessAllConnectionsSyncJobAsync(userId, normalizedConnectionIds, null));
+        var trackingId = Guid.NewGuid().ToString("N");
+        var accepted = _tracker.Register(trackingId, userId, "all", normalizedConnectionIds);
+
+        _backgroundJobClient.Enqueue<BankSyncJobService>(
+            service => service.ProcessAllConnectionsSyncJobAsync(trackingId, userId, normalizedConnectionIds, null));
 
         _logger.LogInformation(
-            "Enqueued bank sync-all job {JobId} for {ConnectionCount} connections and user {UserId}",
-            jobId, normalizedConnectionIds.Length, userId);
+            "Enqueued bank sync-all job {TrackingId} for {ConnectionCount} connections and user {UserId}",
+            trackingId, normalizedConnectionIds.Length, userId);
 
-        return _tracker.Register(jobId, userId, "all", normalizedConnectionIds);
+        return accepted;
     }
 
     public BankSyncJobStatusDto GetStatus(string jobId, Guid userId)
@@ -66,12 +72,12 @@ public class BankSyncJobService : IBankSyncJobService
 
     [AutomaticRetry(Attempts = 0)]
     public async Task ProcessConnectionSyncJobAsync(
+        string trackingId,
         int connectionId,
         Guid userId,
         PerformContext? performContext = null)
     {
-        var jobId = GetJobId(performContext);
-        _tracker.MarkRunning(jobId);
+        _tracker.MarkRunning(trackingId);
 
         try
         {
@@ -83,25 +89,25 @@ public class BankSyncJobService : IBankSyncJobService
                     new TransactionsCreatedEvent(result.ImportedTransactionIds, userId));
             }
 
-            _tracker.RecordConnectionResult(jobId, result);
-            _tracker.MarkCompleted(jobId, result.IsSuccess ? BankSyncJobTerminalStatus.Succeeded : BankSyncJobTerminalStatus.Failed);
+            _tracker.RecordConnectionResult(trackingId, result);
+            _tracker.MarkCompleted(trackingId, result.IsSuccess ? BankSyncJobTerminalStatus.Succeeded : BankSyncJobTerminalStatus.Failed);
         }
         catch (Exception ex)
         {
-            _tracker.MarkFailed(jobId, ex.Message);
-            _logger.LogError(ex, "Background bank sync job {JobId} failed for connection {ConnectionId}", jobId, connectionId);
+            _tracker.MarkFailed(trackingId, "The sync failed. Please try again.");
+            _logger.LogError(ex, "Background bank sync job {TrackingId} failed for connection {ConnectionId}", trackingId, connectionId);
             throw;
         }
     }
 
     [AutomaticRetry(Attempts = 0)]
     public async Task ProcessAllConnectionsSyncJobAsync(
+        string trackingId,
         Guid userId,
         IReadOnlyCollection<int> connectionIds,
         PerformContext? performContext = null)
     {
-        var jobId = GetJobId(performContext);
-        _tracker.MarkRunning(jobId);
+        _tracker.MarkRunning(trackingId);
 
         var hadErrors = false;
 
@@ -117,7 +123,7 @@ public class BankSyncJobService : IBankSyncJobService
                         new TransactionsCreatedEvent(result.ImportedTransactionIds, userId));
                 }
 
-                _tracker.RecordConnectionResult(jobId, result);
+                _tracker.RecordConnectionResult(trackingId, result);
 
                 if (!result.IsSuccess)
                 {
@@ -127,23 +133,18 @@ public class BankSyncJobService : IBankSyncJobService
             catch (Exception ex)
             {
                 hadErrors = true;
-                _tracker.RecordUnhandledConnectionFailure(jobId, connectionId, ex.Message);
+                _tracker.RecordUnhandledConnectionFailure(trackingId, connectionId, "The sync failed for this connection.");
                 _logger.LogError(
                     ex,
-                    "Background sync-all job {JobId} failed while processing connection {ConnectionId}",
-                    jobId,
+                    "Background sync-all job {TrackingId} failed while processing connection {ConnectionId}",
+                    trackingId,
                     connectionId);
             }
         }
 
         _tracker.MarkCompleted(
-            jobId,
+            trackingId,
             hadErrors ? BankSyncJobTerminalStatus.CompletedWithErrors : BankSyncJobTerminalStatus.Succeeded);
-    }
-
-    private static string GetJobId(PerformContext? performContext)
-    {
-        return performContext?.BackgroundJob?.Id ?? string.Empty;
     }
 }
 

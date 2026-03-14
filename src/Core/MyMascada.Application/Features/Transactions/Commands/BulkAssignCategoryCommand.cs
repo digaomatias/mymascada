@@ -31,7 +31,7 @@ public class BulkAssignCategoryCommandHandler : IRequestHandler<BulkAssignCatego
     {
         var errors = new List<string>();
 
-        if (request.TransactionIds.Count == 0)
+        if (request.TransactionIds == null || request.TransactionIds.Count == 0)
         {
             return new BulkAssignCategoryResponse
             {

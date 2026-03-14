@@ -329,7 +329,8 @@ public class TransactionsController : ControllerBase
         }
         catch (UnauthorizedAccessException ex)
         {
-            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+            _logger.LogWarning(ex, "Unauthorized bulk category assignment attempt for user {UserId}", _currentUserService.GetUserId());
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to update one or more selected transactions." });
         }
     }
 

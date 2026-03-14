@@ -85,10 +85,10 @@ public class BulkDeleteTransactionsCommandHandler : IRequestHandler<BulkDeleteTr
                     transaction.Notes = newNotes;
                 }
 
-                totalDeleted++;
             }
 
             await _transactionRepository.SaveChangesAsync();
+            totalDeleted = transactions.Count();
         }
         catch (Exception ex)
         {

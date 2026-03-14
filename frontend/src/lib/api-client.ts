@@ -1616,8 +1616,8 @@ class ApiClient {
     });
   }
 
-  async getSyncJobStatus(jobId: string): Promise<BankSyncJobStatus> {
-    return this.request(`/api/BankConnections/sync-jobs/${jobId}`);
+  async getSyncJobStatus(jobId: string, requestOptions: RequestInit = {}): Promise<BankSyncJobStatus> {
+    return this.request(`/api/BankConnections/sync-jobs/${jobId}`, requestOptions);
   }
 
   async waitForSyncJob(
@@ -1633,7 +1633,7 @@ class ApiClient {
         throw new DOMException('Aborted', 'AbortError');
       }
 
-      const status = await this.getSyncJobStatus(jobId);
+      const status = await this.getSyncJobStatus(jobId, { signal: options.signal });
       if (status.status === 'succeeded' || status.status === 'failed' || status.status === 'completed_with_errors') {
         return status;
       }
@@ -1642,8 +1642,25 @@ class ApiClient {
         throw new Error('Timed out waiting for sync job to finish');
       }
 
-      await new Promise((resolve) => setTimeout(resolve, intervalMs));
+      await this.waitWithAbort(intervalMs, options.signal);
     }
+  }
+
+  private waitWithAbort(ms: number, signal?: AbortSignal): Promise<void> {
+    if (signal?.aborted) {
+      return Promise.reject(new DOMException('Aborted', 'AbortError'));
+    }
+    return new Promise((resolve, reject) => {
+      const timer = globalThis.setTimeout(() => {
+        signal?.removeEventListener('abort', onAbort);
+        resolve();
+      }, ms);
+      const onAbort = () => {
+        globalThis.clearTimeout(timer);
+        reject(new DOMException('Aborted', 'AbortError'));
+      };
+      signal?.addEventListener('abort', onAbort, { once: true });
+    });
   }
 
   async getSyncHistory(connectionId: number, limit?: number): Promise<BankSyncLog[]> {

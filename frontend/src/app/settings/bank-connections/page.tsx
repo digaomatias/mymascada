@@ -43,6 +43,7 @@ export default function BankConnectionsPage() {
   const [activeSyncJobs, setActiveSyncJobs] = useState<Record<string, BankSyncJobStatus>>({});
   const pollTimersRef = useRef<Record<string, number>>({});
   const pollSyncJobRef = useRef<((jobId: string) => Promise<void>) | undefined>(undefined);
+  const pollAbortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -204,7 +205,7 @@ export default function BankConnectionsPage() {
           successful: successfulConnections,
           total: status.transactionsImported
         }));
-      } else if (status.status === 'completed_with_errors') {
+      } else if (status.status === 'completed_with_errors' && successfulConnections > 0) {
         toast.warning(t('toasts.syncPartial', {
           successful: successfulConnections,
           total: status.totalConnections
@@ -224,7 +225,11 @@ export default function BankConnectionsPage() {
 
   const pollSyncJob = useCallback(async (jobId: string) => {
     try {
-      const status = await apiClient.getSyncJobStatus(jobId);
+      pollAbortRef.current = new AbortController();
+      const status = await apiClient.getSyncJobStatus(jobId, { signal: pollAbortRef.current.signal });
+
+      if (pollAbortRef.current?.signal.aborted) return;
+
       setActiveSyncJobs((current) => ({
         ...current,
         [jobId]: status,
@@ -237,6 +242,7 @@ export default function BankConnectionsPage() {
 
       await handleTerminalJob(status);
     } catch (error) {
+      if ((error as Error).name === 'AbortError') return;
       console.error('Failed to poll sync job:', error);
       toast.error(t('toasts.syncAllFailed'));
       removeActiveJob(jobId);
@@ -269,6 +275,8 @@ export default function BankConnectionsPage() {
   }, [schedulePoll]);
 
   const handleSync = async (connectionId: number) => {
+    // Prevent duplicate sync if already in progress for this connection
+    if (syncingConnectionIds.has(connectionId)) return;
     const accepted = await apiClient.syncBankConnection(connectionId);
     trackAcceptedJob(accepted);
     toast.info(t('toasts.syncStarting'));
@@ -279,6 +287,7 @@ export default function BankConnectionsPage() {
   };
 
   const handleSyncAll = async () => {
+    if (isSyncing) return;
     toast.info(t('toasts.syncStarting'));
 
     try {
@@ -296,6 +305,7 @@ export default function BankConnectionsPage() {
         return;
       }
 
+      pollAbortRef.current?.abort();
       Object.values(pollTimersRef.current).forEach((timerId) => window.clearTimeout(timerId));
       pollTimersRef.current = {};
     };

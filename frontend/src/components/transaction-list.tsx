@@ -411,7 +411,7 @@ export function TransactionList({
       transactionsAbortControllerRef.current?.abort();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, deferredSearchTerm, transferFilter, effectiveCategoryId, effectiveAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter]);
+  }, [currentPage, deferredSearchTerm, transferFilter, effectiveCategoryId, effectiveAccountId, reviewFilter, dateFilter, startDate, endDate, typeFilter, reconciliationFilter]);
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
