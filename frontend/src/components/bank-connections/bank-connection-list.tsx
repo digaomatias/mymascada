@@ -5,12 +5,15 @@ import { BankConnectionCard } from './bank-connection-card';
 import { BuildingLibraryIcon } from '@heroicons/react/24/outline';
 import { useTranslations } from 'next-intl';
 
+const EMPTY_SYNCING_IDS = new Set<number>();
+
 interface BankConnectionListProps {
   connections: BankConnection[];
   onSync: (connectionId: number) => Promise<void>;
   onDisconnect: (connectionId: number) => Promise<void>;
   onRefresh: () => void;
   isLoading?: boolean;
+  syncingConnectionIds?: Set<number>;
 }
 
 export function BankConnectionList({
@@ -18,7 +21,8 @@ export function BankConnectionList({
   onSync,
   onDisconnect,
   onRefresh,
-  isLoading = false
+  isLoading = false,
+  syncingConnectionIds = EMPTY_SYNCING_IDS
 }: BankConnectionListProps) {
   const t = useTranslations('bankConnections');
   if (isLoading) {
@@ -65,6 +69,7 @@ export function BankConnectionList({
           onSync={onSync}
           onDisconnect={onDisconnect}
           onRefresh={onRefresh}
+          isSyncing={syncingConnectionIds.has(connection.id)}
         />
       ))}
     </div>

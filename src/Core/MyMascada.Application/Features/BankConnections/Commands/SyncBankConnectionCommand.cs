@@ -1,8 +1,6 @@
 using MediatR;
 using MyMascada.Application.Common.Interfaces;
-using MyMascada.Application.Events;
 using MyMascada.Application.Features.BankConnections.DTOs;
-using MyMascada.Domain.Enums;
 
 namespace MyMascada.Application.Features.BankConnections.Commands;
 
@@ -12,34 +10,31 @@ namespace MyMascada.Application.Features.BankConnections.Commands;
 public record SyncBankConnectionCommand(
     Guid UserId,
     int BankConnectionId
-) : IRequest<BankSyncResultDto>;
+) : IRequest<BankSyncJobAcceptedDto>;
 
 /// <summary>
-/// Handler for syncing a single bank connection.
+/// Handler for enqueuing a single bank connection sync.
 /// </summary>
-public class SyncBankConnectionCommandHandler : IRequestHandler<SyncBankConnectionCommand, BankSyncResultDto>
+public class SyncBankConnectionCommandHandler : IRequestHandler<SyncBankConnectionCommand, BankSyncJobAcceptedDto>
 {
     private readonly IBankConnectionRepository _bankConnectionRepository;
-    private readonly IBankSyncService _bankSyncService;
-    private readonly IMediator _mediator;
+    private readonly IBankSyncJobService _bankSyncJobService;
     private readonly IApplicationLogger<SyncBankConnectionCommandHandler> _logger;
 
     public SyncBankConnectionCommandHandler(
         IBankConnectionRepository bankConnectionRepository,
-        IBankSyncService bankSyncService,
-        IMediator mediator,
+        IBankSyncJobService bankSyncJobService,
         IApplicationLogger<SyncBankConnectionCommandHandler> logger)
     {
         _bankConnectionRepository = bankConnectionRepository ?? throw new ArgumentNullException(nameof(bankConnectionRepository));
-        _bankSyncService = bankSyncService ?? throw new ArgumentNullException(nameof(bankSyncService));
-        _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+        _bankSyncJobService = bankSyncJobService ?? throw new ArgumentNullException(nameof(bankSyncJobService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<BankSyncResultDto> Handle(SyncBankConnectionCommand request, CancellationToken cancellationToken)
+    public async Task<BankSyncJobAcceptedDto> Handle(SyncBankConnectionCommand request, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
-            "Triggering manual sync for bank connection {ConnectionId} by user {UserId}",
+            "Queueing manual sync for bank connection {ConnectionId} by user {UserId}",
             request.BankConnectionId, request.UserId);
 
         // 1. Verify the connection exists and belongs to the user
@@ -66,45 +61,18 @@ public class SyncBankConnectionCommandHandler : IRequestHandler<SyncBankConnecti
             _logger.LogWarning(
                 "Bank connection {ConnectionId} is not active",
                 request.BankConnectionId);
-            return new BankSyncResultDto
-            {
-                BankConnectionId = request.BankConnectionId,
-                IsSuccess = false,
-                ErrorMessage = "Bank connection is not active. Please reconnect.",
-                TransactionsImported = 0,
-                TransactionsSkipped = 0
-            };
+            throw new InvalidOperationException("Bank connection is not active. Please reconnect.");
         }
 
-        // 3. Perform the sync
-        var result = await _bankSyncService.SyncAccountAsync(
-            request.BankConnectionId,
-            BankSyncType.Manual,
-            cancellationToken);
+        var accepted = _bankSyncJobService.EnqueueConnectionSync(
+            request.UserId,
+            request.BankConnectionId);
 
         _logger.LogInformation(
-            "Completed sync for bank connection {ConnectionId}: Success={IsSuccess}, Imported={Imported}, Skipped={Skipped}",
-            request.BankConnectionId, result.IsSuccess, result.TransactionsImported, result.TransactionsSkipped);
+            "Queued sync job {JobId} for bank connection {ConnectionId}",
+            accepted.JobId,
+            request.BankConnectionId);
 
-        // Publish TransactionsCreatedEvent to trigger description cleaning and categorization
-        if (result.IsSuccess && result.ImportedTransactionIds.Any())
-        {
-            await _mediator.Publish(
-                new TransactionsCreatedEvent(result.ImportedTransactionIds, request.UserId),
-                cancellationToken);
-
-            _logger.LogInformation(
-                "Published TransactionsCreatedEvent for {TransactionCount} imported transactions from bank sync",
-                result.ImportedTransactionIds.Count);
-        }
-
-        return new BankSyncResultDto
-        {
-            BankConnectionId = result.BankConnectionId,
-            IsSuccess = result.IsSuccess,
-            ErrorMessage = result.ErrorMessage,
-            TransactionsImported = result.TransactionsImported,
-            TransactionsSkipped = result.TransactionsSkipped
-        };
+        return accepted;
     }
 }

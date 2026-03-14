@@ -31,6 +31,8 @@ public static class BankProviderServiceExtensions
         services.AddScoped<IBankProviderModeResolver, BankProviderModeResolver>();
         services.AddScoped<IBankProviderFactory, BankProviderFactory>();
         services.AddScoped<IBankSyncService, BankSyncService>();
+        services.AddScoped<IBankSyncJobService, BankSyncJobService>();
+        services.AddSingleton<InMemoryBankSyncJobTracker>();
 
         // Repositories for bank integration
         services.AddScoped<IBankConnectionRepository, BankConnectionRepository>();

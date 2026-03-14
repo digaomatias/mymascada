@@ -74,6 +74,15 @@ public class BulkReviewTransactionsRequest
 }
 
 /// <summary>
+/// Request to bulk assign a category to multiple transactions.
+/// </summary>
+public class BulkAssignCategoryRequest
+{
+    public List<int> TransactionIds { get; set; } = new();
+    public int CategoryId { get; set; }
+}
+
+/// <summary>
 /// Response after bulk deleting transactions
 /// </summary>
 public class BulkDeleteTransactionsResponse
@@ -81,5 +90,16 @@ public class BulkDeleteTransactionsResponse
     public bool Success { get; set; }
     public string Message { get; set; } = string.Empty;
     public int TransactionsDeleted { get; set; }
+    public List<string> Errors { get; set; } = new();
+}
+
+/// <summary>
+/// Response after bulk assigning categories.
+/// </summary>
+public class BulkAssignCategoryResponse
+{
+    public bool Success { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public int TransactionsUpdated { get; set; }
     public List<string> Errors { get; set; } = new();
 }

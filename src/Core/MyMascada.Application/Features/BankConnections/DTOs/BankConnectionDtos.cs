@@ -155,6 +155,103 @@ public record BankSyncResultDto
 }
 
 /// <summary>
+/// DTO returned when a bank sync job is accepted for background processing.
+/// </summary>
+public record BankSyncJobAcceptedDto
+{
+    /// <summary>
+    /// Background job identifier.
+    /// </summary>
+    public string JobId { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Sync scope: single connection or all connections.
+    /// </summary>
+    public string Scope { get; init; } = string.Empty;
+
+    /// <summary>
+    /// UTC timestamp when the job was enqueued.
+    /// </summary>
+    public DateTime StartedAt { get; init; }
+
+    /// <summary>
+    /// IDs of bank connections covered by the job.
+    /// </summary>
+    public IReadOnlyList<int> ConnectionIds { get; init; } = Array.Empty<int>();
+
+    /// <summary>
+    /// Total number of connections the job will process.
+    /// </summary>
+    public int TotalConnections { get; init; }
+}
+
+/// <summary>
+/// DTO describing the current state of a bank sync background job.
+/// </summary>
+public record BankSyncJobStatusDto
+{
+    /// <summary>
+    /// Background job identifier.
+    /// </summary>
+    public string JobId { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Sync scope: single connection or all connections.
+    /// </summary>
+    public string Scope { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Job lifecycle status.
+    /// </summary>
+    public string Status { get; init; } = "queued";
+
+    /// <summary>
+    /// UTC timestamp when the job was created.
+    /// </summary>
+    public DateTime StartedAt { get; init; }
+
+    /// <summary>
+    /// UTC timestamp when the job finished, if applicable.
+    /// </summary>
+    public DateTime? CompletedAt { get; init; }
+
+    /// <summary>
+    /// IDs of bank connections covered by the job.
+    /// </summary>
+    public IReadOnlyList<int> ConnectionIds { get; init; } = Array.Empty<int>();
+
+    /// <summary>
+    /// Total number of connections the job will process.
+    /// </summary>
+    public int TotalConnections { get; init; }
+
+    /// <summary>
+    /// Number of connections completed so far.
+    /// </summary>
+    public int CompletedConnections { get; init; }
+
+    /// <summary>
+    /// Number of connections that have failed so far.
+    /// </summary>
+    public int FailedConnections { get; init; }
+
+    /// <summary>
+    /// Total transactions imported across completed syncs.
+    /// </summary>
+    public int TransactionsImported { get; init; }
+
+    /// <summary>
+    /// Total transactions skipped across completed syncs.
+    /// </summary>
+    public int TransactionsSkipped { get; init; }
+
+    /// <summary>
+    /// Aggregated error message for failed or partially failed jobs.
+    /// </summary>
+    public string? ErrorMessage { get; init; }
+}
+
+/// <summary>
 /// DTO for Akahu account information returned during OAuth flow.
 /// </summary>
 public record AkahuAccountDto

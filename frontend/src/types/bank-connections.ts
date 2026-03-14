@@ -38,6 +38,29 @@ export interface BankSyncResult {
   transactionsSkipped: number;
 }
 
+export interface BankSyncJobAccepted {
+  jobId: string;
+  scope: string;
+  startedAt: string;
+  connectionIds: number[];
+  totalConnections: number;
+}
+
+export interface BankSyncJobStatus {
+  jobId: string;
+  scope: string;
+  status: 'queued' | 'processing' | 'succeeded' | 'failed' | 'completed_with_errors';
+  startedAt: string;
+  completedAt?: string;
+  connectionIds: number[];
+  totalConnections: number;
+  completedConnections: number;
+  failedConnections: number;
+  transactionsImported: number;
+  transactionsSkipped: number;
+  errorMessage?: string;
+}
+
 export interface BankProviderAuthModeInfo {
   modeId: string;
   displayName: string;

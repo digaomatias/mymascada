@@ -26,8 +26,7 @@ public class TransactionQueryService : ITransactionQueryService
         var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(parameters.UserId);
 
         var query = _context.Transactions
-            .Include(t => t.Account)
-            .Include(t => t.Category)
+            .AsNoTracking()
             .Where(t => accessibleIds.Contains(t.AccountId) && !t.Account.IsDeleted);
 
         // Apply filters using the same logic as TransactionRepository

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState, useMemo } from 'react';
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import React from 'react';
 import { useTranslations } from 'next-intl';
 import { useTransactionFilters } from '@/hooks/use-transaction-filters';
@@ -132,6 +132,9 @@ export function TransactionList({
 
   const effectiveAccountId = accountId?.toString() || selectedAccountId;
   const effectiveCategoryId = categoryId?.toString() || selectedCategoryId;
+  const deferredSearchTerm = useDeferredValue(searchTerm);
+  const transactionsAbortControllerRef = useRef<AbortController | null>(null);
+  const transactionsRequestIdRef = useRef(0);
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -230,47 +233,61 @@ export function TransactionList({
       transactionDate: string;
       description: string;
     }> = [];
-
-    const processedTransfers = new Set<string>();
+    const placeholders: Array<Transaction | { transferId: string }> = [];
+    const transferGroups = new Map<string, Transaction[]>();
 
     for (const transaction of transactions) {
-      if (transaction.transferId && !processedTransfers.has(transaction.transferId)) {
-        // Find related transaction
-        const relatedTransaction = transactions.find(t => 
-          t.transferId === transaction.transferId && t.id !== transaction.id
-        );
-
-        if (relatedTransaction) {
-          // Create a transfer group
-          const sourceTransaction = transaction.isTransferSource ? transaction : relatedTransaction;
-          const destTransaction = transaction.isTransferSource ? relatedTransaction : transaction;
-          
-          grouped.push({
-            id: `transfer-${transaction.transferId}`,
-            isTransferGroup: true,
-            transferId: transaction.transferId,
-            transactions: [sourceTransaction, destTransaction],
-            amount: Math.abs(sourceTransaction.amount),
-            transactionDate: sourceTransaction.transactionDate,
-            description: `Transfer: ${sourceTransaction.accountName} → ${destTransaction.accountName}`
-          });
-          
-          processedTransfers.add(transaction.transferId);
-        } else {
-          // Single transaction (transfer partner not in current page)
-          grouped.push(transaction);
-        }
-      } else if (!transaction.transferId) {
-        // Regular transaction
-        grouped.push(transaction);
+      if (!transaction.transferId) {
+        placeholders.push(transaction);
+        continue;
       }
-      // Skip if already processed as part of a transfer group
+
+      const existingGroup = transferGroups.get(transaction.transferId);
+      if (existingGroup) {
+        existingGroup.push(transaction);
+        continue;
+      }
+
+      transferGroups.set(transaction.transferId, [transaction]);
+      placeholders.push({ transferId: transaction.transferId });
+    }
+
+    for (const entry of placeholders) {
+      if ('id' in entry) {
+        grouped.push(entry);
+        continue;
+      }
+
+      const groupTransactions = transferGroups.get(entry.transferId) ?? [];
+      if (groupTransactions.length !== 2) {
+        grouped.push(...groupTransactions);
+        continue;
+      }
+
+      const [firstTransaction, secondTransaction] = groupTransactions;
+      const sourceTransaction = firstTransaction.isTransferSource ? firstTransaction : secondTransaction;
+      const destinationTransaction = firstTransaction.isTransferSource ? secondTransaction : firstTransaction;
+
+      grouped.push({
+        id: `transfer-${entry.transferId}`,
+        isTransferGroup: true,
+        transferId: entry.transferId,
+        transactions: [sourceTransaction, destinationTransaction],
+        amount: Math.abs(sourceTransaction.amount),
+        transactionDate: sourceTransaction.transactionDate,
+        description: `Transfer: ${sourceTransaction.accountName} → ${destinationTransaction.accountName}`
+      });
     }
 
     return grouped;
   }, [transactions]);
 
   const fetchTransactions = useCallback(async (page = 1, search = '', filter = transferFilter, categoryId_param = effectiveCategoryId, accountId_param = effectiveAccountId, reviewStatus = reviewFilter, currentDateFilter = dateFilter, currentTypeFilter = typeFilter, currentReconciliationFilter = reconciliationFilter) => {
+    const requestId = ++transactionsRequestIdRef.current;
+    transactionsAbortControllerRef.current?.abort();
+    const abortController = new AbortController();
+    transactionsAbortControllerRef.current = abortController;
+
     try {
       setLoading(true);
       const params: {
@@ -337,7 +354,9 @@ export function TransactionList({
         params.isReconciled = false;
       }
 
-      const response = await apiClient.getTransactions(params) as {
+      const response = await apiClient.getTransactions(params, {
+        signal: abortController.signal
+      }) as {
         transactions: Transaction[];
         totalPages: number;
         totalCount: number;
@@ -352,7 +371,11 @@ export function TransactionList({
           unreviewedTransactionCount: number;
         };
       };
-      
+
+      if (abortController.signal.aborted || requestId !== transactionsRequestIdRef.current) {
+        return;
+      }
+
       setTransactions(response?.transactions || []);
       setTotalPages(response?.totalPages || 1);
       setTotalCount(response?.totalCount || 0);
@@ -363,17 +386,32 @@ export function TransactionList({
         onFilteredBalanceChange(response.summary.totalBalance);
       }
     } catch (error) {
+      if ((error as Error).name === 'AbortError') {
+        return;
+      }
+
       console.error('Failed to fetch transactions:', error);
-      setTransactions([]);
+      if (requestId === transactionsRequestIdRef.current) {
+        setTransactions([]);
+      }
     } finally {
-      setLoading(false);
+      if (requestId === transactionsRequestIdRef.current) {
+        setLoading(false);
+      }
+
+      if (transactionsAbortControllerRef.current === abortController) {
+        transactionsAbortControllerRef.current = null;
+      }
     }
   }, [transferFilter, effectiveCategoryId, effectiveAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter, getDateRangeFromFilter, compact, accountId, onFilteredBalanceChange, setCurrentPage]);
 
   useEffect(() => {
-    fetchTransactions(currentPage, searchTerm, transferFilter, effectiveCategoryId, effectiveAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter);
+    void fetchTransactions(currentPage, deferredSearchTerm, transferFilter, effectiveCategoryId, effectiveAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter);
+    return () => {
+      transactionsAbortControllerRef.current?.abort();
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, searchTerm, transferFilter, effectiveCategoryId, effectiveAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter]);
+  }, [currentPage, deferredSearchTerm, transferFilter, effectiveCategoryId, effectiveAccountId, reviewFilter, dateFilter, startDate, endDate, typeFilter, reconciliationFilter]);
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
@@ -440,55 +478,20 @@ export function TransactionList({
 
     setIsBulkProcessing(true);
     const selectedIds = Array.from(selectedTransactionIds);
-    let successCount = 0;
-    let errorCount = 0;
 
     try {
-      // Update each transaction individually
-      for (const transactionId of selectedIds) {
-        try {
-          const transaction = transactions.find(t => t.id === transactionId);
-          if (transaction) {
-            // Map status to enum values
-            const statusMap: Record<string, number> = {
-              'pending': 1,
-              'cleared': 2, 
-              'reconciled': 3,
-              'cancelled': 4
-            };
-            
-            // Convert status to number
-            let statusValue = 2; // Default to Cleared
-            if (typeof transaction.status === 'string') {
-              statusValue = statusMap[(transaction.status as string).toLowerCase()] || 2;
-            } else if (typeof transaction.status === 'number') {
-              statusValue = transaction.status;
-            }
+      const result = await apiClient.bulkAssignTransactionCategory(selectedIds, Number(categoryId));
 
-            await apiClient.updateTransaction(transactionId, {
-              ...transaction,
-              categoryId: Number(categoryId),
-              transactionDate: transaction.transactionDate,
-              status: statusValue,
-            });
-            successCount++;
-          }
-        } catch (err) {
-          console.error(`Failed to update transaction ${transactionId}:`, err);
-          errorCount++;
-        }
+      if (result.transactionsUpdated > 0) {
+        toast.success(t('categoryAssigned', { count: result.transactionsUpdated }));
       }
 
-      // Show results
-      if (successCount > 0) {
-        toast.success(t('categoryAssigned', { count: successCount }));
-      }
-      if (errorCount > 0) {
-        toast.error(t('failedToUpdate', { count: errorCount }));
+      if (result.errors.length > 0) {
+        toast.error(t('failedToUpdate', { count: result.errors.length }));
       }
 
       // Refresh transactions and clear selection
-      await fetchTransactions(currentPage, searchTerm, transferFilter, effectiveCategoryId, effectiveAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter);
+      await fetchTransactions(currentPage, deferredSearchTerm, transferFilter, effectiveCategoryId, effectiveAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter);
       setSelectedTransactionIds(new Set());
       setIsSelectionMode(false);
 
@@ -550,7 +553,7 @@ export function TransactionList({
 
       if (result.success) {
         toast.success(t('transactionsReviewed', { count: result.reviewedCount }));
-        await fetchTransactions(currentPage, searchTerm, transferFilter, effectiveCategoryId, effectiveAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter);
+        await fetchTransactions(currentPage, deferredSearchTerm, transferFilter, effectiveCategoryId, effectiveAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter);
         setSelectedTransactionIds(new Set());
         setIsSelectionMode(false);
 
@@ -575,31 +578,20 @@ export function TransactionList({
   const confirmBulkDelete = async () => {
     setIsBulkProcessing(true);
     const selectedIds = Array.from(selectedTransactionIds);
-    let successCount = 0;
-    let errorCount = 0;
 
     try {
-      // Delete each transaction individually
-      for (const transactionId of selectedIds) {
-        try {
-          await apiClient.deleteTransaction(transactionId);
-          successCount++;
-        } catch (err) {
-          console.error(`Failed to delete transaction ${transactionId}:`, err);
-          errorCount++;
-        }
+      const result = await apiClient.bulkDeleteTransactions(selectedIds);
+
+      if (result.transactionsDeleted > 0) {
+        toast.success(t('deleted', { count: result.transactionsDeleted }));
       }
 
-      // Show results
-      if (successCount > 0) {
-        toast.success(t('deleted', { count: successCount }));
-      }
-      if (errorCount > 0) {
-        toast.error(t('failedToDelete', { count: errorCount }));
+      if (result.errors.length > 0) {
+        toast.error(t('failedToDelete', { count: result.errors.length }));
       }
 
       // Refresh transactions and clear selection
-      await fetchTransactions(currentPage, searchTerm, transferFilter, effectiveCategoryId, effectiveAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter);
+      await fetchTransactions(currentPage, deferredSearchTerm, transferFilter, effectiveCategoryId, effectiveAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter);
       setSelectedTransactionIds(new Set());
       setIsSelectionMode(false);
 
@@ -619,7 +611,7 @@ export function TransactionList({
     if (deleteConfirm.transactionId) {
       try {
         await apiClient.deleteTransaction(deleteConfirm.transactionId);
-        await fetchTransactions(currentPage, searchTerm, transferFilter, effectiveCategoryId, effectiveAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter);
+        await fetchTransactions(currentPage, deferredSearchTerm, transferFilter, effectiveCategoryId, effectiveAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter);
         toast.success(tToasts('transactionDeleted'));
         
         if (onTransactionUpdate) {
@@ -1305,7 +1297,7 @@ export function TransactionList({
                                     transactionId={transaction.id}
                                     isReviewed={transaction.isReviewed}
                                     onReviewComplete={() => {
-                                      fetchTransactions(currentPage, searchTerm, transferFilter, effectiveCategoryId, effectiveAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter);
+                                      void fetchTransactions(currentPage, deferredSearchTerm, transferFilter, effectiveCategoryId, effectiveAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter);
                                       if (onTransactionUpdate) onTransactionUpdate();
                                     }}
                                   />
@@ -1388,7 +1380,7 @@ export function TransactionList({
                         onSuccess={() => {
                           setCreateTransferForTransaction(null);
                           // Refresh the transaction list
-                          fetchTransactions(currentPage, searchTerm, transferFilter, effectiveCategoryId, effectiveAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter);
+                          void fetchTransactions(currentPage, deferredSearchTerm, transferFilter, effectiveCategoryId, effectiveAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter);
                           onTransactionUpdate?.();
                           toast.success(tToasts('transferCreated'));
                         }}
