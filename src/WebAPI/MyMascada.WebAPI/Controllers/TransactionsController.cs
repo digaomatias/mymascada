@@ -308,6 +308,31 @@ public class TransactionsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost("bulk-assign-category")]
+    public async Task<ActionResult<BulkAssignCategoryResponse>> BulkAssignCategory([FromBody] BulkAssignCategoryRequest request)
+    {
+        var command = new BulkAssignCategoryCommand
+        {
+            UserId = _currentUserService.GetUserId(),
+            TransactionIds = request.TransactionIds,
+            CategoryId = request.CategoryId
+        };
+
+        try
+        {
+            var result = await _mediator.Send(command);
+            return Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+        }
+    }
+
     [HttpGet("description-suggestions")]
     public async Task<ActionResult<IEnumerable<string>>> GetDescriptionSuggestions([FromQuery] string? q = null, [FromQuery] int limit = 10)
     {

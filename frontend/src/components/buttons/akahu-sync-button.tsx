@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import type { BankSyncResult } from '@/types/bank-connections';
 
 interface AkahuSyncButtonProps {
   onSyncComplete?: () => void;
@@ -20,6 +19,13 @@ export function AkahuSyncButton({
   const t = useTranslations('dashboard.akahuSync');
   const [hasAkahuConnection, setHasAkahuConnection] = useState<boolean | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  const syncAbortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    return () => {
+      syncAbortRef.current?.abort();
+    };
+  }, []);
 
   useEffect(() => {
     const checkConnection = async () => {
@@ -36,31 +42,28 @@ export function AkahuSyncButton({
   }, []);
 
   const handleSync = async () => {
+    syncAbortRef.current?.abort();
+    syncAbortRef.current = new AbortController();
+
     setIsSyncing(true);
     toast.info(t('syncStarting'));
     try {
-      const results: BankSyncResult[] = await apiClient.syncAllConnections();
+      const accepted = await apiClient.syncAllConnections();
+      const status = await apiClient.waitForSyncJob(accepted.jobId, { signal: syncAbortRef.current.signal });
+      const successful = status.completedConnections - status.failedConnections;
 
-      const successful = results.filter(r => r.isSuccess);
-      const totalImported = results.reduce((sum, r) => sum + r.transactionsImported, 0);
-
-      if (results.length === 0) {
-        toast.info(t('syncSuccessNoNew'));
-      } else if (successful.length === results.length) {
-        // All syncs succeeded
-        if (totalImported > 0) {
-          toast.success(t('syncSuccess', { imported: totalImported }));
+      if (status.status === 'succeeded') {
+        if (status.transactionsImported > 0) {
+          toast.success(t('syncSuccess', { imported: status.transactionsImported }));
         } else {
           toast.success(t('syncSuccessNoNew'));
         }
-      } else if (successful.length > 0) {
-        // Partial success
+      } else if (status.status === 'completed_with_errors' && successful > 0) {
         toast.warning(t('syncPartial', {
-          successful: successful.length,
-          total: results.length
+          successful,
+          total: status.totalConnections
         }));
       } else {
-        // All failed
         toast.error(t('syncFailed'));
       }
 
@@ -68,6 +71,7 @@ export function AkahuSyncButton({
         onSyncComplete();
       }
     } catch (error) {
+      if ((error as Error).name === 'AbortError') return;
       console.error('Failed to sync bank data:', error);
       toast.error(t('syncFailed'));
     } finally {

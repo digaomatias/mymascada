@@ -27,12 +27,14 @@ public class BankConnectionsController : ControllerBase
     private readonly IMediator _mediator;
     private readonly ICurrentUserService _currentUserService;
     private readonly AkahuOptions _akahuOptions;
+    private readonly ILogger<BankConnectionsController> _logger;
 
-    public BankConnectionsController(IMediator mediator, ICurrentUserService currentUserService, IOptions<AkahuOptions> akahuOptions)
+    public BankConnectionsController(IMediator mediator, ICurrentUserService currentUserService, IOptions<AkahuOptions> akahuOptions, ILogger<BankConnectionsController> logger)
     {
         _mediator = mediator;
         _currentUserService = currentUserService;
         _akahuOptions = akahuOptions.Value;
+        _logger = logger;
     }
 
     /// <summary>
@@ -303,25 +305,31 @@ public class BankConnectionsController : ControllerBase
 
     /// <summary>
     /// Triggers a manual sync for a specific bank connection.
-    /// Fetches new transactions from the bank provider.
+    /// Queues background processing and returns immediately.
     /// </summary>
     /// <param name="id">The bank connection ID to sync</param>
-    /// <returns>Sync result with statistics</returns>
+    /// <returns>Accepted job metadata</returns>
     [HttpPost("{id}/sync")]
-    [ProducesResponseType(typeof(BankSyncResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BankSyncJobAcceptedDto), StatusCodes.Status202Accepted)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<BankSyncResultDto>> SyncBankConnection(int id)
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<BankSyncJobAcceptedDto>> SyncBankConnection(int id)
     {
         try
         {
             var command = new SyncBankConnectionCommand(_currentUserService.GetUserId(), id);
             var result = await _mediator.Send(command);
-            return Ok(result);
+            return Accepted(result);
         }
         catch (ArgumentException)
         {
             return NotFound();
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Sync request rejected for connection {ConnectionId}", id);
+            return BadRequest(new { message = "The requested sync could not be started. Please check your bank connections." });
         }
         catch (UnauthorizedAccessException)
         {
@@ -330,16 +338,45 @@ public class BankConnectionsController : ControllerBase
     }
 
     /// <summary>
-    /// Triggers a manual sync for all active bank connections of the current user.
+    /// Triggers a background sync for all active bank connections of the current user.
     /// </summary>
-    /// <returns>List of sync results for each connection</returns>
+    /// <returns>Accepted job metadata</returns>
     [HttpPost("sync-all")]
-    [ProducesResponseType(typeof(IEnumerable<BankSyncResultDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<BankSyncResultDto>>> SyncAllConnections()
+    [ProducesResponseType(typeof(BankSyncJobAcceptedDto), StatusCodes.Status202Accepted)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<BankSyncJobAcceptedDto>> SyncAllConnections()
     {
-        var command = new SyncAllConnectionsCommand(_currentUserService.GetUserId());
-        var result = await _mediator.Send(command);
-        return Ok(result);
+        try
+        {
+            var command = new SyncAllConnectionsCommand(_currentUserService.GetUserId());
+            var result = await _mediator.Send(command);
+            return Accepted(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Sync-all request rejected");
+            return BadRequest(new { message = "The requested sync could not be started. Please check your bank connections." });
+        }
+    }
+
+    /// <summary>
+    /// Gets the current status of a queued bank sync job.
+    /// </summary>
+    [HttpGet("sync-jobs/{jobId}")]
+    [ProducesResponseType(typeof(BankSyncJobStatusDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<BankSyncJobStatusDto>> GetSyncJobStatus(string jobId)
+    {
+        try
+        {
+            var query = new GetBankSyncJobStatusQuery(_currentUserService.GetUserId(), jobId);
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+        catch (ArgumentException)
+        {
+            return NotFound();
+        }
     }
 
     /// <summary>

@@ -65,11 +65,13 @@ public class BulkDeleteTransactionsCommandHandler : IRequestHandler<BulkDeleteTr
             }
 
             // Delete the found transactions
+            var now = DateTime.UtcNow;
             foreach (var transaction in transactions)
             {
                 // Use soft delete
                 transaction.IsDeleted = true;
-                transaction.UpdatedAt = DateTime.UtcNow;
+                transaction.DeletedAt = now;
+                transaction.UpdatedAt = now;
                 transaction.UpdatedBy = request.UserId.ToString();
                 
                 // Add reason to notes if provided
@@ -82,8 +84,7 @@ public class BulkDeleteTransactionsCommandHandler : IRequestHandler<BulkDeleteTr
                     
                     transaction.Notes = newNotes;
                 }
-                
-                await _transactionRepository.UpdateAsync(transaction);
+
                 totalDeleted++;
             }
 

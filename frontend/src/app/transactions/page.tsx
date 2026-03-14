@@ -2,7 +2,7 @@
 
 import { useFeatures } from '@/contexts/features-context';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useCallback, Suspense } from 'react';
+import { useCallback, useEffect, useRef, useState, Suspense } from 'react';
 import { useAuthGuard } from '@/hooks/use-auth-guard';
 import React from 'react';
 import { AppLayout } from '@/components/app-layout';
@@ -148,6 +148,13 @@ function TransactionsPageContent() {
   const [createTransferForTransaction, setCreateTransferForTransaction] = useState<Transaction | null>(null);
   const [hasAkahuConnection, setHasAkahuConnection] = useState<boolean>(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const syncAbortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    return () => {
+      syncAbortRef.current?.abort();
+    };
+  }, []);
 
   // Helper function to get date range from filter type (UTC normalized)
   const getDateRangeFromFilter = useCallback((filter: typeof dateFilter) => {
@@ -483,23 +490,24 @@ function TransactionsPageContent() {
 
   // Handle sync for mobile overflow menu
   const handleMobileSync = async () => {
+    syncAbortRef.current?.abort();
+    syncAbortRef.current = new AbortController();
+
     setIsSyncing(true);
     toast.info(tToasts('syncStarting'));
     try {
-      const results = await apiClient.syncAllConnections();
-      const successful = results.filter((r: { isSuccess: boolean }) => r.isSuccess);
-      const totalImported = results.reduce((sum: number, r: { transactionsImported: number }) => sum + r.transactionsImported, 0);
+      const accepted = await apiClient.syncAllConnections();
+      const status = await apiClient.waitForSyncJob(accepted.jobId, { signal: syncAbortRef.current.signal });
+      const successful = status.completedConnections - status.failedConnections;
 
-      if (results.length === 0) {
-        toast.success(tToasts('bankSyncSuccess'));
-      } else if (successful.length === results.length) {
-        if (totalImported > 0) {
-          toast.success(tToasts('syncComplete', { count: totalImported }));
+      if (status.status === 'succeeded') {
+        if (status.transactionsImported > 0) {
+          toast.success(tToasts('syncComplete', { count: status.transactionsImported }));
         } else {
           toast.success(tToasts('bankSyncSuccess'));
         }
-      } else if (successful.length > 0) {
-        toast.warning(tToasts('syncPartial', { successful: successful.length, total: results.length }));
+      } else if (status.status === 'completed_with_errors' && successful > 0) {
+        toast.warning(tToasts('syncPartial', { successful, total: status.totalConnections }));
       } else {
         toast.error(tToasts('bankSyncFailed'));
       }
@@ -507,6 +515,7 @@ function TransactionsPageContent() {
       // Refresh transactions after sync
       await fetchTransactions(currentPage, searchTerm, transferFilter, selectedCategoryId, selectedAccountId, reviewFilter, dateFilter, typeFilter, reconciliationFilter, sortBy, sortDirection);
     } catch (error) {
+      if ((error as Error).name === 'AbortError') return;
       console.error('Failed to sync bank data:', error);
       toast.error(tToasts('bankSyncFailed'));
     } finally {

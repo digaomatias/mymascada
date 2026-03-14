@@ -21,31 +21,27 @@ interface BankConnectionCardProps {
   onSync: (connectionId: number) => Promise<void>;
   onDisconnect: (connectionId: number) => Promise<void>;
   onRefresh: () => void;
+  isSyncing?: boolean;
 }
 
 export function BankConnectionCard({
   connection,
   onSync,
   onDisconnect,
-  onRefresh
+  onRefresh,
+  isSyncing = false
 }: BankConnectionCardProps) {
   const t = useTranslations('bankConnections');
   const tCommon = useTranslations('common');
   const tToasts = useTranslations('toasts');
-  const [isSyncing, setIsSyncing] = useState(false);
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
 
   const handleSync = async () => {
-    setIsSyncing(true);
     try {
       await onSync(connection.id);
-      toast.success(tToasts('bankSyncSuccess'));
-      onRefresh();
     } catch (error) {
       console.error('Sync failed:', error);
       toast.error(tToasts('bankSyncFailed'));
-    } finally {
-      setIsSyncing(false);
     }
   };
 

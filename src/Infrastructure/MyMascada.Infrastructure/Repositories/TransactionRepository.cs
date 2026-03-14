@@ -42,6 +42,7 @@ public class TransactionRepository : ITransactionRepository
             return Enumerable.Empty<Transaction>();
 
         return await _context.Transactions
+            .AsNoTracking()
             .Include(t => t.Account)
             .Include(t => t.Category)
             .Where(t => t.AccountId == accountId)
@@ -62,6 +63,7 @@ public class TransactionRepository : ITransactionRepository
     {
         var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
         return await _context.Transactions
+            .AsNoTracking()
             .Include(t => t.Account)
             .Include(t => t.Category)
             .Where(t => t.CategoryId == categoryId &&
@@ -84,7 +86,10 @@ public class TransactionRepository : ITransactionRepository
         var sortedQuery = _queryService.ApplySorting(baseQuery, request.SortBy, request.SortDirection);
         var paginatedQuery = _queryService.ApplyPagination(sortedQuery, request.Page, request.PageSize);
 
-        var transactions = await paginatedQuery.ToListAsync();
+        var transactions = await paginatedQuery
+            .Include(t => t.Account)
+            .Include(t => t.Category)
+            .ToListAsync();
 
         return (transactions, totalCount);
     }
@@ -239,6 +244,7 @@ public class TransactionRepository : ITransactionRepository
     {
         var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
         return await _context.Transactions
+            .AsNoTracking()
             .Include(t => t.Account)
             .Include(t => t.Category)
             .Where(t => accessibleIds.Contains(t.AccountId) && !t.Account.IsDeleted)
@@ -292,6 +298,7 @@ public class TransactionRepository : ITransactionRepository
     {
         var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
         return await _context.Transactions
+            .AsNoTracking()
             .Include(t => t.Account)
             .Include(t => t.Category)
             .Where(t => accessibleIds.Contains(t.AccountId) && !t.Account.IsDeleted)
@@ -308,6 +315,7 @@ public class TransactionRepository : ITransactionRepository
         var inclusiveEndDate = endDate.EndOfDayUtc();
 
         var query = _context.Transactions
+            .AsNoTracking()
             .Include(t => t.Account)
             .Include(t => t.Category)
             .Where(t => t.AccountId == accountId &&
@@ -332,6 +340,7 @@ public class TransactionRepository : ITransactionRepository
         var inclusiveEndDate = endDate.EndOfDayUtc();
 
         return await _context.Transactions
+            .AsNoTracking()
             .Include(t => t.Account)
             .Include(t => t.Category)
             .Where(t => accessibleIds.Contains(t.AccountId) &&
@@ -350,6 +359,7 @@ public class TransactionRepository : ITransactionRepository
         var inclusiveEndDate = endDate.EndOfDayUtc();
 
         return await _context.Transactions
+            .AsNoTracking()
             .Include(t => t.Account)
             .Include(t => t.Category)
             .Where(t => t.AccountId == accountId &&

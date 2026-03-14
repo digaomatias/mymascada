@@ -3,7 +3,8 @@ import {
   BankConnection,
   BankConnectionDetail,
   BankSyncLog,
-  BankSyncResult,
+  BankSyncJobAccepted,
+  BankSyncJobStatus,
   BankProviderInfo,
   AkahuAccount,
   InitiateConnectionResult,
@@ -214,6 +215,10 @@ class ApiClient {
 
       return JSON.parse(text);
     } catch (error) {
+      if ((error as Error).name === 'AbortError') {
+        throw error;
+      }
+
       console.error('API request failed:', error);
       throw error;
     }
@@ -340,7 +345,7 @@ class ApiClient {
     transactionType?: string;
     sortBy?: string;
     sortDirection?: string;
-  }): Promise<unknown> {
+  }, requestOptions: RequestInit = {}): Promise<unknown> {
     const queryParams = new URLSearchParams();
     if (params?.page) queryParams.append('page', params.page.toString());
     if (params?.pageSize) queryParams.append('pageSize', params.pageSize.toString());
@@ -362,7 +367,7 @@ class ApiClient {
     const queryString = queryParams.toString();
     const endpoint = `/api/transactions${queryString ? `?${queryString}` : ''}`;
     
-    return this.request(endpoint);
+    return this.request(endpoint, requestOptions);
   }
 
   async getTransaction(id: number): Promise<unknown> {
@@ -497,6 +502,30 @@ class ApiClient {
     return this.request('/api/transactions/bulk-review', {
       method: 'POST',
       body: JSON.stringify({ transactionIds }),
+    });
+  }
+
+  async bulkAssignTransactionCategory(transactionIds: number[], categoryId: number): Promise<{
+    success: boolean;
+    message: string;
+    transactionsUpdated: number;
+    errors: string[];
+  }> {
+    return this.request('/api/transactions/bulk-assign-category', {
+      method: 'POST',
+      body: JSON.stringify({ transactionIds, categoryId }),
+    });
+  }
+
+  async bulkDeleteTransactions(transactionIds: number[], reason?: string): Promise<{
+    success: boolean;
+    message: string;
+    transactionsDeleted: number;
+    errors: string[];
+  }> {
+    return this.request('/api/transactions/bulk-delete', {
+      method: 'POST',
+      body: JSON.stringify({ transactionIds, reason }),
     });
   }
 
@@ -1575,16 +1604,46 @@ class ApiClient {
     });
   }
 
-  async syncBankConnection(id: number): Promise<BankSyncResult> {
+  async syncBankConnection(id: number): Promise<BankSyncJobAccepted> {
     return this.request(`/api/BankConnections/${id}/sync`, {
       method: 'POST',
     });
   }
 
-  async syncAllConnections(): Promise<BankSyncResult[]> {
+  async syncAllConnections(): Promise<BankSyncJobAccepted> {
     return this.request('/api/BankConnections/sync-all', {
       method: 'POST',
     });
+  }
+
+  async getSyncJobStatus(jobId: string): Promise<BankSyncJobStatus> {
+    return this.request(`/api/BankConnections/sync-jobs/${jobId}`);
+  }
+
+  async waitForSyncJob(
+    jobId: string,
+    options: { intervalMs?: number; timeoutMs?: number; signal?: AbortSignal } = {}
+  ): Promise<BankSyncJobStatus> {
+    const intervalMs = options.intervalMs ?? 1500;
+    const timeoutMs = options.timeoutMs ?? 120000;
+    const startedAt = Date.now();
+
+    while (true) {
+      if (options.signal?.aborted) {
+        throw new DOMException('Aborted', 'AbortError');
+      }
+
+      const status = await this.getSyncJobStatus(jobId);
+      if (status.status === 'succeeded' || status.status === 'failed' || status.status === 'completed_with_errors') {
+        return status;
+      }
+
+      if (Date.now() - startedAt > timeoutMs) {
+        throw new Error('Timed out waiting for sync job to finish');
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, intervalMs));
+    }
   }
 
   async getSyncHistory(connectionId: number, limit?: number): Promise<BankSyncLog[]> {

@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/contexts/auth-context';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppLayout } from '@/components/app-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,13 @@ import {
 } from '@heroicons/react/24/outline';
 import { BackButton } from '@/components/ui/back-button';
 import { useTranslations } from 'next-intl';
-import type { BankConnection, BankProviderInfo, AkahuAccount } from '@/types/bank-connections';
+import type {
+  AkahuAccount,
+  BankConnection,
+  BankProviderInfo,
+  BankSyncJobAccepted,
+  BankSyncJobStatus
+} from '@/types/bank-connections';
 
 export default function BankConnectionsPage() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -34,22 +40,15 @@ export default function BankConnectionsPage() {
   const [showSetupDialog, setShowSetupDialog] = useState(false);
   const [credentialsError, setCredentialsError] = useState<string | undefined>(undefined);
   const [isInitiatingConnection, setIsInitiatingConnection] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const syncAllInFlightRef = useRef(false);
+  const [activeSyncJobs, setActiveSyncJobs] = useState<Record<string, BankSyncJobStatus>>({});
+  const pollTimersRef = useRef<Record<string, number>>({});
+  const pollSyncJobRef = useRef<((jobId: string) => Promise<void>) | undefined>(undefined);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/auth/login');
     }
   }, [isAuthenticated, isLoading, router]);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadConnections();
-      loadProviders();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated]);
 
   // Check for OAuth callback data on mount (Production App mode only)
   useEffect(() => {
@@ -71,7 +70,7 @@ export default function BankConnectionsPage() {
     }
   }, []);
 
-  const loadConnections = async () => {
+  const loadConnections = useCallback(async () => {
     setLoadingConnections(true);
     try {
       const data = await apiClient.getBankConnections();
@@ -82,16 +81,23 @@ export default function BankConnectionsPage() {
     } finally {
       setLoadingConnections(false);
     }
-  };
+  }, [t]);
 
-  const loadProviders = async () => {
+  const loadProviders = useCallback(async () => {
     try {
       const data = await apiClient.getAvailableProviders();
       setProviders(data);
     } catch (error) {
       console.error('Failed to load providers:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      void loadConnections();
+      void loadProviders();
+    }
+  }, [isAuthenticated, loadConnections, loadProviders]);
 
   const handleInitiateConnection = async (providerId: string) => {
     if (providerId !== 'akahu') {
@@ -157,13 +163,115 @@ export default function BankConnectionsPage() {
     }
   };
 
-  const handleSync = async (connectionId: number) => {
-    const result = await apiClient.syncBankConnection(connectionId);
-    if (result.isSuccess) {
-      toast.success(t('toasts.syncSuccess', { count: result.transactionsImported }));
-    } else {
-      throw new Error(result.errorMessage || 'Sync failed');
+  const clearPollTimer = useCallback((jobId: string) => {
+    if (typeof window === 'undefined') {
+      return;
     }
+
+    const timerId = pollTimersRef.current[jobId];
+    if (timerId) {
+      window.clearTimeout(timerId);
+      delete pollTimersRef.current[jobId];
+    }
+  }, []);
+
+  const removeActiveJob = useCallback((jobId: string) => {
+    clearPollTimer(jobId);
+    setActiveSyncJobs((current) => {
+      const next = { ...current };
+      delete next[jobId];
+      return next;
+    });
+  }, [clearPollTimer]);
+
+  const schedulePoll = useCallback((jobId: string, delay = 1500) => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    clearPollTimer(jobId);
+    pollTimersRef.current[jobId] = window.setTimeout(() => {
+      void pollSyncJobRef.current?.(jobId);
+    }, delay);
+  }, [clearPollTimer]);
+
+  const handleTerminalJob = useCallback(async (status: BankSyncJobStatus) => {
+    const successfulConnections = status.completedConnections - status.failedConnections;
+
+    if (status.scope === 'all') {
+      if (status.status === 'succeeded') {
+        toast.success(t('toasts.syncAllSuccess', {
+          successful: successfulConnections,
+          total: status.transactionsImported
+        }));
+      } else if (status.status === 'completed_with_errors') {
+        toast.warning(t('toasts.syncPartial', {
+          successful: successfulConnections,
+          total: status.totalConnections
+        }));
+      } else {
+        toast.error(status.errorMessage || t('toasts.syncAllFailed'));
+      }
+    } else if (status.status === 'succeeded') {
+      toast.success(t('toasts.syncSuccess', { count: status.transactionsImported }));
+    } else {
+      toast.error(status.errorMessage || t('toasts.syncAllFailed'));
+    }
+
+    await loadConnections();
+    removeActiveJob(status.jobId);
+  }, [loadConnections, removeActiveJob, t]);
+
+  const pollSyncJob = useCallback(async (jobId: string) => {
+    try {
+      const status = await apiClient.getSyncJobStatus(jobId);
+      setActiveSyncJobs((current) => ({
+        ...current,
+        [jobId]: status,
+      }));
+
+      if (status.status === 'queued' || status.status === 'processing') {
+        schedulePoll(jobId);
+        return;
+      }
+
+      await handleTerminalJob(status);
+    } catch (error) {
+      console.error('Failed to poll sync job:', error);
+      toast.error(t('toasts.syncAllFailed'));
+      removeActiveJob(jobId);
+    }
+  }, [handleTerminalJob, removeActiveJob, schedulePoll, t]);
+
+  // Keep ref in sync so schedulePoll always calls the latest pollSyncJob
+  pollSyncJobRef.current = pollSyncJob;
+
+  const trackAcceptedJob = useCallback((accepted: BankSyncJobAccepted) => {
+    const queuedStatus: BankSyncJobStatus = {
+      jobId: accepted.jobId,
+      scope: accepted.scope,
+      status: 'queued',
+      startedAt: accepted.startedAt,
+      connectionIds: accepted.connectionIds,
+      totalConnections: accepted.totalConnections,
+      completedConnections: 0,
+      failedConnections: 0,
+      transactionsImported: 0,
+      transactionsSkipped: 0,
+    };
+
+    setActiveSyncJobs((current) => ({
+      ...current,
+      [accepted.jobId]: queuedStatus,
+    }));
+
+    schedulePoll(accepted.jobId, 250);
+  }, [schedulePoll]);
+
+  const handleSync = async (connectionId: number) => {
+    const accepted = await apiClient.syncBankConnection(connectionId);
+    trackAcceptedJob(accepted);
+    toast.info(t('toasts.syncStarting'));
   };
 
   const handleDisconnect = async (connectionId: number) => {
@@ -171,36 +279,46 @@ export default function BankConnectionsPage() {
   };
 
   const handleSyncAll = async () => {
-    if (syncAllInFlightRef.current) {
-      return;
-    }
-
-    syncAllInFlightRef.current = true;
-    setIsSyncing(true);
-
-    // Ensure loading state is painted before potentially heavy sync request starts
-    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-
     toast.info(t('toasts.syncStarting'));
-    try {
-      const results = await apiClient.syncAllConnections();
-      const successful = results.filter(r => r.isSuccess).length;
-      const totalImported = results.reduce((sum, r) => sum + r.transactionsImported, 0);
 
-      if (successful === results.length) {
-        toast.success(t('toasts.syncAllSuccess', { successful, total: totalImported }));
-      } else {
-        toast.warning(t('toasts.syncPartial', { successful, total: results.length }));
-      }
-      await loadConnections();
+    try {
+      const accepted = await apiClient.syncAllConnections();
+      trackAcceptedJob(accepted);
     } catch (error) {
-      console.error('Failed to sync all:', error);
+      console.error('Failed to start sync-all job:', error);
       toast.error(t('toasts.syncAllFailed'));
-    } finally {
-      syncAllInFlightRef.current = false;
-      setIsSyncing(false);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (typeof window === 'undefined') {
+        return;
+      }
+
+      Object.values(pollTimersRef.current).forEach((timerId) => window.clearTimeout(timerId));
+      pollTimersRef.current = {};
+    };
+  }, []);
+
+  const activeJobList = useMemo(
+    () => Object.values(activeSyncJobs),
+    [activeSyncJobs]
+  );
+
+  const isSyncing = activeJobList.some(
+    (job) => job.status === 'queued' || job.status === 'processing'
+  );
+
+  const syncingConnectionIds = useMemo(() => {
+    const ids = new Set<number>();
+    activeJobList
+      .filter((job) => job.status === 'queued' || job.status === 'processing')
+      .forEach((job) => {
+        job.connectionIds.forEach((connectionId) => ids.add(connectionId));
+      });
+    return ids;
+  }, [activeJobList]);
 
   if (isLoading) {
     return (
@@ -293,6 +411,7 @@ export default function BankConnectionsPage() {
               onDisconnect={handleDisconnect}
               onRefresh={loadConnections}
               isLoading={loadingConnections}
+              syncingConnectionIds={syncingConnectionIds}
             />
 
             {connections.length === 0 && !loadingConnections && canConnectProvider && (
