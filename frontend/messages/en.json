@@ -114,6 +114,7 @@
     "toggleMenu": "Toggle menu",
     "aiChat": "Ask Alce",
     "goals": "Goals",
+    "wallets": "Wallets",
     "version": "v{version}"
   },
   "auth": {
@@ -484,6 +485,14 @@
         "subtitle": "Personalised insights for your journey",
         "noInsights": "You're doing great! No action items right now.",
         "askAbout": "Ask about my finances"
+      },
+      "wallet": {
+        "title": "Wallet Pots",
+        "noWallets": "No wallets",
+        "noWalletsDesc": "Create virtual pots to track money set aside for specific purposes.",
+        "createWallet": "Create Wallet",
+        "totalAllocated": "Total Allocated",
+        "viewAll": "View all wallets"
       }
     }
   },
@@ -3367,6 +3376,60 @@
       "saving": "Saving...",
       "saveChanges": "Save Changes"
     }
+  },
+  "wallets": {
+    "title": "Wallets",
+    "subtitle": "Manage your virtual pots and allocations",
+    "createWallet": "New Wallet",
+    "createFirstWallet": "Create Your First Wallet",
+    "noWallets": "No wallets yet",
+    "noWalletsDescription": "Create virtual pots to track money allocated for specific purposes.",
+    "loadError": "Failed to load wallets",
+    "createError": "Failed to create wallet",
+    "updateError": "Failed to update wallet",
+    "deleteError": "Failed to delete wallet",
+    "walletCreated": "Wallet created successfully",
+    "walletUpdated": "Wallet updated successfully",
+    "walletDeleted": "Wallet deleted successfully",
+    "deleteWallet": "Delete Wallet",
+    "deleteConfirm": "Are you sure you want to delete \"{name}\"? All allocations will be removed. This action cannot be undone.",
+    "editWallet": "Edit Wallet",
+    "totalAllocated": "Total Allocated",
+    "balance": "Balance",
+    "allocations": "Allocations",
+    "allocationCount": "{count} allocations",
+    "noAllocations": "No allocations yet",
+    "noAllocationsDescription": "Allocate transactions to this wallet to start tracking.",
+    "removeAllocation": "Remove",
+    "removeAllocationConfirm": "Remove this allocation from the wallet?",
+    "allocationRemoved": "Allocation removed",
+    "removeError": "Failed to remove allocation",
+    "targetAmount": "Target Amount",
+    "progress": "Progress",
+    "name": "Name",
+    "namePlaceholder": "e.g., Kids Fund, Travel Savings",
+    "icon": "Icon",
+    "color": "Color",
+    "currency": "Currency",
+    "optional": "optional",
+    "archived": "Archived",
+    "active": "Active",
+    "showArchived": "Show archived",
+    "viewAll": "View all",
+    "backToWallets": "Back to Wallets",
+    "of": "of",
+    "save": "Save",
+    "saving": "Saving...",
+    "creating": "Creating...",
+    "allocateTransaction": "Allocate Transaction",
+    "transactionId": "Transaction ID",
+    "amount": "Amount",
+    "note": "Note",
+    "notePlaceholder": "Optional note",
+    "allocate": "Allocate",
+    "allocating": "Allocating...",
+    "allocationCreated": "Allocation created successfully",
+    "allocationError": "Failed to create allocation"
   },
   "onboarding": {
     "welcome": {

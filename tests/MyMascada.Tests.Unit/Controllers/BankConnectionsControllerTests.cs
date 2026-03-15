@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.BankConnections.Queries;
@@ -26,7 +27,8 @@ public class BankConnectionsControllerTests
         mediator.Send(Arg.Any<ExchangeAkahuCodeQuery>(), Arg.Any<CancellationToken>())
             .Returns(new ExchangeAkahuCodeResult(Array.Empty<MyMascada.Application.Features.BankConnections.DTOs.AkahuAccountDto>(), "access_token"));
 
-        var controller = new BankConnectionsController(mediator, currentUserService, options);
+        var logger = Substitute.For<ILogger<BankConnectionsController>>();
+        var controller = new BankConnectionsController(mediator, currentUserService, options, logger);
 
         var response = await controller.ExchangeAkahuCode(new ExchangeAkahuCodeRequest("code-1", null));
 
@@ -48,7 +50,8 @@ public class BankConnectionsControllerTests
         var currentUserService = Substitute.For<ICurrentUserService>();
         var options = Options.Create(new AkahuOptions());
 
-        var controller = new BankConnectionsController(mediator, currentUserService, options);
+        var logger = Substitute.For<ILogger<BankConnectionsController>>();
+        var controller = new BankConnectionsController(mediator, currentUserService, options, logger);
 
         var response = await controller.ExchangeAkahuCode(new ExchangeAkahuCodeRequest("code-1", null));
 

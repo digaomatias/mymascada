@@ -49,6 +49,9 @@ public static class RepositoryServiceExtensions
         // Goal repositories
         services.AddScoped<IGoalRepository, GoalRepository>();
 
+        // Wallet repositories
+        services.AddScoped<IWalletRepository, WalletRepository>();
+
         // Onboarding repositories
         services.AddScoped<IUserFinancialProfileRepository, UserFinancialProfileRepository>();
 

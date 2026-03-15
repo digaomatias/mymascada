@@ -114,6 +114,7 @@
     "toggleMenu": "Alternar menu",
     "aiChat": "Pergunte ao Alce",
     "goals": "Metas",
+    "wallets": "Carteiras",
     "version": "v{version}"
   },
   "auth": {
@@ -484,6 +485,14 @@
         "subtitle": "Insights personalizados para sua jornada",
         "noInsights": "Tudo certo! Nenhuma ação necessária agora.",
         "askAbout": "Perguntar sobre minhas finanças"
+      },
+      "wallet": {
+        "title": "Potes de Carteira",
+        "noWallets": "Nenhuma carteira",
+        "noWalletsDesc": "Crie potes virtuais para rastrear dinheiro reservado para fins específicos.",
+        "createWallet": "Criar Carteira",
+        "totalAllocated": "Total Alocado",
+        "viewAll": "Ver todas as carteiras"
       }
     }
   },
@@ -3367,6 +3376,60 @@
       "saving": "Salvando...",
       "saveChanges": "Salvar Alterações"
     }
+  },
+  "wallets": {
+    "title": "Carteiras",
+    "subtitle": "Gerencie seus potes virtuais e alocações",
+    "createWallet": "Nova Carteira",
+    "createFirstWallet": "Crie Sua Primeira Carteira",
+    "noWallets": "Nenhuma carteira ainda",
+    "noWalletsDescription": "Crie potes virtuais para rastrear dinheiro alocado para fins específicos.",
+    "loadError": "Falha ao carregar carteiras",
+    "createError": "Falha ao criar carteira",
+    "updateError": "Falha ao atualizar carteira",
+    "deleteError": "Falha ao excluir carteira",
+    "walletCreated": "Carteira criada com sucesso",
+    "walletUpdated": "Carteira atualizada com sucesso",
+    "walletDeleted": "Carteira excluída com sucesso",
+    "deleteWallet": "Excluir Carteira",
+    "deleteConfirm": "Tem certeza que deseja excluir \"{name}\"? Todas as alocações serão removidas. Esta ação não pode ser desfeita.",
+    "editWallet": "Editar Carteira",
+    "totalAllocated": "Total Alocado",
+    "balance": "Saldo",
+    "allocations": "Alocações",
+    "allocationCount": "{count} alocações",
+    "noAllocations": "Nenhuma alocação ainda",
+    "noAllocationsDescription": "Aloque transações a esta carteira para começar a rastrear.",
+    "removeAllocation": "Remover",
+    "removeAllocationConfirm": "Remover esta alocação da carteira?",
+    "allocationRemoved": "Alocação removida",
+    "removeError": "Falha ao remover alocação",
+    "targetAmount": "Valor Alvo",
+    "progress": "Progresso",
+    "name": "Nome",
+    "namePlaceholder": "ex., Fundo dos Filhos, Poupança Viagem",
+    "icon": "Ícone",
+    "color": "Cor",
+    "currency": "Moeda",
+    "optional": "opcional",
+    "archived": "Arquivada",
+    "active": "Ativa",
+    "showArchived": "Mostrar arquivadas",
+    "viewAll": "Ver todas",
+    "backToWallets": "Voltar para Carteiras",
+    "of": "de",
+    "save": "Salvar",
+    "saving": "Salvando...",
+    "creating": "Criando...",
+    "allocateTransaction": "Alocar Transação",
+    "transactionId": "ID da Transação",
+    "amount": "Valor",
+    "note": "Nota",
+    "notePlaceholder": "Nota opcional",
+    "allocate": "Alocar",
+    "allocating": "Alocando...",
+    "allocationCreated": "Alocação criada com sucesso",
+    "allocationError": "Falha ao criar alocação"
   },
   "onboarding": {
     "welcome": {

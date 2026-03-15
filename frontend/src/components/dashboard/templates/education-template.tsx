@@ -6,6 +6,7 @@ import { CashflowChartCard } from '@/components/dashboard/cards/cashflow-chart-c
 import { AttentionItemsCard } from '@/components/dashboard/cards/attention-items-card';
 import { RecentTransactionsCard } from '@/components/dashboard/cards/recent-transactions-card';
 import { BudgetHealthCard } from '@/components/dashboard/cards/budget-health-card';
+import { WalletSummaryCard } from '@/components/dashboard/cards/wallet-summary-card';
 import { GettingStartedSection } from '@/components/dashboard/getting-started-section';
 
 export function EducationTemplate() {
@@ -34,6 +35,11 @@ export function EducationTemplate() {
       {/* Row 4: Budget Health */}
       <section>
         <BudgetHealthCard />
+      </section>
+
+      {/* Row 5: Wallet Pots */}
+      <section>
+        <WalletSummaryCard />
       </section>
     </div>
   );

@@ -171,6 +171,11 @@ public class Transaction : BaseEntity
     public ICollection<TransactionSplit> Splits { get; set; } = new List<TransactionSplit>();
 
     /// <summary>
+    /// Wallet allocations that reference this transaction
+    /// </summary>
+    public ICollection<WalletAllocation> WalletAllocations { get; set; } = new List<WalletAllocation>();
+
+    /// <summary>
     /// Gets the display description, preferring user description over original
     /// </summary>
     public string GetDisplayDescription()

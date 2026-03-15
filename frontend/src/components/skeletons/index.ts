@@ -14,6 +14,7 @@ export { SettingsSkeleton } from './settings-skeleton';
 export { AccountsSkeleton } from './accounts-skeleton';
 export { BudgetsSkeleton } from './budgets-skeleton';
 export { GoalsSkeleton } from './goals-skeleton';
+export { WalletsSkeleton } from './wallets-skeleton';
 export { TransactionsSkeleton } from './transactions-skeleton';
 export { CategoriesSkeleton } from './categories-skeleton';
 export { RulesSkeleton } from './rules-skeleton';

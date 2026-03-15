@@ -45,6 +45,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
     public DbSet<UserTelegramSettings> UserTelegramSettings => Set<UserTelegramSettings>();
     public DbSet<Goal> Goals => Set<Goal>();
+    public DbSet<Wallet> Wallets => Set<Wallet>();
+    public DbSet<WalletAllocation> WalletAllocations => Set<WalletAllocation>();
     public DbSet<UserFinancialProfile> UserFinancialProfiles => Set<UserFinancialProfile>();
     public DbSet<DashboardNudgeDismissal> DashboardNudgeDismissals => Set<DashboardNudgeDismissal>();
     public DbSet<AiTokenUsage> AiTokenUsages => Set<AiTokenUsage>();
@@ -794,6 +796,49 @@ public class ApplicationDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.LinkedAccountId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
+        // Wallet configuration
+        modelBuilder.Entity<Wallet>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Icon).HasMaxLength(10);
+            entity.Property(e => e.Color).HasMaxLength(7);
+            entity.Property(e => e.Currency).IsRequired().HasMaxLength(3);
+            entity.Property(e => e.TargetAmount).HasPrecision(18, 2);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.IsArchived).HasDefaultValue(false);
+
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => new { e.UserId, e.IsArchived });
+
+            entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
+        // WalletAllocation configuration
+        modelBuilder.Entity<WalletAllocation>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Amount).HasPrecision(18, 2);
+            entity.Property(e => e.Note).HasMaxLength(500);
+            entity.Property(e => e.WalletId).IsRequired();
+            entity.Property(e => e.TransactionId).IsRequired();
+
+            entity.HasOne(e => e.Wallet)
+                .WithMany(w => w.Allocations)
+                .HasForeignKey(e => e.WalletId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Transaction)
+                .WithMany(t => t.WalletAllocations)
+                .HasForeignKey(e => e.TransactionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.WalletId);
+            entity.HasIndex(e => e.TransactionId);
 
             entity.HasQueryFilter(e => !e.IsDeleted);
         });
