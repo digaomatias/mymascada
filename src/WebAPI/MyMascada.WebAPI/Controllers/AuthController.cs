@@ -537,17 +537,27 @@ public class AuthController : ControllerBase
             return BadRequest("Google Client ID not configured");
         }
 
-        // Validate returnUrl against allowed frontend origin to prevent open redirects
+        // Validate returnUrl against allowed frontend origin to prevent open redirects.
+        // Also allow registered mobile app deep-link schemes.
+        var allowedMobileSchemes = new[] { "mymascada" };
         var safeReturnUrl = $"{_appOptions.FrontendUrl}/dashboard";
         if (!string.IsNullOrEmpty(returnUrl))
         {
             var frontendUri = new Uri(_appOptions.FrontendUrl);
-            if (Uri.TryCreate(returnUrl, UriKind.Absolute, out var parsedReturn)
-                && string.Equals(parsedReturn.Host, frontendUri.Host, StringComparison.OrdinalIgnoreCase)
-                && string.Equals(parsedReturn.Scheme, frontendUri.Scheme, StringComparison.OrdinalIgnoreCase)
-                && parsedReturn.Port == frontendUri.Port)
+            if (Uri.TryCreate(returnUrl, UriKind.Absolute, out var parsedReturn))
             {
-                safeReturnUrl = returnUrl;
+                var isFrontendOrigin =
+                    string.Equals(parsedReturn.Host, frontendUri.Host, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(parsedReturn.Scheme, frontendUri.Scheme, StringComparison.OrdinalIgnoreCase)
+                    && parsedReturn.Port == frontendUri.Port;
+
+                var isMobileDeepLink = allowedMobileSchemes.Contains(
+                    parsedReturn.Scheme, StringComparer.OrdinalIgnoreCase);
+
+                if (isFrontendOrigin || isMobileDeepLink)
+                {
+                    safeReturnUrl = returnUrl;
+                }
             }
         }
 
@@ -662,15 +672,24 @@ public class AuthController : ControllerBase
                 }
 
                 // Validate the final return URL against the allowed frontend origin
+                // and registered mobile deep-link schemes.
                 var frontendBase = new Uri(_appOptions.FrontendUrl);
                 var redirectTarget = $"{_appOptions.FrontendUrl}/dashboard";
                 if (!string.IsNullOrEmpty(finalReturnUrl)
-                    && Uri.TryCreate(finalReturnUrl, UriKind.Absolute, out var parsedReturn)
-                    && string.Equals(parsedReturn.Host, frontendBase.Host, StringComparison.OrdinalIgnoreCase)
-                    && string.Equals(parsedReturn.Scheme, frontendBase.Scheme, StringComparison.OrdinalIgnoreCase)
-                    && parsedReturn.Port == frontendBase.Port)
+                    && Uri.TryCreate(finalReturnUrl, UriKind.Absolute, out var parsedReturn))
                 {
-                    redirectTarget = finalReturnUrl;
+                    var isFrontendOrigin =
+                        string.Equals(parsedReturn.Host, frontendBase.Host, StringComparison.OrdinalIgnoreCase)
+                        && string.Equals(parsedReturn.Scheme, frontendBase.Scheme, StringComparison.OrdinalIgnoreCase)
+                        && parsedReturn.Port == frontendBase.Port;
+
+                    var isMobileDeepLink = new[] { "mymascada" }.Contains(
+                        parsedReturn.Scheme, StringComparer.OrdinalIgnoreCase);
+
+                    if (isFrontendOrigin || isMobileDeepLink)
+                    {
+                        redirectTarget = finalReturnUrl;
+                    }
                 }
 
                 // Pass a short-lived encrypted auth code instead of the raw JWT
