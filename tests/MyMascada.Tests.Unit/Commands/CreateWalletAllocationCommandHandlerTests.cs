@@ -45,6 +45,7 @@ public class CreateWalletAllocationCommandHandlerTests
         {
             Id = walletId,
             Name = "Savings",
+            Currency = "USD",
             UserId = _userId,
             Allocations = new List<WalletAllocation>()
         };
@@ -56,7 +57,7 @@ public class CreateWalletAllocationCommandHandlerTests
             Description = "Salary deposit",
             TransactionDate = new DateTime(2026, 3, 1, 0, 0, 0, DateTimeKind.Utc),
             Amount = 3000m,
-            Account = new Account { Id = accountId, Name = "Checking" }
+            Account = new Account { Id = accountId, Name = "Checking", Currency = "USD" }
         };
 
         var createdAllocation = new WalletAllocation
@@ -240,6 +241,7 @@ public class CreateWalletAllocationCommandHandlerTests
         {
             Id = walletId,
             Name = "Savings",
+            Currency = "USD",
             UserId = _userId,
             Allocations = new List<WalletAllocation>()
         };
@@ -249,7 +251,8 @@ public class CreateWalletAllocationCommandHandlerTests
             Id = transactionId,
             AccountId = accountId,
             Description = "Some transaction",
-            Amount = 100m
+            Amount = 100m,
+            Account = new Account { Id = accountId, Name = "Checking", Currency = "USD" }
         };
 
         _walletRepository.GetWalletByIdAsync(walletId, _userId, Arg.Any<CancellationToken>())
@@ -269,5 +272,126 @@ public class CreateWalletAllocationCommandHandlerTests
             .WithMessage("Allocation amount cannot be zero.");
 
         await _walletRepository.DidNotReceive().CreateAllocationAsync(Arg.Any<WalletAllocation>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_WhenCurrencyMismatch_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var walletId = 1;
+        var transactionId = 10;
+        var accountId = 5;
+
+        var command = new CreateWalletAllocationCommand
+        {
+            WalletId = walletId,
+            TransactionId = transactionId,
+            Amount = 100m,
+            UserId = _userId
+        };
+
+        var wallet = new Wallet
+        {
+            Id = walletId,
+            Name = "Euro Savings",
+            Currency = "EUR",
+            UserId = _userId,
+            Allocations = new List<WalletAllocation>()
+        };
+
+        var transaction = new Transaction
+        {
+            Id = transactionId,
+            AccountId = accountId,
+            Description = "Salary deposit",
+            Amount = 3000m,
+            Account = new Account { Id = accountId, Name = "USD Checking", Currency = "USD" }
+        };
+
+        _walletRepository.GetWalletByIdAsync(walletId, _userId, Arg.Any<CancellationToken>())
+            .Returns(wallet);
+
+        _transactionRepository.GetByIdAsync(transactionId)
+            .Returns(transaction);
+
+        _accountAccessService.CanAccessAccountAsync(_userId, accountId)
+            .Returns(true);
+
+        // Act
+        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<ArgumentException>()
+            .WithMessage("Currency mismatch: wallet uses EUR but transaction account uses USD.");
+
+        await _walletRepository.DidNotReceive().CreateAllocationAsync(Arg.Any<WalletAllocation>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_WhenCurrencyMatchesCaseInsensitive_ShouldCreateAllocation()
+    {
+        // Arrange
+        var walletId = 1;
+        var transactionId = 10;
+        var accountId = 5;
+
+        var command = new CreateWalletAllocationCommand
+        {
+            WalletId = walletId,
+            TransactionId = transactionId,
+            Amount = 150.00m,
+            Note = "Monthly savings",
+            UserId = _userId
+        };
+
+        var wallet = new Wallet
+        {
+            Id = walletId,
+            Name = "Savings",
+            Currency = "USD",
+            UserId = _userId,
+            Allocations = new List<WalletAllocation>()
+        };
+
+        var transaction = new Transaction
+        {
+            Id = transactionId,
+            AccountId = accountId,
+            Description = "Salary deposit",
+            TransactionDate = new DateTime(2026, 3, 1, 0, 0, 0, DateTimeKind.Utc),
+            Amount = 3000m,
+            Account = new Account { Id = accountId, Name = "Checking", Currency = "usd" }
+        };
+
+        var createdAllocation = new WalletAllocation
+        {
+            Id = 100,
+            WalletId = walletId,
+            TransactionId = transactionId,
+            Amount = 150.00m,
+            Note = "Monthly savings",
+            Transaction = transaction
+        };
+
+        _walletRepository.GetWalletByIdAsync(walletId, _userId, Arg.Any<CancellationToken>())
+            .Returns(wallet);
+
+        _transactionRepository.GetByIdAsync(transactionId)
+            .Returns(transaction);
+
+        _accountAccessService.CanAccessAccountAsync(_userId, accountId)
+            .Returns(true);
+
+        _walletRepository.CreateAllocationAsync(Arg.Any<WalletAllocation>(), Arg.Any<CancellationToken>())
+            .Returns(createdAllocation);
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Id.Should().Be(100);
+
+        await _walletRepository.Received(1).CreateAllocationAsync(Arg.Any<WalletAllocation>(), Arg.Any<CancellationToken>());
     }
 }

@@ -3430,7 +3430,9 @@
     "allocate": "Allocate",
     "allocating": "Allocating...",
     "allocationCreated": "Allocation created successfully",
-    "allocationError": "Failed to create allocation"
+    "allocationError": "Failed to create allocation",
+    "transactionIdPlaceholder": "e.g., 123",
+    "amountPlaceholder": "0.00"
   },
   "onboarding": {
     "welcome": {

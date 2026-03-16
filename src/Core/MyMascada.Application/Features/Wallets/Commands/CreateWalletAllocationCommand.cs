@@ -53,6 +53,17 @@ public class CreateWalletAllocationCommandHandler : IRequestHandler<CreateWallet
             throw new ArgumentException("You don't have permission to access this transaction's account.");
         }
 
+        // Verify the transaction's account currency matches the wallet's currency
+        var account = transaction.Account;
+        if (account == null)
+        {
+            throw new ArgumentException("Transaction account not found.");
+        }
+        if (!string.Equals(wallet.Currency, account.Currency, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException($"Currency mismatch: wallet uses {wallet.Currency} but transaction account uses {account.Currency}.");
+        }
+
         if (request.Amount == 0)
         {
             throw new ArgumentException("Allocation amount cannot be zero.");

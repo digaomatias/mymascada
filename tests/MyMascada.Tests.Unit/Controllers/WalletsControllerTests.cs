@@ -278,10 +278,11 @@ public class WalletsControllerTests
         var dashboard = new WalletDashboardSummaryDto
         {
             TotalBalance = 1500m,
+            BalanceByCurrency = new Dictionary<string, decimal> { { "USD", 1500m } },
             Wallets = new List<WalletSummaryDto>
             {
-                new() { Id = 1, Name = "Vacation", Balance = 500m },
-                new() { Id = 2, Name = "Emergency", Balance = 1000m }
+                new() { Id = 1, Name = "Vacation", Balance = 500m, Currency = "USD" },
+                new() { Id = 2, Name = "Emergency", Balance = 1000m, Currency = "USD" }
             }
         };
 

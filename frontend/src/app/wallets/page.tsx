@@ -269,6 +269,7 @@ export default function WalletsPage() {
                     tabIndex={0}
                     onClick={() => router.push(`/wallets/${wallet.id}`)}
                     onKeyDown={(e) => {
+                      if (e.currentTarget !== e.target) return;
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
                         router.push(`/wallets/${wallet.id}`);
@@ -308,7 +309,7 @@ export default function WalletsPage() {
 
                       {/* Actions */}
                       <div
-                        className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100"
+                        className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <button
@@ -409,6 +410,8 @@ export default function WalletsPage() {
                 <button
                   key={emoji}
                   type="button"
+                  aria-label={emoji}
+                  aria-pressed={formData.icon === emoji}
                   onClick={() => setFormData((prev) => ({ ...prev, icon: emoji }))}
                   className={cn(
                     'flex h-10 w-10 items-center justify-center rounded-xl text-xl transition-all',
@@ -431,6 +434,8 @@ export default function WalletsPage() {
                 <button
                   key={color}
                   type="button"
+                  aria-label={color}
+                  aria-pressed={formData.color === color}
                   onClick={() => setFormData((prev) => ({ ...prev, color }))}
                   className={cn(
                     'h-8 w-8 rounded-full transition-all',
@@ -476,7 +481,7 @@ export default function WalletsPage() {
               step="0.01"
               value={formData.targetAmount}
               onChange={(e) => setFormData((prev) => ({ ...prev, targetAmount: e.target.value }))}
-              placeholder="0.00"
+              placeholder={t('amountPlaceholder')}
               className="mt-1.5"
             />
           </div>

@@ -2478,6 +2478,8 @@ export interface WalletAllocation {
 
 export interface WalletDashboardSummary {
   totalBalance: number;
+  /** Per-currency breakdown of wallet balances (e.g. { "USD": 1500, "EUR": 300 }). */
+  balanceByCurrency: Record<string, number>;
   wallets: WalletSummary[];
 }
 

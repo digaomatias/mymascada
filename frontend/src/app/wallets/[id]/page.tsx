@@ -378,7 +378,7 @@ export default function WalletDetailPage() {
                     min="1"
                     value={allocTransactionId}
                     onChange={(e) => setAllocTransactionId(e.target.value)}
-                    placeholder="e.g., 123"
+                    placeholder={t('transactionIdPlaceholder')}
                     className="mt-1"
                   />
                 </div>
@@ -392,7 +392,7 @@ export default function WalletDetailPage() {
                     step="0.01"
                     value={allocAmount}
                     onChange={(e) => setAllocAmount(e.target.value)}
-                    placeholder="0.00"
+                    placeholder={t('amountPlaceholder')}
                     className="mt-1"
                   />
                 </div>
@@ -536,6 +536,8 @@ export default function WalletDetailPage() {
                   <button
                     key={emoji}
                     type="button"
+                    aria-label={emoji}
+                    aria-pressed={editFormData.icon === emoji}
                     onClick={() => setEditFormData((prev) => ({ ...prev, icon: emoji }))}
                     className={cn(
                       'flex h-10 w-10 items-center justify-center rounded-xl text-xl transition-all',
@@ -558,6 +560,8 @@ export default function WalletDetailPage() {
                   <button
                     key={color}
                     type="button"
+                    aria-label={color}
+                    aria-pressed={editFormData.color === color}
                     onClick={() => setEditFormData((prev) => ({ ...prev, color }))}
                     className={cn(
                       'h-8 w-8 rounded-full transition-all',
@@ -603,7 +607,7 @@ export default function WalletDetailPage() {
                 step="0.01"
                 value={editFormData.targetAmount}
                 onChange={(e) => setEditFormData((prev) => ({ ...prev, targetAmount: e.target.value }))}
-                placeholder="0.00"
+                placeholder={t('amountPlaceholder')}
                 className="mt-1.5"
               />
             </div>

@@ -44,7 +44,17 @@ public class WalletAllocationDto
 
 public class WalletDashboardSummaryDto
 {
+    /// <summary>
+    /// Sum of all wallet balances regardless of currency.
+    /// Note: This is a naive sum across currencies — use BalanceByCurrency for accurate per-currency totals.
+    /// </summary>
     public decimal TotalBalance { get; set; }
+
+    /// <summary>
+    /// Per-currency breakdown of wallet balances (e.g. { "USD": 1500, "EUR": 300 }).
+    /// </summary>
+    public Dictionary<string, decimal> BalanceByCurrency { get; set; } = new();
+
     public List<WalletSummaryDto> Wallets { get; set; } = new();
 }
 

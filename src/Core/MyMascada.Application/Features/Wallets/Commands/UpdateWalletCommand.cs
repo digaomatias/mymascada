@@ -67,6 +67,15 @@ public class UpdateWalletCommandHandler : IRequestHandler<UpdateWalletCommand, W
             var currency = request.Currency.Trim().ToUpperInvariant();
             if (currency.Length != 3 || !currency.All(char.IsLetter))
                 throw new ArgumentException("Currency must be a 3-letter code.");
+
+            if (currency != wallet.Currency)
+            {
+                // Block currency changes on wallets that have existing allocations
+                var allocations = await _walletRepository.GetAllocationsForWalletAsync(request.WalletId, cancellationToken);
+                if (allocations.Any())
+                    throw new ArgumentException("Cannot change currency on a wallet that has existing allocations.");
+            }
+
             wallet.Currency = currency;
         }
 

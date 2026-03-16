@@ -32,9 +32,15 @@ public class GetWalletDashboardQueryHandler : IRequestHandler<GetWalletDashboard
             w, balances, allocationCounts.GetValueOrDefault(w.Id, 0))).ToList();
         var totalBalance = walletSummaries.Sum(w => w.Balance);
 
+        // Group balances by currency for accurate per-currency totals
+        var balanceByCurrency = walletSummaries
+            .GroupBy(w => w.Currency, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key.ToUpperInvariant(), g => g.Sum(w => w.Balance));
+
         return new WalletDashboardSummaryDto
         {
             TotalBalance = totalBalance,
+            BalanceByCurrency = balanceByCurrency,
             Wallets = walletSummaries
         };
     }
