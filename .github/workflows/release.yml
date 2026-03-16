@@ -45,7 +45,7 @@ jobs:
 
       # --- API ---
       - name: Build and push API image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: src/Dockerfile.api
@@ -59,7 +59,7 @@ jobs:
 
       # --- Migration ---
       - name: Build and push Migration image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: src/Dockerfile.migration
@@ -76,7 +76,7 @@ jobs:
       # This works with the Caddy reverse proxy (recommended setup).
       # Self-hosters NOT using Caddy should build from source with --build.
       - name: Build and push Frontend image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./frontend
           file: frontend/Dockerfile
