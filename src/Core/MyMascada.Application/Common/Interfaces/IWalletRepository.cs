@@ -27,4 +27,6 @@ public interface IWalletRepository
     Task<decimal> GetWalletBalanceAsync(int walletId, CancellationToken ct = default);
 
     Task<Dictionary<int, decimal>> GetWalletBalancesForUserAsync(Guid userId, CancellationToken ct = default);
+
+    Task<Dictionary<int, int>> GetWalletAllocationCountsForUserAsync(Guid userId, CancellationToken ct = default);
 }

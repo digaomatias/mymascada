@@ -26,13 +26,13 @@ export function WalletSummaryCard() {
         setWallets(data);
       } catch (err) {
         console.error('Failed to load wallets:', err);
-        setError('Failed to load wallets');
+        setError(t('loadError'));
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, []);
+  }, [t]);
 
   const totalBalance = wallets.reduce((sum, w) => sum + w.balance, 0);
   const displayWallets = wallets.slice(0, 5);
@@ -82,7 +82,7 @@ export function WalletSummaryCard() {
                   href={`/wallets/${wallet.id}`}
                   className="flex items-center gap-3 rounded-xl border border-violet-100/40 bg-violet-50/20 px-3 py-2.5 transition-colors hover:bg-violet-50/50"
                 >
-                  <span className="text-lg">{wallet.icon}</span>
+                  <span className="text-lg">{wallet.icon || '\u{1F4B0}'}</span>
                   <span className="flex-1 truncate text-sm font-medium text-slate-700">
                     {wallet.name}
                   </span>

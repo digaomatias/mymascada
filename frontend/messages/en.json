@@ -492,7 +492,8 @@
         "noWalletsDesc": "Create virtual pots to track money set aside for specific purposes.",
         "createWallet": "Create Wallet",
         "totalAllocated": "Total Allocated",
-        "viewAll": "View all wallets"
+        "viewAll": "View all wallets",
+        "loadError": "Failed to load wallets"
       }
     }
   },
@@ -3397,7 +3398,7 @@
     "totalAllocated": "Total Allocated",
     "balance": "Balance",
     "allocations": "Allocations",
-    "allocationCount": "{count} allocations",
+    "allocationCount": "{count, plural, one {# allocation} other {# allocations}}",
     "noAllocations": "No allocations yet",
     "noAllocationsDescription": "Allocate transactions to this wallet to start tracking.",
     "removeAllocation": "Remove",

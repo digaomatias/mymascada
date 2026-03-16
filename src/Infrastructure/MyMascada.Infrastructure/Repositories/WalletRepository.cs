@@ -17,7 +17,7 @@ public class WalletRepository : IWalletRepository
     public async Task<IEnumerable<Wallet>> GetWalletsForUserAsync(Guid userId, bool includeArchived = false, CancellationToken ct = default)
     {
         var query = _context.Wallets
-            .Include(w => w.Allocations.Where(a => !a.IsDeleted))
+            .AsNoTracking()
             .Where(w => w.UserId == userId && !w.IsDeleted);
 
         if (!includeArchived)
@@ -74,6 +74,17 @@ public class WalletRepository : IWalletRepository
             wallet.IsDeleted = true;
             wallet.DeletedAt = DateTime.UtcNow;
             wallet.UpdatedAt = DateTime.UtcNow;
+
+            // Soft-delete all non-deleted allocations for this wallet
+            var allocations = await _context.WalletAllocations
+                .Where(a => a.WalletId == walletId && !a.IsDeleted)
+                .ToListAsync(ct);
+
+            foreach (var allocation in allocations)
+            {
+                allocation.IsDeleted = true;
+                allocation.DeletedAt = DateTime.UtcNow;
+            }
 
             await _context.SaveChangesAsync(ct);
         }
@@ -155,5 +166,14 @@ public class WalletRepository : IWalletRepository
             .GroupBy(a => a.WalletId)
             .Select(g => new { WalletId = g.Key, Balance = g.Sum(a => a.Amount) })
             .ToDictionaryAsync(x => x.WalletId, x => x.Balance, ct);
+    }
+
+    public async Task<Dictionary<int, int>> GetWalletAllocationCountsForUserAsync(Guid userId, CancellationToken ct = default)
+    {
+        return await _context.WalletAllocations
+            .Where(a => a.Wallet.UserId == userId && !a.IsDeleted && !a.Wallet.IsDeleted)
+            .GroupBy(a => a.WalletId)
+            .Select(g => new { WalletId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.WalletId, x => x.Count, ct);
     }
 }

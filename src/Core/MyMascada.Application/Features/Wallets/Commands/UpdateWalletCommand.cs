@@ -1,6 +1,7 @@
 using MediatR;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Wallets.DTOs;
+using MyMascada.Application.Features.Wallets.Mappers;
 using MyMascada.Domain.Entities;
 
 namespace MyMascada.Application.Features.Wallets.Commands;
@@ -14,6 +15,7 @@ public class UpdateWalletCommand : IRequest<WalletDetailDto>
     public string? Currency { get; set; }
     public bool? IsArchived { get; set; }
     public decimal? TargetAmount { get; set; }
+    public bool ClearTargetAmount { get; set; }
     public Guid UserId { get; set; }
 }
 
@@ -59,9 +61,13 @@ public class UpdateWalletCommandHandler : IRequestHandler<UpdateWalletCommand, W
             wallet.Color = request.Color.Trim();
         }
 
+        // Fix #4: Validate currency is a 3-letter code
         if (request.Currency != null)
         {
-            wallet.Currency = request.Currency.Trim().ToUpperInvariant();
+            var currency = request.Currency.Trim().ToUpperInvariant();
+            if (currency.Length != 3 || !currency.All(char.IsLetter))
+                throw new ArgumentException("Currency must be a 3-letter code.");
+            wallet.Currency = currency;
         }
 
         if (request.IsArchived.HasValue)
@@ -69,7 +75,12 @@ public class UpdateWalletCommandHandler : IRequestHandler<UpdateWalletCommand, W
             wallet.IsArchived = request.IsArchived.Value;
         }
 
-        if (request.TargetAmount.HasValue)
+        // Fix #5: Allow clearing TargetAmount via ClearTargetAmount flag
+        if (request.ClearTargetAmount)
+        {
+            wallet.TargetAmount = null;
+        }
+        else if (request.TargetAmount.HasValue)
         {
             wallet.TargetAmount = request.TargetAmount.Value;
         }
@@ -77,39 +88,6 @@ public class UpdateWalletCommandHandler : IRequestHandler<UpdateWalletCommand, W
         var updatedWallet = await _walletRepository.UpdateWalletAsync(wallet, cancellationToken);
         var balance = await _walletRepository.GetWalletBalanceAsync(updatedWallet.Id, cancellationToken);
 
-        return MapToDetailDto(updatedWallet, balance);
-    }
-
-    private static WalletDetailDto MapToDetailDto(Wallet wallet, decimal balance)
-    {
-        return new WalletDetailDto
-        {
-            Id = wallet.Id,
-            Name = wallet.Name,
-            Icon = wallet.Icon,
-            Color = wallet.Color,
-            Currency = wallet.Currency,
-            IsArchived = wallet.IsArchived,
-            TargetAmount = wallet.TargetAmount,
-            Balance = balance,
-            AllocationCount = wallet.Allocations.Count(a => !a.IsDeleted),
-            CreatedAt = wallet.CreatedAt,
-            UpdatedAt = wallet.UpdatedAt,
-            Allocations = wallet.Allocations
-                .Where(a => !a.IsDeleted)
-                .OrderByDescending(a => a.Transaction.TransactionDate)
-                .ThenByDescending(a => a.CreatedAt)
-                .Select(a => new WalletAllocationDto
-                {
-                    Id = a.Id,
-                    TransactionId = a.TransactionId,
-                    TransactionDescription = a.Transaction.GetDisplayDescription(),
-                    TransactionDate = a.Transaction.TransactionDate,
-                    AccountName = a.Transaction.Account?.Name ?? string.Empty,
-                    Amount = a.Amount,
-                    Note = a.Note,
-                    CreatedAt = a.CreatedAt
-                }).ToList()
-        };
+        return WalletMapper.ToDetailDto(updatedWallet, balance);
     }
 }

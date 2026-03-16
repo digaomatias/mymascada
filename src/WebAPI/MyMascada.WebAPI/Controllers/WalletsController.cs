@@ -174,6 +174,7 @@ public class WalletsController : ControllerBase
                 Currency = request.Currency,
                 IsArchived = request.IsArchived,
                 TargetAmount = request.TargetAmount,
+                ClearTargetAmount = request.ClearTargetAmount,
                 UserId = _currentUserService.GetUserId()
             };
 

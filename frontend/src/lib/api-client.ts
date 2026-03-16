@@ -2450,8 +2450,8 @@ export interface OnboardingStatusResponse {
 export interface WalletSummary {
   id: number;
   name: string;
-  icon: string;
-  color: string;
+  icon?: string;
+  color?: string;
   currency: string;
   isArchived: boolean;
   targetAmount?: number;
@@ -2483,8 +2483,8 @@ export interface WalletDashboardSummary {
 
 export interface CreateWalletRequest {
   name: string;
-  icon: string;
-  color: string;
+  icon?: string;
+  color?: string;
   currency: string;
   targetAmount?: number;
 }
@@ -2496,6 +2496,7 @@ export interface UpdateWalletRequest {
   currency?: string;
   isArchived?: boolean;
   targetAmount?: number | null;
+  clearTargetAmount?: boolean;
 }
 
 export interface CreateAllocationRequest {

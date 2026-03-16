@@ -70,13 +70,15 @@ public class CreateWalletAllocationCommandHandler : IRequestHandler<CreateWallet
 
         var createdAllocation = await _walletRepository.CreateAllocationAsync(allocation, cancellationToken);
 
+        // Fix #2: Use the already-fetched transaction variable instead of relying on
+        // navigation properties from createdAllocation, which may not be eager-loaded.
         return new WalletAllocationDto
         {
             Id = createdAllocation.Id,
             TransactionId = createdAllocation.TransactionId,
-            TransactionDescription = createdAllocation.Transaction.GetDisplayDescription(),
-            TransactionDate = createdAllocation.Transaction.TransactionDate,
-            AccountName = createdAllocation.Transaction.Account?.Name ?? string.Empty,
+            TransactionDescription = transaction.GetDisplayDescription(),
+            TransactionDate = transaction.TransactionDate,
+            AccountName = transaction.Account?.Name ?? string.Empty,
             Amount = createdAllocation.Amount,
             Note = createdAllocation.Note,
             CreatedAt = createdAllocation.CreatedAt

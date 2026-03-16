@@ -46,6 +46,9 @@ const WALLET_COLORS = [
 
 const CURRENCIES = ['NZD', 'USD', 'EUR', 'BRL', 'GBP', 'AUD'];
 
+const DEFAULT_ICON = '\u{1F4B0}';
+const DEFAULT_COLOR = '#7c3aed';
+
 interface WalletFormData {
   name: string;
   icon: string;
@@ -62,9 +65,11 @@ export default function WalletDetailPage() {
   const tCommon = useTranslations('common');
 
   const walletId = Number(params.id);
+  const hasValidWalletId = Number.isInteger(walletId) && walletId > 0;
   const [wallet, setWallet] = useState<WalletDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [allocationToRemove, setAllocationToRemove] = useState<WalletAllocation | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAllocateForm, setShowAllocateForm] = useState(false);
   const [editFormData, setEditFormData] = useState<WalletFormData>({
@@ -95,12 +100,15 @@ export default function WalletDetailPage() {
     }
   }, [walletId, router, t]);
 
+  // Fix #5: Handle invalid route IDs
   useEffect(() => {
     if (!isAuthResolved) return;
-    if (walletId) {
-      loadWallet();
+    if (!hasValidWalletId) {
+      router.push('/wallets');
+      return;
     }
-  }, [isAuthResolved, walletId, loadWallet]);
+    loadWallet();
+  }, [isAuthResolved, hasValidWalletId, loadWallet, router]);
 
   const handleDelete = async () => {
     try {
@@ -116,8 +124,8 @@ export default function WalletDetailPage() {
     if (!wallet) return;
     setEditFormData({
       name: wallet.name,
-      icon: wallet.icon,
-      color: wallet.color,
+      icon: wallet.icon || DEFAULT_ICON,
+      color: wallet.color || DEFAULT_COLOR,
       currency: wallet.currency,
       targetAmount: wallet.targetAmount?.toString() ?? '',
     });
@@ -129,12 +137,16 @@ export default function WalletDetailPage() {
 
     setIsSubmitting(true);
     try {
+      // Fix #10: When target amount is cleared, set clearTargetAmount: true
+      const hadTarget = wallet?.targetAmount != null && wallet.targetAmount > 0;
+      const newTarget = editFormData.targetAmount ? parseFloat(editFormData.targetAmount) : null;
       const update: UpdateWalletRequest = {
         name: editFormData.name.trim(),
         icon: editFormData.icon,
         color: editFormData.color,
         currency: editFormData.currency,
-        targetAmount: editFormData.targetAmount ? parseFloat(editFormData.targetAmount) : null,
+        targetAmount: newTarget,
+        clearTargetAmount: hadTarget && !newTarget ? true : undefined,
       };
       const updated = await apiClient.updateWallet(walletId, update);
       setWallet(updated);
@@ -173,16 +185,17 @@ export default function WalletDetailPage() {
     }
   };
 
-  const handleRemoveAllocation = async (allocation: WalletAllocation) => {
-    const confirmed = window.confirm(t('removeAllocationConfirm'));
-    if (!confirmed) return;
+  const handleRemoveAllocation = async () => {
+    if (!allocationToRemove) return;
 
     try {
-      await apiClient.deleteWalletAllocation(walletId, allocation.id);
+      await apiClient.deleteWalletAllocation(walletId, allocationToRemove.id);
       toast.success(t('allocationRemoved'));
       loadWallet();
     } catch {
       toast.error(t('removeError'));
+    } finally {
+      setAllocationToRemove(null);
     }
   };
 
@@ -210,6 +223,10 @@ export default function WalletDetailPage() {
     return null;
   }
 
+  // Fix #4: Null safety for icon and color
+  const walletIcon = wallet.icon || DEFAULT_ICON;
+  const walletColor = wallet.color || DEFAULT_COLOR;
+
   const progressPercent =
     wallet.targetAmount && wallet.targetAmount > 0
       ? Math.min((wallet.balance / wallet.targetAmount) * 100, 100)
@@ -225,8 +242,8 @@ export default function WalletDetailPage() {
 
             {/* Title row */}
             <div className="flex items-center gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-2xl" style={{ backgroundColor: `${wallet.color}20` }}>
-                {wallet.icon}
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-2xl" style={{ backgroundColor: `${walletColor}20` }}>
+                {walletIcon}
               </span>
               <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900">
                 {wallet.name}
@@ -285,7 +302,7 @@ export default function WalletDetailPage() {
                     className="h-full rounded-full transition-all duration-500"
                     style={{
                       width: `${progressPercent}%`,
-                      backgroundColor: wallet.color,
+                      backgroundColor: walletColor,
                     }}
                   />
                 </div>
@@ -408,7 +425,8 @@ export default function WalletDetailPage() {
                     !allocTransactionId ||
                     !allocAmount ||
                     isNaN(parseInt(allocTransactionId, 10)) ||
-                    isNaN(parseFloat(allocAmount))
+                    isNaN(parseFloat(allocAmount)) ||
+                    parseFloat(allocAmount) === 0
                   }
                 >
                   {isAllocating ? t('allocating') : t('allocate')}
@@ -454,7 +472,7 @@ export default function WalletDetailPage() {
                     {formatCurrency(allocation.amount, wallet.currency)}
                   </p>
                   <button
-                    onClick={() => handleRemoveAllocation(allocation)}
+                    onClick={() => setAllocationToRemove(allocation)}
                     className="shrink-0 rounded-lg px-2.5 py-1 text-xs font-medium text-rose-600 transition-colors hover:bg-rose-50"
                   >
                     {t('removeAllocation')}
@@ -473,6 +491,18 @@ export default function WalletDetailPage() {
           title={t('deleteWallet')}
           description={t('deleteConfirm', { name: wallet.name })}
           confirmText={t('deleteWallet')}
+          cancelText={tCommon('cancel')}
+          variant="danger"
+        />
+
+        {/* Remove Allocation Confirmation Dialog */}
+        <ConfirmationDialog
+          isOpen={allocationToRemove !== null}
+          onClose={() => setAllocationToRemove(null)}
+          onConfirm={handleRemoveAllocation}
+          title={t('removeAllocation')}
+          description={t('removeAllocationConfirm')}
+          confirmText={t('removeAllocation')}
           cancelText={tCommon('cancel')}
           variant="danger"
         />

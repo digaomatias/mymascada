@@ -492,7 +492,8 @@
         "noWalletsDesc": "Crie potes virtuais para rastrear dinheiro reservado para fins específicos.",
         "createWallet": "Criar Carteira",
         "totalAllocated": "Total Alocado",
-        "viewAll": "Ver todas as carteiras"
+        "viewAll": "Ver todas as carteiras",
+        "loadError": "Falha ao carregar carteiras"
       }
     }
   },
@@ -3397,7 +3398,7 @@
     "totalAllocated": "Total Alocado",
     "balance": "Saldo",
     "allocations": "Alocações",
-    "allocationCount": "{count} alocações",
+    "allocationCount": "{count, plural, one {# alocação} other {# alocações}}",
     "noAllocations": "Nenhuma alocação ainda",
     "noAllocationsDescription": "Aloque transações a esta carteira para começar a rastrear.",
     "removeAllocation": "Remover",

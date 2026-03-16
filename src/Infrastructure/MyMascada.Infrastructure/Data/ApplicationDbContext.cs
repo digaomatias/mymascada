@@ -812,8 +812,19 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.UserId).IsRequired();
             entity.Property(e => e.IsArchived).HasDefaultValue(false);
 
+            // Fix #6: Add User FK relationship
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => new { e.UserId, e.IsArchived });
+
+            // Fix #7: Unique constraint for wallet names per user (excluding soft-deleted)
+            entity.HasIndex(e => new { e.UserId, e.Name })
+                .HasFilter("\"IsDeleted\" = false")
+                .IsUnique();
 
             entity.HasQueryFilter(e => !e.IsDeleted);
         });

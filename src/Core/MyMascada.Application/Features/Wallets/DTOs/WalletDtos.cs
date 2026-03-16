@@ -65,6 +65,10 @@ public class UpdateWalletRequest
     public string? Currency { get; set; }
     public bool? IsArchived { get; set; }
     public decimal? TargetAmount { get; set; }
+    /// <summary>
+    /// Set to true to explicitly clear the target amount (set it to null).
+    /// </summary>
+    public bool ClearTargetAmount { get; set; }
 }
 
 public class CreateAllocationRequest

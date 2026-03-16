@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { AppLayout } from '@/components/app-layout';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { BaseModal } from '@/components/modals/base-modal';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import {
   apiClient,
   WalletSummary,
@@ -44,6 +45,9 @@ const WALLET_COLORS = [
 
 const CURRENCIES = ['NZD', 'USD', 'EUR', 'BRL', 'GBP', 'AUD'];
 
+const DEFAULT_ICON = '\u{1F4B0}';
+const DEFAULT_COLOR = '#7c3aed';
+
 interface WalletFormData {
   name: string;
   icon: string;
@@ -54,8 +58,8 @@ interface WalletFormData {
 
 const defaultFormData: WalletFormData = {
   name: '',
-  icon: '\u{1F4B0}',
-  color: '#7c3aed',
+  icon: DEFAULT_ICON,
+  color: DEFAULT_COLOR,
   currency: 'NZD',
   targetAmount: '',
 };
@@ -64,6 +68,7 @@ export default function WalletsPage() {
   const { shouldRender, isAuthResolved } = useAuthGuard();
   const t = useTranslations('wallets');
   const tCommon = useTranslations('common');
+  const router = useRouter();
   const [wallets, setWallets] = useState<WalletSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showArchived, setShowArchived] = useState(false);
@@ -71,6 +76,7 @@ export default function WalletsPage() {
   const [editingWallet, setEditingWallet] = useState<WalletSummary | null>(null);
   const [formData, setFormData] = useState<WalletFormData>(defaultFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [walletToDelete, setWalletToDelete] = useState<WalletSummary | null>(null);
 
   const loadWallets = useCallback(async () => {
     try {
@@ -89,9 +95,15 @@ export default function WalletsPage() {
     loadWallets();
   }, [isAuthResolved, loadWallets]);
 
-  const totalBalance = wallets
+  // Fix #2: Group totals by currency instead of summing across currencies
+  const balanceByCurrency = wallets
     .filter((w) => !w.isArchived)
-    .reduce((sum, w) => sum + w.balance, 0);
+    .reduce((acc, w) => {
+      acc[w.currency] = (acc[w.currency] || 0) + w.balance;
+      return acc;
+    }, {} as Record<string, number>);
+
+  const currencyTotals = Object.entries(balanceByCurrency);
 
   const openCreateModal = () => {
     setEditingWallet(null);
@@ -105,8 +117,8 @@ export default function WalletsPage() {
     setEditingWallet(wallet);
     setFormData({
       name: wallet.name,
-      icon: wallet.icon,
-      color: wallet.color,
+      icon: wallet.icon || DEFAULT_ICON,
+      color: wallet.color || DEFAULT_COLOR,
       currency: wallet.currency,
       targetAmount: wallet.targetAmount?.toString() ?? '',
     });
@@ -119,12 +131,16 @@ export default function WalletsPage() {
     setIsSubmitting(true);
     try {
       if (editingWallet) {
+        // Fix #10: When target amount is cleared, set clearTargetAmount: true
+        const hadTarget = editingWallet.targetAmount != null && editingWallet.targetAmount > 0;
+        const newTarget = formData.targetAmount ? parseFloat(formData.targetAmount) : null;
         const update: UpdateWalletRequest = {
           name: formData.name.trim(),
           icon: formData.icon,
           color: formData.color,
           currency: formData.currency,
-          targetAmount: formData.targetAmount ? parseFloat(formData.targetAmount) : null,
+          targetAmount: newTarget,
+          clearTargetAmount: hadTarget && !newTarget ? true : undefined,
         };
         await apiClient.updateWallet(editingWallet.id, update);
         toast.success(t('walletUpdated'));
@@ -148,18 +164,24 @@ export default function WalletsPage() {
     }
   };
 
-  const handleDelete = async (wallet: WalletSummary, e: React.MouseEvent) => {
+  // Fix #1: Replace window.confirm with ConfirmationDialog
+  const confirmDeleteWallet = (wallet: WalletSummary, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const confirmed = window.confirm(t('deleteConfirm', { name: wallet.name }));
-    if (!confirmed) return;
+    setWalletToDelete(wallet);
+  };
+
+  const handleDelete = async () => {
+    if (!walletToDelete) return;
 
     try {
-      await apiClient.deleteWallet(wallet.id);
+      await apiClient.deleteWallet(walletToDelete.id);
       toast.success(t('walletDeleted'));
       loadWallets();
     } catch {
       toast.error(t('deleteError'));
+    } finally {
+      setWalletToDelete(null);
     }
   };
 
@@ -216,111 +238,147 @@ export default function WalletsPage() {
           </section>
         ) : (
           <>
-            {/* Total allocated hero */}
+            {/* Fix #2: Total allocated hero — per-currency totals */}
             <section className="rounded-[26px] border border-violet-100/60 bg-white/90 p-6 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
                 {t('totalAllocated')}
               </p>
-              <p className="mt-1 font-[var(--font-dash-sans)] text-3xl font-bold tracking-tight text-slate-900">
-                {formatCurrency(totalBalance)}
-              </p>
+              <div className="mt-1 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                {currencyTotals.map(([currency, total]) => (
+                  <p
+                    key={currency}
+                    className="font-[var(--font-dash-sans)] text-3xl font-bold tracking-tight text-slate-900"
+                  >
+                    {formatCurrency(total, currency)}
+                  </p>
+                ))}
+              </div>
             </section>
 
             {/* Wallet cards grid */}
+            {/* Fix #3: Use div instead of Link to avoid nested interactive elements */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {wallets.map((wallet) => (
-                <Link
-                  key={wallet.id}
-                  href={`/wallets/${wallet.id}`}
-                  className={cn(
-                    'group relative cursor-pointer rounded-[26px] border border-violet-100/80 bg-white/90 p-5 shadow-[0_20px_44px_-32px_rgba(76,29,149,0.48)] transition-shadow hover:shadow-[0_24px_52px_-28px_rgba(76,29,149,0.55)]',
-                    wallet.isArchived && 'opacity-60',
-                  )}
-                >
-                  {/* Color accent bar */}
+              {wallets.map((wallet) => {
+                const icon = wallet.icon || DEFAULT_ICON;
+                const color = wallet.color || DEFAULT_COLOR;
+
+                return (
                   <div
-                    className="absolute left-0 top-4 bottom-4 w-1 rounded-r-full"
-                    style={{ backgroundColor: wallet.color }}
-                  />
-
-                  {/* Top row: emoji + name + actions */}
-                  <div className="flex items-start gap-3 pl-2">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-50 text-xl">
-                      {wallet.icon}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="line-clamp-1 text-lg font-semibold tracking-[-0.02em] text-slate-900">
-                          {wallet.name}
-                        </h3>
-                        {wallet.isArchived && (
-                          <span className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
-                            {t('archived')}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-slate-500">
-                        {t('allocationCount', { count: wallet.allocationCount })}
-                      </p>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                      <button
-                        onClick={(e) => openEditModal(wallet, e)}
-                        className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-violet-50 hover:text-violet-600"
-                        title={t('editWallet')}
-                      >
-                        <PencilIcon className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={(e) => handleDelete(wallet, e)}
-                        className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
-                        title={t('deleteWallet')}
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Balance */}
-                  <div className="mt-3 flex items-baseline justify-between pl-2">
-                    <p className="font-[var(--font-dash-mono)] text-xl font-bold text-slate-900">
-                      {formatCurrency(wallet.balance, wallet.currency)}
-                    </p>
-                    {wallet.targetAmount != null && wallet.targetAmount > 0 && (
-                      <p className="text-xs text-slate-500">
-                        {t('of')} {formatCurrency(wallet.targetAmount, wallet.currency)}
-                      </p>
+                    key={wallet.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => router.push(`/wallets/${wallet.id}`)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        router.push(`/wallets/${wallet.id}`);
+                      }
+                    }}
+                    className={cn(
+                      'group relative cursor-pointer rounded-[26px] border border-violet-100/80 bg-white/90 p-5 shadow-[0_20px_44px_-32px_rgba(76,29,149,0.48)] transition-shadow hover:shadow-[0_24px_52px_-28px_rgba(76,29,149,0.55)]',
+                      wallet.isArchived && 'opacity-60',
                     )}
-                  </div>
+                  >
+                    {/* Color accent bar */}
+                    <div
+                      className="absolute left-0 top-4 bottom-4 w-1 rounded-r-full"
+                      style={{ backgroundColor: color }}
+                    />
 
-                  {/* Progress bar (if target) */}
-                  {wallet.targetAmount != null && wallet.targetAmount > 0 && (
-                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200 pl-2">
+                    {/* Top row: emoji + name + actions */}
+                    <div className="flex items-start gap-3 pl-2">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-50 text-xl">
+                        {icon}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="line-clamp-1 text-lg font-semibold tracking-[-0.02em] text-slate-900">
+                            {wallet.name}
+                          </h3>
+                          {wallet.isArchived && (
+                            <span className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
+                              {t('archived')}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-500">
+                          {t('allocationCount', { count: wallet.allocationCount })}
+                        </p>
+                      </div>
+
+                      {/* Actions */}
                       <div
-                        className="h-full rounded-full transition-all"
-                        style={{
-                          width: `${Math.min((wallet.balance / wallet.targetAmount) * 100, 100)}%`,
-                          backgroundColor: wallet.color,
-                        }}
-                      />
+                        className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          onClick={(e) => openEditModal(wallet, e)}
+                          className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-violet-50 hover:text-violet-600"
+                          title={t('editWallet')}
+                        >
+                          <PencilIcon className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={(e) => confirmDeleteWallet(wallet, e)}
+                          className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
+                          title={t('deleteWallet')}
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
-                  )}
 
-                  {/* Footer */}
-                  <div className="mt-3 flex justify-end pl-2">
-                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-violet-600">
-                      {t('viewAll')}
-                      <ArrowRightIcon className="h-3.5 w-3.5" />
-                    </span>
+                    {/* Balance */}
+                    <div className="mt-3 flex items-baseline justify-between pl-2">
+                      <p className="font-[var(--font-dash-mono)] text-xl font-bold text-slate-900">
+                        {formatCurrency(wallet.balance, wallet.currency)}
+                      </p>
+                      {wallet.targetAmount != null && wallet.targetAmount > 0 && (
+                        <p className="text-xs text-slate-500">
+                          {t('of')} {formatCurrency(wallet.targetAmount, wallet.currency)}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Progress bar (if target) */}
+                    {wallet.targetAmount != null && wallet.targetAmount > 0 && (
+                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200 pl-2">
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{
+                            width: `${Math.min((wallet.balance / wallet.targetAmount) * 100, 100)}%`,
+                            backgroundColor: color,
+                          }}
+                        />
+                      </div>
+                    )}
+
+                    {/* Footer */}
+                    <div className="mt-3 flex justify-end pl-2">
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-violet-600">
+                        {t('viewAll')}
+                        <ArrowRightIcon className="h-3.5 w-3.5" />
+                      </span>
+                    </div>
                   </div>
-                </Link>
-              ))}
+                );
+              })}
             </div>
           </>
         )}
       </div>
+
+      {/* Fix #1: Delete Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={walletToDelete !== null}
+        onClose={() => setWalletToDelete(null)}
+        onConfirm={handleDelete}
+        title={t('deleteWallet')}
+        description={walletToDelete ? t('deleteConfirm', { name: walletToDelete.name }) : ''}
+        confirmText={t('deleteWallet')}
+        cancelText={tCommon('cancel')}
+        variant="danger"
+      />
 
       {/* Create/Edit Modal */}
       <BaseModal
