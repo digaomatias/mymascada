@@ -19,6 +19,7 @@ import {
   CreateAllocationRequest,
 } from '@/lib/api-client';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
+import { WALLET_ICONS, WalletIcon, DEFAULT_WALLET_ICON_ID } from '@/lib/wallet-icons';
 import { toast } from 'sonner';
 import {
   PencilIcon,
@@ -30,14 +31,6 @@ import {
 import { BackButton } from '@/components/ui/back-button';
 import { useAuthGuard } from '@/hooks/use-auth-guard';
 
-const WALLET_EMOJIS = [
-  '\u{1F4B0}', '\u{1F4B5}', '\u{1F4B3}', '\u{1F3E6}', '\u{1F3AF}',
-  '\u{1F48E}', '\u{1F437}', '\u{1F3E0}', '\u{1F393}', '\u{2708}\u{FE0F}',
-  '\u{1F3E5}', '\u{1F6CD}\u{FE0F}', '\u{1F381}', '\u{1F37D}\u{FE0F}', '\u{2615}',
-  '\u{1F697}', '\u{1F4F1}', '\u{1F4BB}', '\u{1F3AE}', '\u{1F3CB}\u{FE0F}\u{200D}\u{2642}\u{FE0F}',
-  '\u{1F4DA}', '\u{1F476}', '\u{1F43E}', '\u{1F3B5}', '\u{1F31F}',
-];
-
 const WALLET_COLORS = [
   '#7c3aed', '#2563eb', '#059669', '#d97706',
   '#dc2626', '#db2777', '#0891b2', '#4f46e5',
@@ -46,7 +39,6 @@ const WALLET_COLORS = [
 
 const CURRENCIES = ['NZD', 'USD', 'EUR', 'BRL', 'GBP', 'AUD'];
 
-const DEFAULT_ICON = '\u{1F4B0}';
 const DEFAULT_COLOR = '#7c3aed';
 
 interface WalletFormData {
@@ -74,7 +66,7 @@ export default function WalletDetailPage() {
   const [showAllocateForm, setShowAllocateForm] = useState(false);
   const [editFormData, setEditFormData] = useState<WalletFormData>({
     name: '',
-    icon: '\u{1F4B0}',
+    icon: DEFAULT_WALLET_ICON_ID,
     color: '#7c3aed',
     currency: 'NZD',
     targetAmount: '',
@@ -124,7 +116,7 @@ export default function WalletDetailPage() {
     if (!wallet) return;
     setEditFormData({
       name: wallet.name,
-      icon: wallet.icon || DEFAULT_ICON,
+      icon: wallet.icon || DEFAULT_WALLET_ICON_ID,
       color: wallet.color || DEFAULT_COLOR,
       currency: wallet.currency,
       targetAmount: wallet.targetAmount?.toString() ?? '',
@@ -223,8 +215,7 @@ export default function WalletDetailPage() {
     return null;
   }
 
-  // Fix #4: Null safety for icon and color
-  const walletIcon = wallet.icon || DEFAULT_ICON;
+  // Fix #4: Null safety for color
   const walletColor = wallet.color || DEFAULT_COLOR;
 
   const progressPercent =
@@ -242,8 +233,8 @@ export default function WalletDetailPage() {
 
             {/* Title row */}
             <div className="flex items-center gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-2xl" style={{ backgroundColor: `${walletColor}20` }}>
-                {walletIcon}
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-violet-600" style={{ backgroundColor: `${walletColor}20` }}>
+                <WalletIcon iconId={wallet.icon} className="h-6 w-6" />
               </span>
               <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900">
                 {wallet.name}
@@ -532,21 +523,21 @@ export default function WalletDetailPage() {
             <div>
               <Label className="text-sm font-medium text-slate-700">{t('icon')}</Label>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
-                {WALLET_EMOJIS.map((emoji) => (
+                {WALLET_ICONS.map((item) => (
                   <button
-                    key={emoji}
+                    key={item.id}
                     type="button"
-                    aria-label={emoji}
-                    aria-pressed={editFormData.icon === emoji}
-                    onClick={() => setEditFormData((prev) => ({ ...prev, icon: emoji }))}
+                    aria-label={item.label}
+                    aria-pressed={editFormData.icon === item.id}
+                    onClick={() => setEditFormData((prev) => ({ ...prev, icon: item.id }))}
                     className={cn(
-                      'flex h-10 w-10 items-center justify-center rounded-xl text-xl transition-all',
-                      editFormData.icon === emoji
+                      'flex h-10 w-10 items-center justify-center rounded-xl transition-all',
+                      editFormData.icon === item.id
                         ? 'bg-violet-100 ring-2 ring-violet-500'
                         : 'bg-slate-50 hover:bg-slate-100',
                     )}
                   >
-                    {emoji}
+                    <item.icon className="h-5 w-5 text-gray-700" />
                   </button>
                 ))}
               </div>

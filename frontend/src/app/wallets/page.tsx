@@ -18,6 +18,7 @@ import {
   UpdateWalletRequest,
 } from '@/lib/api-client';
 import { formatCurrency, cn } from '@/lib/utils';
+import { WALLET_ICONS, WalletIcon, DEFAULT_WALLET_ICON_ID } from '@/lib/wallet-icons';
 import { toast } from 'sonner';
 import {
   ArrowRightIcon,
@@ -29,14 +30,6 @@ import {
 import { WalletsSkeleton } from '@/components/skeletons';
 import { useAuthGuard } from '@/hooks/use-auth-guard';
 
-const WALLET_EMOJIS = [
-  '\u{1F4B0}', '\u{1F4B5}', '\u{1F4B3}', '\u{1F3E6}', '\u{1F3AF}',
-  '\u{1F48E}', '\u{1F437}', '\u{1F3E0}', '\u{1F393}', '\u{2708}\u{FE0F}',
-  '\u{1F3E5}', '\u{1F6CD}\u{FE0F}', '\u{1F381}', '\u{1F37D}\u{FE0F}', '\u{2615}',
-  '\u{1F697}', '\u{1F4F1}', '\u{1F4BB}', '\u{1F3AE}', '\u{1F3CB}\u{FE0F}\u{200D}\u{2642}\u{FE0F}',
-  '\u{1F4DA}', '\u{1F476}', '\u{1F43E}', '\u{1F3B5}', '\u{1F31F}',
-];
-
 const WALLET_COLORS = [
   '#7c3aed', '#2563eb', '#059669', '#d97706',
   '#dc2626', '#db2777', '#0891b2', '#4f46e5',
@@ -45,7 +38,6 @@ const WALLET_COLORS = [
 
 const CURRENCIES = ['NZD', 'USD', 'EUR', 'BRL', 'GBP', 'AUD'];
 
-const DEFAULT_ICON = '\u{1F4B0}';
 const DEFAULT_COLOR = '#7c3aed';
 
 interface WalletFormData {
@@ -58,7 +50,7 @@ interface WalletFormData {
 
 const defaultFormData: WalletFormData = {
   name: '',
-  icon: DEFAULT_ICON,
+  icon: DEFAULT_WALLET_ICON_ID,
   color: DEFAULT_COLOR,
   currency: 'NZD',
   targetAmount: '',
@@ -117,7 +109,7 @@ export default function WalletsPage() {
     setEditingWallet(wallet);
     setFormData({
       name: wallet.name,
-      icon: wallet.icon || DEFAULT_ICON,
+      icon: wallet.icon || DEFAULT_WALLET_ICON_ID,
       color: wallet.color || DEFAULT_COLOR,
       currency: wallet.currency,
       targetAmount: wallet.targetAmount?.toString() ?? '',
@@ -259,7 +251,6 @@ export default function WalletsPage() {
             {/* Fix #3: Use div instead of Link to avoid nested interactive elements */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {wallets.map((wallet) => {
-                const icon = wallet.icon || DEFAULT_ICON;
                 const color = wallet.color || DEFAULT_COLOR;
 
                 return (
@@ -286,10 +277,10 @@ export default function WalletsPage() {
                       style={{ backgroundColor: color }}
                     />
 
-                    {/* Top row: emoji + name + actions */}
+                    {/* Top row: icon + name + actions */}
                     <div className="flex items-start gap-3 pl-2">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-50 text-xl">
-                        {icon}
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-50 text-violet-600">
+                        <WalletIcon iconId={wallet.icon} className="h-5 w-5" />
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
@@ -406,21 +397,21 @@ export default function WalletsPage() {
           <div>
             <Label className="text-sm font-medium text-slate-700">{t('icon')}</Label>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
-              {WALLET_EMOJIS.map((emoji) => (
+              {WALLET_ICONS.map((item) => (
                 <button
-                  key={emoji}
+                  key={item.id}
                   type="button"
-                  aria-label={emoji}
-                  aria-pressed={formData.icon === emoji}
-                  onClick={() => setFormData((prev) => ({ ...prev, icon: emoji }))}
+                  aria-label={item.label}
+                  aria-pressed={formData.icon === item.id}
+                  onClick={() => setFormData((prev) => ({ ...prev, icon: item.id }))}
                   className={cn(
-                    'flex h-10 w-10 items-center justify-center rounded-xl text-xl transition-all',
-                    formData.icon === emoji
+                    'flex h-10 w-10 items-center justify-center rounded-xl transition-all',
+                    formData.icon === item.id
                       ? 'bg-violet-100 ring-2 ring-violet-500'
                       : 'bg-slate-50 hover:bg-slate-100',
                   )}
                 >
-                  {emoji}
+                  <item.icon className="h-5 w-5 text-gray-700" />
                 </button>
               ))}
             </div>

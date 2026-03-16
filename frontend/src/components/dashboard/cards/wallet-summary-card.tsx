@@ -11,6 +11,7 @@ import {
   ArrowRightIcon,
   PlusIcon,
 } from '@heroicons/react/24/outline';
+import { WalletIcon } from '@/lib/wallet-icons';
 
 export function WalletSummaryCard() {
   const t = useTranslations('dashboard.cards.wallet');
@@ -82,7 +83,9 @@ export function WalletSummaryCard() {
                   href={`/wallets/${wallet.id}`}
                   className="flex items-center gap-3 rounded-xl border border-violet-100/40 bg-violet-50/20 px-3 py-2.5 transition-colors hover:bg-violet-50/50"
                 >
-                  <span className="text-lg">{wallet.icon || '\u{1F4B0}'}</span>
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center text-violet-600">
+                    <WalletIcon iconId={wallet.icon} className="h-5 w-5" />
+                  </span>
                   <span className="flex-1 truncate text-sm font-medium text-slate-700">
                     {wallet.name}
                   </span>

@@ -68,6 +68,15 @@ Clean Architecture with four layers:
 - **Modals**: Use `<BaseModal>` from `@/components/modals/base-modal`
 - **Confirmation dialogs**: Use `<ConfirmationDialog>` from `@/components/ui/confirmation-dialog`
 
+### No Emojis in the UI (CRITICAL)
+**NEVER use emojis in the web app or mobile app.** This includes:
+- ❌ Emoji characters as icons, labels, or decorative elements
+- ❌ Emoji pickers for user-selectable icons
+- ❌ Emoji fallback defaults (e.g., 💰 as a default icon)
+- ✅ Use Heroicons (`@heroicons/react/24/outline` or `/24/solid`) for all icons
+- ✅ Use SVG icons or icon font libraries when Heroicons don't have what you need
+- ✅ For user-selectable icons (e.g., wallet icons), use a curated set of Heroicons rendered as clickable options
+
 ## UI Pattern: Creation/Edit Forms (CRITICAL — Consistency Required)
 
 All "create new" and "edit" pages **MUST** follow the same full-page layout pattern. **Do NOT use modals or centered cards for creation/edit flows.**
