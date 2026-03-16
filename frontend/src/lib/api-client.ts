@@ -1840,6 +1840,42 @@ class ApiClient {
     return this.request(`/api/goals/${goalId}/emergency-fund-analysis?includeLlmAnalysis=${includeLlmAnalysis}`);
   }
 
+  // Wallet (Virtual Pots) methods
+  async getWallets(params?: { includeArchived?: boolean }): Promise<WalletSummary[]> {
+    const queryParams = new URLSearchParams();
+    if (params?.includeArchived) queryParams.append('includeArchived', 'true');
+    const queryString = queryParams.toString();
+    return this.request(`/api/wallets${queryString ? `?${queryString}` : ''}`);
+  }
+
+  async getWallet(id: number): Promise<WalletDetail> {
+    return this.request(`/api/wallets/${id}`);
+  }
+
+  async createWallet(wallet: CreateWalletRequest): Promise<WalletDetail> {
+    return this.request('/api/wallets', { method: 'POST', body: JSON.stringify(wallet) });
+  }
+
+  async updateWallet(id: number, wallet: UpdateWalletRequest): Promise<WalletDetail> {
+    return this.request(`/api/wallets/${id}`, { method: 'PUT', body: JSON.stringify(wallet) });
+  }
+
+  async deleteWallet(id: number): Promise<void> {
+    return this.request(`/api/wallets/${id}`, { method: 'DELETE' });
+  }
+
+  async createWalletAllocation(walletId: number, allocation: CreateAllocationRequest): Promise<WalletAllocation> {
+    return this.request(`/api/wallets/${walletId}/allocations`, { method: 'POST', body: JSON.stringify(allocation) });
+  }
+
+  async deleteWalletAllocation(walletId: number, allocationId: number): Promise<void> {
+    return this.request(`/api/wallets/${walletId}/allocations/${allocationId}`, { method: 'DELETE' });
+  }
+
+  async getWalletDashboard(): Promise<WalletDashboardSummary> {
+    return this.request('/api/wallets/dashboard');
+  }
+
   // User Data methods (LGPD/GDPR compliance)
   async getUserDataSummary(): Promise<UserDataSummary> {
     return this.request('/api/UserData/summary');
@@ -2408,6 +2444,67 @@ export interface OnboardingStatusResponse {
   monthlyIncome?: number;
   monthlyExpenses?: number;
   monthlyAvailable?: number;
+}
+
+// Wallet (Virtual Pots) Types
+export interface WalletSummary {
+  id: number;
+  name: string;
+  icon?: string;
+  color?: string;
+  currency: string;
+  isArchived: boolean;
+  targetAmount?: number;
+  balance: number;
+  allocationCount: number;
+  createdAt: string;
+}
+
+export interface WalletDetail extends WalletSummary {
+  allocations: WalletAllocation[];
+  updatedAt: string;
+}
+
+export interface WalletAllocation {
+  id: number;
+  transactionId: number;
+  transactionDescription: string;
+  transactionDate: string;
+  accountName: string;
+  amount: number;
+  note?: string;
+  createdAt: string;
+}
+
+export interface WalletDashboardSummary {
+  totalBalance: number;
+  /** Per-currency breakdown of wallet balances (e.g. { "USD": 1500, "EUR": 300 }). */
+  balanceByCurrency: Record<string, number>;
+  wallets: WalletSummary[];
+}
+
+export interface CreateWalletRequest {
+  name: string;
+  icon?: string;
+  color?: string;
+  currency: string;
+  targetAmount?: number;
+}
+
+export interface UpdateWalletRequest {
+  name?: string;
+  icon?: string;
+  color?: string;
+  currency?: string;
+  isArchived?: boolean;
+  targetAmount?: number | null;
+  clearTargetAmount?: boolean;
+}
+
+export interface CreateAllocationRequest {
+  transactionId: number;
+  amount: number;
+  note?: string;
 }
 
 // Create a singleton instance that's safe for SSR

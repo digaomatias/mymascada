@@ -16,6 +16,7 @@ import {
   WalletIcon,
   ChatBubbleLeftRightIcon,
   FlagIcon,
+  CircleStackIcon,
   ChevronRightIcon,
   ArrowRightOnRectangleIcon,
 } from '@heroicons/react/24/outline';
@@ -48,6 +49,7 @@ export default function Navigation() {
     { href: '/transactions', labelKey: 'transactions' as const, icon: ArrowsRightLeftIcon },
     { href: '/budgets', labelKey: 'budgets' as const, icon: WalletIcon },
     { href: '/goals', labelKey: 'goals' as const, icon: FlagIcon },
+    { href: '/wallets', labelKey: 'wallets' as const, icon: CircleStackIcon },
     { href: '/analytics', labelKey: 'analytics' as const, icon: ChartBarIcon },
     { href: '/chat', labelKey: 'aiChat' as const, icon: ChatBubbleLeftRightIcon },
   ];
@@ -72,6 +74,7 @@ export default function Navigation() {
   const mobileMoreItems = [
     { href: '/accounts', labelKey: 'accounts' as const, icon: BuildingOffice2Icon },
     { href: '/goals', labelKey: 'goals' as const, icon: FlagIcon },
+    { href: '/wallets', labelKey: 'wallets' as const, icon: CircleStackIcon },
     { href: '/analytics', labelKey: 'analytics' as const, icon: ChartBarIcon },
     { href: '/categories', labelKey: 'categories' as const, icon: TagIcon },
     { href: '/rules', labelKey: 'rules' as const, icon: AdjustmentsHorizontalIcon },
