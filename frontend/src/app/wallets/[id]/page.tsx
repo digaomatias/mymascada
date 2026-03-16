@@ -37,7 +37,10 @@ const WALLET_COLORS = [
   '#65a30d', '#ea580c', '#6d28d9', '#0d9488',
 ];
 
-const CURRENCIES = ['NZD', 'USD', 'EUR', 'BRL', 'GBP', 'AUD'];
+const CURRENCIES = [
+  'NZD', 'USD', 'EUR', 'BRL', 'GBP', 'AUD',
+  'CAD', 'JPY', 'ARS', 'CLP', 'COP', 'MXN',
+];
 
 const DEFAULT_COLOR = '#7c3aed';
 
@@ -527,7 +530,7 @@ export default function WalletDetailPage() {
                   <button
                     key={item.id}
                     type="button"
-                    aria-label={item.label}
+                    aria-label={t(`walletIcons.${item.labelKey}`)}
                     aria-pressed={editFormData.icon === item.id}
                     onClick={() => setEditFormData((prev) => ({ ...prev, icon: item.id }))}
                     className={cn(

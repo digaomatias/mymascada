@@ -36,7 +36,10 @@ const WALLET_COLORS = [
   '#65a30d', '#ea580c', '#6d28d9', '#0d9488',
 ];
 
-const CURRENCIES = ['NZD', 'USD', 'EUR', 'BRL', 'GBP', 'AUD'];
+const CURRENCIES = [
+  'NZD', 'USD', 'EUR', 'BRL', 'GBP', 'AUD',
+  'CAD', 'JPY', 'ARS', 'CLP', 'COP', 'MXN',
+];
 
 const DEFAULT_COLOR = '#7c3aed';
 
@@ -63,6 +66,7 @@ export default function WalletsPage() {
   const router = useRouter();
   const [wallets, setWallets] = useState<WalletSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasLoadError, setHasLoadError] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingWallet, setEditingWallet] = useState<WalletSummary | null>(null);
@@ -72,10 +76,12 @@ export default function WalletsPage() {
 
   const loadWallets = useCallback(async () => {
     try {
+      setHasLoadError(false);
       setIsLoading(true);
       const data = await apiClient.getWallets({ includeArchived: showArchived });
       setWallets(data);
     } catch {
+      setHasLoadError(true);
       toast.error(t('loadError'));
     } finally {
       setIsLoading(false);
@@ -213,6 +219,16 @@ export default function WalletsPage() {
       <div className="space-y-5">
         {isLoading ? (
           <WalletsSkeleton />
+        ) : hasLoadError ? (
+          <section className="rounded-[28px] border border-red-100/80 bg-white/92 p-10 text-center shadow-[0_20px_50px_-30px_rgba(76,29,149,0.45)]">
+            <p className="text-red-600">{t('loadError')}</p>
+            <button
+              onClick={loadWallets}
+              className="mt-4 text-sm font-semibold text-violet-600 hover:underline"
+            >
+              {tCommon('retry')}
+            </button>
+          </section>
         ) : wallets.length === 0 ? (
           /* Empty state */
           <section className="rounded-[28px] border border-violet-100/80 bg-white/92 p-10 text-center shadow-[0_20px_50px_-30px_rgba(76,29,149,0.45)]">
@@ -401,7 +417,7 @@ export default function WalletsPage() {
                 <button
                   key={item.id}
                   type="button"
-                  aria-label={item.label}
+                  aria-label={t(`walletIcons.${item.labelKey}`)}
                   aria-pressed={formData.icon === item.id}
                   onClick={() => setFormData((prev) => ({ ...prev, icon: item.id }))}
                   className={cn(

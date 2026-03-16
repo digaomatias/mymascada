@@ -30,35 +30,35 @@ import React from 'react';
 export interface WalletIconOption {
   id: string;
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-  label: string;
+  labelKey: string;
 }
 
 export const WALLET_ICONS: WalletIconOption[] = [
-  { id: 'banknotes', icon: BanknotesIcon, label: 'Money' },
-  { id: 'credit-card', icon: CreditCardIcon, label: 'Card' },
-  { id: 'building-library', icon: BuildingLibraryIcon, label: 'Bank' },
-  { id: 'home', icon: HomeIcon, label: 'Home' },
-  { id: 'academic-cap', icon: AcademicCapIcon, label: 'Education' },
-  { id: 'globe-alt', icon: GlobeAltIcon, label: 'Travel' },
-  { id: 'heart', icon: HeartIcon, label: 'Health' },
-  { id: 'shopping-bag', icon: ShoppingBagIcon, label: 'Shopping' },
-  { id: 'gift', icon: GiftIcon, label: 'Gift' },
-  { id: 'truck', icon: TruckIcon, label: 'Transport' },
-  { id: 'device-phone-mobile', icon: DevicePhoneMobileIcon, label: 'Phone' },
-  { id: 'computer-desktop', icon: ComputerDesktopIcon, label: 'Tech' },
-  { id: 'musical-note', icon: MusicalNoteIcon, label: 'Music' },
-  { id: 'book-open', icon: BookOpenIcon, label: 'Books' },
-  { id: 'sparkles', icon: SparklesIcon, label: 'Special' },
-  { id: 'shield-check', icon: ShieldCheckIcon, label: 'Insurance' },
-  { id: 'wrench-screwdriver', icon: WrenchScrewdriverIcon, label: 'Repair' },
-  { id: 'cake', icon: CakeIcon, label: 'Birthday' },
-  { id: 'user-group', icon: UserGroupIcon, label: 'Family' },
-  { id: 'star', icon: StarIcon, label: 'Savings' },
-  { id: 'rocket-launch', icon: RocketLaunchIcon, label: 'Goals' },
-  { id: 'puzzle-piece', icon: PuzzlePieceIcon, label: 'Hobbies' },
-  { id: 'fire', icon: FireIcon, label: 'Emergency' },
-  { id: 'bolt', icon: BoltIcon, label: 'Utilities' },
-  { id: 'currency-dollar', icon: CurrencyDollarIcon, label: 'General' },
+  { id: 'banknotes', icon: BanknotesIcon, labelKey: 'money' },
+  { id: 'credit-card', icon: CreditCardIcon, labelKey: 'card' },
+  { id: 'building-library', icon: BuildingLibraryIcon, labelKey: 'bank' },
+  { id: 'home', icon: HomeIcon, labelKey: 'home' },
+  { id: 'academic-cap', icon: AcademicCapIcon, labelKey: 'education' },
+  { id: 'globe-alt', icon: GlobeAltIcon, labelKey: 'travel' },
+  { id: 'heart', icon: HeartIcon, labelKey: 'health' },
+  { id: 'shopping-bag', icon: ShoppingBagIcon, labelKey: 'shopping' },
+  { id: 'gift', icon: GiftIcon, labelKey: 'gift' },
+  { id: 'truck', icon: TruckIcon, labelKey: 'transport' },
+  { id: 'device-phone-mobile', icon: DevicePhoneMobileIcon, labelKey: 'phone' },
+  { id: 'computer-desktop', icon: ComputerDesktopIcon, labelKey: 'tech' },
+  { id: 'musical-note', icon: MusicalNoteIcon, labelKey: 'music' },
+  { id: 'book-open', icon: BookOpenIcon, labelKey: 'books' },
+  { id: 'sparkles', icon: SparklesIcon, labelKey: 'special' },
+  { id: 'shield-check', icon: ShieldCheckIcon, labelKey: 'insurance' },
+  { id: 'wrench-screwdriver', icon: WrenchScrewdriverIcon, labelKey: 'repair' },
+  { id: 'cake', icon: CakeIcon, labelKey: 'birthday' },
+  { id: 'user-group', icon: UserGroupIcon, labelKey: 'family' },
+  { id: 'star', icon: StarIcon, labelKey: 'savings' },
+  { id: 'rocket-launch', icon: RocketLaunchIcon, labelKey: 'goals' },
+  { id: 'puzzle-piece', icon: PuzzlePieceIcon, labelKey: 'hobbies' },
+  { id: 'fire', icon: FireIcon, labelKey: 'emergency' },
+  { id: 'bolt', icon: BoltIcon, labelKey: 'utilities' },
+  { id: 'currency-dollar', icon: CurrencyDollarIcon, labelKey: 'general' },
 ];
 
 export const DEFAULT_WALLET_ICON_ID = 'currency-dollar';

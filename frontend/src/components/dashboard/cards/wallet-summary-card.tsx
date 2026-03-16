@@ -22,6 +22,7 @@ export function WalletSummaryCard() {
   useEffect(() => {
     const load = async () => {
       try {
+        setError(null);
         setLoading(true);
         const data = await apiClient.getWallets();
         setWallets(data);
@@ -35,7 +36,11 @@ export function WalletSummaryCard() {
     load();
   }, [t]);
 
-  const totalBalance = wallets.reduce((sum, w) => sum + w.balance, 0);
+  const totalsByCurrency = wallets.reduce<Record<string, number>>((acc, w) => {
+    acc[w.currency] = (acc[w.currency] || 0) + w.balance;
+    return acc;
+  }, {});
+  const currencyEntries = Object.entries(totalsByCurrency);
   const displayWallets = wallets.slice(0, 5);
 
   return (
@@ -71,9 +76,13 @@ export function WalletSummaryCard() {
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
                 {t('totalAllocated')}
               </p>
-              <p className="font-[var(--font-dash-mono)] text-xl font-semibold text-slate-900">
-                {formatCurrency(totalBalance)}
-              </p>
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                {currencyEntries.map(([currency, total]) => (
+                  <p key={currency} className="font-[var(--font-dash-mono)] text-xl font-semibold text-slate-900">
+                    {formatCurrency(total, currency)}
+                  </p>
+                ))}
+              </div>
             </div>
 
             <div className="mt-4 space-y-2.5">

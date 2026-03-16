@@ -3432,7 +3432,34 @@
     "allocationCreated": "Alocação criada com sucesso",
     "allocationError": "Falha ao criar alocação",
     "transactionIdPlaceholder": "ex., 123",
-    "amountPlaceholder": "0,00"
+    "amountPlaceholder": "0,00",
+    "walletIcons": {
+      "money": "Dinheiro",
+      "card": "Cartao",
+      "bank": "Banco",
+      "home": "Casa",
+      "education": "Educacao",
+      "travel": "Viagem",
+      "health": "Saude",
+      "shopping": "Compras",
+      "gift": "Presente",
+      "transport": "Transporte",
+      "phone": "Celular",
+      "tech": "Tecnologia",
+      "music": "Musica",
+      "books": "Livros",
+      "special": "Especial",
+      "insurance": "Seguro",
+      "repair": "Reparo",
+      "birthday": "Aniversario",
+      "family": "Familia",
+      "savings": "Poupanca",
+      "goals": "Metas",
+      "hobbies": "Hobbies",
+      "emergency": "Emergencia",
+      "utilities": "Utilidades",
+      "general": "Geral"
+    }
   },
   "onboarding": {
     "welcome": {

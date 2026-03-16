@@ -3432,7 +3432,34 @@
     "allocationCreated": "Allocation created successfully",
     "allocationError": "Failed to create allocation",
     "transactionIdPlaceholder": "e.g., 123",
-    "amountPlaceholder": "0.00"
+    "amountPlaceholder": "0.00",
+    "walletIcons": {
+      "money": "Money",
+      "card": "Card",
+      "bank": "Bank",
+      "home": "Home",
+      "education": "Education",
+      "travel": "Travel",
+      "health": "Health",
+      "shopping": "Shopping",
+      "gift": "Gift",
+      "transport": "Transport",
+      "phone": "Phone",
+      "tech": "Technology",
+      "music": "Music",
+      "books": "Books",
+      "special": "Special",
+      "insurance": "Insurance",
+      "repair": "Repair",
+      "birthday": "Birthday",
+      "family": "Family",
+      "savings": "Savings",
+      "goals": "Goals",
+      "hobbies": "Hobbies",
+      "emergency": "Emergency",
+      "utilities": "Utilities",
+      "general": "General"
+    }
   },
   "onboarding": {
     "welcome": {
