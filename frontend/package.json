@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@google-cloud/local-auth": "^3.0.1",
-    "@headlessui/react": "^2.2.0",
+    "@headlessui/react": "^2.2.9",
     "@heroicons/react": "^2.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.5",
     "@radix-ui/react-dropdown-menu": "^2.1.5",
