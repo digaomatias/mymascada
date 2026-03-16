@@ -131,7 +131,9 @@ export default function WalletsPage() {
       if (editingWallet) {
         // Fix #10: When target amount is cleared, set clearTargetAmount: true
         const hadTarget = editingWallet.targetAmount != null && editingWallet.targetAmount > 0;
-        const newTarget = formData.targetAmount ? parseFloat(formData.targetAmount) : null;
+        const rawTarget = formData.targetAmount?.trim();
+        const parsedTarget = rawTarget ? Number(rawTarget) : null;
+        const newTarget = parsedTarget !== null && Number.isFinite(parsedTarget) && parsedTarget >= 0 ? parsedTarget : null;
         const update: UpdateWalletRequest = {
           name: formData.name.trim(),
           icon: formData.icon,
@@ -148,7 +150,11 @@ export default function WalletsPage() {
           icon: formData.icon,
           color: formData.color,
           currency: formData.currency,
-          targetAmount: formData.targetAmount ? parseFloat(formData.targetAmount) : undefined,
+          targetAmount: (() => {
+            const raw = formData.targetAmount?.trim();
+            const parsed = raw ? Number(raw) : undefined;
+            return parsed !== undefined && Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
+          })(),
         };
         await apiClient.createWallet(create);
         toast.success(t('walletCreated'));
@@ -316,7 +322,7 @@ export default function WalletsPage() {
 
                       {/* Actions */}
                       <div
-                        className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100"
+                        className="flex shrink-0 items-center gap-1 opacity-0 pointer-events-none transition-opacity group-hover:opacity-100 group-hover:pointer-events-auto focus-within:opacity-100 focus-within:pointer-events-auto"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <button
