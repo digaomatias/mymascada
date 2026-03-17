@@ -23,7 +23,7 @@
     "@google-cloud/local-auth": "^3.0.1",
     "@headlessui/react": "^2.2.9",
     "@heroicons/react": "^2.2.0",
-    "@radix-ui/react-alert-dialog": "^1.1.5",
+    "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.5",
     "@sentry/nextjs": "^10.42.0",
     "@tailwindcss/postcss": "^4.2.1",
