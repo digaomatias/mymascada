@@ -2,6 +2,9 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /app
 
+# App semantic version injected by CI/release (fallback keeps local builds working)
+ARG APP_VERSION=1.0.0
+
 # Copy only the src directory to avoid double nesting
 COPY src/ ./
 
@@ -9,7 +12,21 @@ COPY src/ ./
 RUN dotnet restore WebAPI/MyMascada.WebAPI/MyMascada.WebAPI.csproj
 
 # Build and publish
-RUN dotnet publish WebAPI/MyMascada.WebAPI/MyMascada.WebAPI.csproj -c Release -o /app/publish
+RUN dotnet publish WebAPI/MyMascada.WebAPI/MyMascada.WebAPI.csproj \
+    -c Release \
+    -o /app/publish \
+    -p:Version=${APP_VERSION} \
+    -p:InformationalVersion=${APP_VERSION}
+
+# Build the migration bundle (self-contained, no SDK needed at runtime)
+RUN dotnet tool install --global dotnet-ef --version 10.0.0
+ENV PATH="$PATH:/root/.dotnet/tools"
+RUN dotnet ef migrations bundle \
+    --project WebAPI/MyMascada.WebAPI/MyMascada.WebAPI.csproj \
+    --output /app/efbundle \
+    --self-contained \
+    -r linux-x64 \
+    --force
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
@@ -26,6 +43,14 @@ RUN mkdir -p /app/data/keys /app/logs
 
 # Copy published files
 COPY --from=build /app/publish .
+
+# Copy migration bundle (single self-contained binary, no SDK needed)
+COPY --from=build /app/efbundle /app/efbundle
+RUN chmod +x /app/efbundle
+
+# Copy migration script
+COPY src/migrate.sh /app/migrate.sh
+RUN chmod +x /app/migrate.sh
 
 # Copy entrypoint script
 COPY src/docker-entrypoint.sh /app/docker-entrypoint.sh

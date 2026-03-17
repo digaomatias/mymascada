@@ -4,6 +4,9 @@ primary_region = 'syd'
 [build]
   dockerfile = 'src/Dockerfile.api'
 
+[deploy]
+  release_command = '/app/migrate.sh'
+
 [env]
   ASPNETCORE_ENVIRONMENT = 'Production'
   ASPNETCORE_URLS = 'http://+:5126'
