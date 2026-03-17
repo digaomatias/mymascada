@@ -8,7 +8,9 @@ export function DashboardHeader() {
   const { user, isLoading } = useAuth();
   const t = useTranslations('dashboard');
 
-  const name = user?.firstName || user?.userName;
+  const firstName = user?.firstName?.trim();
+  const userName = user?.userName?.trim();
+  const name = firstName || userName;
 
   return (
     <header className="flex flex-wrap items-end justify-between gap-4 mb-5">
