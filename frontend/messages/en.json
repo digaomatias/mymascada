@@ -240,6 +240,7 @@
   "dashboard": {
     "title": "Dashboard",
     "welcomeBack": "Welcome back, {name}!",
+    "welcomeBackGeneric": "Welcome back!",
     "overview": "Here's an overview of your financial activity",
     "recentTransactions": "Recent Transactions",
     "viewAllTransactions": "View All Transactions",

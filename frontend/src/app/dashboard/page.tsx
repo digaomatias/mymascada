@@ -63,17 +63,35 @@ function DashboardContent() {
         {isAuthResolved ? (
           <DashboardTemplateRenderer />
         ) : (
-          <div className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <SkeletonCard className="h-48 p-6" />
-              <SkeletonCard className="h-48 p-6" />
-              <SkeletonCard className="h-48 p-6" />
-            </div>
-            <SkeletonPanel height="h-64" />
-          </div>
+          <DashboardBodySkeleton className="space-y-4" />
         )}
       </AppLayout>
     </DashboardProvider>
+  );
+}
+
+function DashboardBodySkeleton({ className }: { className?: string }) {
+  return (
+    <div className={className}>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <SkeletonCard key={i} className="h-48 p-6">
+            <div className="space-y-4">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-8 w-32" />
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-3/4" />
+            </div>
+          </SkeletonCard>
+        ))}
+      </div>
+      <SkeletonPanel className="mt-4" height="h-64">
+        <div className="p-6 space-y-4">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-40 w-full rounded-xl" />
+        </div>
+      </SkeletonPanel>
+    </div>
   );
 }
 
@@ -86,12 +104,7 @@ function DashboardSuspenseFallback() {
           <Skeleton className="h-4 w-40 mt-1.5" />
         </div>
       </header>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <SkeletonCard className="h-48 p-6" />
-        <SkeletonCard className="h-48 p-6" />
-        <SkeletonCard className="h-48 p-6" />
-      </div>
-      <SkeletonPanel className="mt-4" height="h-64" />
+      <DashboardBodySkeleton />
     </AppLayout>
   );
 }
