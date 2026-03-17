@@ -240,6 +240,7 @@
   "dashboard": {
     "title": "Painel",
     "welcomeBack": "Bem-vindo(a) de volta, {name}!",
+    "welcomeBackGeneric": "Bem-vindo(a) de volta!",
     "overview": "Aqui está uma visão geral da sua atividade financeira",
     "recentTransactions": "Transações Recentes",
     "viewAllTransactions": "Ver Todas as Transações",

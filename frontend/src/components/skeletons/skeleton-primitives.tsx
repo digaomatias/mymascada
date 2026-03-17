@@ -89,9 +89,11 @@ export function SkeletonStatCards({ count = 4 }: { count?: number }) {
 export function SkeletonPanel({
   className,
   height = 'h-[390px]',
+  children,
 }: {
   className?: string;
   height?: string;
+  children?: React.ReactNode;
 }) {
   return (
     <div
@@ -100,7 +102,9 @@ export function SkeletonPanel({
         height,
         className,
       )}
-    />
+    >
+      {children}
+    </div>
   );
 }
 

@@ -65,11 +65,23 @@ function DashboardContent() {
         ) : (
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <SkeletonCard className="h-48 p-6" />
-              <SkeletonCard className="h-48 p-6" />
-              <SkeletonCard className="h-48 p-6" />
+              {Array.from({ length: 3 }).map((_, i) => (
+                <SkeletonCard key={i} className="h-48 p-6">
+                  <div className="space-y-4">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-8 w-32" />
+                    <Skeleton className="h-3 w-full" />
+                    <Skeleton className="h-3 w-3/4" />
+                  </div>
+                </SkeletonCard>
+              ))}
             </div>
-            <SkeletonPanel height="h-64" />
+            <SkeletonPanel height="h-64">
+              <div className="p-6 space-y-4">
+                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-40 w-full rounded-xl" />
+              </div>
+            </SkeletonPanel>
           </div>
         )}
       </AppLayout>
@@ -87,11 +99,23 @@ function DashboardSuspenseFallback() {
         </div>
       </header>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <SkeletonCard className="h-48 p-6" />
-        <SkeletonCard className="h-48 p-6" />
-        <SkeletonCard className="h-48 p-6" />
+        {Array.from({ length: 3 }).map((_, i) => (
+          <SkeletonCard key={i} className="h-48 p-6">
+            <div className="space-y-4">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-8 w-32" />
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-3/4" />
+            </div>
+          </SkeletonCard>
+        ))}
       </div>
-      <SkeletonPanel className="mt-4" height="h-64" />
+      <SkeletonPanel className="mt-4" height="h-64">
+        <div className="p-6 space-y-4">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-40 w-full rounded-xl" />
+        </div>
+      </SkeletonPanel>
     </AppLayout>
   );
 }
