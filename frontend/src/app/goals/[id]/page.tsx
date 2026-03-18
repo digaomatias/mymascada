@@ -210,6 +210,8 @@ export default function GoalDetailPage() {
               )}
               <button
                 onClick={handleTogglePin}
+                aria-pressed={goal.isPinned}
+                aria-label={goal.isPinned ? t('unpinGoal') : t('pinGoal')}
                 className="rounded-lg p-1.5 text-ink-400 transition-colors hover:bg-primary-50 hover:text-primary-600"
                 title={goal.isPinned ? t('unpinGoal') : t('pinGoal')}
               >

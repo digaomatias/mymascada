@@ -509,6 +509,8 @@ function GoalCard({
         {/* Pin toggle */}
         <button
           onClick={(e) => onTogglePin(goal, e)}
+          aria-pressed={goal.isPinned}
+          aria-label={goal.isPinned ? t('unpinGoal') : t('pinGoal')}
           className="shrink-0 rounded-lg p-1.5 text-ink-400 transition-colors hover:bg-primary-50 hover:text-primary-600"
           title={goal.isPinned ? t('unpinGoal') : t('pinGoal')}
         >

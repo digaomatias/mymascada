@@ -30,7 +30,8 @@ function getInitialBg(name: string): string {
     'bg-sky-100 text-sky-700',
     'bg-amber-100 text-amber-700',
   ];
-  const idx = name.charCodeAt(0) % colors.length;
+  const code = name.trim().charCodeAt(0);
+  const idx = Number.isNaN(code) ? 0 : code % colors.length;
   return colors[idx];
 }
 
