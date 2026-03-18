@@ -13,6 +13,9 @@ interface DashboardCardProps {
   gradient?: boolean;
 }
 
+const baseCardClasses =
+  'rounded-2xl border border-ink-200 bg-surface shadow-card';
+
 export function DashboardCard({
   children,
   className,
@@ -32,7 +35,8 @@ export function DashboardCard({
     return (
       <div
         className={cn(
-          'rounded-[28px] border border-violet-100/70 bg-white/85 p-6 shadow-[0_20px_50px_-28px_rgba(76,29,149,0.3)] backdrop-blur-xl sm:p-8',
+          baseCardClasses,
+          'p-6 sm:p-8',
           colSpanClass,
           className,
         )}
@@ -51,12 +55,12 @@ export function DashboardCard({
     return (
       <div
         className={cn(
-          'rounded-[28px] border border-rose-200/70 bg-white/85 p-6 shadow-[0_20px_50px_-28px_rgba(76,29,149,0.3)] backdrop-blur-xl sm:p-8',
+          'rounded-2xl border border-danger-200 bg-surface p-6 shadow-card sm:p-8',
           colSpanClass,
           className,
         )}
       >
-        <p className="text-sm text-rose-600">{error}</p>
+        <p className="text-sm text-danger-600">{error}</p>
       </div>
     );
   }
@@ -64,10 +68,11 @@ export function DashboardCard({
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-[28px] border border-violet-100/70 shadow-[0_20px_50px_-28px_rgba(76,29,149,0.3)] backdrop-blur-xl',
+        'relative overflow-hidden',
+        baseCardClasses,
         gradient
-          ? 'bg-gradient-to-br from-[#f5f0ff] via-white to-[#fdf2ff] border-violet-200/50'
-          : 'bg-white/85',
+          ? 'bg-gradient-to-br from-surface-brand via-surface to-[oklch(98%_0.015_330)]'
+          : '',
         'p-6 sm:p-8',
         colSpanClass,
         className,
