@@ -22,7 +22,7 @@ interface BudgetRow {
   usedPercentage: number;
 }
 
-const BAR_COLORS = ['#10b981', '#ef4444', '#f59e0b', '#3b82f6', '#3a9e8c', '#e07c5a'];
+const BAR_COLORS = ['#2f8170', '#5b7fb5', '#c08a30', '#6a9b5e', '#c0614a', '#b85670'];
 
 export function BudgetHealthCard() {
   const t = useTranslations('dashboard.cards.budget');
@@ -72,7 +72,7 @@ export function BudgetHealthCard() {
     <DashboardCard cardId="budget-health" loading={loading} error={error}>
       {budgets.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-6 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-400 to-primary-400 shadow-lg mb-4">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-sky-600 shadow-lg mb-4">
             <WalletIcon className="h-7 w-7 text-white" />
           </div>
           <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold text-ink-900 mb-2">

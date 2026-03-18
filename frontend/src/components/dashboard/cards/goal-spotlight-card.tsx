@@ -23,12 +23,12 @@ function GoalRing({ value, label, size = 148 }: { value: number; label: string; 
       <svg viewBox={`0 0 ${size} ${size}`} className="h-full w-full" style={{ transform: 'rotate(-90deg)' }}>
         <defs>
           <linearGradient id="goal-ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#2f8170" />
-            <stop offset="50%" stopColor="#5fbfac" />
-            <stop offset="100%" stopColor="#8dd4c6" />
+            <stop offset="0%" stopColor="#c08a30" />
+            <stop offset="50%" stopColor="#d4a94a" />
+            <stop offset="100%" stopColor="#e8c96a" />
           </linearGradient>
         </defs>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#e8f5f2" strokeWidth="12" />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#f5f0e0" strokeWidth="12" />
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -84,7 +84,7 @@ export function GoalSpotlightCard() {
     <DashboardCard cardId="goal-spotlight" loading={loading} error={error}>
       {!primary ? (
         <div className="flex flex-col items-center justify-center py-6 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-400 to-primary-400 shadow-lg mb-4">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 shadow-lg mb-4">
             <FlagIcon className="h-7 w-7 text-white" />
           </div>
           <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold text-ink-900 mb-2">

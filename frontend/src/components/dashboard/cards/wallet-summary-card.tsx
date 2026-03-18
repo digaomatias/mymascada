@@ -47,7 +47,7 @@ export function WalletSummaryCard() {
     <DashboardCard cardId="wallet-pots" loading={loading} error={error}>
       {wallets.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-6 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-400 to-primary-400 shadow-lg mb-4">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg mb-4">
             <CircleStackIcon className="h-7 w-7 text-white" />
           </div>
           <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold text-ink-900 mb-2">

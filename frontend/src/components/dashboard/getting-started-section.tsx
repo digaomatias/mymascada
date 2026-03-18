@@ -61,8 +61,8 @@ export function GettingStartedSection() {
       desc: t('step3Desc'),
       cta: t('step3Cta'),
       href: '/categories',
-      gradient: 'from-primary-500 to-primary-600',
-      ring: 'ring-primary-100',
+      gradient: 'from-amber-500 to-amber-600',
+      ring: 'ring-amber-100',
     },
   ];
 

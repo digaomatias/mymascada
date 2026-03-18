@@ -114,7 +114,7 @@ export function FinancialRunwayCard() {
               </div>
               <div className="mt-1.5 h-3 overflow-hidden rounded-full bg-primary-100/50">
                 <div
-                  className="relative h-full rounded-full bg-gradient-to-r from-primary-500 to-primary-500 transition-all duration-1000"
+                  className="relative h-full rounded-full bg-gradient-to-r from-primary-600 to-primary-300 transition-all duration-1000"
                   style={{ width: `${Math.min((data.runwayMonths / 6) * 100, 100)}%` }}
                 >
                   <div className="absolute inset-0 animate-pulse rounded-full bg-white/20" />
@@ -135,8 +135,8 @@ export function FinancialRunwayCard() {
               {[
                 { label: t('earned'), value: formatCurrency(data.monthlyIncome), accent: 'text-emerald-700' },
                 { label: t('spent'), value: formatCurrency(data.monthlyExpenses), accent: 'text-ink-900' },
-                { label: t('kept'), value: formatCurrency(data.netSaved), accent: 'text-primary-700' },
-                { label: t('saved'), value: `${data.savingsRate}%`, accent: 'text-primary-700' },
+                { label: t('kept'), value: formatCurrency(data.netSaved), accent: 'text-sky-700' },
+                { label: t('saved'), value: `${data.savingsRate}%`, accent: 'text-amber-700' },
               ].map((kpi) => (
                 <div key={kpi.label}>
                   <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">{kpi.label}</p>

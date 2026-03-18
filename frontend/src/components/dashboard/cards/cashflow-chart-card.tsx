@@ -54,8 +54,8 @@ function CashflowChart({ data }: { data: MonthData[] }) {
           <stop offset="100%" stopColor="#10b981" stopOpacity="0.01" />
         </linearGradient>
         <linearGradient id="cf-exp-fill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#3a9e8c" stopOpacity="0.10" />
-          <stop offset="100%" stopColor="#3a9e8c" stopOpacity="0.01" />
+          <stop offset="0%" stopColor="#c0614a" stopOpacity="0.10" />
+          <stop offset="100%" stopColor="#c0614a" stopOpacity="0.01" />
         </linearGradient>
       </defs>
       {/* Grid lines */}
@@ -91,8 +91,8 @@ function CashflowChart({ data }: { data: MonthData[] }) {
       {expPts.length > 1 && (
         <>
           <polygon points={area(expPts)} fill="url(#cf-exp-fill)" />
-          <polyline points={polyline(expPts)} fill="none" stroke="#3a9e8c" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.7" />
-          <circle cx={expPts[expPts.length - 1][0]} cy={expPts[expPts.length - 1][1]} r="5" fill="#fff" stroke="#3a9e8c" strokeWidth="2.5" />
+          <polyline points={polyline(expPts)} fill="none" stroke="#c0614a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.7" />
+          <circle cx={expPts[expPts.length - 1][0]} cy={expPts[expPts.length - 1][1]} r="5" fill="#fff" stroke="#c0614a" strokeWidth="2.5" />
         </>
       )}
     </svg>
@@ -147,7 +147,7 @@ export function CashflowChartCard() {
             <span className="inline-block h-[3px] w-4 rounded-full bg-emerald-500" /> {t('income')}
           </span>
           <span className="flex items-center gap-2">
-            <span className="inline-block h-[3px] w-4 rounded-full bg-primary-400" /> {t('expenses')}
+            <span className="inline-block h-[3px] w-4 rounded-full bg-[#c0614a]" /> {t('expenses')}
           </span>
         </div>
       </div>
