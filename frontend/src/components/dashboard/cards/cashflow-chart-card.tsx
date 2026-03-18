@@ -138,16 +138,16 @@ export function CashflowChartCard() {
           <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold tracking-[-0.02em] text-slate-900">
             {t('title')}
           </h3>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-ink-500">
             {t('subtitle')}
           </p>
         </div>
-        <div className="flex items-center gap-5 text-xs font-medium text-slate-500">
+        <div className="flex items-center gap-5 text-xs font-medium text-ink-500">
           <span className="flex items-center gap-2">
             <span className="inline-block h-[3px] w-4 rounded-full bg-emerald-500" /> {t('income')}
           </span>
           <span className="flex items-center gap-2">
-            <span className="inline-block h-[3px] w-4 rounded-full bg-violet-400" /> {t('expenses')}
+            <span className="inline-block h-[3px] w-4 rounded-full bg-primary-400" /> {t('expenses')}
           </span>
         </div>
       </div>

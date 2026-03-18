@@ -75,19 +75,19 @@ export function FinancialRunwayCard() {
             {/* Runway headline */}
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold text-slate-500">{t('title')}</p>
+                <p className="text-sm font-semibold text-ink-500">{t('title')}</p>
                 <div className="mt-2 flex items-baseline gap-3">
                   <p className="font-[var(--font-dash-mono)] text-5xl font-semibold tracking-[-0.02em] text-slate-900 sm:text-[3.2rem]">
                     {data.runwayMonths === 0 ? '0' : data.runwayMonths.toFixed(1)}
                   </p>
                   <p className="text-xl font-medium text-slate-400">{t('months')}</p>
                 </div>
-                <p className="mt-1.5 max-w-sm text-[15px] leading-relaxed text-slate-500">
+                <p className="mt-1.5 max-w-sm text-[15px] leading-relaxed text-ink-500">
                   {t('description', { months: data.runwayMonths === 0 ? '0' : data.runwayMonths.toFixed(1) })}
                 </p>
               </div>
               {/* Inline period toggle */}
-              <div className="inline-flex rounded-xl border border-violet-200/60 bg-white/90 p-1 shadow-sm backdrop-blur-sm">
+              <div className="inline-flex rounded-xl border border-primary-200/60 bg-white/90 p-1 shadow-sm backdrop-blur-sm">
                 {(['month', 'quarter'] as const).map((p) => (
                   <button
                     key={p}
@@ -96,8 +96,8 @@ export function FinancialRunwayCard() {
                     className={cn(
                       'rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] transition-all',
                       period === p
-                        ? 'bg-violet-600 text-white shadow-sm'
-                        : 'text-slate-500 hover:bg-violet-50 hover:text-violet-700',
+                        ? 'bg-primary-600 text-white shadow-sm'
+                        : 'text-ink-500 hover:bg-primary-50 hover:text-primary-700',
                     )}
                   >
                     {tDashboard(p === 'month' ? 'periodMonth' : 'periodQuarter')}
@@ -110,11 +110,11 @@ export function FinancialRunwayCard() {
             <div className="mt-5">
               <div className="flex items-center justify-between text-xs font-medium text-slate-400">
                 <span>{t('zeroMonths')}</span>
-                <span className="text-violet-500">{t('targetRange')}</span>
+                <span className="text-primary-500">{t('targetRange')}</span>
               </div>
-              <div className="mt-1.5 h-3 overflow-hidden rounded-full bg-violet-100/50">
+              <div className="mt-1.5 h-3 overflow-hidden rounded-full bg-primary-100/50">
                 <div
-                  className="relative h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-all duration-1000"
+                  className="relative h-full rounded-full bg-gradient-to-r from-primary-500 to-primary-500 transition-all duration-1000"
                   style={{ width: `${Math.min((data.runwayMonths / 6) * 100, 100)}%` }}
                 >
                   <div className="absolute inset-0 animate-pulse rounded-full bg-white/20" />
@@ -131,12 +131,12 @@ export function FinancialRunwayCard() {
             </div>
 
             {/* KPI row */}
-            <div className="mt-6 grid grid-cols-2 gap-4 rounded-2xl border border-violet-100/50 bg-violet-50/20 p-4 sm:grid-cols-4">
+            <div className="mt-6 grid grid-cols-2 gap-4 rounded-2xl border border-primary-100/50 bg-primary-50/20 p-4 sm:grid-cols-4">
               {[
                 { label: t('earned'), value: formatCurrency(data.monthlyIncome), accent: 'text-emerald-700' },
                 { label: t('spent'), value: formatCurrency(data.monthlyExpenses), accent: 'text-slate-900' },
-                { label: t('kept'), value: formatCurrency(data.netSaved), accent: 'text-violet-700' },
-                { label: t('saved'), value: `${data.savingsRate}%`, accent: 'text-violet-700' },
+                { label: t('kept'), value: formatCurrency(data.netSaved), accent: 'text-primary-700' },
+                { label: t('saved'), value: `${data.savingsRate}%`, accent: 'text-primary-700' },
               ].map((kpi) => (
                 <div key={kpi.label}>
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{kpi.label}</p>

@@ -71,7 +71,7 @@ export function DashboardCard({
         'relative overflow-hidden',
         baseCardClasses,
         gradient
-          ? 'bg-gradient-to-br from-surface-brand via-surface to-[oklch(98%_0.015_330)]'
+          ? 'bg-gradient-to-br from-surface-brand via-surface to-[oklch(98%_0.012_55)]'
           : '',
         'p-6 sm:p-8',
         colSpanClass,

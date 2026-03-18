@@ -3,15 +3,15 @@
 export function DashboardBackground() {
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-      {/* Top-left: warm violet wash */}
+      {/* Top-left: subtle teal wash */}
       <div
         className="absolute -left-32 -top-40 h-[550px] w-[550px] rounded-full blur-[160px]"
-        style={{ background: 'oklch(92% 0.04 285 / 35%)' }}
+        style={{ background: 'oklch(93% 0.035 168 / 25%)' }}
       />
-      {/* Bottom-right: subtle rose/fuchsia accent */}
+      {/* Bottom-right: warm amber accent */}
       <div
         className="absolute -bottom-48 right-[-8%] h-[450px] w-[450px] rounded-full blur-[140px]"
-        style={{ background: 'oklch(93% 0.03 320 / 20%)' }}
+        style={{ background: 'oklch(94% 0.025 55 / 20%)' }}
       />
     </div>
   );

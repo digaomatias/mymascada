@@ -41,8 +41,8 @@ export function GettingStartedSection() {
       desc: t('step1Desc'),
       cta: t('step1Cta'),
       href: '/accounts/new',
-      gradient: 'from-violet-500 to-violet-600',
-      ring: 'ring-violet-100',
+      gradient: 'from-primary-500 to-primary-600',
+      ring: 'ring-primary-100',
     },
     {
       number: 2,
@@ -61,17 +61,17 @@ export function GettingStartedSection() {
       desc: t('step3Desc'),
       cta: t('step3Cta'),
       href: '/categories',
-      gradient: 'from-fuchsia-500 to-fuchsia-600',
-      ring: 'ring-fuchsia-100',
+      gradient: 'from-primary-500 to-primary-600',
+      ring: 'ring-primary-100',
     },
   ];
 
   return (
-    <section className="rounded-3xl border border-violet-100/60 bg-gradient-to-br from-violet-50/80 to-fuchsia-50/60 p-6 shadow-sm sm:p-8">
+    <section className="rounded-3xl border border-primary-100/60 bg-gradient-to-br from-primary-50/80 to-primary-50/60 p-6 shadow-sm sm:p-8">
       {/* Heading */}
       <div className="mb-6">
         <h2 className="text-xl font-bold text-slate-800 sm:text-2xl">{t('title')}</h2>
-        <p className="mt-1 text-sm text-slate-500">{t('subtitle')}</p>
+        <p className="mt-1 text-sm text-ink-500">{t('subtitle')}</p>
       </div>
 
       {/* Steps */}
@@ -99,11 +99,11 @@ export function GettingStartedSection() {
               {/* Text */}
               <div className="flex-1">
                 <p className="font-semibold text-slate-800">{step.title}</p>
-                <p className="mt-1 text-xs text-slate-500 leading-relaxed">{step.desc}</p>
+                <p className="mt-1 text-xs text-ink-500 leading-relaxed">{step.desc}</p>
               </div>
 
               {/* CTA */}
-              <div className="flex items-center gap-1 text-sm font-medium text-violet-600 group-hover:text-violet-700 transition-colors">
+              <div className="flex items-center gap-1 text-sm font-medium text-primary-600 group-hover:text-primary-700 transition-colors">
                 {step.cta}
                 <ArrowRightIcon className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
               </div>

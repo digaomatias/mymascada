@@ -33,7 +33,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#6b46c1',
+  themeColor: '#2f8170',
 };
 
 // Force dynamic rendering since locale detection requires cookies at request time

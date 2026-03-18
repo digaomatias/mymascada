@@ -1,19 +1,19 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-primary-50: #f5f3ff;
-  --color-primary-100: #ede9fe;
-  --color-primary-200: #ddd6fe;
-  --color-primary-300: #c4b5fd;
-  --color-primary-400: #a78bfa;
-  --color-primary-500: #8b5cf6;
-  --color-primary-600: #6b46c1;
-  --color-primary-700: #553c9a;
-  --color-primary-800: #6b46c1;
-  --color-primary-900: #4c1d95;
-  --color-primary: #6b46c1;
-  --color-primary-light: #8b5cf6;
-  --color-primary-dark: #553c9a;
+  --color-primary-50: oklch(97% 0.015 168);
+  --color-primary-100: oklch(94% 0.03 168);
+  --color-primary-200: oklch(88% 0.06 168);
+  --color-primary-300: oklch(78% 0.09 168);
+  --color-primary-400: oklch(65% 0.11 168);
+  --color-primary-500: oklch(55% 0.12 168);
+  --color-primary-600: oklch(48% 0.10 168);
+  --color-primary-700: oklch(40% 0.09 168);
+  --color-primary-800: oklch(33% 0.08 168);
+  --color-primary-900: oklch(25% 0.07 168);
+  --color-primary: oklch(48% 0.10 168);
+  --color-primary-light: oklch(55% 0.12 168);
+  --color-primary-dark: oklch(40% 0.09 168);
 
   --color-success-50: #ecfdf5;
   --color-success-100: #d1fae5;
@@ -66,27 +66,27 @@
   --color-popover: #ffffff;
   --color-popover-foreground: #1e293b;
 
-  /* ── Impeccable: Tinted neutrals (violet hue 285, subtle chroma) ── */
-  --color-ink-50: oklch(97.5% 0.008 285);
-  --color-ink-100: oklch(96% 0.012 285);
-  --color-ink-200: oklch(92% 0.015 285);
-  --color-ink-300: oklch(85% 0.012 285);
-  --color-ink-400: oklch(70% 0.01 285);
-  --color-ink-500: oklch(55% 0.01 285);
-  --color-ink-600: oklch(45% 0.012 285);
-  --color-ink-700: oklch(35% 0.012 285);
-  --color-ink-800: oklch(25% 0.015 285);
-  --color-ink-900: oklch(18% 0.015 285);
-  --color-ink-950: oklch(13% 0.015 285);
+  /* ── Impeccable: Tinted neutrals (warm sand hue 65, subtle chroma) ── */
+  --color-ink-50: oklch(97.5% 0.008 65);
+  --color-ink-100: oklch(96% 0.012 65);
+  --color-ink-200: oklch(92% 0.015 65);
+  --color-ink-300: oklch(85% 0.012 65);
+  --color-ink-400: oklch(70% 0.01 65);
+  --color-ink-500: oklch(55% 0.01 65);
+  --color-ink-600: oklch(45% 0.012 65);
+  --color-ink-700: oklch(35% 0.012 65);
+  --color-ink-800: oklch(25% 0.015 65);
+  --color-ink-900: oklch(18% 0.015 65);
+  --color-ink-950: oklch(13% 0.015 65);
 
   /* Semantic surface colors */
-  --color-surface: oklch(99.5% 0.004 285);
-  --color-surface-alt: oklch(97.5% 0.008 285);
-  --color-surface-brand: oklch(96% 0.018 285);
+  --color-surface: oklch(99.5% 0.004 65);
+  --color-surface-alt: oklch(97.5% 0.008 65);
+  --color-surface-brand: oklch(96% 0.018 168);
 
   /* ── Impeccable: Tinted shadows ── */
-  --shadow-card: 0 1px 2px oklch(13% 0.015 285 / 4%), 0 6px 20px -6px oklch(13% 0.015 285 / 7%);
-  --shadow-card-raised: 0 1px 2px oklch(13% 0.015 285 / 4%), 0 12px 28px -8px oklch(13% 0.015 285 / 10%);
+  --shadow-card: 0 1px 2px oklch(13% 0.015 65 / 4%), 0 6px 20px -6px oklch(13% 0.015 65 / 7%);
+  --shadow-card-raised: 0 1px 2px oklch(13% 0.015 65 / 4%), 0 12px 28px -8px oklch(13% 0.015 65 / 10%);
 
   /* ── Fonts ── */
   --font-sans:
@@ -122,22 +122,22 @@
 }
 
 @utility btn-primary {
-  @apply btn bg-violet-600 text-white
-           hover:bg-violet-700
-           focus-visible:ring-violet-500;
-  box-shadow: 0 1px 2px oklch(30% 0.1 285 / 20%), 0 6px 16px -4px oklch(30% 0.15 285 / 30%);
+  @apply btn bg-primary-600 text-white
+           hover:bg-primary-700
+           focus-visible:ring-primary-500;
+  box-shadow: 0 1px 2px oklch(30% 0.1 168 / 20%), 0 6px 16px -4px oklch(30% 0.15 168 / 30%);
 
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 0 1px 2px oklch(30% 0.1 285 / 20%), 0 10px 22px -4px oklch(30% 0.15 285 / 40%);
+    box-shadow: 0 1px 2px oklch(30% 0.1 168 / 20%), 0 10px 22px -4px oklch(30% 0.15 168 / 40%);
   }
 }
 
 @utility btn-secondary {
   @apply btn bg-white text-ink-700
            hover:bg-ink-50 hover:text-ink-900
-           focus-visible:ring-violet-500;
-  border: 1px solid oklch(90% 0.02 285);
+           focus-visible:ring-primary-500;
+  border: 1px solid oklch(90% 0.02 65);
 }
 
 @utility btn-danger {
@@ -150,7 +150,7 @@
            bg-white placeholder-ink-400
            focus:ring-2 focus:ring-primary/20
            disabled:bg-ink-50 disabled:cursor-not-allowed;
-  border: 1px solid oklch(90% 0.015 285);
+  border: 1px solid oklch(90% 0.015 65);
   transition: border-color 150ms cubic-bezier(0.25, 1, 0.5, 1), box-shadow 150ms cubic-bezier(0.25, 1, 0.5, 1);
 
   &:focus {
@@ -163,7 +163,7 @@
            bg-white cursor-pointer
            focus:ring-2 focus:ring-primary/20
            disabled:bg-ink-50 disabled:cursor-not-allowed;
-  border: 1px solid oklch(90% 0.015 285);
+  border: 1px solid oklch(90% 0.015 65);
   transition: border-color 150ms cubic-bezier(0.25, 1, 0.5, 1);
 
   &:focus {
@@ -184,8 +184,8 @@
 
 @utility card {
   @apply rounded-2xl border p-6;
-  background: oklch(99.5% 0.004 285);
-  border-color: oklch(92% 0.02 285);
+  background: oklch(99.5% 0.004 65);
+  border-color: oklch(92% 0.02 65);
   box-shadow: var(--shadow-card);
 
   @media (prefers-contrast: high) {
@@ -205,9 +205,9 @@
 
 @utility form-card {
   @apply rounded-2xl border p-6;
-  background: oklch(99.5% 0.004 285);
-  border-color: oklch(92% 0.02 285);
-  box-shadow: 0 1px 3px oklch(13% 0.015 285 / 5%), 0 12px 32px -10px oklch(13% 0.015 285 / 10%);
+  background: oklch(99.5% 0.004 65);
+  border-color: oklch(92% 0.02 65);
+  box-shadow: 0 1px 3px oklch(13% 0.015 65 / 5%), 0 12px 32px -10px oklch(13% 0.015 65 / 10%);
 }
 
 @utility table {
@@ -274,19 +274,19 @@
 
 @utility modal-overlay {
   @apply fixed inset-0 z-40;
-  background: oklch(13% 0.015 285 / 50%);
+  background: oklch(13% 0.015 65 / 50%);
 }
 
 @utility modal-content {
   @apply rounded-2xl p-8 max-w-lg mx-auto border;
-  background: oklch(99.5% 0.004 285);
-  border-color: oklch(92% 0.02 285);
-  box-shadow: 0 24px 48px -12px oklch(13% 0.015 285 / 18%);
+  background: oklch(99.5% 0.004 65);
+  border-color: oklch(92% 0.02 65);
+  box-shadow: 0 24px 48px -12px oklch(13% 0.015 65 / 18%);
 }
 
 @utility modal-scroll {
   scrollbar-width: thin;
-  scrollbar-color: oklch(82% 0.01 285) oklch(96% 0.008 285);
+  scrollbar-color: oklch(82% 0.01 65) oklch(96% 0.008 65);
 }
 
 @layer base {
@@ -295,17 +295,17 @@
   }
 
   .modal-scroll::-webkit-scrollbar-track {
-    background: oklch(96% 0.008 285);
+    background: oklch(96% 0.008 65);
     border-radius: 3px;
   }
 
   .modal-scroll::-webkit-scrollbar-thumb {
-    background: oklch(82% 0.01 285);
+    background: oklch(82% 0.01 65);
     border-radius: 3px;
   }
 
   .modal-scroll::-webkit-scrollbar-thumb:hover {
-    background: oklch(70% 0.01 285);
+    background: oklch(70% 0.01 65);
   }
 }
 
@@ -315,7 +315,7 @@
 }
 
 @utility nav-link-active {
-  @apply bg-white/95 text-violet-900 shadow-lg shadow-violet-950/50;
+  @apply bg-white/95 text-primary-900 shadow-lg shadow-primary-900/50;
 }
 
 @utility form-group {
@@ -377,7 +377,7 @@
 
 @layer base {
   html {
-    color: oklch(18% 0.015 285);
+    color: oklch(18% 0.015 65);
     overflow-x: hidden;
   }
 
