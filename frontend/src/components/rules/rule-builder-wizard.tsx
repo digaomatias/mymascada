@@ -306,7 +306,7 @@ export function RuleBuilderWizard() {
             <div className={cn(
               'flex items-center justify-center w-10 h-10 rounded-full border-2 text-sm font-semibold transition-colors',
               currentStep > step.number && 'bg-emerald-500 border-emerald-500 text-white',
-              currentStep === step.number && 'bg-violet-500 border-violet-500 text-white',
+              currentStep === step.number && 'bg-primary-500 border-primary-500 text-white',
               currentStep < step.number && 'bg-white border-slate-300 text-slate-400'
             )}>
               {currentStep > step.number ? (
@@ -325,7 +325,7 @@ export function RuleBuilderWizard() {
         ))}
       </div>
 
-      <section className="rounded-[26px] border border-violet-100/60 bg-white/90 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
+      <section className="rounded-[26px] border border-ink-200 bg-white/90 shadow-lg shadow-primary-200/20 backdrop-blur-xs">
         {/* Card Header */}
         <div className="p-6 pb-0">
           <h2 className="font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900">
@@ -407,7 +407,7 @@ export function RuleBuilderWizard() {
                   id="caseSensitive"
                   checked={formData.isCaseSensitive}
                   onChange={(e) => updateFormData('isCaseSensitive', e.target.checked)}
-                  className="rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                  className="rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                 />
                 <Label htmlFor="caseSensitive" className="cursor-pointer">{t('builder.form.caseSensitive')}</Label>
               </label>
@@ -431,9 +431,9 @@ export function RuleBuilderWizard() {
                 </p>
               </div>
               {selectedCategory && (
-                <div className="p-4 bg-violet-50 rounded-2xl">
-                  <h4 className="font-medium text-violet-900">{t('builder.form.selectedCategory')}</h4>
-                  <p className="text-violet-700">{selectedCategory.name}</p>
+                <div className="p-4 bg-primary-50 rounded-2xl">
+                  <h4 className="font-medium text-primary-900">{t('builder.form.selectedCategory')}</h4>
+                  <p className="text-primary-700">{selectedCategory.name}</p>
                 </div>
               )}
             </div>
@@ -491,7 +491,7 @@ export function RuleBuilderWizard() {
                             updateFormData('accountTypes', formData.accountTypes.filter(t => t !== type.value));
                           }
                         }}
-                        className="rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                        className="rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                       />
                       <span className="text-sm text-slate-700">{t(`builder.accountTypes.${type.labelKey}`)}</span>
                     </label>
@@ -593,7 +593,7 @@ export function RuleBuilderWizard() {
                             type="checkbox"
                             checked={condition.isCaseSensitive}
                             onChange={(e) => updateCondition(index, 'isCaseSensitive', e.target.checked)}
-                            className="rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                            className="rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                           />
                           <span className="text-sm text-slate-600">{t('builder.advanced.caseSensitiveCondition')}</span>
                         </label>
@@ -757,7 +757,7 @@ export function RuleBuilderWizard() {
                   id="isActive"
                   checked={formData.isActive}
                   onChange={(e) => updateFormData('isActive', e.target.checked)}
-                  className="rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                  className="rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                 />
                 <Label htmlFor="isActive" className="cursor-pointer">{t('builder.review.activateImmediately')}</Label>
               </label>

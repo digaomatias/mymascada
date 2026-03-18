@@ -113,7 +113,7 @@ export function RuleSuggestionsView() {
     return (
       <div className="space-y-5">
         {/* Skeleton stat cards */}
-        <section className="rounded-[26px] border border-violet-100/60 bg-white/90 p-6 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
+        <section className="rounded-[26px] border border-ink-200 bg-white/90 p-6 shadow-lg shadow-primary-200/20 backdrop-blur-xs">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="animate-pulse">
@@ -134,7 +134,7 @@ export function RuleSuggestionsView() {
 
   if (!suggestions || suggestions.suggestions.length === 0) {
     return (
-      <Card className="rounded-[26px] border border-violet-100/60 bg-white/90 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
+      <Card className="rounded-[26px] border border-ink-200 bg-white/90 shadow-lg shadow-primary-200/20 backdrop-blur-xs">
         <CardContent className="text-center py-12 px-6">
           <div className="w-20 h-20 bg-gradient-to-br from-amber-400 to-amber-500 rounded-3xl shadow-2xl flex items-center justify-center mx-auto mb-6">
             <LightBulbIcon className="w-10 h-10 text-white" />
@@ -160,11 +160,11 @@ export function RuleSuggestionsView() {
   return (
     <div className="space-y-5">
       {/* Header Stats */}
-      <section className="rounded-[26px] border border-violet-100/60 bg-white/90 p-6 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
+      <section className="rounded-[26px] border border-ink-200 bg-white/90 p-6 shadow-lg shadow-primary-200/20 backdrop-blur-xs">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <SparklesIcon className="h-4 w-4 text-violet-500" />
+              <SparklesIcon className="h-4 w-4 text-primary-500" />
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                 {t('suggestions.stats.totalSuggestions')}
               </p>
@@ -188,7 +188,7 @@ export function RuleSuggestionsView() {
 
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <ClockIcon className="h-4 w-4 text-violet-500" />
+              <ClockIcon className="h-4 w-4 text-primary-500" />
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                 {t('suggestions.stats.generated')}
               </p>
@@ -215,7 +215,7 @@ export function RuleSuggestionsView() {
 
       {/* Category Distribution */}
       {Object.keys(suggestions.summary.categoryDistribution).length > 0 && (
-        <section className="rounded-[26px] border border-violet-100/60 bg-white/90 p-5 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
+        <section className="rounded-[26px] border border-ink-200 bg-white/90 p-5 shadow-lg shadow-primary-200/20 backdrop-blur-xs">
           <h3 className="font-[var(--font-dash-sans)] text-base font-semibold text-slate-900 mb-3">
             {t('suggestions.categoryDistribution')}
           </h3>
@@ -245,14 +245,14 @@ export function RuleSuggestionsView() {
         {visibleSuggestions.map((suggestion, index) => (
           <section
             key={index}
-            className="rounded-[26px] border border-violet-100/60 border-l-4 border-l-violet-500 bg-white/90 shadow-lg shadow-violet-200/20 backdrop-blur-xs overflow-hidden"
+            className="rounded-[26px] border border-ink-200 border-l-4 border-l-primary-500 bg-white/90 shadow-lg shadow-primary-200/20 backdrop-blur-xs overflow-hidden"
           >
             {/* Header */}
             <div className="p-5 pb-0">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <SparklesIcon className="h-5 w-5 text-violet-500 shrink-0" />
+                    <SparklesIcon className="h-5 w-5 text-primary-500 shrink-0" />
                     <h3 className="font-[var(--font-dash-sans)] text-base font-semibold text-slate-900 truncate">
                       {suggestion.name}
                     </h3>
@@ -353,7 +353,7 @@ export function RuleSuggestionsView() {
       </div>
 
       {visibleSuggestions.length === 0 && suggestions.suggestions.length > 0 && (
-        <Card className="rounded-[26px] border border-violet-100/60 bg-white/90 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
+        <Card className="rounded-[26px] border border-ink-200 bg-white/90 shadow-lg shadow-primary-200/20 backdrop-blur-xs">
           <CardContent className="text-center py-12 px-6">
             <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-2xl shadow-2xl flex items-center justify-center mx-auto mb-4">
               <CheckIcon className="w-8 h-8 text-white" />

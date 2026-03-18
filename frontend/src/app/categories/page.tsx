@@ -32,7 +32,7 @@ const BankCategoryMappings = dynamic(
       <div className="space-y-4">
         {Array.from({ length: 3 }).map((_, i) => (
           <div key={i} className="animate-pulse">
-            <div className="h-24 bg-slate-100 rounded-lg"></div>
+            <div className="h-24 bg-ink-100 rounded-lg"></div>
           </div>
         ))}
       </div>
@@ -274,10 +274,10 @@ export default function CategoriesPage() {
         <div className="mb-5">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
+              <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-ink-900 sm:text-[2.1rem]">
                 {t('title')}
               </h1>
-              <p className="text-[15px] text-slate-500 mt-1.5">
+              <p className="text-[15px] text-ink-500 mt-1.5">
                 {t('subtitle')}
               </p>
             </div>
@@ -294,15 +294,15 @@ export default function CategoriesPage() {
           </div>
 
           {/* Tabs */}
-          <div className="mt-4 border-b border-slate-200">
+          <div className="mt-4 border-b border-ink-200">
             <nav className="-mb-px flex gap-4 sm:gap-6">
               <button
                 onClick={() => setActiveTab('categories')}
                 className={cn(
                   'flex items-center gap-2 py-3 px-1 border-b-2 font-medium text-sm transition-colors',
                   activeTab === 'categories'
-                    ? 'border-violet-500 text-violet-600'
-                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                    ? 'border-primary-500 text-primary-600'
+                    : 'border-transparent text-ink-500 hover:text-ink-700 hover:border-ink-200'
                 )}
               >
                 <TagIcon className="w-5 h-5" />
@@ -313,8 +313,8 @@ export default function CategoriesPage() {
                 className={cn(
                   'flex items-center gap-2 py-3 px-1 border-b-2 font-medium text-sm transition-colors',
                   activeTab === 'bank-mappings'
-                    ? 'border-violet-500 text-violet-600'
-                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                    ? 'border-primary-500 text-primary-600'
+                    : 'border-transparent text-ink-500 hover:text-ink-700 hover:border-ink-200'
                 )}
               >
                 <ArrowPathIcon className="w-5 h-5" />
@@ -326,7 +326,7 @@ export default function CategoriesPage() {
           {/* Search Bar - only for categories tab */}
           {activeTab === 'categories' && (
             <div className="mt-4 relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-ink-400" />
               <Input
                 type="text"
                 placeholder={t('searchPlaceholder')}
@@ -349,7 +349,7 @@ export default function CategoriesPage() {
         <>
         {/* Status label */}
         {!loading && displayCategories.length > 0 && (
-          <p className="text-sm text-slate-500 mb-3">
+          <p className="text-sm text-ink-500 mb-3">
             {viewMode === 'search'
               ? t('searchResultsCount', { count: displayCategories.length, term: debouncedSearch })
               : viewMode === 'all'
@@ -357,19 +357,19 @@ export default function CategoriesPage() {
                 : t('showingTopByUsage', { count: displayCategories.length })}
           </p>
         )}
-        <Card className="rounded-[26px] border border-violet-100/60 bg-white/90 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
+        <Card className="rounded-[26px] border border-ink-200 bg-white/90 shadow-lg shadow-primary-200/20 backdrop-blur-xs">
           <CardContent className="p-0">
             {loading ? (
               <div className="p-6 space-y-4">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <div key={i} className="animate-pulse">
-                    <div className="flex items-center gap-4 p-4 bg-slate-100 rounded-lg">
-                      <div className="w-3 h-10 bg-slate-300 rounded"></div>
+                    <div className="flex items-center gap-4 p-4 bg-ink-100 rounded-lg">
+                      <div className="w-3 h-10 bg-ink-300 rounded"></div>
                       <div className="flex-1">
-                        <div className="h-4 bg-slate-300 rounded w-1/2 mb-2"></div>
-                        <div className="h-3 bg-slate-300 rounded w-1/4"></div>
+                        <div className="h-4 bg-ink-300 rounded w-1/2 mb-2"></div>
+                        <div className="h-3 bg-ink-300 rounded w-1/4"></div>
                       </div>
-                      <div className="h-6 bg-slate-300 rounded w-20"></div>
+                      <div className="h-6 bg-ink-300 rounded w-20"></div>
                     </div>
                   </div>
                 ))}
@@ -379,10 +379,10 @@ export default function CategoriesPage() {
                 <div className="w-20 h-20 bg-gradient-to-br from-primary-400 to-primary-600 rounded-3xl shadow-2xl flex items-center justify-center mx-auto mb-6">
                   <TagIcon className="w-10 h-10 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold text-slate-900 mb-2">
+                <h3 className="text-xl font-semibold text-ink-900 mb-2">
                   {categories.length === 0 ? t('noCategories') : t('noCategoriesMatch')}
                 </h3>
-                <p className="text-slate-500 mb-6">
+                <p className="text-ink-500 mb-6">
                   {categories.length === 0
                     ? t('getStarted')
                     : t('tryAdjusting')
@@ -416,8 +416,8 @@ export default function CategoriesPage() {
                     <div
                       key={category.id}
                       className={cn(
-                        'relative group border-b border-slate-100 last:border-b-0 hover:bg-slate-50 transition-colors',
-                        isChild && 'bg-slate-50/40'
+                        'relative group border-b border-ink-100 last:border-b-0 hover:bg-ink-50 transition-colors',
+                        isChild && 'bg-ink-50/40'
                       )}
                     >
                       <Link href={`/categories/${category.id}`} className="block">
@@ -438,7 +438,7 @@ export default function CategoriesPage() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <h4 className={cn(
-                                'text-slate-900 truncate',
+                                'text-ink-900 truncate',
                                 isChild
                                   ? 'text-sm font-medium'
                                   : 'text-base font-semibold'
@@ -446,13 +446,13 @@ export default function CategoriesPage() {
                                 {category.name}
                               </h4>
                               {category.isSystemCategory && (
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-500">
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-ink-100 text-ink-500">
                                   {t('system')}
                                 </span>
                               )}
                             </div>
                             {category.description && (
-                              <p className="text-sm text-slate-500 truncate mt-0.5">
+                              <p className="text-sm text-ink-500 truncate mt-0.5">
                                 {category.description}
                               </p>
                             )}
@@ -462,15 +462,15 @@ export default function CategoriesPage() {
                           <div className="flex-shrink-0 text-right">
                             {category.transactionCount > 0 ? (
                               <>
-                                <p className="font-[var(--font-dash-mono)] text-sm font-semibold text-slate-700">
+                                <p className="font-[var(--font-dash-mono)] text-sm font-semibold text-ink-700">
                                   {formatCurrency(Math.abs(category.totalAmount))}
                                 </p>
-                                <p className="text-xs text-slate-400">
+                                <p className="text-xs text-ink-400">
                                   {t('transactions', { count: category.transactionCount })}
                                 </p>
                               </>
                             ) : (
-                              <p className="text-xs text-slate-400">
+                              <p className="text-xs text-ink-400">
                                 {t('noTransactions')}
                               </p>
                             )}
@@ -492,11 +492,11 @@ export default function CategoriesPage() {
                                 <EllipsisVerticalIcon className="w-4 h-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48 bg-white border border-slate-200 shadow-lg z-50">
+                            <DropdownMenuContent align="end" className="w-48 bg-white border border-ink-200 shadow-lg z-50">
                               <DropdownMenuItem asChild>
                                 <Link
                                   href={`/categories/${category.id}`}
-                                  className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-sm"
+                                  className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-ink-700 hover:bg-ink-50 rounded-sm"
                                 >
                                   <EyeIcon className="w-4 h-4" />
                                   {t('viewDetails')}
@@ -505,13 +505,13 @@ export default function CategoriesPage() {
                               <DropdownMenuItem asChild>
                                 <Link
                                   href={`/categories/${category.id}/edit`}
-                                  className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-sm"
+                                  className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-ink-700 hover:bg-ink-50 rounded-sm"
                                 >
                                   <PencilIcon className="w-4 h-4" />
                                   {t('editCategory')}
                                 </Link>
                               </DropdownMenuItem>
-                              <DropdownMenuSeparator className="my-1 bg-slate-200" />
+                              <DropdownMenuSeparator className="my-1 bg-ink-200" />
                               <DropdownMenuItem
                                 onClick={() => handleDeleteCategory(category.id, category.name)}
                                 className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-sm cursor-pointer"
@@ -529,12 +529,12 @@ export default function CategoriesPage() {
 
                 {/* Show all / Show top toggle button */}
                 {(viewMode === 'all' || hasMoreCategories) && (
-                  <div className="py-3 text-center border-t border-slate-100">
+                  <div className="py-3 text-center border-t border-ink-100">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setShowAll(!showAll)}
-                      className="text-slate-500 hover:text-violet-600"
+                      className="text-ink-500 hover:text-primary-600"
                     >
                       {showAll
                         ? t('showTopCategories')

@@ -47,7 +47,7 @@ export function ConflictResolutionCard({
       case ConflictType.PotentialDuplicate:
         return 'bg-orange-100 text-orange-800 border-orange-200';
       case ConflictType.TransferConflict:
-        return 'bg-purple-100 text-purple-800 border-purple-200';
+        return 'bg-primary-100 text-primary-800 border-primary-200';
       case ConflictType.ManualEntryConflict:
         return 'bg-blue-100 text-blue-800 border-blue-200';
       default:
@@ -116,7 +116,7 @@ export function ConflictResolutionCard({
       case ConflictResolution.MergeWithExisting:
         return 'bg-blue-500 hover:bg-blue-600';
       case ConflictResolution.ReplaceExisting:
-        return 'bg-purple-500 hover:bg-purple-600';
+        return 'bg-primary-500 hover:bg-primary-600';
       default:
         return 'bg-yellow-500 hover:bg-yellow-600';
     }

@@ -212,10 +212,10 @@ export const GOAL_TYPE_CONFIGS: Record<string, GoalTypeConfig> = {
   Savings: {
     icon: BanknotesIcon,
     accentColor: {
-      bg: 'bg-violet-50',
-      text: 'text-violet-700',
-      border: 'border-violet-200',
-      bar: 'bg-violet-500',
+      bg: 'bg-primary-50',
+      text: 'text-primary-700',
+      border: 'border-ink-200',
+      bar: 'bg-primary-500',
     },
     journeyStage: 'growth',
     journeyPriority: 3,

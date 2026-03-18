@@ -278,14 +278,14 @@ export function DraggableTransactionCard({
                     e.stopPropagation();
                     onPreview();
                   }}
-                  className="p-1 text-purple-500 hover:text-purple-700 hover:bg-purple-50 rounded transition-colors"
+                  className="p-1 text-primary-500 hover:text-primary-700 hover:bg-primary-50 rounded transition-colors"
                   title={t('previewAiDescription')}
                 >
                   <SparklesIcon className="w-4 h-4" />
                 </button>
               )}
               {isPreviewing && (
-                <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
               )}
               {bankTransaction?.bankCategory && (
                 <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">
@@ -293,7 +293,7 @@ export function DraggableTransactionCard({
                 </span>
               )}
               {systemTransaction?.categoryName && (
-                <span className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-700">
+                <span className="text-xs px-2 py-1 rounded-full bg-primary-100 text-primary-700">
                   {systemTransaction.categoryName}
                 </span>
               )}

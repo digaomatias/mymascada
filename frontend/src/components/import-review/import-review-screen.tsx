@@ -462,7 +462,7 @@ export function ImportReviewScreen({
 
       {/* Workflow Guidance */}
       {progressStats.total > 0 && progressStats.pending > 0 && (
-        <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+        <Card className="bg-gradient-to-r from-blue-50 to-primary-50 border-blue-200">
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
               <InformationCircleIcon className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
@@ -581,8 +581,8 @@ export function ImportReviewScreen({
         {renderConflictGroup(
           tImport('review.groups.transfer.title'),
           groupedItems.transferConflicts,
-          <ExclamationTriangleIcon className="w-5 h-5 text-purple-600" />,
-          'bg-purple-100',
+          <ExclamationTriangleIcon className="w-5 h-5 text-primary-600" />,
+          'bg-primary-100',
           tImport('review.groups.transfer.description')
         )}
 

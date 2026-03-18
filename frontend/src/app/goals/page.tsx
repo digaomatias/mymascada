@@ -171,10 +171,10 @@ export default function GoalsPage() {
       <header className="mb-5">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
+            <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-ink-900 sm:text-[2.1rem]">
               {t('title')}
             </h1>
-            <p className="mt-1.5 text-[15px] text-slate-500">
+            <p className="mt-1.5 text-[15px] text-ink-500">
               {t('journeySubtitle')}
             </p>
           </div>
@@ -192,7 +192,7 @@ export default function GoalsPage() {
             checked={showCompleted}
             onCheckedChange={(checked) => setShowCompleted(checked === true)}
           />
-          <Label htmlFor="showCompleted" className="text-sm text-slate-600">
+          <Label htmlFor="showCompleted" className="text-sm text-ink-600">
             {t('filters.showCompleted')}
           </Label>
         </div>
@@ -219,12 +219,12 @@ export default function GoalsPage() {
           <GoalsSkeleton />
         ) : sorted.length === 0 ? (
           /* Empty state */
-          <section className="rounded-[28px] border border-violet-100/80 bg-white/92 p-10 text-center shadow-[0_20px_50px_-30px_rgba(76,29,149,0.45)]">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-100 text-violet-600">
+          <section className="rounded-[28px] border border-ink-200 bg-white/92 p-10 text-center shadow-[0_20px_50px_-30px_rgba(47,129,112,0.20)]">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-100 text-primary-600">
               <SparklesIcon className="h-7 w-7" />
             </div>
-            <h3 className="mt-4 text-xl font-semibold text-slate-900">{t('emptyState.title')}</h3>
-            <p className="mt-2 text-sm text-slate-500">
+            <h3 className="mt-4 text-xl font-semibold text-ink-900">{t('emptyState.title')}</h3>
+            <p className="mt-2 text-sm text-ink-500">
               {t('emptyState.description')}
             </p>
             <Link href="/goals/new" className="mt-5 inline-flex">
@@ -240,7 +240,7 @@ export default function GoalsPage() {
             {/* Pinned section */}
             {pinnedGoals.length > 0 && (
               <section>
-                <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-violet-500">
+                <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-primary-500">
                   {t('pinned')}
                 </h2>
                 <div className="space-y-3">
@@ -265,7 +265,7 @@ export default function GoalsPage() {
               if (stageGoals.length === 0) return null;
               return (
                 <section key={stage.key}>
-                  <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-400">
                     {t(`stages.${stage.key}`)}
                   </h2>
                   <div className="space-y-3">
@@ -288,7 +288,7 @@ export default function GoalsPage() {
             {/* Completed / paused at the bottom */}
             {showCompleted && completedGoals.length > 0 && (
               <section>
-                <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-400">
                   {t('completed')}
                 </h2>
                 <div className="space-y-3">
@@ -325,7 +325,7 @@ function JourneyMap({
   stageLabels: ReturnType<typeof useTranslations<'goals'>>;
 }) {
   return (
-    <div className="flex items-center justify-center gap-0 overflow-x-auto rounded-2xl border border-violet-100/60 bg-white/80 px-4 py-3.5 shadow-sm">
+    <div className="flex items-center justify-center gap-0 overflow-x-auto rounded-2xl border border-ink-200 bg-white/80 px-4 py-3.5 shadow-sm">
       {JOURNEY_STAGES.map((stage, i) => {
         const isCurrent = stage.key === currentStage;
         const hasGoals = activeStages.has(stage.key);
@@ -338,16 +338,16 @@ function JourneyMap({
               <div className="relative flex items-center justify-center">
                 {/* Pulse ring for current focus stage */}
                 {isCurrent && (
-                  <span className="absolute h-5 w-5 animate-ping rounded-full bg-violet-400/30" />
+                  <span className="absolute h-5 w-5 animate-ping rounded-full bg-primary-400/30" />
                 )}
                 <span
                   className={cn(
                     'relative block rounded-full transition-colors',
                     isCurrent
-                      ? 'h-3.5 w-3.5 bg-violet-600 ring-[3px] ring-violet-200'
+                      ? 'h-3.5 w-3.5 bg-primary-600 ring-[3px] ring-primary-200'
                       : hasGoals
-                        ? 'h-2.5 w-2.5 bg-violet-500'
-                        : 'h-2.5 w-2.5 border-[1.5px] border-slate-300 bg-white',
+                        ? 'h-2.5 w-2.5 bg-primary-500'
+                        : 'h-2.5 w-2.5 border-[1.5px] border-ink-200 bg-white',
                   )}
                 />
               </div>
@@ -356,10 +356,10 @@ function JourneyMap({
                 className={cn(
                   'text-[10px] font-semibold uppercase tracking-[0.08em]',
                   isCurrent
-                    ? 'text-violet-700'
+                    ? 'text-primary-700'
                     : hasGoals
-                      ? 'text-violet-500'
-                      : 'text-slate-400',
+                      ? 'text-primary-500'
+                      : 'text-ink-400',
                 )}
               >
                 {stageLabels(`stages.${stage.key}`)}
@@ -370,7 +370,7 @@ function JourneyMap({
               <div
                 className={cn(
                   'mx-2 h-px w-8 sm:w-12',
-                  hasGoals || isCurrent ? 'bg-violet-200' : 'bg-slate-200',
+                  hasGoals || isCurrent ? 'bg-primary-200' : 'bg-ink-200',
                 )}
               />
             )}
@@ -425,7 +425,7 @@ function NudgeBanner({
           <LightBulbIcon className="h-[18px] w-[18px]" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-slate-800">{message}</p>
+          <p className="text-sm font-medium text-ink-800">{message}</p>
           {ctaLabel && ctaHref && (
             <Link
               href={ctaHref}
@@ -469,7 +469,7 @@ function GoalCard({
   return (
     <article
       onClick={onClick}
-      className="cursor-pointer rounded-[26px] border border-violet-100/80 bg-white/90 p-5 shadow-[0_20px_44px_-32px_rgba(76,29,149,0.48)] transition-shadow hover:shadow-[0_24px_52px_-28px_rgba(76,29,149,0.55)]"
+      className="cursor-pointer rounded-[26px] border border-ink-200 bg-white/90 p-5 shadow-[0_20px_44px_-32px_rgba(47,129,112,0.20)] transition-shadow hover:shadow-[0_24px_52px_-28px_rgba(47,129,112,0.25)]"
     >
       {/* Top row: icon + name + badges + pin */}
       <div className="flex items-start gap-3">
@@ -485,7 +485,7 @@ function GoalCard({
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="line-clamp-1 text-lg font-semibold tracking-[-0.02em] text-slate-900">
+            <h3 className="line-clamp-1 text-lg font-semibold tracking-[-0.02em] text-ink-900">
               {goal.name}
             </h3>
             <span
@@ -499,7 +499,7 @@ function GoalCard({
               {stateStyle.label}
             </span>
             {isFocus && (
-              <span className="shrink-0 rounded-full bg-violet-600 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-white">
+              <span className="shrink-0 rounded-full bg-primary-600 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-white">
                 {t('focus')}
               </span>
             )}
@@ -509,11 +509,11 @@ function GoalCard({
         {/* Pin toggle */}
         <button
           onClick={(e) => onTogglePin(goal, e)}
-          className="shrink-0 rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-violet-50 hover:text-violet-600"
+          className="shrink-0 rounded-lg p-1.5 text-ink-400 transition-colors hover:bg-primary-50 hover:text-primary-600"
           title={goal.isPinned ? t('unpinGoal') : t('pinGoal')}
         >
           {goal.isPinned ? (
-            <MapPinSolidIcon className="h-4.5 w-4.5 text-violet-600" />
+            <MapPinSolidIcon className="h-4.5 w-4.5 text-primary-600" />
           ) : (
             <MapPinOutlineIcon className="h-4.5 w-4.5" />
           )}
@@ -524,23 +524,23 @@ function GoalCard({
       <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
         {hero ? (
           <div>
-            <p className="text-base font-semibold text-slate-900">{hero.label}</p>
+            <p className="text-base font-semibold text-ink-900">{hero.label}</p>
             {hero.subtext && (
-              <p className="text-xs text-slate-500">{hero.subtext}</p>
+              <p className="text-xs text-ink-500">{hero.subtext}</p>
             )}
           </div>
         ) : (
-          <p className="text-base font-semibold text-slate-900">
+          <p className="text-base font-semibold text-ink-900">
             {t('funded', { percent: `${goal.progressPercentage.toFixed(0)}%` })}
           </p>
         )}
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-ink-600">
           {formatCurrency(goal.currentAmount)} / {formatCurrency(goal.targetAmount)}
         </p>
       </div>
 
       {/* Progress bar */}
-      <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-200">
+      <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-ink-200">
         <div
           className={cn('h-full rounded-full transition-all', config.accentColor.bar)}
           style={{ width: `${Math.min(goal.progressPercentage, 100)}%` }}
@@ -548,7 +548,7 @@ function GoalCard({
       </div>
 
       {/* Footer: metadata + link */}
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-ink-500">
         <div className="flex flex-wrap items-center gap-3">
           {goal.deadline && goal.daysRemaining !== undefined && (
             <span className="inline-flex items-center gap-1">
@@ -565,7 +565,7 @@ function GoalCard({
             </span>
           )}
         </div>
-        <span className="inline-flex items-center gap-1 text-xs font-semibold text-violet-600">
+        <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary-600">
           {t('viewDetails')}
           <ArrowRightIcon className="h-3.5 w-3.5" />
         </span>

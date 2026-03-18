@@ -201,10 +201,10 @@ export function LlmCategorizationSection({
   // Show loading state while checking health
   if (isCheckingHealth || isHealthy === null) {
     return (
-      <Card className="mb-6 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
+      <Card className="mb-6 bg-gradient-to-r from-primary-50 to-blue-50 border-primary-200">
         <CardContent className="p-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-r from-primary-500 to-blue-500 rounded-lg flex items-center justify-center">
               <SparklesIcon className="w-5 h-5 text-white animate-pulse" />
             </div>
             <div>
@@ -262,11 +262,11 @@ export function LlmCategorizationSection({
   }
 
   return (
-    <Card className="mb-6 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
+    <Card className="mb-6 bg-gradient-to-r from-primary-50 to-blue-50 border-primary-200">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-r from-primary-500 to-blue-500 rounded-lg flex items-center justify-center">
               <SparklesIcon className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -298,7 +298,7 @@ export function LlmCategorizationSection({
                 type="checkbox"
                 checked={selectedTransactions.length === transactions.length && transactions.length > 0}
                 onChange={handleSelectAll}
-                className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
               />
               <span className="text-sm font-medium text-gray-700">
                 {tTransactions('aiCategorization.selectAllCount', {
@@ -311,7 +311,7 @@ export function LlmCategorizationSection({
             <Button
               onClick={handleBatchCategorize}
               disabled={isProcessing || selectedTransactions.length === 0}
-              className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
+              className="bg-gradient-to-r from-primary-500 to-blue-500 hover:from-primary-600 hover:to-primary-600"
             >
               {isProcessing ? (
                 <>
@@ -335,7 +335,7 @@ export function LlmCategorizationSection({
                   type="checkbox"
                   checked={selectedTransactions.includes(transaction.id)}
                   onChange={() => handleSelectTransaction(transaction.id)}
-                  className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                  className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                 />
                 <span className="text-xs text-gray-600 truncate">
                   {transaction.userDescription || transaction.description}
@@ -353,9 +353,9 @@ export function LlmCategorizationSection({
 
         {/* AI Suggestions */}
         {suggestions.length > 0 && (
-          <div className="border-t border-purple-200 pt-4">
+          <div className="border-t border-primary-200 pt-4">
             <div className="flex items-center gap-2 mb-3">
-              <LightBulbIcon className="w-5 h-5 text-purple-600" />
+              <LightBulbIcon className="w-5 h-5 text-primary-600" />
               <h4 className="font-medium text-gray-900">{tTransactions('aiCategorization.suggestionsTitle')}</h4>
               <span className="text-sm text-gray-500">{tTransactions('aiCategorization.suggestionsReady', { count: suggestions.length })}</span>
             </div>
@@ -368,14 +368,14 @@ export function LlmCategorizationSection({
                 if (!transaction || !bestSuggestion) return null;
 
                 return (
-                  <div key={suggestion.transactionId} className="p-3 bg-white rounded-lg border border-purple-200">
+                  <div key={suggestion.transactionId} className="p-3 bg-white rounded-lg border border-primary-200">
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">
                           {transaction.userDescription || transaction.description}
                         </p>
                         <div className="flex items-center gap-3 mt-1">
-                          <span className="text-sm font-medium text-purple-700">
+                          <span className="text-sm font-medium text-primary-700">
                             {bestSuggestion.categoryName}
                           </span>
                           <ConfidenceIndicator confidence={bestSuggestion.confidence} />
@@ -392,7 +392,7 @@ export function LlmCategorizationSection({
                           size="sm"
                           onClick={() => handleApplySuggestion(suggestion)}
                           disabled={isProcessing}
-                          className="text-purple-700 border-purple-200 hover:bg-purple-100"
+                          className="text-primary-700 border-primary-200 hover:bg-primary-100"
                           variant="secondary"
                         >
                           <CheckIcon className="w-3 h-3 mr-1" />

@@ -201,11 +201,11 @@ export function TransactionComparison({
           {/* System Transaction */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+              <div className="w-3 h-3 bg-primary-500 rounded-full"></div>
               <h4 className="font-medium text-gray-900">{t('transactionComparison.system')}</h4>
             </div>
             
-            <div className="space-y-3 p-4 bg-purple-50 rounded-lg border border-purple-200">
+            <div className="space-y-3 p-4 bg-primary-50 rounded-lg border border-primary-200">
               <div>
                 <span className="text-sm text-gray-600">{t('transactionComparison.fields.description')}</span>
                 <div className="font-medium mt-1">

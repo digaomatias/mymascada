@@ -156,13 +156,13 @@ export function OnboardingWizard() {
       )}
     >
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-44 -top-44 h-[580px] w-[580px] rounded-full bg-violet-200/55 blur-[110px]" />
-        <div className="absolute -bottom-56 -right-40 h-[560px] w-[560px] rounded-full bg-fuchsia-200/50 blur-[120px]" />
+        <div className="absolute -left-44 -top-44 h-[580px] w-[580px] rounded-full bg-primary-200/55 blur-[110px]" />
+        <div className="absolute -bottom-56 -right-40 h-[560px] w-[560px] rounded-full bg-primary-200/50 blur-[120px]" />
         <div
           className="absolute inset-0 opacity-[0.08]"
           style={{
             backgroundImage:
-              'linear-gradient(to right, rgba(124, 58, 237, 0.2) 1px, transparent 1px), linear-gradient(to bottom, rgba(124, 58, 237, 0.2) 1px, transparent 1px)',
+              'linear-gradient(to right, rgba(47, 129, 112, 0.15) 1px, transparent 1px), linear-gradient(to bottom, rgba(47, 129, 112, 0.15) 1px, transparent 1px)',
             backgroundSize: '30px 30px',
           }}
         />
@@ -177,7 +177,7 @@ export function OnboardingWizard() {
 
         <div
           className={cn(
-            'w-full overflow-hidden rounded-[30px] border border-violet-100/85 bg-white/85 shadow-[0_20px_70px_-32px_rgba(76,29,149,0.42)] backdrop-blur-xl',
+            'w-full overflow-hidden rounded-[30px] border border-ink-200 bg-white/85 shadow-[0_20px_70px_-32px_rgba(47,129,112,0.18)] backdrop-blur-xl',
             (currentStep === 1 || currentStep === 5) && 'mx-auto max-w-[860px]'
           )}
         >
@@ -249,7 +249,7 @@ export function OnboardingWizard() {
         {currentStep !== 5 && (
           <div className="flex flex-col items-center gap-2">
             {!showProgress && (
-              <p className="text-center text-xs font-medium tracking-[0.12em] text-violet-500/70">
+              <p className="text-center text-xs font-medium tracking-[0.12em] text-primary-500/70">
                 {t('welcome.duration')}
               </p>
             )}
@@ -257,7 +257,7 @@ export function OnboardingWizard() {
               type="button"
               onClick={() => { void handleSkip(); }}
               disabled={isSkipping || isSubmitting}
-              className="text-xs text-violet-400/70 hover:text-violet-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed underline underline-offset-2"
+              className="text-xs text-primary-400/70 hover:text-primary-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed underline underline-offset-2"
             >
               {isSkipping ? t('skipping') : t('skip')}
             </button>
@@ -265,7 +265,7 @@ export function OnboardingWizard() {
         )}
 
         {currentStep === 5 && (
-          <p className="mx-auto text-center text-xs font-medium tracking-[0.12em] text-violet-500/70">
+          <p className="mx-auto text-center text-xs font-medium tracking-[0.12em] text-primary-500/70">
             {t('complete.redirecting')}
           </p>
         )}

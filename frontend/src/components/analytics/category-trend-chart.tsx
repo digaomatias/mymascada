@@ -18,16 +18,16 @@ import { useTranslations } from 'next-intl';
 
 // Default color palette for categories without a color
 const DEFAULT_COLORS = [
-  '#8B5CF6', // purple
-  '#EC4899', // pink
+  '#2f8170', // teal
+  '#c0614a', // coral
   '#10B981', // green
-  '#F59E0B', // yellow
-  '#3B82F6', // blue
+  '#F59E0B', // amber
+  '#5b7fb5', // slate blue
   '#EF4444', // red
-  '#6366F1', // indigo
-  '#14B8A6', // teal
+  '#c08a30', // gold
+  '#b85670', // warm rose
   '#F97316', // orange
-  '#84CC16', // lime
+  '#6a9b5e', // sage
 ];
 
 interface CategoryTrendChartProps {
@@ -79,7 +79,7 @@ export function CategoryTrendChart({ categories, selectedCategoryIds }: Category
       const total = payload.reduce((sum: number, entry: { value: number }) => sum + (entry.value || 0), 0);
 
       return (
-        <div className="max-w-xs rounded-xl border border-violet-100/70 bg-white/98 p-4 shadow-[0_18px_36px_-26px_rgba(76,29,149,0.55)] backdrop-blur-xs">
+        <div className="max-w-xs rounded-xl border border-ink-200 bg-white/98 p-4 shadow-[0_18px_36px_-26px_rgba(47,129,112,0.25)] backdrop-blur-xs">
           <p className="mb-2 font-[var(--font-dash-sans)] text-sm font-semibold text-slate-900">{label}</p>
           {payload.map((entry: { name: string; value: number; color: string }, index: number) => {
             const percentage = total > 0 ? ((entry.value / total) * 100).toFixed(1) : 0;
@@ -118,9 +118,9 @@ export function CategoryTrendChart({ categories, selectedCategoryIds }: Category
 
   if (displayCategories.length === 0) {
     return (
-      <div className="flex h-[420px] items-center justify-center rounded-2xl border border-dashed border-violet-200/70 bg-violet-50/30 text-slate-500">
+      <div className="flex h-[420px] items-center justify-center rounded-2xl border border-dashed border-ink-200 bg-primary-50/30 text-slate-500">
         <div className="text-center">
-          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100 text-violet-600">
+          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-primary-100 text-primary-600">
             <ChartBarIcon className="h-5 w-5" />
           </div>
           <p className="text-sm font-medium">{t('selectToViewTrends')}</p>

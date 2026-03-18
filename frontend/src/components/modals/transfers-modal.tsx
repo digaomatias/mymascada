@@ -192,7 +192,7 @@ export function TransfersModal({ isOpen, onClose, onRefresh }: TransfersModalPro
               />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-2">
-                  <ArrowsRightLeftIcon className="w-5 h-5 text-purple-500" />
+                  <ArrowsRightLeftIcon className="w-5 h-5 text-primary-500" />
                   <h3 className="font-medium text-gray-900 truncate">
                     {t('transfers.transferMatch')}
                   </h3>
@@ -314,18 +314,18 @@ export function TransfersModal({ isOpen, onClose, onRefresh }: TransfersModalPro
     >
       <div className="space-y-6">
         {/* Simple Detection */}
-        <Card className="bg-purple-50 border-purple-200">
+        <Card className="bg-primary-50 border-primary-200">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <AdjustmentsHorizontalIcon className="w-5 h-5 text-purple-600" />
-                <h3 className="font-medium text-purple-900">{t('transfers.detectionTitle')}</h3>
-                <span className="text-sm text-purple-700">{t('transfers.detectionSubtitle')}</span>
+                <AdjustmentsHorizontalIcon className="w-5 h-5 text-primary-600" />
+                <h3 className="font-medium text-primary-900">{t('transfers.detectionTitle')}</h3>
+                <span className="text-sm text-primary-700">{t('transfers.detectionSubtitle')}</span>
               </div>
               <Button
                 onClick={runDetection}
                 disabled={loading}
-                className="bg-purple-600 hover:bg-purple-700"
+                className="bg-primary-600 hover:bg-primary-700"
                 size="sm"
               >
                 <MagnifyingGlassIcon className="w-4 h-4 mr-2" />
@@ -339,8 +339,8 @@ export function TransfersModal({ isOpen, onClose, onRefresh }: TransfersModalPro
         <div className="space-y-4">
           {loading && (
             <div className="text-center py-8">
-              <div className="inline-flex items-center gap-2 text-purple-600">
-                <div className="w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin" />
+              <div className="inline-flex items-center gap-2 text-primary-600">
+                <div className="w-5 h-5 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
                 <span>{t('transfers.scanningPotential')}</span>
               </div>
             </div>

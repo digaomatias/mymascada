@@ -82,7 +82,7 @@ export function Pagination({
               value={pageSize}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
               disabled={loading}
-              className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 disabled:opacity-50"
+              className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:opacity-50"
             >
               {pageSizeOptions.map((size) => (
                 <option key={size} value={size}>
@@ -199,7 +199,7 @@ function renderPageNumbers(
         className={`
           px-3 py-1 text-sm font-medium rounded-md transition-colors
           ${isCurrent
-            ? 'bg-purple-600 text-white'
+            ? 'bg-primary-600 text-white'
             : 'text-gray-700 hover:bg-gray-100 focus:bg-gray-100'
           }
           disabled:opacity-50 disabled:cursor-not-allowed

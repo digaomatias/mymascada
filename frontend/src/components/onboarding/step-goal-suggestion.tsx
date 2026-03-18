@@ -70,8 +70,8 @@ export function StepGoalSuggestion({
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)] lg:gap-8">
-      <section className="flex flex-col rounded-[24px] border border-violet-100 bg-white/80 p-5 sm:p-6">
-        <div className="inline-flex w-fit items-center gap-2 rounded-full border border-violet-100 bg-violet-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-violet-600">
+      <section className="flex flex-col rounded-[24px] border border-ink-200 bg-white/80 p-5 sm:p-6">
+        <div className="inline-flex w-fit items-center gap-2 rounded-full border border-ink-200 bg-primary-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-primary-600">
           <ShieldCheckIcon className="h-4 w-4" />
           {t('goalSuggestion.recommended')}
         </div>
@@ -88,13 +88,13 @@ export function StepGoalSuggestion({
         <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
           {!isEditing ? (
             <div className="space-y-3">
-              <div className="relative rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 to-fuchsia-50 p-4">
-                <span className="absolute right-3 top-3 rounded-full bg-violet-600 px-2 py-0.5 text-xs font-semibold text-white">
+              <div className="relative rounded-2xl border border-ink-200 bg-gradient-to-br from-primary-50 to-primary-50 p-4">
+                <span className="absolute right-3 top-3 rounded-full bg-primary-600 px-2 py-0.5 text-xs font-semibold text-white">
                   {t('goalSuggestion.recommended')}
                 </span>
                 <p className="pr-24 text-sm font-medium text-slate-600">{t('goalSuggestion.goalNameLabel')}</p>
                 <p className="mt-1 text-lg font-semibold text-slate-900">{goalName}</p>
-                <p className="mt-2 font-[var(--font-onboarding-mono)] text-3xl font-semibold text-violet-700">
+                <p className="mt-2 font-[var(--font-onboarding-mono)] text-3xl font-semibold text-primary-700">
                   {formatCurrency(goalTargetAmount)}
                 </p>
                 {isBelowMinimum && (
@@ -125,7 +125,7 @@ export function StepGoalSuggestion({
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsEditing(true)}
-                className="rounded-lg border border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100"
+                className="rounded-lg border border-ink-200 bg-primary-50 text-primary-700 hover:bg-primary-100"
               >
                 <AdjustmentsHorizontalIcon className="mr-1.5 h-4 w-4" />
                 {t('goalSuggestion.editGoal')}
@@ -138,7 +138,7 @@ export function StepGoalSuggestion({
                 value={goalName}
                 onChange={(event) => onGoalNameChange(event.target.value)}
                 maxLength={100}
-                className="rounded-xl border-violet-200 focus:border-violet-400 focus:ring-violet-200"
+                className="rounded-xl border-ink-200 focus:border-primary-400 focus:ring-primary-200"
               />
               <CurrencyInput
                 value={goalTargetAmount}
@@ -148,7 +148,7 @@ export function StepGoalSuggestion({
                 allowNegative={false}
                 error={isBelowMinimum}
                 errorMessage={isBelowMinimum ? t('goalSuggestion.belowMinimum', { amount: formatCurrency(monthlyExpenses) }) : undefined}
-                className="rounded-xl border-violet-200 bg-white [font-family:var(--font-onboarding-mono)] focus:border-violet-400 focus:ring-violet-200"
+                className="rounded-xl border-ink-200 bg-white [font-family:var(--font-onboarding-mono)] focus:border-primary-400 focus:ring-primary-200"
               />
               {isBelowRecommended && (
                 <p className="text-xs font-medium text-amber-600">
@@ -166,7 +166,7 @@ export function StepGoalSuggestion({
                       const val = e.target.value;
                       onLinkedAccountChange?.(val ? Number(val) : undefined);
                     }}
-                    className="rounded-xl border-violet-200 focus:border-violet-400 focus:ring-violet-200"
+                    className="rounded-xl border-ink-200 focus:border-primary-400 focus:ring-primary-200"
                   >
                     <option value="">{t('goalSuggestion.noLinkedAccount')}</option>
                     {accounts.map((account) => (
@@ -188,7 +188,7 @@ export function StepGoalSuggestion({
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsEditing(false)}
-                  className="rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-violet-200 hover:bg-violet-50"
+                  className="rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-ink-200 hover:bg-primary-50"
                 >
                   {t('goalSuggestion.doneEditing')}
                 </Button>
@@ -201,14 +201,14 @@ export function StepGoalSuggestion({
           <Button
             variant="ghost"
             onClick={onBack}
-            className="rounded-xl border border-slate-200 bg-white px-5 text-slate-700 hover:border-violet-200 hover:bg-violet-50"
+            className="rounded-xl border border-slate-200 bg-white px-5 text-slate-700 hover:border-ink-200 hover:bg-primary-50"
           >
             {t('back')}
           </Button>
           <Button
             onClick={onNext}
             disabled={!goalName.trim() || goalTargetAmount <= 0 || isBelowMinimum || isSubmitting}
-            className="rounded-xl bg-violet-600 px-6 text-white shadow-[0_12px_25px_-15px_rgba(124,58,237,1)] hover:bg-violet-700"
+            className="rounded-xl bg-primary-600 px-6 text-white shadow-[0_12px_25px_-15px_rgba(47,129,112,0.45)] hover:bg-primary-700"
           >
             {isSubmitting ? t('submitting') : t('finish')}
             {!isSubmitting && <ArrowRightIcon className="ml-2 h-4 w-4" />}
@@ -216,7 +216,7 @@ export function StepGoalSuggestion({
         </div>
       </section>
 
-      <aside className="relative overflow-hidden rounded-[24px] border border-violet-100 bg-gradient-to-br from-violet-50 via-white to-teal-50 p-5 sm:p-6">
+      <aside className="relative overflow-hidden rounded-[24px] border border-ink-200 bg-gradient-to-br from-primary-50 via-white to-teal-50 p-5 sm:p-6">
         <div className="pointer-events-none absolute -bottom-12 -left-16 h-44 w-44 rounded-full bg-teal-200/45 blur-2xl" />
         <svg
           viewBox="0 0 280 190"
@@ -253,8 +253,8 @@ export function StepGoalSuggestion({
           </g>
         </svg>
 
-        <div className="rounded-2xl border border-violet-200/85 bg-white/80 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.17em] text-violet-500">
+        <div className="rounded-2xl border border-ink-200/85 bg-white/80 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.17em] text-primary-500">
             {t('goalSuggestion.timelineTitle')}
           </p>
           <div className="mt-4 space-y-3">
@@ -266,9 +266,9 @@ export function StepGoalSuggestion({
                     {Math.round(progress)}%
                   </span>
                 </div>
-                <div className="h-2 rounded-full bg-violet-100">
+                <div className="h-2 rounded-full bg-primary-100">
                   <div
-                    className="h-2 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-all duration-700"
+                    className="h-2 rounded-full bg-gradient-to-r from-primary-500 to-primary-500 transition-all duration-700"
                     style={{ width: `${Math.max(progress, 6)}%` }}
                   />
                 </div>

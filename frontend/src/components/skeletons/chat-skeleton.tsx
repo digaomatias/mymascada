@@ -25,7 +25,7 @@ export function ChatSkeleton() {
 
         {/* User message */}
         <div className="flex justify-end">
-          <div className="max-w-[75%] rounded-2xl bg-violet-600/20 px-4 py-3 space-y-2">
+          <div className="max-w-[75%] rounded-2xl bg-primary-600/20 px-4 py-3 space-y-2">
             <Skeleton className="h-3 w-40" />
           </div>
         </div>

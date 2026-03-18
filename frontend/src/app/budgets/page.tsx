@@ -37,7 +37,7 @@ function statusClasses(state: ReturnType<typeof getBudgetRiskState>) {
     return 'border-amber-200 bg-amber-50 text-amber-700';
   }
   if (state === 'inactive') {
-    return 'border-slate-200 bg-slate-100 text-slate-600';
+    return 'border-ink-200 bg-ink-100 text-ink-600';
   }
   return 'border-emerald-200 bg-emerald-50 text-emerald-700';
 }
@@ -102,10 +102,10 @@ export default function BudgetsPage() {
       <header className="mb-5">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
+            <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-ink-900 sm:text-[2.1rem]">
               {t('title')}
             </h1>
-            <p className="mt-1.5 text-[15px] text-slate-500">{t('subtitle')}</p>
+            <p className="mt-1.5 text-[15px] text-ink-500">{t('subtitle')}</p>
           </div>
           <Link href={`${BUDGET_BASE}/new`}>
             <Button>
@@ -122,7 +122,7 @@ export default function BudgetsPage() {
               checked={showInactive}
               onCheckedChange={(checked) => setShowInactive(checked === true)}
             />
-            <Label htmlFor="showInactive" className="text-sm text-slate-600">
+            <Label htmlFor="showInactive" className="text-sm text-ink-600">
               {t('filters.showInactive')}
             </Label>
           </div>
@@ -132,7 +132,7 @@ export default function BudgetsPage() {
               checked={currentPeriodOnly}
               onCheckedChange={(checked) => setCurrentPeriodOnly(checked === true)}
             />
-            <Label htmlFor="currentPeriodOnly" className="text-sm text-slate-600">
+            <Label htmlFor="currentPeriodOnly" className="text-sm text-ink-600">
               {t('filters.currentPeriodOnly')}
             </Label>
           </div>
@@ -145,12 +145,12 @@ export default function BudgetsPage() {
         {isLoading ? (
           <BudgetsSkeleton />
         ) : sortedBudgets.length === 0 ? (
-          <section className="rounded-[28px] border border-violet-100/80 bg-white/92 p-10 text-center shadow-[0_20px_50px_-30px_rgba(76,29,149,0.45)]">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-100 text-violet-600">
+          <section className="rounded-[28px] border border-ink-200 bg-white/92 p-10 text-center shadow-[0_20px_50px_-30px_rgba(47,129,112,0.20)]">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-100 text-primary-600">
               <SparklesIcon className="h-7 w-7" />
             </div>
-            <h3 className="mt-4 text-xl font-semibold text-slate-900">{t('noBudgets')}</h3>
-            <p className="mt-2 text-sm text-slate-500">{t('noBudgetsDescription')}</p>
+            <h3 className="mt-4 text-xl font-semibold text-ink-900">{t('noBudgets')}</h3>
+            <p className="mt-2 text-sm text-ink-500">{t('noBudgetsDescription')}</p>
             <Link href={`${BUDGET_BASE}/new`} className="mt-5 inline-flex">
               <Button>
                 <PlusIcon className="mr-1.5 h-4 w-4" />
@@ -167,10 +167,10 @@ export default function BudgetsPage() {
               return (
                 <article
                   key={budget.id}
-                  className="rounded-[26px] border border-violet-100/80 bg-white/90 p-5 shadow-[0_20px_44px_-32px_rgba(76,29,149,0.48)]"
+                  className="rounded-[26px] border border-ink-200 bg-white/90 p-5 shadow-[0_20px_44px_-32px_rgba(47,129,112,0.20)]"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <h3 className="line-clamp-2 text-[1.45rem] font-semibold tracking-[-0.03em] text-slate-900">
+                    <h3 className="line-clamp-2 text-[1.45rem] font-semibold tracking-[-0.03em] text-ink-900">
                       {budget.name}
                     </h3>
                     <span
@@ -185,7 +185,7 @@ export default function BudgetsPage() {
 
                   <div className="mt-4">
                     <div className="flex items-center justify-between text-sm">
-                      <p className="text-slate-600">
+                      <p className="text-ink-600">
                         {t('spentOfBudget', {
                           spent: formatCurrency(budget.totalSpent),
                           budget: formatCurrency(budget.totalBudgeted),
@@ -196,7 +196,7 @@ export default function BudgetsPage() {
                         {formatCurrency(budget.totalRemaining)}
                       </p>
                     </div>
-                    <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-slate-200">
+                    <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-ink-200">
                       <div
                         className={cn(
                           'h-full rounded-full transition-all',
@@ -211,7 +211,7 @@ export default function BudgetsPage() {
                     </div>
                   </div>
 
-                  <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                  <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-ink-500">
                     <span className="inline-flex items-center gap-1">
                       <CalendarDaysIcon className="h-3.5 w-3.5" />
                       {formatDateRange(budget.startDate, budget.endDate)}
@@ -234,7 +234,7 @@ export default function BudgetsPage() {
                   <div className="mt-4 flex items-center justify-end">
                     <Link
                       href={`${BUDGET_BASE}/${budget.id}`}
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-violet-600 transition-colors hover:text-violet-700"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-primary-600 transition-colors hover:text-primary-700"
                     >
                       {t('viewDetails')}
                       <ArrowRightIcon className="h-3.5 w-3.5" />

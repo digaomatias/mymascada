@@ -711,11 +711,11 @@ function TransactionsPageContent() {
         <div className="mb-5">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
+              <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-ink-900 sm:text-[2.1rem]">
                 {t('title')}
               </h1>
               <div className="flex items-center gap-2 mt-1.5">
-                <p className="text-[15px] text-slate-500">
+                <p className="text-[15px] text-ink-500">
                   {totalCount > 0 ? t('count', { count: totalCount }) : t('noTransactions')}
                 </p>
                 {getActiveDateRangeText() && (
@@ -772,10 +772,10 @@ function TransactionsPageContent() {
                           {t('more')}
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" side="bottom" className="w-48 bg-white shadow-lg border border-slate-200 rounded-lg z-50">
+                      <DropdownMenuContent align="end" side="bottom" className="w-48 bg-white shadow-lg border border-ink-200 rounded-lg z-50">
                         {features.aiCategorization && (
                           <DropdownMenuItem asChild>
-                            <Link href="/import" className="flex items-center gap-2 px-3 py-2 hover:bg-slate-50 cursor-pointer">
+                            <Link href="/import" className="flex items-center gap-2 px-3 py-2 hover:bg-ink-50 cursor-pointer">
                               <SparklesIcon className="w-4 h-4" />
                               <span>{t('aiCsvImport')}</span>
                             </Link>
@@ -783,14 +783,14 @@ function TransactionsPageContent() {
                         )}
 
                         <DropdownMenuItem asChild>
-                          <Link href="/import" className="flex items-center gap-2 px-3 py-2 hover:bg-slate-50 cursor-pointer">
+                          <Link href="/import" className="flex items-center gap-2 px-3 py-2 hover:bg-ink-50 cursor-pointer">
                             <DocumentArrowUpIcon className="w-4 h-4" />
                             <span>{t('ofxImport')}</span>
                           </Link>
                         </DropdownMenuItem>
 
                         <DropdownMenuItem asChild>
-                          <Link href="/transactions/categorize" className="flex items-center gap-2 px-3 py-2 hover:bg-slate-50 cursor-pointer">
+                          <Link href="/transactions/categorize" className="flex items-center gap-2 px-3 py-2 hover:bg-ink-50 cursor-pointer">
                             <TagIcon className="w-4 h-4" />
                             <span>{t('categorize')}</span>
                           </Link>
@@ -798,7 +798,7 @@ function TransactionsPageContent() {
 
                         <DropdownMenuItem
                           onClick={() => setShowDuplicatesModal(true)}
-                          className="flex items-center gap-2 px-3 py-2 hover:bg-slate-50 cursor-pointer"
+                          className="flex items-center gap-2 px-3 py-2 hover:bg-ink-50 cursor-pointer"
                         >
                           <DocumentArrowUpIcon className="w-4 h-4 rotate-180" />
                           <span>{t('findDuplicates')}</span>
@@ -806,7 +806,7 @@ function TransactionsPageContent() {
 
                         <DropdownMenuItem
                           onClick={() => setShowTransfersModal(true)}
-                          className="flex items-center gap-2 px-3 py-2 hover:bg-slate-50 cursor-pointer"
+                          className="flex items-center gap-2 px-3 py-2 hover:bg-ink-50 cursor-pointer"
                         >
                           <ArrowsRightLeftIcon className="w-4 h-4" />
                           <span>{t('manageTransfers')}</span>
@@ -936,7 +936,7 @@ function TransactionsPageContent() {
 
           {/* Search Bar */}
           <div className="mt-4 relative">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-ink-400" />
             <Input
               type="text"
               placeholder={t('searchPlaceholder')}
@@ -948,11 +948,11 @@ function TransactionsPageContent() {
 
           {/* Filters (collapsed by default on mobile) */}
           {showFilters && (
-            <Card className="mt-4 rounded-[26px] border border-violet-100/80 bg-white/90 shadow-[0_20px_44px_-32px_rgba(76,29,149,0.48)] overflow-visible">
+            <Card className="mt-4 rounded-[26px] border border-ink-200 bg-white/90 shadow-[0_20px_44px_-32px_rgba(47,129,112,0.20)] overflow-visible">
               <CardContent className="p-4 overflow-visible">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 overflow-visible">
                   <div className="overflow-visible">
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-ink-700 mb-2">
                       {tFilters('dateRange')}
                     </label>
 
@@ -978,7 +978,7 @@ function TransactionsPageContent() {
                               isMobile ? 'px-2 py-1' : 'px-3 py-1.5',
                               dateFilter === filterType
                                 ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white font-medium'
-                                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                : 'bg-ink-100 text-ink-700 hover:bg-ink-200'
                             )}
                           >
                             {labels[filterType]}
@@ -1007,7 +1007,7 @@ function TransactionsPageContent() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-ink-700 mb-2">
                       {tFilters('category')}
                     </label>
                     <CategoryFilter
@@ -1019,7 +1019,7 @@ function TransactionsPageContent() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-ink-700 mb-2">
                       {tFilters('account')}
                     </label>
                     <select
@@ -1037,7 +1037,7 @@ function TransactionsPageContent() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-ink-700 mb-2">
                       {tFilters('transfers')}
                     </label>
                     <select
@@ -1052,7 +1052,7 @@ function TransactionsPageContent() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-ink-700 mb-2">
                       {tFilters('reviewStatus')}
                     </label>
                     <select
@@ -1067,7 +1067,7 @@ function TransactionsPageContent() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-ink-700 mb-2">
                       {tFilters('reconciliationStatus')}
                     </label>
                     <select
@@ -1082,7 +1082,7 @@ function TransactionsPageContent() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-ink-700 mb-2">
                       {tFilters('type')}
                     </label>
                     <select
@@ -1097,7 +1097,7 @@ function TransactionsPageContent() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-ink-700 mb-2">
                       {tFilters('sortBy')}
                     </label>
                     <select
@@ -1147,11 +1147,11 @@ function TransactionsPageContent() {
 
         {/* Bulk Action Toolbar */}
         {isSelectionMode && selectedTransactionIds.size > 0 && (
-          <Card className="mb-4 rounded-[26px] border border-violet-100/80 bg-white/95 shadow-[0_20px_44px_-32px_rgba(76,29,149,0.48)] backdrop-blur-sm sticky top-4 z-[5]">
+          <Card className="mb-4 rounded-[26px] border border-ink-200 bg-white/95 shadow-[0_20px_44px_-32px_rgba(47,129,112,0.20)] backdrop-blur-sm sticky top-4 z-[5]">
             <CardContent className={cn(isMobile ? 'p-3' : 'p-4')}>
               <div className={cn('flex items-center', isMobile ? 'gap-2' : 'justify-between')}>
                 <div className="flex items-center gap-2">
-                  <span className={cn(isMobile ? 'px-2 py-1 bg-primary-100 text-primary-700 rounded-full text-xs font-medium' : 'text-sm font-medium text-slate-700')}>
+                  <span className={cn(isMobile ? 'px-2 py-1 bg-primary-100 text-primary-700 rounded-full text-xs font-medium' : 'text-sm font-medium text-ink-700')}>
                     {tCommon('selected', { count: selectedTransactionIds.size })}
                   </span>
                 </div>
@@ -1160,7 +1160,7 @@ function TransactionsPageContent() {
                   {isBulkProcessing ? (
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
-                      <span className={cn(isMobile ? 'text-xs' : 'text-sm', 'text-slate-600')}>
+                      <span className={cn(isMobile ? 'text-xs' : 'text-sm', 'text-ink-600')}>
                         {t('processing')}
                       </span>
                     </div>
@@ -1168,7 +1168,7 @@ function TransactionsPageContent() {
                     <div className={`flex items-center gap-2 ${isMobile ? 'flex-1' : ''}`}>
                       {/* Category Assignment */}
                       <div className={`flex items-center gap-2 ${isMobile ? 'flex-1' : ''}`}>
-                        <span className="text-sm text-slate-600 hidden sm:inline">{tCommon('category')}:</span>
+                        <span className="text-sm text-ink-600 hidden sm:inline">{tCommon('category')}:</span>
                         <div className={`${isMobile ? 'flex-1' : 'w-48'}`}>
                           <CategoryPicker
                             value=""
@@ -1200,19 +1200,19 @@ function TransactionsPageContent() {
         )}
 
         {/* Transaction List */}
-        <Card className="rounded-[26px] border border-violet-100/80 bg-white/90 shadow-[0_20px_44px_-32px_rgba(76,29,149,0.48)]">
+        <Card className="rounded-[26px] border border-ink-200 bg-white/90 shadow-[0_20px_44px_-32px_rgba(47,129,112,0.20)]">
           {loading ? (
             <CardContent className="p-6">
               <div className="space-y-4">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <div key={i} className="animate-pulse">
-                    <div className="flex items-center gap-4 p-4 bg-slate-100 rounded-lg">
-                      <div className="w-12 h-12 bg-slate-300 rounded-xl"></div>
+                    <div className="flex items-center gap-4 p-4 bg-ink-100 rounded-lg">
+                      <div className="w-12 h-12 bg-ink-300 rounded-xl"></div>
                       <div className="flex-1">
-                        <div className="h-4 bg-slate-300 rounded w-1/2 mb-2"></div>
-                        <div className="h-3 bg-slate-300 rounded w-1/4"></div>
+                        <div className="h-4 bg-ink-300 rounded w-1/2 mb-2"></div>
+                        <div className="h-3 bg-ink-300 rounded w-1/4"></div>
                       </div>
-                      <div className="h-6 bg-slate-300 rounded w-20"></div>
+                      <div className="h-6 bg-ink-300 rounded w-20"></div>
                     </div>
                   </div>
                 ))}
@@ -1223,8 +1223,8 @@ function TransactionsPageContent() {
               <div className="w-20 h-20 bg-gradient-to-br from-primary-400 to-primary-600 rounded-3xl shadow-2xl flex items-center justify-center mx-auto mb-6">
                 <WalletIcon className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">{t('noTransactionsFiltered')}</h3>
-              <p className="text-slate-600 mb-6">
+              <h3 className="text-xl font-semibold text-ink-900 mb-2">{t('noTransactionsFiltered')}</h3>
+              <p className="text-ink-600 mb-6">
                 {searchTerm ? t('adjustSearchTerms') : t('getStarted')}
               </p>
               <div className="flex justify-center">
@@ -1239,7 +1239,7 @@ function TransactionsPageContent() {
           ) : (
             <CardContent className="p-0">
               {/* Mobile-First Transaction Cards */}
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-ink-100">
                 {groupedTransactions.map((item) => {
                   // Handle transfer groups
                   if ('isTransferGroup' in item && item.isTransferGroup) {
@@ -1247,7 +1247,7 @@ function TransactionsPageContent() {
                     return (
                       <div key={item.id}>
                         <div 
-                          className={cn(isMobile ? 'p-3' : 'p-4', 'hover:bg-slate-50 transition-colors cursor-pointer')}
+                          className={cn(isMobile ? 'p-3' : 'p-4', 'hover:bg-ink-50 transition-colors cursor-pointer')}
                           onClick={() => toggleTransferExpansion(item.transferId)}
                         >
                           <div className={cn('flex items-center', isMobile ? 'gap-2' : 'gap-3')}>
@@ -1264,11 +1264,11 @@ function TransactionsPageContent() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between">
                                 <div className="min-w-0 flex-1">
-                                  <p className="text-sm font-semibold text-slate-900 truncate">
+                                  <p className="text-sm font-semibold text-ink-900 truncate">
                                     {item.description}
                                   </p>
 
-                                  <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
+                                  <div className="flex items-center gap-3 mt-1 text-xs text-ink-500">
                                     <span className="flex items-center gap-1">
                                       <CalendarIcon className="w-3 h-3" />
                                       {formatDate(item.transactionDate)}
@@ -1283,12 +1283,12 @@ function TransactionsPageContent() {
                                     <p className="font-[var(--font-dash-mono)] text-sm font-bold text-blue-600">
                                       {formatCurrency(item.amount)}
                                     </p>
-                                    <p className="text-xs text-slate-500">
+                                    <p className="text-xs text-ink-500">
                                       {t('internalTransfer')}
                                     </p>
                                   </div>
                                   <svg
-                                    className={`w-5 h-5 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                    className={`w-5 h-5 text-ink-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
                                     fill="none"
                                     viewBox="0 0 24 24"
                                     stroke="currentColor"
@@ -1303,7 +1303,7 @@ function TransactionsPageContent() {
                         
                         {/* Expanded Details */}
                         {isExpanded && (
-                          <div className="bg-slate-50 border-t border-slate-100">
+                          <div className="bg-ink-50 border-t border-ink-100">
                             <div className="p-4 space-y-3">
                               {/* Individual Transactions */}
                               {item.transactions.map((trans) => (
@@ -1321,10 +1321,10 @@ function TransactionsPageContent() {
                                       )}
                                     </div>
                                     <div>
-                                      <p className="text-sm font-medium text-slate-900">
+                                      <p className="text-sm font-medium text-ink-900">
                                         {trans.accountName}
                                       </p>
-                                      <p className="text-xs text-slate-500">
+                                      <p className="text-xs text-ink-500">
                                         {t('transactionNumber', { id: trans.id })}
                                       </p>
                                     </div>
@@ -1335,7 +1335,7 @@ function TransactionsPageContent() {
                                     </p>
                                     <ContextualTransactionLink
                                       transactionId={trans.id}
-                                      className="text-slate-400 hover:text-slate-600"
+                                      className="text-ink-400 hover:text-ink-600"
                                       onClick={(e) => e.stopPropagation()}
                                     >
                                       <EyeIcon className="w-4 h-4" />
@@ -1390,7 +1390,7 @@ function TransactionsPageContent() {
                     >
                       <div 
                         className={cn(
-                          'block transition-colors cursor-pointer hover:bg-slate-50',
+                          'block transition-colors cursor-pointer hover:bg-ink-50',
                           isMobile ? 'p-3 pr-3' : 'p-4 pr-12'
                         )}
                         onClick={(e) => {
@@ -1491,7 +1491,7 @@ function TransactionsPageContent() {
                               <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
                                 isSelected 
                                   ? 'bg-primary-500 border-primary-500' 
-                                  : 'border-slate-300 hover:border-primary-400'
+                                  : 'border-ink-200 hover:border-primary-400'
                               }`}>
                                 {isSelected && (
                                   <CheckIcon className="w-3 h-3 text-white" />
@@ -1508,14 +1508,14 @@ function TransactionsPageContent() {
                                 ? 'bg-gradient-to-br from-blue-100 to-blue-200'
                                 : isIncome
                                   ? 'bg-gradient-to-br from-success-100 to-success-200'
-                                  : 'bg-gradient-to-br from-slate-100 to-slate-200'
+                                  : 'bg-gradient-to-br from-ink-100 to-ink-200'
                             )}>
                               {isTransfer(transaction) ? (
                                 <ArrowsRightLeftIcon className="w-6 h-6 text-blue-600" />
                               ) : isIncome ? (
                                 <ArrowTrendingUpIcon className="w-6 h-6 text-emerald-600" />
                               ) : (
-                                <ArrowTrendingDownIcon className="w-6 h-6 text-slate-600" />
+                                <ArrowTrendingDownIcon className="w-6 h-6 text-ink-600" />
                               )}
                             </div>
                           )}
@@ -1525,7 +1525,7 @@ function TransactionsPageContent() {
                             <div className="flex items-start justify-between">
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
-                                  <p className="text-sm font-semibold text-slate-900 truncate">
+                                  <p className="text-sm font-semibold text-ink-900 truncate">
                                     {transaction.userDescription || transaction.description}
                                   </p>
                                   {isTransfer(transaction) && (
@@ -1538,7 +1538,7 @@ function TransactionsPageContent() {
                                 
                                 {isMobile ? (
                                   /* Mobile: Single line - category moved to right side */
-                                  <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
+                                  <div className="flex items-center gap-3 mt-1 text-xs text-ink-500">
                                     <span className="flex items-center gap-1">
                                       <CalendarIcon className="w-3 h-3" />
                                       {formatDate(transaction.transactionDate)}
@@ -1553,7 +1553,7 @@ function TransactionsPageContent() {
                                   </div>
                                 ) : (
                                   /* Desktop: Single line */
-                                  <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
+                                  <div className="flex items-center gap-3 mt-1 text-xs text-ink-500">
                                     <span className="flex items-center gap-1">
                                       <CalendarIcon className="w-3 h-3" />
                                       {formatDate(transaction.transactionDate)}
@@ -1589,8 +1589,8 @@ function TransactionsPageContent() {
                                     /* Mobile: Show category if available, no review button for cleaner layout */
                                     transaction.categoryName && (
                                       <div className="flex items-center justify-end gap-1 mt-1">
-                                        <TagIcon className="w-3 h-3 text-slate-400" />
-                                        <span className="text-xs text-slate-600 font-medium">{transaction.categoryName}</span>
+                                        <TagIcon className="w-3 h-3 text-ink-400" />
+                                        <span className="text-xs text-ink-600 font-medium">{transaction.categoryName}</span>
                                       </div>
                                     )
                                   ) : (
@@ -1617,12 +1617,12 @@ function TransactionsPageContent() {
                                 <EllipsisVerticalIcon className="w-4 h-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48 bg-white border border-slate-200 shadow-lg z-50">
+                            <DropdownMenuContent align="end" className="w-48 bg-white border border-ink-200 shadow-lg z-50">
                               <DropdownMenuItem asChild>
                                 <ContextualTransactionLink
                                   transactionId={transaction.id}
                                   mode="edit"
-                                  className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-sm"
+                                  className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-ink-700 hover:bg-ink-50 rounded-sm"
                                 >
                                   <PencilIcon className="w-4 h-4" />
                                   {t('editTransaction')}
@@ -1631,7 +1631,7 @@ function TransactionsPageContent() {
                               <DropdownMenuItem asChild>
                                 <ContextualTransactionLink
                                   transactionId={transaction.id}
-                                  className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-sm"
+                                  className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-ink-700 hover:bg-ink-50 rounded-sm"
                                 >
                                   <EyeIcon className="w-4 h-4" />
                                   {t('viewDetails')}
@@ -1644,13 +1644,13 @@ function TransactionsPageContent() {
                                     setCreateTransferForTransaction(transaction);
                                     setOpenMenuId(null);
                                   }}
-                                  className="flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-sm cursor-pointer"
+                                  className="flex items-center gap-2 px-3 py-2 text-sm text-ink-700 hover:bg-ink-50 rounded-sm cursor-pointer"
                                 >
                                   <ArrowsRightLeftIcon className="w-4 h-4" />
                                   {t('createTransfer')}
                                 </DropdownMenuItem>
                               )}
-                              <DropdownMenuSeparator className="my-1 bg-slate-200" />
+                              <DropdownMenuSeparator className="my-1 bg-ink-200" />
                               <DropdownMenuItem
                                 onClick={() => setDeleteConfirm({ show: true, transactionId: transaction.id })}
                                 className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-sm cursor-pointer"
@@ -1692,9 +1692,9 @@ function TransactionsPageContent() {
               
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="border-t border-slate-100 p-4">
+                <div className="border-t border-ink-100 p-4">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-slate-700">
+                    <p className="text-sm text-ink-700">
                       {t('page', { current: currentPage, total: totalPages })}
                     </p>
 

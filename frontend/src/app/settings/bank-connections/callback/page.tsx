@@ -108,7 +108,7 @@ function CallbackContent() {
   }, [searchParams, router, isAuthenticated, isLoading]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-primary-50 to-primary-200 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
         {status === 'processing' && (
           <>
@@ -169,7 +169,7 @@ function CallbackFallback() {
   const t = useTranslations('settings.bankConnections.callback');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-primary-50 to-primary-200 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
         <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center mx-auto animate-pulse">
           <BuildingLibraryIcon className="w-8 h-8 text-white" />

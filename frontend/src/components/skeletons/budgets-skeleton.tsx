@@ -6,7 +6,7 @@ export function BudgetsSkeleton() {
       {[1, 2, 3, 4].map((i) => (
         <div
           key={i}
-          className="h-56 rounded-[24px] border border-violet-100/80 bg-white/80 p-5 animate-pulse"
+          className="h-56 rounded-[24px] border border-ink-200 bg-white/80 p-5 animate-pulse"
         >
           <div className="flex items-start justify-between gap-3">
             <Skeleton className="h-6 w-2/5" />

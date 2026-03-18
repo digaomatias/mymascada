@@ -35,16 +35,16 @@ interface CategorySpendingChartProps {
 
 // Default color palette for categories without colors
 const DEFAULT_COLORS = [
-  '#8B5CF6', // purple
-  '#EC4899', // pink
+  '#2f8170', // teal
+  '#c0614a', // coral
   '#10B981', // green
-  '#F59E0B', // yellow
-  '#3B82F6', // blue
+  '#F59E0B', // amber
+  '#5b7fb5', // slate blue
   '#EF4444', // red
-  '#6366F1', // indigo
-  '#14B8A6', // teal
+  '#c08a30', // gold
+  '#b85670', // warm rose
   '#F97316', // orange
-  '#84CC16', // lime
+  '#6a9b5e', // sage
 ];
 
 export function CategorySpendingChart({ data, title }: CategorySpendingChartProps) {
@@ -65,7 +65,7 @@ export function CategorySpendingChart({ data, title }: CategorySpendingChartProp
     if (active && payload && payload[0]) {
       const data = payload[0].payload;
       return (
-        <div className="rounded-xl border border-violet-100/60 bg-white p-3 shadow-lg shadow-violet-200/20">
+        <div className="rounded-xl border border-ink-200 bg-white p-3 shadow-lg shadow-primary-200/20">
           <p className="font-[var(--font-dash-sans)] font-semibold text-slate-900">{data.displayName}</p>
           <p className="font-[var(--font-dash-mono)] text-sm text-slate-600">
             Amount: {formatCurrency(data.value)}

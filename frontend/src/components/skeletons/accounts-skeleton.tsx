@@ -12,7 +12,7 @@ export function AccountsSkeleton() {
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="rounded-[26px] border border-violet-100/80 bg-white/80 p-5 animate-pulse"
+            className="rounded-[26px] border border-ink-200 bg-white/80 p-5 animate-pulse"
           >
             <div className="flex items-center gap-3">
               <Skeleton className="h-11 w-11 rounded-xl" variant="rounded-sm" />

@@ -106,10 +106,10 @@ function AccountDetailsPageContent() {
     return (
       <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
+          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-400 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <BuildingOffice2Icon className="w-8 h-8 text-white" />
           </div>
-          <div className="mt-6 text-slate-700 font-medium">{t('loadingAccount')}</div>
+          <div className="mt-6 text-ink-700 font-medium">{t('loadingAccount')}</div>
         </div>
       </div>
     );
@@ -145,7 +145,7 @@ function AccountDetailsPageContent() {
 
       <div className="space-y-5">
         {/* Hero Section */}
-        <section className="rounded-[26px] border border-violet-100/60 bg-white/90 p-6 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
+        <section className="rounded-[26px] border border-ink-200 bg-white/90 p-6 shadow-lg shadow-primary-200/20 backdrop-blur-xs">
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
             {/* Left: Account identity + balance */}
             <div className="min-w-0 flex-1">
@@ -160,13 +160,13 @@ function AccountDetailsPageContent() {
                   <TypeIcon className="h-6 w-6 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <h1 className="font-[var(--font-dash-sans)] text-2xl sm:text-3xl font-semibold tracking-[-0.03em] text-slate-900 truncate">
+                  <h1 className="font-[var(--font-dash-sans)] text-2xl sm:text-3xl font-semibold tracking-[-0.03em] text-ink-900 truncate">
                     {account.name}
                   </h1>
                   <div className="mt-0.5 flex flex-wrap items-center gap-2">
                     <AccountTypeBadge type={account.type} />
                     {account.institution && (
-                      <span className="text-xs text-slate-500">{account.institution}</span>
+                      <span className="text-xs text-ink-500">{account.institution}</span>
                     )}
                   </div>
                 </div>
@@ -174,13 +174,13 @@ function AccountDetailsPageContent() {
 
               {/* Balance */}
               <div className="mt-5">
-                <p className="text-sm font-semibold text-slate-500">{t('currentBalance')}</p>
+                <p className="text-sm font-semibold text-ink-500">{t('currentBalance')}</p>
                 <div className="mt-1 flex items-baseline gap-3">
-                  <p className="font-[var(--font-dash-mono)] text-4xl sm:text-5xl font-semibold tracking-[-0.02em] text-slate-900">
+                  <p className="font-[var(--font-dash-mono)] text-4xl sm:text-5xl font-semibold tracking-[-0.02em] text-ink-900">
                     {formatCurrency(account.calculatedBalance || 0)}
                   </p>
                 </div>
-                <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+                <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-400">
                   {account.currency}
                 </p>
               </div>
@@ -203,8 +203,8 @@ function AccountDetailsPageContent() {
                     )}
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-slate-500">{t('filteredBalance')}</p>
-                    <p className="font-[var(--font-dash-mono)] text-lg font-semibold text-slate-900">
+                    <p className="text-xs font-medium text-ink-500">{t('filteredBalance')}</p>
+                    <p className="font-[var(--font-dash-mono)] text-lg font-semibold text-ink-900">
                       {formatCurrency(filteredBalance || 0)}
                     </p>
                   </div>
@@ -216,13 +216,13 @@ function AccountDetailsPageContent() {
             <div className="flex items-start gap-5 lg:gap-6">
               {/* Monthly Spending */}
               <div className="text-left lg:text-right">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                   {t('monthlySpending')}
                 </p>
-                <p className="mt-1 font-[var(--font-dash-mono)] text-xl font-semibold text-slate-900">
+                <p className="mt-1 font-[var(--font-dash-mono)] text-xl font-semibold text-ink-900">
                   {formatCurrency(account.monthlySpending.currentMonthSpending)}
                 </p>
-                <div className="flex items-center lg:justify-end gap-1 mt-0.5 text-xs text-slate-500">
+                <div className="flex items-center lg:justify-end gap-1 mt-0.5 text-xs text-ink-500">
                   <CalendarIcon className="w-3 h-3" />
                   {formatMonthYearFromName(
                     account.monthlySpending.monthName,
@@ -235,7 +235,7 @@ function AccountDetailsPageContent() {
                     className={cn('flex items-center lg:justify-end gap-1 mt-0.5 text-xs', {
                       'text-red-600': account.monthlySpending.trendDirection === 'up',
                       'text-emerald-600': account.monthlySpending.trendDirection === 'down',
-                      'text-slate-500': account.monthlySpending.trendDirection === 'neutral',
+                      'text-ink-500': account.monthlySpending.trendDirection === 'neutral',
                     })}
                   >
                     {account.monthlySpending.trendDirection === 'up' ? (
@@ -248,26 +248,26 @@ function AccountDetailsPageContent() {
                 )}
               </div>
 
-              <div className="h-12 w-px bg-slate-200 self-center" />
+              <div className="h-12 w-px bg-ink-200 self-center" />
 
               {/* Reconciliation */}
               <div className="text-left lg:text-right">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                   {t('lastReconciled')}
                 </p>
                 {account.lastReconciledDate ? (
                   <>
-                    <p className="mt-1 font-[var(--font-dash-mono)] text-xl font-semibold text-slate-900">
+                    <p className="mt-1 font-[var(--font-dash-mono)] text-xl font-semibold text-ink-900">
                       {new Date(account.lastReconciledDate).toLocaleDateString()}
                     </p>
                     {account.lastReconciledBalance !== undefined && account.lastReconciledBalance !== null && (
-                      <p className="text-xs text-slate-500 mt-0.5">
+                      <p className="text-xs text-ink-500 mt-0.5">
                         {t('reconciledBalance')}: {formatCurrency(account.lastReconciledBalance)}
                       </p>
                     )}
                   </>
                 ) : (
-                  <p className="mt-1 text-sm font-medium text-slate-400">{t('neverReconciled')}</p>
+                  <p className="mt-1 text-sm font-medium text-ink-400">{t('neverReconciled')}</p>
                 )}
               </div>
             </div>
@@ -276,16 +276,16 @@ function AccountDetailsPageContent() {
 
         {/* Account Notes */}
         {account.notes && (
-          <section className="rounded-[26px] border border-violet-100/80 bg-white/90 p-5 shadow-[0_20px_44px_-32px_rgba(76,29,149,0.48)]">
-            <h2 className="font-[var(--font-dash-sans)] text-base font-semibold text-slate-900 mb-2">
+          <section className="rounded-[26px] border border-ink-200 bg-white/90 p-5 shadow-[0_20px_44px_-32px_rgba(47,129,112,0.20)]">
+            <h2 className="font-[var(--font-dash-sans)] text-base font-semibold text-ink-900 mb-2">
               {tCommon('notes')}
             </h2>
-            <p className="text-sm text-slate-600 whitespace-pre-wrap">{account.notes}</p>
+            <p className="text-sm text-ink-600 whitespace-pre-wrap">{account.notes}</p>
           </section>
         )}
 
         {/* Transactions Section */}
-        <section className="rounded-[26px] border border-violet-100/80 bg-white/90 shadow-[0_20px_44px_-32px_rgba(76,29,149,0.48)] p-5">
+        <section className="rounded-[26px] border border-ink-200 bg-white/90 shadow-[0_20px_44px_-32px_rgba(47,129,112,0.20)] p-5">
           <TransactionList
             accountId={account.id}
             onTransactionUpdate={handleTransactionUpdate}

@@ -188,10 +188,10 @@ export default function AccountsPage() {
       {/* Header */}
       <header className="flex flex-wrap items-end justify-between gap-4 mb-5">
         <div>
-          <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
+          <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-ink-900 sm:text-[2.1rem]">
             {t('title')}
           </h1>
-          <p className="mt-1.5 text-[15px] text-slate-500">
+          <p className="mt-1.5 text-[15px] text-ink-500">
             {t('subtitle')}
           </p>
         </div>
@@ -204,12 +204,12 @@ export default function AccountsPage() {
       <div className="space-y-5">
         {/* Hero net worth section */}
         {!loading && accounts.length > 0 && (
-          <section className="rounded-[26px] border border-violet-100/60 bg-white/90 p-6 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
+          <section className="rounded-[26px] border border-ink-200 bg-white/90 p-6 shadow-lg shadow-primary-200/20 backdrop-blur-xs">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold text-slate-500">{t('netWorth')}</p>
+                <p className="text-sm font-semibold text-ink-500">{t('netWorth')}</p>
                 <div className="mt-2 flex items-baseline gap-3">
-                  <p className="font-[var(--font-dash-mono)] text-5xl font-semibold tracking-[-0.02em] text-slate-900 sm:text-[3.2rem]">
+                  <p className="font-[var(--font-dash-mono)] text-5xl font-semibold tracking-[-0.02em] text-ink-900 sm:text-[3.2rem]">
                     {formatCurrency(netWorth)}
                   </p>
                 </div>
@@ -217,19 +217,19 @@ export default function AccountsPage() {
               {/* Quick stats */}
               <div className="flex items-center gap-4">
                 <div className="text-right">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                     {t('totalAccounts')}
                   </p>
-                  <p className="mt-1 font-[var(--font-dash-mono)] text-xl font-semibold text-slate-900">
+                  <p className="mt-1 font-[var(--font-dash-mono)] text-xl font-semibold text-ink-900">
                     {accounts.length}
                   </p>
                 </div>
-                <div className="h-8 w-px bg-slate-200" />
+                <div className="h-8 w-px bg-ink-200" />
                 <div className="text-right">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                     {t('activeAccounts')}
                   </p>
-                  <p className="mt-1 font-[var(--font-dash-mono)] text-xl font-semibold text-slate-900">
+                  <p className="mt-1 font-[var(--font-dash-mono)] text-xl font-semibold text-ink-900">
                     {activeCount}
                   </p>
                 </div>
@@ -238,11 +238,11 @@ export default function AccountsPage() {
 
             {/* Asset / Liability breakdown bar */}
             <div className="mt-5">
-              <div className="flex items-center justify-between text-xs font-medium text-slate-400">
+              <div className="flex items-center justify-between text-xs font-medium text-ink-400">
                 <span className="text-emerald-600">{formatCurrency(totalAssets)}</span>
                 <span className="text-rose-500">{formatCurrency(totalLiabilities)}</span>
               </div>
-              <div className="mt-1.5 flex h-3 overflow-hidden rounded-full bg-slate-100">
+              <div className="mt-1.5 flex h-3 overflow-hidden rounded-full bg-ink-100">
                 {totalAssets + totalLiabilities > 0 && (
                   <>
                     <div
@@ -267,7 +267,7 @@ export default function AccountsPage() {
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
                 <EnvelopeIcon className="h-[18px] w-[18px]" />
               </div>
-              <h2 className="text-sm font-semibold text-slate-800">
+              <h2 className="text-sm font-semibold text-ink-800">
                 {t('sharing.pendingInvitations')}
               </h2>
               <span className="inline-flex items-center justify-center h-5 min-w-5 rounded-full bg-amber-200 px-1.5 text-[11px] font-bold text-amber-800">
@@ -285,8 +285,8 @@ export default function AccountsPage() {
                       <BuildingOffice2Icon className="h-5 w-5 text-white" />
                     </div>
                     <div className="min-w-0">
-                      <h4 className="text-sm font-semibold text-slate-900 truncate">{invitation.accountName}</h4>
-                      <p className="text-xs text-slate-500 mt-0.5">
+                      <h4 className="text-sm font-semibold text-ink-900 truncate">{invitation.accountName}</h4>
+                      <p className="text-xs text-ink-500 mt-0.5">
                         {t('sharing.sharedByName', { name: invitation.sharedByName })}
                         {' \u00B7 '}
                         {getShareRoleName(invitation.role)}
@@ -323,12 +323,12 @@ export default function AccountsPage() {
           <AccountsSkeleton />
         ) : accounts.length === 0 ? (
           /* Empty state */
-          <section className="rounded-[28px] border border-violet-100/80 bg-white/92 p-10 text-center shadow-[0_20px_50px_-30px_rgba(76,29,149,0.45)]">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-100 text-violet-600">
+          <section className="rounded-[28px] border border-ink-200 bg-white/92 p-10 text-center shadow-[0_20px_50px_-30px_rgba(47,129,112,0.20)]">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-100 text-primary-600">
               <BuildingOffice2Icon className="h-7 w-7" />
             </div>
-            <h3 className="mt-4 text-xl font-semibold text-slate-900">{t('noAccounts')}</h3>
-            <p className="mt-2 text-sm text-slate-500">
+            <h3 className="mt-4 text-xl font-semibold text-ink-900">{t('noAccounts')}</h3>
+            <p className="mt-2 text-sm text-ink-500">
               {t('noAccountsDescription')}
             </p>
             <div className="mt-5 inline-flex">
@@ -420,7 +420,7 @@ function AccountCard({
   return (
     <article
       onClick={onClick}
-      className="cursor-pointer rounded-[26px] border border-violet-100/80 bg-white/90 p-5 shadow-[0_20px_44px_-32px_rgba(76,29,149,0.48)] transition-shadow hover:shadow-[0_24px_52px_-28px_rgba(76,29,149,0.55)]"
+      className="cursor-pointer rounded-[26px] border border-ink-200 bg-white/90 p-5 shadow-[0_20px_44px_-32px_rgba(47,129,112,0.20)] transition-shadow hover:shadow-[0_24px_52px_-28px_rgba(47,129,112,0.25)]"
     >
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
         {/* Left: icon + name + badges */}
@@ -436,14 +436,14 @@ function AccountCard({
 
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h3 className="line-clamp-1 text-lg font-semibold tracking-[-0.02em] text-slate-900">
+              <h3 className="line-clamp-1 text-lg font-semibold tracking-[-0.02em] text-ink-900">
                 {account.name}
               </h3>
             </div>
             <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
               <AccountTypeBadge type={account.type} />
               {account.institution && (
-                <span className="text-xs text-slate-500 truncate">{account.institution}</span>
+                <span className="text-xs text-ink-500 truncate">{account.institution}</span>
               )}
               {account.isSharedWithMe && (
                 <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
@@ -460,10 +460,10 @@ function AccountCard({
         {/* Right: balance + menu */}
         <div className="flex items-center justify-between sm:justify-end gap-3 pl-13 sm:pl-0">
           <div className="text-left sm:text-right">
-            <p className="font-[var(--font-dash-mono)] text-xl font-bold tracking-tight text-slate-900">
+            <p className="font-[var(--font-dash-mono)] text-xl font-bold tracking-tight text-ink-900">
               {formatCurrency(account.calculatedBalance)}
             </p>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-400">
               {account.currency}
             </p>
           </div>
@@ -475,7 +475,7 @@ function AccountCard({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 rounded-lg p-0 text-slate-400 transition-colors hover:bg-violet-50 hover:text-violet-600"
+                  className="h-8 w-8 rounded-lg p-0 text-ink-400 transition-colors hover:bg-primary-50 hover:text-primary-600"
                 >
                   <EllipsisVerticalIcon className="h-4 w-4" />
                 </Button>

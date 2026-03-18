@@ -14,7 +14,7 @@ export const ACCOUNT_TYPE_STYLES: Record<number, { gradient: string; icon: typeo
   [BackendAccountType.Checking]: { gradient: 'from-blue-500 to-blue-600', icon: BuildingLibraryIcon },
   [BackendAccountType.Savings]: { gradient: 'from-emerald-500 to-emerald-600', icon: BanknotesIcon },
   [BackendAccountType.CreditCard]: { gradient: 'from-rose-500 to-rose-600', icon: CreditCardIcon },
-  [BackendAccountType.Investment]: { gradient: 'from-violet-500 to-fuchsia-500', icon: ChartBarIcon },
+  [BackendAccountType.Investment]: { gradient: 'from-primary-500 to-primary-400', icon: ChartBarIcon },
   [BackendAccountType.Loan]: { gradient: 'from-amber-500 to-amber-600', icon: CurrencyDollarIcon },
   [BackendAccountType.Cash]: { gradient: 'from-slate-500 to-slate-600', icon: WalletIcon },
   [BackendAccountType.Other]: { gradient: 'from-slate-400 to-slate-500', icon: BuildingOffice2Icon },

@@ -566,7 +566,7 @@ export function CSVMappingReviewForReconciliation({
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <AdjustmentsHorizontalIcon className="w-6 h-6 text-purple-600" />
+              <AdjustmentsHorizontalIcon className="w-6 h-6 text-primary-600" />
               <div>
                 <CardTitle>{tImport('aiCsvReconciliation.mappingReview.title')}</CardTitle>
                 <p className="text-sm text-gray-600 mt-1">

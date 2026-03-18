@@ -334,10 +334,10 @@ export default function BankConnectionsPage() {
     return (
       <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-violet-600 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
+          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <BuildingLibraryIcon className="w-8 h-8 text-white" />
           </div>
-          <div className="mt-6 text-slate-700 font-medium">{t('loading')}</div>
+          <div className="mt-6 text-ink-700 font-medium">{t('loading')}</div>
         </div>
       </div>
     );
@@ -357,10 +357,10 @@ export default function BankConnectionsPage() {
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
+              <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-ink-900 sm:text-[2.1rem]">
                 {t('title')}
               </h1>
-              <p className="text-[15px] text-slate-500 mt-1.5">
+              <p className="text-[15px] text-ink-500 mt-1.5">
                 {t('subtitle')}
               </p>
             </div>
@@ -406,10 +406,10 @@ export default function BankConnectionsPage() {
         </div>
 
         {/* Connections List */}
-        <Card className="rounded-[26px] border border-violet-100/70 bg-white/92 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs">
+        <Card className="rounded-[26px] border border-ink-200 bg-white/92 shadow-[0_20px_46px_-30px_rgba(47,129,112,0.20)] backdrop-blur-xs">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <BuildingLibraryIcon className="w-6 h-6 text-violet-600" />
+              <BuildingLibraryIcon className="w-6 h-6 text-primary-600" />
               {t('connectedAccounts')}
             </CardTitle>
           </CardHeader>

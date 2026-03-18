@@ -87,13 +87,13 @@ export default function BudgetDetailPage() {
     return (
       <AppLayout>
         <div className="space-y-4">
-          <div className="h-20 animate-pulse rounded-[24px] border border-violet-100/80 bg-white/80" />
+          <div className="h-20 animate-pulse rounded-[24px] border border-ink-200 bg-white/80" />
           <div className="grid gap-4 md:grid-cols-4">
             {[1, 2, 3, 4].map((item) => (
-              <div key={item} className="h-28 animate-pulse rounded-[22px] border border-violet-100/80 bg-white/80" />
+              <div key={item} className="h-28 animate-pulse rounded-[22px] border border-ink-200 bg-white/80" />
             ))}
           </div>
-          <div className="h-40 animate-pulse rounded-[24px] border border-violet-100/80 bg-white/80" />
+          <div className="h-40 animate-pulse rounded-[24px] border border-ink-200 bg-white/80" />
         </div>
       </AppLayout>
     );
@@ -116,7 +116,7 @@ export default function BudgetDetailPage() {
           <div>
             <BackButton variant="link" href={BUDGET_BASE} label={t('backToBudgets')} />
 
-            <h1 className="mt-2 font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
+            <h1 className="mt-2 font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-ink-900 sm:text-[2.1rem]">
               {budget.name}
             </h1>
 
@@ -129,7 +129,7 @@ export default function BudgetDetailPage() {
                   {t('recurring')}
                 </Badge>
               )}
-              <span className="inline-flex items-center gap-1 text-xs text-slate-500">
+              <span className="inline-flex items-center gap-1 text-xs text-ink-500">
                 <CalendarDaysIcon className="h-3.5 w-3.5" />
                 {formatDateRange(budget.startDate, budget.endDate)}
               </span>
@@ -159,19 +159,19 @@ export default function BudgetDetailPage() {
       <div className="space-y-5">
         <section className="grid gap-4 md:grid-cols-4">
           {[
-            { label: t('totalBudgeted'), value: formatCurrency(budget.totalBudgeted), tone: 'text-slate-900' },
-            { label: t('totalSpent'), value: formatCurrency(budget.totalSpent), tone: 'text-slate-900' },
+            { label: t('totalBudgeted'), value: formatCurrency(budget.totalBudgeted), tone: 'text-ink-900' },
+            { label: t('totalSpent'), value: formatCurrency(budget.totalSpent), tone: 'text-ink-900' },
             { label: t('totalRemaining'), value: formatCurrency(budget.totalRemaining), tone: budget.totalRemaining >= 0 ? 'text-emerald-600' : 'text-rose-600' },
-            { label: t('progress'), value: `${budget.usedPercentage.toFixed(1)}%`, tone: 'text-slate-900' },
+            { label: t('progress'), value: `${budget.usedPercentage.toFixed(1)}%`, tone: 'text-ink-900' },
           ].map((item) => (
             <article
               key={item.label}
-              className="rounded-2xl border border-violet-100/80 bg-white/90 p-4 shadow-[0_16px_34px_-28px_rgba(76,29,149,0.45)]"
+              className="rounded-2xl border border-ink-200 bg-white/90 p-4 shadow-[0_16px_34px_-28px_rgba(47,129,112,0.20)]"
             >
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">{item.label}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-500">{item.label}</p>
               <p className={cn('mt-2 text-3xl font-semibold tracking-[-0.02em]', item.tone)}>{item.value}</p>
               {item.label === t('progress') ? (
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-ink-500">
                   {budget.daysRemaining > 0
                     ? budget.daysRemaining === 1
                       ? t('daysRemainingOne')
@@ -183,12 +183,12 @@ export default function BudgetDetailPage() {
           ))}
         </section>
 
-        <section className="rounded-[24px] border border-violet-100/80 bg-white/92 p-5 shadow-[0_18px_38px_-28px_rgba(76,29,149,0.48)]">
-          <div className="flex items-center justify-between text-xs text-slate-500">
+        <section className="rounded-[24px] border border-ink-200 bg-white/92 p-5 shadow-[0_18px_38px_-28px_rgba(47,129,112,0.20)]">
+          <div className="flex items-center justify-between text-xs text-ink-500">
             <span>{t('overview')}</span>
             <span>{t('percentUsed', { percent: budget.usedPercentage.toFixed(1) })}</span>
           </div>
-          <div className="mt-2 h-3 overflow-hidden rounded-full bg-slate-200">
+          <div className="mt-2 h-3 overflow-hidden rounded-full bg-ink-200">
             <div
               className={cn(
                 'h-full rounded-full transition-all',
@@ -201,7 +201,7 @@ export default function BudgetDetailPage() {
               style={{ width: `${Math.min(budget.usedPercentage, 100)}%` }}
             />
           </div>
-          <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
+          <div className="mt-2 flex items-center justify-between text-xs text-ink-500">
             <span>{t('spentOfBudget', { spent: formatCurrency(budget.totalSpent), budget: formatCurrency(budget.totalBudgeted) })}</span>
             <span>{t('detail.elapsedOfPeriod', { percent: budget.periodElapsedPercentage.toFixed(0) })}</span>
           </div>
@@ -213,13 +213,13 @@ export default function BudgetDetailPage() {
           periodElapsedPercentage={budget.periodElapsedPercentage}
         />
 
-        <section className="rounded-[28px] border border-violet-100/80 bg-white/92 p-6 shadow-[0_20px_42px_-30px_rgba(76,29,149,0.45)]">
+        <section className="rounded-[28px] border border-ink-200 bg-white/92 p-6 shadow-[0_20px_42px_-30px_rgba(47,129,112,0.20)]">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-2xl font-semibold tracking-[-0.02em] text-slate-900">
+              <h2 className="text-2xl font-semibold tracking-[-0.02em] text-ink-900">
                 {t('categories')}
               </h2>
-              <p className="mt-1 text-sm text-slate-500">{t('detail.categoriesHint')}</p>
+              <p className="mt-1 text-sm text-ink-500">{t('detail.categoriesHint')}</p>
             </div>
             <Link href={`${BUDGET_BASE}/${budget.id}/edit`}>
               <Button variant="outline">
@@ -230,7 +230,7 @@ export default function BudgetDetailPage() {
           </div>
 
           {budget.categories.length === 0 ? (
-            <p className="rounded-xl border border-violet-100 bg-violet-50/40 p-5 text-sm text-slate-500">
+            <p className="rounded-xl border border-ink-200 bg-primary-50/40 p-5 text-sm text-ink-500">
               {t('noCategoriesInBudget')}
             </p>
           ) : (
@@ -247,13 +247,13 @@ export default function BudgetDetailPage() {
                 return (
                   <article
                     key={category.categoryId}
-                    className="rounded-xl border border-violet-100/80 bg-white p-4"
+                    className="rounded-xl border border-ink-200 bg-white p-4"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <p className="text-base font-semibold text-slate-900">{category.categoryName}</p>
+                        <p className="text-base font-semibold text-ink-900">{category.categoryName}</p>
                         {category.parentCategoryName ? (
-                          <p className="text-xs text-slate-500">{category.parentCategoryName}</p>
+                          <p className="text-xs text-ink-500">{category.parentCategoryName}</p>
                         ) : null}
                       </div>
                       <Badge variant="outline" className={cn('border text-xs font-semibold', statusClass)}>
@@ -266,7 +266,7 @@ export default function BudgetDetailPage() {
                     </div>
 
                     <div className="mt-3 flex items-center justify-between text-sm">
-                      <p className="text-slate-600">
+                      <p className="text-ink-600">
                         {t('spentOfBudget', {
                           spent: formatCurrency(category.actualSpent),
                           budget: formatCurrency(category.effectiveBudget),
@@ -278,7 +278,7 @@ export default function BudgetDetailPage() {
                       </p>
                     </div>
 
-                    <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200">
+                    <div className="mt-2 h-2 overflow-hidden rounded-full bg-ink-200">
                       <div
                         className={cn(
                           'h-full rounded-full',
@@ -292,7 +292,7 @@ export default function BudgetDetailPage() {
                       />
                     </div>
 
-                    <p className="mt-2 text-xs text-slate-500">
+                    <p className="mt-2 text-xs text-ink-500">
                       {t('detail.categoryTransactions', { count: category.transactionCount })}
                     </p>
                   </article>

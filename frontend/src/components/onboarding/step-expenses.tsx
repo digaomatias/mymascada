@@ -115,7 +115,7 @@ export function StepExpenses({ value, onChange, currency, onNext, onBack }: Step
         </div>
       </aside>
 
-      <section className="flex flex-col rounded-[24px] border border-violet-100 bg-white/80 p-5 sm:p-6">
+      <section className="flex flex-col rounded-[24px] border border-ink-200 bg-white/80 p-5 sm:p-6">
         <div className="inline-flex w-fit items-center gap-2 rounded-full border border-amber-100 bg-amber-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">
           <CreditCardIcon className="h-4 w-4" />
           {t('expenses.label')}
@@ -172,7 +172,7 @@ export function StepExpenses({ value, onChange, currency, onNext, onBack }: Step
           <Button
             onClick={onNext}
             disabled={value <= 0}
-            className="rounded-xl bg-violet-600 px-6 text-white shadow-[0_12px_25px_-15px_rgba(124,58,237,1)] hover:bg-violet-700"
+            className="rounded-xl bg-primary-600 px-6 text-white shadow-[0_12px_25px_-15px_rgba(47,129,112,0.45)] hover:bg-primary-700"
           >
             {t('next')}
             <ArrowRightIcon className="ml-2 h-4 w-4" />

@@ -18,7 +18,7 @@ export function StepIncome({ value, onChange, currency, onNext, onBack }: StepIn
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-8">
-      <aside className="relative overflow-hidden rounded-[24px] border border-emerald-100 bg-gradient-to-br from-emerald-50 via-violet-50 to-white p-5 sm:p-6">
+      <aside className="relative overflow-hidden rounded-[24px] border border-emerald-100 bg-gradient-to-br from-emerald-50 via-primary-50 to-white p-5 sm:p-6">
         <div className="pointer-events-none absolute -bottom-12 -right-10 h-36 w-36 rounded-full bg-emerald-200/50 blur-2xl" />
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700/90">
           {t('income.visualLabel')}
@@ -87,8 +87,8 @@ export function StepIncome({ value, onChange, currency, onNext, onBack }: StepIn
         </div>
       </aside>
 
-      <section className="flex flex-col rounded-[24px] border border-violet-100 bg-white/80 p-5 sm:p-6">
-        <div className="inline-flex w-fit items-center gap-2 rounded-full border border-violet-100 bg-violet-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-violet-600">
+      <section className="flex flex-col rounded-[24px] border border-ink-200 bg-white/80 p-5 sm:p-6">
+        <div className="inline-flex w-fit items-center gap-2 rounded-full border border-ink-200 bg-primary-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-primary-600">
           <ArrowTrendingUpIcon className="h-4 w-4" />
           {t('income.label')}
         </div>
@@ -110,7 +110,7 @@ export function StepIncome({ value, onChange, currency, onNext, onBack }: StepIn
             label={t('income.label')}
             allowNegative={false}
             placeholder="0.00"
-            className="h-16 rounded-2xl border-violet-200 bg-white px-5 text-3xl font-semibold tracking-tight text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] [font-family:var(--font-onboarding-mono)] [font-variant-numeric:tabular-nums] focus:border-violet-400 focus:ring-4 focus:ring-violet-200/60"
+            className="h-16 rounded-2xl border-ink-200 bg-white px-5 text-3xl font-semibold tracking-tight text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] [font-family:var(--font-onboarding-mono)] [font-variant-numeric:tabular-nums] focus:border-primary-400 focus:ring-4 focus:ring-primary-200/60"
           />
           <p className="mt-2 text-sm text-slate-500">
             {t('income.helper')}
@@ -121,14 +121,14 @@ export function StepIncome({ value, onChange, currency, onNext, onBack }: StepIn
           <Button
             variant="ghost"
             onClick={onBack}
-            className="rounded-xl border border-slate-200 bg-white px-5 text-slate-700 hover:border-violet-200 hover:bg-violet-50"
+            className="rounded-xl border border-slate-200 bg-white px-5 text-slate-700 hover:border-ink-200 hover:bg-primary-50"
           >
             {t('back')}
           </Button>
           <Button
             onClick={onNext}
             disabled={value <= 0}
-            className="rounded-xl bg-violet-600 px-6 text-white shadow-[0_12px_25px_-15px_rgba(124,58,237,1)] hover:bg-violet-700"
+            className="rounded-xl bg-primary-600 px-6 text-white shadow-[0_12px_25px_-15px_rgba(47,129,112,0.45)] hover:bg-primary-700"
           >
             {t('next')}
             <ArrowDownTrayIcon className="ml-2 h-4 w-4 rotate-180" />

@@ -583,12 +583,12 @@ export function DuplicatesModal({ isOpen, onClose, onRefresh }: DuplicatesModalP
                   </div>
 
                   {/* Bulk Actions */}
-                  <Card className="bg-purple-50 border-purple-200">
+                  <Card className="bg-primary-50 border-primary-200">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
-                          <h4 className="font-medium text-purple-900">{t('duplicates.bulkActions')}</h4>
-                          <span className="text-sm text-purple-700">
+                          <h4 className="font-medium text-primary-900">{t('duplicates.bulkActions')}</h4>
+                          <span className="text-sm text-primary-700">
                             {t('duplicates.bulkSelected', { selected: selectedGroups.size, total: duplicates.duplicateGroups.length })}
                           </span>
                         </div>

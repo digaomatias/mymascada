@@ -123,9 +123,9 @@ export function PeriodSelector({
   const showNavigation = period !== 'all';
 
   return (
-    <div className="mb-6 rounded-[24px] border border-violet-100/80 bg-white/92 p-4 shadow-[0_18px_40px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs">
+    <div className="mb-6 rounded-[24px] border border-ink-200 bg-white/92 p-4 shadow-[0_18px_40px_-30px_rgba(47,129,112,0.20)] backdrop-blur-xs">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="inline-flex w-full flex-wrap items-center gap-1 rounded-xl border border-violet-100 bg-violet-50/55 p-1 lg:w-auto">
+        <div className="inline-flex w-full flex-wrap items-center gap-1 rounded-xl border border-ink-200 bg-primary-50/55 p-1 lg:w-auto">
           {periodOptions.map((option) => {
             const isActive = option === period;
             const label =
@@ -145,8 +145,8 @@ export function PeriodSelector({
                 className={cn(
                   'flex-1 rounded-lg px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] transition-all lg:flex-none',
                   isActive
-                    ? 'bg-white text-violet-700 shadow-[0_10px_24px_-16px_rgba(76,29,149,0.65)]'
-                    : 'text-slate-500 hover:text-violet-700',
+                    ? 'bg-white text-primary-700 shadow-[0_10px_24px_-16px_rgba(47,129,112,0.25)]'
+                    : 'text-slate-500 hover:text-primary-700',
                 )}
                 aria-pressed={isActive}
               >
@@ -157,12 +157,12 @@ export function PeriodSelector({
         </div>
 
         {showNavigation ? (
-          <div className="flex w-full items-center justify-between gap-2 rounded-xl border border-violet-100/80 bg-white/95 px-2 py-1.5 lg:w-auto lg:justify-start">
+          <div className="flex w-full items-center justify-between gap-2 rounded-xl border border-ink-200 bg-white/95 px-2 py-1.5 lg:w-auto lg:justify-start">
             <Button
               variant="ghost"
               size="icon"
               onClick={navigatePrevious}
-              className="h-8 w-8 rounded-lg text-slate-500 hover:text-violet-700"
+              className="h-8 w-8 rounded-lg text-slate-500 hover:text-primary-700"
               aria-label={t('previousPeriod')}
             >
               <ChevronLeftIcon className="h-4 w-4" />
@@ -177,14 +177,14 @@ export function PeriodSelector({
               size="icon"
               onClick={navigateNext}
               disabled={!canNavigateForward()}
-              className="h-8 w-8 rounded-lg text-slate-500 hover:text-violet-700"
+              className="h-8 w-8 rounded-lg text-slate-500 hover:text-primary-700"
               aria-label={t('nextPeriod')}
             >
               <ChevronRightIcon className="h-4 w-4" />
             </Button>
           </div>
         ) : (
-          <div className="inline-flex items-center rounded-xl border border-violet-100/80 bg-white/95 px-3 py-2 text-sm font-semibold text-slate-700">
+          <div className="inline-flex items-center rounded-xl border border-ink-200 bg-white/95 px-3 py-2 text-sm font-semibold text-slate-700">
             {getPeriodLabel()}
           </div>
         )}

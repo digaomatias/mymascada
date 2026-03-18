@@ -727,7 +727,7 @@ export function TransactionList({
 
       {/* Filters */}
       {showFilters && (
-        <Card className="rounded-[26px] border border-violet-100/80 bg-white/90 shadow-[0_20px_44px_-32px_rgba(76,29,149,0.48)] overflow-visible">
+        <Card className="rounded-[26px] border border-ink-200 bg-white/90 shadow-[0_20px_44px_-32px_rgba(47,129,112,0.20)] overflow-visible">
           <CardContent className="p-4 overflow-visible">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 overflow-visible">
               <div className="overflow-visible">
@@ -899,7 +899,7 @@ export function TransactionList({
 
       {/* Bulk Action Toolbar */}
       {isSelectionMode && selectedTransactionIds.size > 0 && (
-        <Card className="rounded-[26px] border border-violet-100/80 bg-white/95 shadow-[0_20px_44px_-32px_rgba(76,29,149,0.48)] backdrop-blur-sm">
+        <Card className="rounded-[26px] border border-ink-200 bg-white/95 shadow-[0_20px_44px_-32px_rgba(47,129,112,0.20)] backdrop-blur-sm">
           <CardContent className={`${isMobile ? 'p-3' : 'p-4'}`}>
             <div className={`flex items-center ${isMobile ? 'gap-2' : 'justify-between'}`}>
               <div className="flex items-center gap-2">
@@ -963,7 +963,7 @@ export function TransactionList({
       )}
 
       {/* Transaction List */}
-      <Card className="rounded-[26px] border border-violet-100/80 bg-white/90 shadow-[0_20px_44px_-32px_rgba(76,29,149,0.48)]">
+      <Card className="rounded-[26px] border border-ink-200 bg-white/90 shadow-[0_20px_44px_-32px_rgba(47,129,112,0.20)]">
         {loading ? (
           <CardContent className="p-6">
             <div className="space-y-4">
@@ -1268,7 +1268,7 @@ export function TransactionList({
 
                                 {transaction.status === 3 && (
                                   <span
-                                    className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-purple-100 text-purple-700 text-[10px] font-bold flex-shrink-0"
+                                    className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-primary-100 text-primary-700 text-[10px] font-bold flex-shrink-0"
                                     title={t('status.reconciled')}
                                   >
                                     {(t('status.reconciled')[0] || 'R').toUpperCase()}

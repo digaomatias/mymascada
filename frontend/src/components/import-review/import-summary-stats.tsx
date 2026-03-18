@@ -72,8 +72,8 @@ export function ImportSummaryStats({ summary, progress }: ImportSummaryStatsProp
       label: tImport('review.summary.otherConflicts'),
       value: safeSummary.transferConflicts + safeSummary.manualConflicts,
       icon: <ExclamationTriangleIcon className="w-5 h-5" />,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100'
+      color: 'text-primary-600',
+      bgColor: 'bg-primary-100'
     }
   ];
 

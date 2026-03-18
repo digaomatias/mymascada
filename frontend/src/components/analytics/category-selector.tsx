@@ -71,7 +71,7 @@ export function CategorySelector({
   const hasMore = sortedCategories.length > 8;
 
   return (
-    <aside className="rounded-[26px] border border-violet-100/70 bg-white/92 p-4 shadow-[0_20px_44px_-32px_rgba(76,29,149,0.42)] backdrop-blur-xs">
+    <aside className="rounded-[26px] border border-ink-200 bg-white/92 p-4 shadow-[0_20px_44px_-32px_rgba(47,129,112,0.18)] backdrop-blur-xs">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="font-[var(--font-dash-sans)] text-base font-semibold tracking-[-0.01em] text-slate-900">
           {t('selectCategories')}
@@ -89,7 +89,7 @@ export function CategorySelector({
           placeholder={t('searchCategories')}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full rounded-xl border border-violet-100/80 bg-white pl-9 pr-8 py-2 text-sm text-slate-700 transition-colors placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-violet-200 focus:border-violet-300"
+          className="w-full rounded-xl border border-ink-200 bg-white pl-9 pr-8 py-2 text-sm text-slate-700 transition-colors placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-primary-200 focus:border-primary-300"
         />
         {searchTerm && (
           <button
@@ -152,9 +152,9 @@ export function CategorySelector({
               className={cn(
                 'w-full rounded-xl border p-2.5 text-left transition-all',
                 isSelected &&
-                  'border-violet-200 bg-violet-50/75 shadow-[0_12px_26px_-20px_rgba(124,58,237,0.65)]',
+                  'border-ink-200 bg-primary-50/75 shadow-[0_12px_26px_-20px_rgba(47,129,112,0.25)]',
                 isDisabled && 'border-slate-100 bg-slate-50 opacity-55 cursor-not-allowed',
-                !isSelected && !isDisabled && 'border-transparent hover:border-violet-100 hover:bg-violet-50/40'
+                !isSelected && !isDisabled && 'border-transparent hover:border-primary-100 hover:bg-primary-50/40'
               )}
             >
               <div className="flex items-center justify-between gap-2">
@@ -162,7 +162,7 @@ export function CategorySelector({
                   <span
                     className={cn(
                       'flex h-4 w-4 items-center justify-center rounded border transition-colors',
-                      isSelected ? 'border-violet-500 bg-violet-500 text-white' : 'border-slate-300 bg-white',
+                      isSelected ? 'border-primary-500 bg-primary-500 text-white' : 'border-slate-300 bg-white',
                     )}
                   >
                     {isSelected && <CheckIcon className="h-3 w-3" />}
@@ -178,7 +178,7 @@ export function CategorySelector({
                 <div
                   className={cn(
                     'font-[var(--font-dash-mono)] text-sm',
-                    isSelected ? 'text-violet-700' : 'text-slate-500',
+                    isSelected ? 'text-primary-700' : 'text-slate-500',
                   )}
                 >
                   {formatCurrency(category.totalSpent)}
@@ -194,7 +194,7 @@ export function CategorySelector({
         <button
           type="button"
           onClick={() => setIsExpanded(!isExpanded)}
-          className="mt-2 text-sm font-medium text-violet-600 transition-colors hover:text-violet-700"
+          className="mt-2 text-sm font-medium text-primary-600 transition-colors hover:text-primary-700"
         >
           {isExpanded ? t('showLess') : t('showMore', { count: sortedCategories.length - 8 })}
         </button>

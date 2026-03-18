@@ -205,10 +205,10 @@ export default function CategoryDetailsPage() {
     return (
       <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
+          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-400 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <TagIcon className="w-8 h-8 text-white" />
           </div>
-          <div className="mt-6 text-slate-700 font-medium">{t('details.loadingCategory')}</div>
+          <div className="mt-6 text-ink-700 font-medium">{t('details.loadingCategory')}</div>
         </div>
       </div>
     );
@@ -249,7 +249,7 @@ export default function CategoryDetailsPage() {
 
       <div className="space-y-5">
         {/* Hero Section */}
-        <section className="rounded-[26px] border border-violet-100/60 bg-white/90 p-6 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
+        <section className="rounded-[26px] border border-ink-200 bg-white/90 p-6 shadow-lg shadow-primary-200/20 backdrop-blur-xs">
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
             {/* Left: Category identity */}
             <div className="min-w-0 flex-1">
@@ -261,12 +261,12 @@ export default function CategoryDetailsPage() {
                   {renderCategoryIcon(category.icon, 'h-6 w-6 text-white')}
                 </div>
                 <div className="min-w-0">
-                  <h1 className="font-[var(--font-dash-sans)] text-2xl sm:text-3xl font-semibold tracking-[-0.03em] text-slate-900 truncate">
+                  <h1 className="font-[var(--font-dash-sans)] text-2xl sm:text-3xl font-semibold tracking-[-0.03em] text-ink-900 truncate">
                     {category.name}
                   </h1>
                   {category.isSystemCategory && (
                     <div className="mt-0.5">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-ink-100 text-ink-600">
                         {t('details.systemCategory')}
                       </span>
                     </div>
@@ -275,7 +275,7 @@ export default function CategoryDetailsPage() {
               </div>
 
               {category.description && (
-                <p className="mt-3 text-sm text-slate-500">{category.description}</p>
+                <p className="mt-3 text-sm text-ink-500">{category.description}</p>
               )}
             </div>
 
@@ -283,34 +283,34 @@ export default function CategoryDetailsPage() {
             <div className="flex items-start gap-5 lg:gap-6">
               {/* Total Spent/Earned */}
               <div className="text-left lg:text-right">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                   {t('details.totalAmount')}
                 </p>
-                <p className={'mt-1 font-[var(--font-dash-mono)] text-xl font-semibold text-violet-600'}>
+                <p className={'mt-1 font-[var(--font-dash-mono)] text-xl font-semibold text-primary-600'}>
                   {formatCurrency(category.totalAmount ? Math.abs(category.totalAmount) : 0)}
                 </p>
               </div>
 
-              <div className="h-12 w-px bg-slate-200 self-center" />
+              <div className="h-12 w-px bg-ink-200 self-center" />
 
               {/* Transaction Count */}
               <div className="text-left lg:text-right">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                   {t('details.totalTransactions')}
                 </p>
-                <p className="mt-1 font-[var(--font-dash-mono)] text-xl font-semibold text-slate-900">
+                <p className="mt-1 font-[var(--font-dash-mono)] text-xl font-semibold text-ink-900">
                   {category.transactionCount}
                 </p>
               </div>
 
-              <div className="h-12 w-px bg-slate-200 self-center" />
+              <div className="h-12 w-px bg-ink-200 self-center" />
 
               {/* Average per Transaction */}
               <div className="text-left lg:text-right">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                   {t('details.averagePerTransaction')}
                 </p>
-                <p className={'mt-1 font-[var(--font-dash-mono)] text-xl font-semibold text-violet-600'}>
+                <p className={'mt-1 font-[var(--font-dash-mono)] text-xl font-semibold text-primary-600'}>
                   {formatCurrency(
                     category.transactionCount > 0
                       ? Math.abs(category.totalAmount) / category.transactionCount
@@ -323,7 +323,7 @@ export default function CategoryDetailsPage() {
         </section>
 
         {/* Stats Section with Date Filters */}
-        <section className="rounded-[26px] border border-violet-100/60 bg-white/90 p-5 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
+        <section className="rounded-[26px] border border-ink-200 bg-white/90 p-5 shadow-lg shadow-primary-200/20 backdrop-blur-xs">
           {/* Date Filter Pills */}
           <div className="flex flex-wrap gap-1.5 mb-5">
             {dateFilters.map((filterType) => (
@@ -335,7 +335,7 @@ export default function CategoryDetailsPage() {
                   'px-3 py-1.5 text-xs rounded-lg transition-colors cursor-pointer font-medium',
                   dateFilter === filterType
                     ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
+                    : 'bg-ink-100 text-ink-600 hover:bg-ink-200',
                 )}
               >
                 {getDateFilterLabel(filterType)}
@@ -347,50 +347,50 @@ export default function CategoryDetailsPage() {
           {loadingStats ? (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="animate-pulse rounded-xl bg-slate-50 p-4">
-                  <div className="h-3 bg-slate-200 rounded w-1/2 mb-3" />
-                  <div className="h-7 bg-slate-200 rounded w-2/3" />
+                <div key={i} className="animate-pulse rounded-xl bg-ink-50 p-4">
+                  <div className="h-3 bg-ink-200 rounded w-1/2 mb-3" />
+                  <div className="h-7 bg-ink-200 rounded w-2/3" />
                 </div>
               ))}
             </div>
           ) : categoryStats ? (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="rounded-xl bg-slate-50/80 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <div className="rounded-xl bg-ink-50/80 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                   {t('details.totalAmount')}
                 </p>
-                <p className={'mt-1 font-[var(--font-dash-mono)] text-2xl font-semibold text-violet-600'}>
+                <p className={'mt-1 font-[var(--font-dash-mono)] text-2xl font-semibold text-primary-600'}>
                   {formatCurrency(categoryStats.totalAmount)}
                 </p>
               </div>
 
-              <div className="rounded-xl bg-slate-50/80 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <div className="rounded-xl bg-ink-50/80 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                   {t('details.totalTransactions')}
                 </p>
-                <p className="mt-1 font-[var(--font-dash-mono)] text-2xl font-semibold text-slate-900">
+                <p className="mt-1 font-[var(--font-dash-mono)] text-2xl font-semibold text-ink-900">
                   {categoryStats.transactionCount}
                 </p>
               </div>
 
-              <div className="rounded-xl bg-slate-50/80 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <div className="rounded-xl bg-ink-50/80 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                   {t('details.averageAmount')}
                 </p>
-                <p className="mt-1 font-[var(--font-dash-mono)] text-2xl font-semibold text-slate-900">
+                <p className="mt-1 font-[var(--font-dash-mono)] text-2xl font-semibold text-ink-900">
                   {formatCurrency(categoryStats.averageAmount || 0)}
                 </p>
               </div>
             </div>
           ) : (
-            <div className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">
+            <div className="rounded-xl bg-ink-50 p-4 text-center text-sm text-ink-500">
               {t('details.failedToLoadStats')}
             </div>
           )}
         </section>
 
         {/* Transactions Section */}
-        <section className="rounded-[26px] border border-violet-100/80 bg-white/90 shadow-[0_20px_44px_-32px_rgba(76,29,149,0.48)] p-5">
+        <section className="rounded-[26px] border border-ink-200 bg-white/90 shadow-[0_20px_44px_-32px_rgba(47,129,112,0.20)] p-5">
           <TransactionList
             categoryId={parseInt(categoryId)}
             showCategoryFilter={false}
@@ -400,38 +400,38 @@ export default function CategoryDetailsPage() {
         </section>
 
         {/* Category Info */}
-        <section className="rounded-[26px] border border-violet-100/60 bg-white/90 p-5 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
-          <h2 className="font-[var(--font-dash-sans)] text-base font-semibold text-slate-900 mb-4">
+        <section className="rounded-[26px] border border-ink-200 bg-white/90 p-5 shadow-lg shadow-primary-200/20 backdrop-blur-xs">
+          <h2 className="font-[var(--font-dash-sans)] text-base font-semibold text-ink-900 mb-4">
             {tCommon('details')}
           </h2>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <span className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                 {t('details.fullPath')}
               </span>
-              <span className="font-[var(--font-dash-mono)] text-sm text-slate-700">
+              <span className="font-[var(--font-dash-mono)] text-sm text-ink-700">
                 {category.fullPath}
               </span>
             </div>
 
-            <div className="h-px bg-slate-100" />
+            <div className="h-px bg-ink-100" />
 
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <span className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                 {t('details.created')}
               </span>
-              <span className="font-[var(--font-dash-mono)] text-sm text-slate-700">
+              <span className="font-[var(--font-dash-mono)] text-sm text-ink-700">
                 {formatDate(category.createdAt)}
               </span>
             </div>
 
-            <div className="h-px bg-slate-100" />
+            <div className="h-px bg-ink-100" />
 
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <span className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                 {t('details.lastUpdated')}
               </span>
-              <span className="font-[var(--font-dash-mono)] text-sm text-slate-700">
+              <span className="font-[var(--font-dash-mono)] text-sm text-ink-700">
                 {formatDate(category.updatedAt)}
               </span>
             </div>

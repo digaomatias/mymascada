@@ -88,11 +88,11 @@ export default function CreateGoalPage() {
         </div>
 
         <div>
-          <h2 className="text-[1.65rem] font-semibold tracking-[-0.03em] text-slate-900">{t('form.createTitle')}</h2>
-          <p className="mt-1 text-sm text-slate-500">{t('form.createSubtitle')}</p>
+          <h2 className="text-[1.65rem] font-semibold tracking-[-0.03em] text-ink-900">{t('form.createTitle')}</h2>
+          <p className="mt-1 text-sm text-ink-500">{t('form.createSubtitle')}</p>
         </div>
 
-        <div className="rounded-[28px] border border-violet-100/80 bg-white/92 p-6 shadow-[0_24px_46px_-34px_rgba(76,29,149,0.42)] sm:p-7">
+        <div className="rounded-[28px] border border-ink-200 bg-white/92 p-6 shadow-[0_24px_46px_-34px_rgba(47,129,112,0.18)] sm:p-7">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="name">{t('form.name')} *</Label>
@@ -171,7 +171,7 @@ export default function CreateGoalPage() {
                   </option>
                 ))}
               </Select>
-              <p className="text-xs text-slate-500">{t('form.linkedAccountHelp')}</p>
+              <p className="text-xs text-ink-500">{t('form.linkedAccountHelp')}</p>
             </div>
 
             <div className="flex justify-end gap-3">

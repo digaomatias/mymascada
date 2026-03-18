@@ -257,8 +257,8 @@ export default function EditBudgetPage() {
     return (
       <AppLayout>
         <div className="space-y-4">
-          <div className="h-24 animate-pulse rounded-[24px] border border-violet-100/80 bg-white/80" />
-          <div className="h-96 animate-pulse rounded-[24px] border border-violet-100/80 bg-white/80" />
+          <div className="h-24 animate-pulse rounded-[24px] border border-ink-200 bg-white/80" />
+          <div className="h-96 animate-pulse rounded-[24px] border border-ink-200 bg-white/80" />
         </div>
       </AppLayout>
     );
@@ -271,16 +271,16 @@ export default function EditBudgetPage() {
       <div>
         <header className="mb-5">
           <BackButton variant="link" href={`${BUDGET_BASE}/${budget.id}`} label={t('backToBudget')} />
-          <h1 className="mt-2 font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
+          <h1 className="mt-2 font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-ink-900 sm:text-[2.1rem]">
             {t('editBudget')}
           </h1>
-          <p className="mt-1.5 text-[15px] text-slate-500">{t('edit.subtitle')}</p>
+          <p className="mt-1.5 text-[15px] text-ink-500">{t('edit.subtitle')}</p>
         </header>
 
         <div className="space-y-5">
-        <section className="space-y-4 rounded-[28px] border border-violet-100/80 bg-white/92 p-6 shadow-[0_20px_42px_-30px_rgba(76,29,149,0.45)]">
+        <section className="space-y-4 rounded-[28px] border border-ink-200 bg-white/92 p-6 shadow-[0_20px_42px_-30px_rgba(47,129,112,0.20)]">
           <div>
-            <h2 className="text-lg font-semibold tracking-[-0.02em] text-slate-900">
+            <h2 className="text-lg font-semibold tracking-[-0.02em] text-ink-900">
               {t('edit.basicInfo')}
             </h2>
           </div>
@@ -307,19 +307,19 @@ export default function EditBudgetPage() {
           </div>
 
           <div className="flex flex-wrap gap-4">
-            <label className="inline-flex items-center gap-2 text-sm text-slate-600">
+            <label className="inline-flex items-center gap-2 text-sm text-ink-600">
               <Checkbox checked={isActive} onCheckedChange={(checked) => setIsActive(checked === true)} />
               {t('active')}
             </label>
-            <label className="inline-flex items-center gap-2 text-sm text-slate-600">
+            <label className="inline-flex items-center gap-2 text-sm text-ink-600">
               <Checkbox checked={isRecurring} onCheckedChange={(checked) => setIsRecurring(checked === true)} />
               {t('wizard.isRecurring')}
             </label>
           </div>
         </section>
 
-        <section className="space-y-4 rounded-[28px] border border-violet-100/80 bg-white/92 p-6 shadow-[0_20px_42px_-30px_rgba(76,29,149,0.45)]">
-          <h2 className="text-lg font-semibold tracking-[-0.02em] text-slate-900">
+        <section className="space-y-4 rounded-[28px] border border-ink-200 bg-white/92 p-6 shadow-[0_20px_42px_-30px_rgba(47,129,112,0.20)]">
+          <h2 className="text-lg font-semibold tracking-[-0.02em] text-ink-900">
             {t('edit.categoryAllocations')}
           </h2>
 
@@ -328,16 +328,16 @@ export default function EditBudgetPage() {
               const categoryId = Number(id);
               const meta = existingCategoryMeta.get(categoryId);
               return (
-                <div key={id} className="rounded-xl border border-violet-100/80 p-4">
+                <div key={id} className="rounded-xl border border-ink-200 p-4">
                   <div className="flex items-start justify-between gap-3">
-                    <p className="inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
+                    <p className="inline-flex items-center gap-2 text-sm font-semibold text-ink-800">
                       {renderCategoryIcon(meta?.icon, 'h-4 w-4')}
                       {meta?.name || id}
                     </p>
                     <button
                       type="button"
                       onClick={() => handleRemoveExistingCategory(categoryId)}
-                      className="rounded-md p-1 text-slate-400 hover:bg-violet-50 hover:text-rose-600"
+                      className="rounded-md p-1 text-ink-400 hover:bg-primary-50 hover:text-rose-600"
                     >
                       <TrashIcon className="h-4 w-4" />
                     </button>
@@ -345,7 +345,7 @@ export default function EditBudgetPage() {
 
                   <div className="mt-3 space-y-3">
                     <div className="grid gap-3 sm:grid-cols-[140px_1fr] sm:items-center">
-                      <Label className="text-xs text-slate-500">{t('wizard.budgetAmount')}</Label>
+                      <Label className="text-xs text-ink-500">{t('wizard.budgetAmount')}</Label>
                       <Input
                         type="number"
                         min="0"
@@ -359,7 +359,7 @@ export default function EditBudgetPage() {
                       />
                     </div>
                     <div className="flex flex-wrap gap-4">
-                      <label className="inline-flex items-center gap-2 text-xs text-slate-600">
+                      <label className="inline-flex items-center gap-2 text-xs text-ink-600">
                         <Checkbox
                           checked={allocation.allowRollover}
                           onCheckedChange={(checked) =>
@@ -370,7 +370,7 @@ export default function EditBudgetPage() {
                         />
                         {t('wizard.allowRollover')}
                       </label>
-                      <label className="inline-flex items-center gap-2 text-xs text-slate-600">
+                      <label className="inline-flex items-center gap-2 text-xs text-ink-600">
                         <Checkbox
                           checked={allocation.includeSubcategories}
                           onCheckedChange={(checked) =>
@@ -388,10 +388,10 @@ export default function EditBudgetPage() {
             })}
 
             {newCategories.map((category) => (
-              <div key={category.categoryId} className="rounded-xl border border-violet-100/80 p-4">
+              <div key={category.categoryId} className="rounded-xl border border-ink-200 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
+                    <p className="inline-flex items-center gap-2 text-sm font-semibold text-ink-800">
                       {renderCategoryIcon(category.categoryIcon, 'h-4 w-4')}
                       {category.categoryName}
                       <Badge variant="secondary" className="text-[10px]">{t('edit.newBadge')}</Badge>
@@ -402,7 +402,7 @@ export default function EditBudgetPage() {
                         onClick={() =>
                           handleUpdateNewCategory(category.categoryId, { budgetedAmount: category.suggestion?.suggestedBudget || 0 })
                         }
-                        className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-violet-600 hover:text-violet-700"
+                        className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-primary-600 hover:text-primary-700"
                       >
                         <LightBulbIcon className="h-3.5 w-3.5" />
                         {t('wizard.useSuggestion')} · {formatCurrency(category.suggestion.suggestedBudget)}
@@ -413,14 +413,14 @@ export default function EditBudgetPage() {
                   <button
                     type="button"
                     onClick={() => handleRemoveNewCategory(category.categoryId)}
-                    className="rounded-md p-1 text-slate-400 hover:bg-violet-50 hover:text-rose-600"
+                    className="rounded-md p-1 text-ink-400 hover:bg-primary-50 hover:text-rose-600"
                   >
                     <TrashIcon className="h-4 w-4" />
                   </button>
                 </div>
 
                 <div className="mt-3 grid gap-3 sm:grid-cols-[140px_1fr] sm:items-center">
-                  <Label className="text-xs text-slate-500">{t('wizard.budgetAmount')}</Label>
+                  <Label className="text-xs text-ink-500">{t('wizard.budgetAmount')}</Label>
                   <Input
                     type="number"
                     min="0"
@@ -435,7 +435,7 @@ export default function EditBudgetPage() {
                 </div>
 
                 <div className="mt-3 flex flex-wrap gap-4">
-                  <label className="inline-flex items-center gap-2 text-xs text-slate-600">
+                  <label className="inline-flex items-center gap-2 text-xs text-ink-600">
                     <Checkbox
                       checked={category.allowRollover}
                       onCheckedChange={(checked) =>
@@ -444,7 +444,7 @@ export default function EditBudgetPage() {
                     />
                     {t('wizard.allowRollover')}
                   </label>
-                  <label className="inline-flex items-center gap-2 text-xs text-slate-600">
+                  <label className="inline-flex items-center gap-2 text-xs text-ink-600">
                     <Checkbox
                       checked={category.includeSubcategories}
                       onCheckedChange={(checked) =>
@@ -459,12 +459,12 @@ export default function EditBudgetPage() {
           </div>
         </section>
 
-        <section className="space-y-3 rounded-[28px] border border-violet-100/80 bg-white/92 p-6 shadow-[0_20px_42px_-30px_rgba(76,29,149,0.45)]">
-          <h2 className="text-lg font-semibold tracking-[-0.02em] text-slate-900">
+        <section className="space-y-3 rounded-[28px] border border-ink-200 bg-white/92 p-6 shadow-[0_20px_42px_-30px_rgba(47,129,112,0.20)]">
+          <h2 className="text-lg font-semibold tracking-[-0.02em] text-ink-900">
             {t('edit.addMoreCategories')}
           </h2>
           <div className="relative">
-            <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
             <Input
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
@@ -472,33 +472,33 @@ export default function EditBudgetPage() {
               className="pl-9"
             />
           </div>
-          <div className="max-h-56 overflow-y-auto rounded-xl border border-violet-100/80">
+          <div className="max-h-56 overflow-y-auto rounded-xl border border-ink-200">
             {filteredCategories.slice(0, 15).map((category) => (
               <button
                 key={category.id}
                 type="button"
                 onClick={() => handleAddCategory(category)}
-                className="flex w-full items-center justify-between border-b border-violet-100/70 px-3 py-2 text-left last:border-b-0 hover:bg-violet-50/40"
+                className="flex w-full items-center justify-between border-b border-ink-200 px-3 py-2 text-left last:border-b-0 hover:bg-primary-50/40"
               >
-                <span className="inline-flex items-center gap-2 text-sm text-slate-700">
+                <span className="inline-flex items-center gap-2 text-sm text-ink-700">
                   {renderCategoryIcon(category.icon, 'h-4 w-4')}
                   {category.name}
                 </span>
-                <span className="inline-flex items-center gap-2 text-xs text-slate-500">
+                <span className="inline-flex items-center gap-2 text-xs text-ink-500">
                   <PlusIcon className="h-3.5 w-3.5" />
                 </span>
               </button>
             ))}
             {filteredCategories.length === 0 ? (
-              <p className="px-3 py-3 text-sm text-slate-500">{t('wizard.noMatchingCategories')}</p>
+              <p className="px-3 py-3 text-sm text-ink-500">{t('wizard.noMatchingCategories')}</p>
             ) : null}
           </div>
         </section>
 
-        <footer className="sticky bottom-4 z-20 flex items-center justify-between rounded-2xl border border-violet-200/80 bg-white/95 p-4 shadow-[0_18px_36px_-24px_rgba(76,29,149,0.5)] backdrop-blur">
+        <footer className="sticky bottom-4 z-20 flex items-center justify-between rounded-2xl border border-ink-200 bg-white/95 p-4 shadow-[0_18px_36px_-24px_rgba(47,129,112,0.20)] backdrop-blur">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">{t('wizard.totalBudget')}</p>
-            <p className="text-xl font-semibold tracking-[-0.02em] text-slate-900">{formatCurrency(totalBudget)}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-ink-500">{t('wizard.totalBudget')}</p>
+            <p className="text-xl font-semibold tracking-[-0.02em] text-ink-900">{formatCurrency(totalBudget)}</p>
           </div>
           <div className="flex items-center gap-2">
             <Link href={`${BUDGET_BASE}/${budget.id}`}>

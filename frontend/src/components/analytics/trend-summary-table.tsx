@@ -126,9 +126,9 @@ export function TrendSummaryTable({ categories, selectedCategoryIds }: TrendSumm
   }
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-violet-100/70 bg-white/95">
+    <div className="overflow-x-auto rounded-2xl border border-ink-200 bg-white/95">
       <table className="min-w-full divide-y divide-slate-200">
-        <thead className="bg-violet-50/45">
+        <thead className="bg-primary-50/45">
           <tr>
             <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
               {t('category')}
@@ -152,7 +152,7 @@ export function TrendSummaryTable({ categories, selectedCategoryIds }: TrendSumm
         </thead>
         <tbody className="divide-y divide-slate-100 bg-white">
           {categoriesWithTrend.map((cat) => (
-            <tr key={cat.categoryId} className="transition-colors hover:bg-violet-50/45">
+            <tr key={cat.categoryId} className="transition-colors hover:bg-primary-50/45">
               <td className="px-4 py-3 whitespace-nowrap">
                 <div className="flex items-center gap-2">
                   <div

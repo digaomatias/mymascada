@@ -18,11 +18,11 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
 
   return (
     <div className="flex flex-col items-center gap-8 py-2 sm:py-5">
-      <div className="relative w-full overflow-hidden rounded-[28px] border border-violet-100 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 px-5 py-6 sm:px-8 sm:py-7">
-        <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-violet-200/55 blur-2xl" />
-        <div className="pointer-events-none absolute -bottom-20 -left-16 h-44 w-44 rounded-full bg-fuchsia-200/40 blur-2xl" />
+      <div className="relative w-full overflow-hidden rounded-[28px] border border-ink-200 bg-gradient-to-br from-primary-50 via-white to-primary-50 px-5 py-6 sm:px-8 sm:py-7">
+        <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-primary-200/55 blur-2xl" />
+        <div className="pointer-events-none absolute -bottom-20 -left-16 h-44 w-44 rounded-full bg-primary-200/40 blur-2xl" />
         <div className="relative">
-          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-violet-500">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-primary-500">
             {t('welcome.badge')}
           </p>
           <svg
@@ -95,7 +95,7 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
         <p className="mx-auto max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
           {t('welcome.subtitle')}
         </p>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-500/80">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-500/80">
           {t('welcome.duration')}
         </p>
       </div>
@@ -103,7 +103,7 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
       <Button
         onClick={onNext}
         size="lg"
-        className="h-12 rounded-xl bg-gradient-to-r from-violet-600 via-violet-500 to-fuchsia-500 px-8 text-base font-semibold text-white shadow-[0_14px_30px_-16px_rgba(124,58,237,0.9)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-15px_rgba(124,58,237,0.95)] focus-visible:ring-violet-300"
+        className="h-12 rounded-xl bg-gradient-to-r from-primary-600 via-primary-500 to-primary-500 px-8 text-base font-semibold text-white shadow-[0_14px_30px_-16px_rgba(47,129,112,0.38)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-15px_rgba(47,129,112,0.40)] focus-visible:ring-primary-300"
       >
         {t('welcome.cta')}
         <ArrowRightIcon className="h-4 w-4" />
@@ -113,7 +113,7 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
         {trustSignals.map((signal) => (
           <span
             key={signal}
-            className="rounded-full border border-violet-200 bg-white/80 px-3 py-1.5 text-xs font-medium text-violet-700"
+            className="rounded-full border border-ink-200 bg-white/80 px-3 py-1.5 text-xs font-medium text-primary-700"
           >
             {signal}
           </span>

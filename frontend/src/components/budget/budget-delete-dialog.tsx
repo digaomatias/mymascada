@@ -46,8 +46,8 @@ export function BudgetDeleteDialog({
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
-      <AlertDialogContent className="max-w-[560px] rounded-[24px] border border-violet-200/80 bg-white/95 p-0 shadow-[0_28px_58px_-28px_rgba(76,29,149,0.45)]">
-        <AlertDialogHeader className="border-b border-violet-100/80 p-6 pb-4 text-left">
+      <AlertDialogContent className="max-w-[560px] rounded-[24px] border border-ink-200 bg-white/95 p-0 shadow-[0_28px_58px_-28px_rgba(47,129,112,0.20)]">
+        <AlertDialogHeader className="border-b border-ink-200 p-6 pb-4 text-left">
           <div className="mb-2 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
             <ExclamationTriangleIcon className="h-5 w-5" />
           </div>
@@ -59,7 +59,7 @@ export function BudgetDeleteDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="p-6 pt-4">
-          <AlertDialogCancel className="rounded-xl border-violet-200 bg-white text-slate-700 hover:bg-violet-50 hover:text-violet-700">
+          <AlertDialogCancel className="rounded-xl border-ink-200 bg-white text-slate-700 hover:bg-primary-50 hover:text-primary-700">
             {tCommon('cancel')}
           </AlertDialogCancel>
           <AlertDialogAction

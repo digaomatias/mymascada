@@ -762,7 +762,7 @@ export function CSVMappingReview({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <AdjustmentsHorizontalIcon className="w-5 h-5 text-purple-600" />
+            <AdjustmentsHorizontalIcon className="w-5 h-5 text-primary-600" />
             {tImport('aiCsv.mappingReview.columnMappingsTitle')}
           </CardTitle>
         </CardHeader>

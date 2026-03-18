@@ -238,7 +238,7 @@ export default function BankCategoryMappings() {
   const getSourceIcon = (source: string) => {
     switch (source) {
       case 'AI':
-        return <SparklesIcon className="w-4 h-4 text-purple-500" />;
+        return <SparklesIcon className="w-4 h-4 text-primary-500" />;
       case 'User':
         return <UserIcon className="w-4 h-4 text-blue-500" />;
       case 'Learned':
@@ -273,7 +273,7 @@ export default function BankCategoryMappings() {
           </Card>
           <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-sm">
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-purple-600">{statistics.aiCreatedMappings}</div>
+              <div className="text-2xl font-bold text-primary-600">{statistics.aiCreatedMappings}</div>
               <div className="text-sm text-gray-600">{t('aiCreated')}</div>
             </CardContent>
           </Card>

@@ -6,7 +6,7 @@ export function GoalsSkeleton() {
       {[1, 2, 3].map((i) => (
         <div
           key={i}
-          className="rounded-[26px] border border-violet-100/80 bg-white/80 p-5 animate-pulse"
+          className="rounded-[26px] border border-ink-200 bg-white/80 p-5 animate-pulse"
         >
           <div className="flex items-start gap-3">
             <Skeleton className="h-10 w-10 rounded-xl" variant="rounded-sm" />

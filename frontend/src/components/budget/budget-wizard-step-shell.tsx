@@ -49,9 +49,9 @@ export function BudgetWizardStepShell({
               className={cn(
                 'grid h-8 w-8 place-items-center rounded-full border text-xs font-semibold transition-colors',
                 index < step
-                  ? 'border-violet-600 bg-violet-600 text-white'
+                  ? 'border-primary-600 bg-primary-600 text-white'
                   : index === step
-                    ? 'border-violet-600 bg-violet-600 text-white'
+                    ? 'border-primary-600 bg-primary-600 text-white'
                     : 'border-slate-300 bg-white text-slate-500',
               )}
             >
@@ -61,7 +61,7 @@ export function BudgetWizardStepShell({
               <div
                 className={cn(
                   'mx-1.5 h-1 w-8 rounded-full sm:w-16',
-                  index < step ? 'bg-violet-600' : 'bg-slate-300',
+                  index < step ? 'bg-primary-600' : 'bg-slate-300',
                 )}
               />
             )}
@@ -69,7 +69,7 @@ export function BudgetWizardStepShell({
         ))}
       </div>
 
-      <div className="rounded-[28px] border border-violet-100/80 bg-white/92 p-6 shadow-[0_24px_46px_-34px_rgba(76,29,149,0.42)] sm:p-7">
+      <div className="rounded-[28px] border border-ink-200 bg-white/92 p-6 shadow-[0_24px_46px_-34px_rgba(47,129,112,0.18)] sm:p-7">
         {children}
 
         <div className="mt-6 flex items-center justify-between">

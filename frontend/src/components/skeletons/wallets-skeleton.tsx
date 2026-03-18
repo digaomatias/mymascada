@@ -4,7 +4,7 @@ export function WalletsSkeleton() {
   return (
     <div className="space-y-5">
       {/* Hero skeleton */}
-      <div className="rounded-[26px] border border-violet-100/80 bg-white/80 p-6 animate-pulse">
+      <div className="rounded-[26px] border border-ink-200 bg-white/80 p-6 animate-pulse">
         <Skeleton className="h-4 w-24" />
         <Skeleton className="mt-2 h-8 w-40" />
       </div>
@@ -13,7 +13,7 @@ export function WalletsSkeleton() {
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="rounded-[26px] border border-violet-100/80 bg-white/80 p-5 animate-pulse"
+            className="rounded-[26px] border border-ink-200 bg-white/80 p-5 animate-pulse"
           >
             <div className="flex items-center gap-3">
               <Skeleton className="h-10 w-10 rounded-full" />

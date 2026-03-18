@@ -350,10 +350,10 @@ export function CategoryPicker({
         };
       case 'LLM':
         return {
-          button: 'bg-purple-600 hover:bg-purple-700',
+          button: 'bg-primary-600 hover:bg-primary-700',
           text: 'AI analysis',
-          bgColor: 'bg-purple-50',
-          textColor: 'text-purple-700'
+          bgColor: 'bg-primary-50',
+          textColor: 'text-primary-700'
         };
       default:
         return {
@@ -626,7 +626,7 @@ export function CategoryPicker({
                 // Prevent blur from firing
                 e.preventDefault();
               }}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white rounded-lg transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-primary-500 to-blue-500 hover:from-primary-600 hover:to-primary-600 text-white rounded-lg transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer"
             >
               <SparklesIcon className="w-5 h-5" />
               <span className="font-medium">{t('aiSuggestions.getButton')}</span>
@@ -636,7 +636,7 @@ export function CategoryPicker({
           {/* Show suggestions when available */}
           {(activeAiSuggestions.length > 0 || effectiveIsLoading) && (
             <div>
-              <div className="flex items-center gap-2 mb-3 text-sm font-medium text-purple-700">
+              <div className="flex items-center gap-2 mb-3 text-sm font-medium text-primary-700">
                 <SparklesIcon className={`w-4 h-4 ${effectiveIsLoading ? 'animate-pulse' : ''}`} />
                 {t('aiSuggestions.title')}
                 {effectiveIsLoading && (
@@ -683,7 +683,7 @@ export function CategoryPicker({
                   className={`
                     relative p-3 rounded-lg border-2 transition-all duration-200
                     ${confidenceColor}
-                    ${index === 0 ? 'ring-2 ring-purple-200 shadow-md' : 'hover:shadow-sm'}
+                    ${index === 0 ? 'ring-2 ring-primary-200 shadow-md' : 'hover:shadow-sm'}
                   `}
                 >
                   <div className="flex items-start justify-between">
@@ -877,7 +877,7 @@ export function CategoryPicker({
           {/* AI indicator when there are suggestions */}
           {!isOpen && topAiSuggestion && !selectedCategory && (
             <div className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10">
-              <div className="flex items-center gap-1 text-purple-600 animate-pulse">
+              <div className="flex items-center gap-1 text-primary-600 animate-pulse">
                 <SparklesIcon className="w-4 h-4" />
                 <span className="text-xs font-medium">{t('aiBadge')}</span>
               </div>
@@ -906,7 +906,7 @@ export function CategoryPicker({
               ${isOpen ? 'pl-10' : topAiSuggestion && !selectedCategory ? 'pl-16' : 'pl-4'}
               pr-10
               ${error ? 'border-red-300' : ''}
-              ${topAiSuggestion && !selectedCategory ? 'border-purple-300 bg-purple-50' : ''}
+              ${topAiSuggestion && !selectedCategory ? 'border-primary-300 bg-primary-50' : ''}
             `}
           />
           {/* AI quick apply button */}
@@ -920,8 +920,8 @@ export function CategoryPicker({
               }}
               className="
                 absolute right-8 top-1/2 transform -translate-y-1/2
-                px-2 py-1 bg-purple-600 text-white text-xs rounded
-                hover:bg-purple-700 transition-colors cursor-pointer
+                px-2 py-1 bg-primary-600 text-white text-xs rounded
+                hover:bg-primary-700 transition-colors cursor-pointer
               "
             >
               {tCommon('apply')}
@@ -964,7 +964,7 @@ export function CategoryPicker({
         {/* AI indicator for mobile */}
         {topAiSuggestion && !selectedCategory ? (
           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10">
-            <div className="flex items-center gap-1 text-purple-600 animate-pulse">
+            <div className="flex items-center gap-1 text-primary-600 animate-pulse">
               <SparklesIcon className="w-4 h-4" />
               <span className="text-xs font-medium">{t('aiBadge')}</span>
             </div>
@@ -989,7 +989,7 @@ export function CategoryPicker({
             ${topAiSuggestion && !selectedCategory ? 'pl-16' : 'pl-10'} 
             pr-10 cursor-pointer 
             ${error ? 'border-red-300' : ''}
-            ${topAiSuggestion && !selectedCategory ? 'border-purple-300 bg-purple-50' : ''}
+            ${topAiSuggestion && !selectedCategory ? 'border-primary-300 bg-primary-50' : ''}
           `}
         />
         <ChevronDownIcon 
