@@ -11,7 +11,7 @@ const Skeleton = forwardRef<HTMLDivElement, SkeletonProps>(
       <div
         ref={ref}
         className={cn(
-          'animate-pulse bg-linear-to-r from-gray-200 via-gray-300 to-gray-200 bg-size-[200%_100%]',
+          'animate-pulse bg-linear-to-r from-ink-200 via-ink-300 to-ink-200 bg-size-[200%_100%]',
           variant === 'circular' && 'rounded-full',
           variant === 'rounded-sm' && 'rounded-xl',
           variant === 'default' && 'rounded-sm',
@@ -30,7 +30,7 @@ Skeleton.displayName = 'Skeleton';
 
 // Stat card skeleton specifically designed for dashboard stats
 const StatCardSkeleton = () => (
-  <div className="card-hover bg-white/90 backdrop-blur-xs border-0 border-l-4 border-l-gray-200 shadow-lg">
+  <div className="card-hover bg-white/90 backdrop-blur-xs border-0 border-l-4 border-l-ink-200 shadow-lg">
     <div className="p-4 lg:p-6">
       <div className="space-y-2">
         <Skeleton className="h-4 w-24" />

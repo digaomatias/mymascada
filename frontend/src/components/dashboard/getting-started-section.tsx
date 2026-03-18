@@ -70,7 +70,7 @@ export function GettingStartedSection() {
     <section className="rounded-3xl border border-primary-100/60 bg-gradient-to-br from-primary-50/80 to-primary-50/60 p-6 shadow-sm sm:p-8">
       {/* Heading */}
       <div className="mb-6">
-        <h2 className="text-xl font-bold text-slate-800 sm:text-2xl">{t('title')}</h2>
+        <h2 className="text-xl font-bold text-ink-800 sm:text-2xl">{t('title')}</h2>
         <p className="mt-1 text-sm text-ink-500">{t('subtitle')}</p>
       </div>
 
@@ -91,14 +91,14 @@ export function GettingStartedSection() {
                 >
                   <Icon className="h-5 w-5 text-white" />
                 </div>
-                <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+                <span className="text-xs font-semibold uppercase tracking-widest text-ink-400">
                   Step {step.number}
                 </span>
               </div>
 
               {/* Text */}
               <div className="flex-1">
-                <p className="font-semibold text-slate-800">{step.title}</p>
+                <p className="font-semibold text-ink-800">{step.title}</p>
                 <p className="mt-1 text-xs text-ink-500 leading-relaxed">{step.desc}</p>
               </div>
 

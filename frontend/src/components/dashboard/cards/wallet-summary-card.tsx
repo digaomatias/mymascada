@@ -50,7 +50,7 @@ export function WalletSummaryCard() {
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-400 to-primary-400 shadow-lg mb-4">
             <CircleStackIcon className="h-7 w-7 text-white" />
           </div>
-          <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900 mb-2">
+          <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold text-ink-900 mb-2">
             {t('noWallets')}
           </h3>
           <p className="text-sm text-ink-500 mb-4">{t('noWalletsDesc')}</p>
@@ -73,12 +73,12 @@ export function WalletSummaryCard() {
             </div>
 
             <div className="mt-3 flex items-baseline justify-between">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-400">
                 {t('totalAllocated')}
               </p>
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 {currencyEntries.map(([currency, total]) => (
-                  <p key={currency} className="font-[var(--font-dash-mono)] text-xl font-semibold text-slate-900">
+                  <p key={currency} className="font-[var(--font-dash-mono)] text-xl font-semibold text-ink-900">
                     {formatCurrency(total, currency)}
                   </p>
                 ))}
@@ -95,10 +95,10 @@ export function WalletSummaryCard() {
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center text-primary-600">
                     <WalletIcon iconId={wallet.icon} className="h-5 w-5" />
                   </span>
-                  <span className="flex-1 truncate text-sm font-medium text-slate-700">
+                  <span className="flex-1 truncate text-sm font-medium text-ink-700">
                     {wallet.name}
                   </span>
-                  <span className="font-[var(--font-dash-mono)] text-sm font-semibold text-slate-900">
+                  <span className="font-[var(--font-dash-mono)] text-sm font-semibold text-ink-900">
                     {formatCurrency(wallet.balance, wallet.currency)}
                   </span>
                 </Link>

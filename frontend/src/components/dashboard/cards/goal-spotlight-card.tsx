@@ -23,12 +23,12 @@ function GoalRing({ value, label, size = 148 }: { value: number; label: string; 
       <svg viewBox={`0 0 ${size} ${size}`} className="h-full w-full" style={{ transform: 'rotate(-90deg)' }}>
         <defs>
           <linearGradient id="goal-ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#7c3aed" />
-            <stop offset="50%" stopColor="#a78bfa" />
-            <stop offset="100%" stopColor="#d946ef" />
+            <stop offset="0%" stopColor="#2f8170" />
+            <stop offset="50%" stopColor="#5fbfac" />
+            <stop offset="100%" stopColor="#8dd4c6" />
           </linearGradient>
         </defs>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#f3f0ff" strokeWidth="12" />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#e8f5f2" strokeWidth="12" />
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -43,7 +43,7 @@ function GoalRing({ value, label, size = 148 }: { value: number; label: string; 
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-[var(--font-dash-mono)] text-2xl font-semibold text-slate-900">
+        <span className="font-[var(--font-dash-mono)] text-2xl font-semibold text-ink-900">
           {Math.round(value)}%
         </span>
         <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-primary-500">
@@ -87,7 +87,7 @@ export function GoalSpotlightCard() {
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-400 to-primary-400 shadow-lg mb-4">
             <FlagIcon className="h-7 w-7 text-white" />
           </div>
-          <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900 mb-2">
+          <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold text-ink-900 mb-2">
             {t('noGoals')}
           </h3>
           <p className="text-sm text-ink-500 mb-4">{t('noGoalsDesc')}</p>
@@ -108,15 +108,15 @@ export function GoalSpotlightCard() {
               <ShieldCheckIcon className="h-3 w-3" />
               {t('safetyNet')}
             </div>
-            <h3 className="mt-2.5 font-[var(--font-dash-sans)] text-xl font-semibold tracking-[-0.02em] text-slate-900">
+            <h3 className="mt-2.5 font-[var(--font-dash-sans)] text-xl font-semibold tracking-[-0.02em] text-ink-900">
               {primary.name}
             </h3>
             <p className="mt-1 text-sm text-ink-500">
-              <span className="font-[var(--font-dash-mono)] font-semibold text-slate-700">
+              <span className="font-[var(--font-dash-mono)] font-semibold text-ink-700">
                 {formatCurrency(primary.currentAmount)}
               </span>
               {' / '}
-              <span className="font-[var(--font-dash-mono)] font-semibold text-slate-700">
+              <span className="font-[var(--font-dash-mono)] font-semibold text-ink-700">
                 {formatCurrency(primary.targetAmount)}
               </span>
             </p>
@@ -127,8 +127,8 @@ export function GoalSpotlightCard() {
 
             {/* Progress context */}
             <div className="flex items-center justify-between rounded-xl border border-primary-100/60 bg-primary-50/30 px-3 py-2.5">
-              <p className="text-xs text-slate-600">
-                <strong className="text-slate-800">
+              <p className="text-xs text-ink-600">
+                <strong className="text-ink-800">
                   {primary.progressPercentage.toFixed(0)}%
                 </strong>{' '}
                 {t('funded')}

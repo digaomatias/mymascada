@@ -22,7 +22,7 @@ interface BudgetRow {
   usedPercentage: number;
 }
 
-const BAR_COLORS = ['#10b981', '#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899'];
+const BAR_COLORS = ['#10b981', '#ef4444', '#f59e0b', '#3b82f6', '#3a9e8c', '#e07c5a'];
 
 export function BudgetHealthCard() {
   const t = useTranslations('dashboard.cards.budget');
@@ -75,7 +75,7 @@ export function BudgetHealthCard() {
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-400 to-primary-400 shadow-lg mb-4">
             <WalletIcon className="h-7 w-7 text-white" />
           </div>
-          <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900 mb-2">
+          <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold text-ink-900 mb-2">
             {t('noBudgets')}
           </h3>
           <p className="text-sm text-ink-500 mb-4">{t('noBudgetsDesc')}</p>
@@ -90,7 +90,7 @@ export function BudgetHealthCard() {
       ) : (
         <>
           <div className="flex items-center justify-between">
-            <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold tracking-[-0.02em] text-slate-900">
+            <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold tracking-[-0.02em] text-ink-900">
               {t('title')}
             </h3>
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary-500">
@@ -108,7 +108,7 @@ export function BudgetHealthCard() {
               return (
                 <Link key={row.id} href={`/budgets/${row.id}`} className="block">
                   <div className="mb-1.5 flex items-center justify-between text-xs">
-                    <span className="font-medium text-slate-600">{row.name}</span>
+                    <span className="font-medium text-ink-600">{row.name}</span>
                     <span
                       className={cn(
                         'font-[var(--font-dash-mono)] font-semibold',
@@ -118,7 +118,7 @@ export function BudgetHealthCard() {
                       {formatCurrency(row.totalSpent)} / {formatCurrency(row.totalBudgeted)}
                     </span>
                   </div>
-                  <div className="h-2 rounded-full bg-slate-100">
+                  <div className="h-2 rounded-full bg-ink-100">
                     <div
                       className="h-2 rounded-full transition-all duration-500"
                       style={{
@@ -139,7 +139,7 @@ export function BudgetHealthCard() {
                 <LightBulbIcon className="h-3.5 w-3.5" />
                 {t('whatIf')}
               </div>
-              <p className="mt-2 text-sm leading-relaxed text-slate-700">
+              <p className="mt-2 text-sm leading-relaxed text-ink-700">
                 {t('whatIfDesc', {
                   name: topOverBudget.name,
                   amount: formatCurrency(overAmount),

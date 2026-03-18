@@ -88,7 +88,7 @@ export default function Navigation() {
   return (
     <>
       {/* ── Desktop Sidebar (lg+) ── */}
-      <aside className="hidden lg:flex flex-col fixed inset-y-0 left-0 z-40 w-[260px] bg-gradient-to-b from-[#1a0e3e] via-[#241456] to-[#1a0e3e] border-r border-white/15">
+      <aside className="hidden lg:flex flex-col fixed inset-y-0 left-0 z-40 w-[260px] bg-gradient-to-b from-[oklch(20%_0.06_168)] via-[oklch(22%_0.05_168)] to-[oklch(18%_0.06_168)] border-r border-white/15">
         {/* Logo */}
         <div className="flex items-center gap-3 px-5 pt-6 pb-4">
           <Link href="/dashboard" className="flex items-center gap-3">
@@ -97,7 +97,7 @@ export default function Navigation() {
             </div>
             <div>
               <span className="text-lg font-bold text-white tracking-tight">MyMascada</span>
-              <span className="block text-[10px] font-medium text-violet-300/60 tracking-widest uppercase -mt-0.5">Finance</span>
+              <span className="block text-[10px] font-medium text-primary-300/60 tracking-widest uppercase -mt-0.5">Finance</span>
             </div>
           </Link>
         </div>
@@ -114,7 +114,7 @@ export default function Navigation() {
                 className={`nav-link flex items-center gap-2.5 ${
                   active
                     ? 'nav-link-active'
-                    : 'text-violet-200/80 hover:bg-white/8 hover:text-white'
+                    : 'text-primary-200/80 hover:bg-white/8 hover:text-white'
                 }`}
               >
                 <IconComponent className="w-[18px] h-[18px] shrink-0" />
@@ -138,7 +138,7 @@ export default function Navigation() {
                 className={`nav-link flex items-center gap-2.5 ${
                   active
                     ? 'nav-link-active'
-                    : 'text-violet-200/80 hover:bg-white/8 hover:text-white'
+                    : 'text-primary-200/80 hover:bg-white/8 hover:text-white'
                 }`}
               >
                 <IconComponent className="w-[18px] h-[18px] shrink-0" />
@@ -151,17 +151,17 @@ export default function Navigation() {
 
         {/* User info + logout */}
         <div className="px-4 py-4 border-t border-white/10">
-          <div className="text-xs text-violet-300/60 truncate mb-2">
+          <div className="text-xs text-primary-300/60 truncate mb-2">
             {user?.firstName || user?.userName || user?.email}
           </div>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-[13px] font-medium text-violet-200/80 hover:bg-white/8 hover:text-white transition-colors cursor-pointer"
+            className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-[13px] font-medium text-primary-200/80 hover:bg-white/8 hover:text-white transition-colors cursor-pointer"
           >
             <ArrowRightOnRectangleIcon className="w-[18px] h-[18px]" />
             {t('logout')}
           </button>
-          <div className="mt-2 px-3 text-[10px] text-violet-300/40">
+          <div className="mt-2 px-3 text-[10px] text-primary-300/40">
             {t('version', { version: process.env.NEXT_PUBLIC_APP_VERSION ?? '0.0.0' })}
           </div>
         </div>
@@ -170,7 +170,7 @@ export default function Navigation() {
       {/* ── Mobile / Tablet Navigation (< lg) ── */}
       <nav className="lg:hidden">
         {/* Mobile Top Bar */}
-        <div className="bg-gradient-to-r from-[#1a0e3e] to-[#241456] shadow-lg">
+        <div className="bg-gradient-to-r from-[oklch(20%_0.06_168)] to-[oklch(22%_0.05_168)] shadow-lg">
           <div className="flex justify-between items-center h-14 px-4">
             <Link href="/dashboard" className="flex items-center gap-2">
               <div className="w-8 h-8">
@@ -199,11 +199,11 @@ export default function Navigation() {
         {isMobileMenuOpen && (
           <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}>
             <div
-              className="fixed right-0 top-0 h-full w-72 bg-gradient-to-b from-[#1a0e3e] via-[#241456] to-[#1a0e3e] shadow-xl"
+              className="fixed right-0 top-0 h-full w-72 bg-gradient-to-b from-[oklch(20%_0.06_168)] via-[oklch(22%_0.05_168)] to-[oklch(18%_0.06_168)] shadow-xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="px-5 pt-5 pb-3 border-b border-white/10">
-                <p className="text-xs text-violet-300/60">{t('welcome', { name: '' }).split(',')[0]}</p>
+                <p className="text-xs text-primary-300/60">{t('welcome', { name: '' }).split(',')[0]}</p>
                 <p className="text-sm font-medium text-white truncate">{user?.email}</p>
               </div>
 
@@ -218,7 +218,7 @@ export default function Navigation() {
                       className={`nav-link flex items-center gap-2.5 ${
                         active
                           ? 'nav-link-active'
-                          : 'text-violet-200/80 hover:bg-white/8 hover:text-white'
+                          : 'text-primary-200/80 hover:bg-white/8 hover:text-white'
                       }`}
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
@@ -232,12 +232,12 @@ export default function Navigation() {
               <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10">
                 <button
                   onClick={handleLogout}
-                  className="flex items-center justify-center gap-2 w-full px-3 py-2.5 rounded-xl text-[13px] font-medium text-violet-200/80 hover:bg-white/8 hover:text-white transition-colors cursor-pointer"
+                  className="flex items-center justify-center gap-2 w-full px-3 py-2.5 rounded-xl text-[13px] font-medium text-primary-200/80 hover:bg-white/8 hover:text-white transition-colors cursor-pointer"
                 >
                   <ArrowRightOnRectangleIcon className="w-[18px] h-[18px]" />
                   {t('logout')}
                 </button>
-                <div className="mt-2 text-center text-[10px] text-violet-300/40">
+                <div className="mt-2 text-center text-[10px] text-primary-300/40">
                   {t('version', { version: process.env.NEXT_PUBLIC_APP_VERSION ?? '0.0.0' })}
                 </div>
               </div>
@@ -246,7 +246,7 @@ export default function Navigation() {
         )}
 
         {/* Mobile Bottom Tab Bar */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-violet-100/50 shadow-lg z-40 pb-safe">
+        <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-ink-200 shadow-lg z-40 pb-safe">
           <div className="grid grid-cols-5 h-16">
             {mobileTabItems.map((item) => {
               const IconComponent = item.icon;
@@ -257,8 +257,8 @@ export default function Navigation() {
                   href={item.href}
                   className={`flex flex-col items-center justify-center py-2 ${
                     active
-                      ? 'text-violet-600'
-                      : 'text-gray-500 hover:text-violet-600'
+                      ? 'text-primary-600'
+                      : 'text-ink-500 hover:text-primary-600'
                   }`}
                 >
                   <IconComponent className="w-5 h-5" />
@@ -270,7 +270,7 @@ export default function Navigation() {
             {/* More button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="flex flex-col items-center justify-center py-2 text-gray-500 hover:text-violet-600 cursor-pointer"
+              className="flex flex-col items-center justify-center py-2 text-ink-500 hover:text-primary-600 cursor-pointer"
             >
               <EllipsisHorizontalIcon className="w-5 h-5" />
               <span className="text-[10px] mt-1 font-medium">{t('more')}</span>

@@ -63,8 +63,8 @@
   --color-info-900: #1e3a8a;
   --color-info: #3b82f6;
 
-  --color-popover: #ffffff;
-  --color-popover-foreground: #1e293b;
+  --color-popover: oklch(99.5% 0.004 65);
+  --color-popover-foreground: oklch(20% 0.015 65);
 
   /* ── Impeccable: Tinted neutrals (warm sand hue 65, subtle chroma) ── */
   --color-ink-50: oklch(97.5% 0.008 65);
@@ -130,6 +130,11 @@
   &:hover {
     transform: translateY(-1px);
     box-shadow: 0 1px 2px oklch(30% 0.1 168 / 20%), 0 10px 22px -4px oklch(30% 0.15 168 / 40%);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 1px 2px oklch(30% 0.1 168 / 20%);
   }
 }
 
@@ -409,7 +414,7 @@
   }
 
   *:focus-visible {
-    @apply ring-2 ring-primary ring-offset-1;
+    @apply ring-2 ring-primary ring-offset-2;
   }
 }
 

@@ -25,7 +25,7 @@ function getInitialBg(name: string): string {
   const colors = [
     'bg-emerald-100 text-emerald-700',
     'bg-primary-100 text-primary-700',
-    'bg-slate-100 text-slate-700',
+    'bg-ink-100 text-ink-700',
     'bg-rose-100 text-rose-700',
     'bg-sky-100 text-sky-700',
     'bg-amber-100 text-amber-700',
@@ -59,7 +59,7 @@ export function RecentTransactionsCard() {
   return (
     <DashboardCard cardId="recent-transactions" loading={loading} error={error}>
       <div className="flex items-center justify-between">
-        <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold tracking-[-0.02em] text-slate-900">
+        <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold tracking-[-0.02em] text-ink-900">
           {t('title')}
         </h3>
         <Link
@@ -71,7 +71,7 @@ export function RecentTransactionsCard() {
       </div>
       <div className="mt-4 space-y-1">
         {transactions.length === 0 ? (
-          <p className="py-4 text-center text-sm text-slate-400">{t('empty')}</p>
+          <p className="py-4 text-center text-sm text-ink-400">{t('empty')}</p>
         ) : (
           transactions.map((tx) => {
             const positive = tx.amount > 0;
@@ -85,13 +85,13 @@ export function RecentTransactionsCard() {
                   {getInitial(tx.description)}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-slate-800 truncate">{tx.description}</p>
-                  <p className="mt-0.5 text-xs text-slate-400">
+                  <p className="text-sm font-semibold text-ink-800 truncate">{tx.description}</p>
+                  <p className="mt-0.5 text-xs text-ink-400">
                     {tx.categoryName || ''}{tx.categoryName && tx.accountName ? ' · ' : ''}{tx.accountName || ''}{' · '}
                     {new Date(tx.transactionDate).toLocaleDateString()}
                   </p>
                 </div>
-                <p className={cn('font-[var(--font-dash-mono)] text-sm font-semibold tabular-nums', positive ? 'text-emerald-600' : 'text-slate-800')}>
+                <p className={cn('font-[var(--font-dash-mono)] text-sm font-semibold tabular-nums', positive ? 'text-emerald-600' : 'text-ink-800')}>
                   {positive ? '+' : ''}{formatCurrency(tx.amount)}
                 </p>
               </Link>

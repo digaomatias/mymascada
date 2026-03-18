@@ -77,10 +77,10 @@ export function FinancialRunwayCard() {
               <div>
                 <p className="text-sm font-semibold text-ink-500">{t('title')}</p>
                 <div className="mt-2 flex items-baseline gap-3">
-                  <p className="font-[var(--font-dash-mono)] text-5xl font-semibold tracking-[-0.02em] text-slate-900 sm:text-[3.2rem]">
+                  <p className="font-[var(--font-dash-mono)] text-5xl font-semibold tracking-[-0.02em] text-ink-900 sm:text-[3.2rem]">
                     {data.runwayMonths === 0 ? '0' : data.runwayMonths.toFixed(1)}
                   </p>
-                  <p className="text-xl font-medium text-slate-400">{t('months')}</p>
+                  <p className="text-xl font-medium text-ink-400">{t('months')}</p>
                 </div>
                 <p className="mt-1.5 max-w-sm text-[15px] leading-relaxed text-ink-500">
                   {t('description', { months: data.runwayMonths === 0 ? '0' : data.runwayMonths.toFixed(1) })}
@@ -108,7 +108,7 @@ export function FinancialRunwayCard() {
 
             {/* Progress bar */}
             <div className="mt-5">
-              <div className="flex items-center justify-between text-xs font-medium text-slate-400">
+              <div className="flex items-center justify-between text-xs font-medium text-ink-400">
                 <span>{t('zeroMonths')}</span>
                 <span className="text-primary-500">{t('targetRange')}</span>
               </div>
@@ -121,8 +121,8 @@ export function FinancialRunwayCard() {
                 </div>
               </div>
               <div className="mt-2 flex items-center justify-between">
-                <p className="text-xs text-slate-400">
-                  <span className="font-[var(--font-dash-mono)] font-semibold text-slate-600">
+                <p className="text-xs text-ink-400">
+                  <span className="font-[var(--font-dash-mono)] font-semibold text-ink-600">
                     {formatCurrency(data.totalBalance)}
                   </span>{' '}
                   {t('acrossAccounts')}
@@ -134,12 +134,12 @@ export function FinancialRunwayCard() {
             <div className="mt-6 grid grid-cols-2 gap-4 rounded-2xl border border-primary-100/50 bg-primary-50/20 p-4 sm:grid-cols-4">
               {[
                 { label: t('earned'), value: formatCurrency(data.monthlyIncome), accent: 'text-emerald-700' },
-                { label: t('spent'), value: formatCurrency(data.monthlyExpenses), accent: 'text-slate-900' },
+                { label: t('spent'), value: formatCurrency(data.monthlyExpenses), accent: 'text-ink-900' },
                 { label: t('kept'), value: formatCurrency(data.netSaved), accent: 'text-primary-700' },
                 { label: t('saved'), value: `${data.savingsRate}%`, accent: 'text-primary-700' },
               ].map((kpi) => (
                 <div key={kpi.label}>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{kpi.label}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">{kpi.label}</p>
                   <p className={`mt-1.5 font-[var(--font-dash-mono)] text-xl font-semibold ${kpi.accent}`}>
                     {kpi.value}
                   </p>
