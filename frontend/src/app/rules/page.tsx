@@ -560,7 +560,7 @@ export default function RulesPage() {
                 type="checkbox"
                 checked={includeInactive}
                 onChange={(e) => setIncludeInactive(e.target.checked)}
-                className="rounded border-ink-200 text-primary-600 focus:ring-primary-500"
+                className="rounded border-ink-200 text-primary-600 focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
               />
               <span className="text-sm text-ink-600">{t('filters.showInactive')}</span>
             </label>
@@ -854,7 +854,7 @@ export default function RulesPage() {
                         checked={selectedRuleIds.has(rule.id)}
                         onChange={(event) => toggleRuleSelection(rule.id, event.target.checked)}
                         disabled={isReorderMode}
-                        className="mt-1 rounded border-ink-200 text-primary-600 focus:ring-primary-500"
+                        className="mt-1 rounded border-ink-200 text-primary-600 focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
                         aria-label={t('bulk.selectRule', { name: rule.name })}
                       />
 

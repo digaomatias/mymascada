@@ -469,6 +469,14 @@ function GoalCard({
   return (
     <article
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      role="button"
+      tabIndex={0}
       className="cursor-pointer rounded-[26px] border border-ink-200 bg-white/90 p-5 shadow-[0_20px_44px_-32px_rgba(47,129,112,0.20)] transition-shadow hover:shadow-[0_24px_52px_-28px_rgba(47,129,112,0.25)]"
     >
       {/* Top row: icon + name + badges + pin */}

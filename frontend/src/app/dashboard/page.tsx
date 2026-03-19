@@ -75,35 +75,36 @@ function DashboardBodySkeleton({ className }: { className?: string }) {
     <div className={className}>
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 3 }).map((_, i) => (
-          <SkeletonCard
+          <div
             key={i}
-            className="h-48 p-6"
             style={{
               animation: 'fadeInUp 500ms cubic-bezier(0.16, 1, 0.3, 1) both',
               animationDelay: `${i * 60}ms`,
             }}
           >
-            <div className="space-y-4">
-              <Skeleton className="h-4 w-24 rounded" />
-              <Skeleton className="h-8 w-32 rounded" />
-              <Skeleton className="h-3 w-full rounded" />
-              <Skeleton className="h-3 w-3/4 rounded" />
-            </div>
-          </SkeletonCard>
+            <SkeletonCard className="h-48 p-6">
+              <div className="space-y-4">
+                <Skeleton className="h-4 w-24 rounded" />
+                <Skeleton className="h-8 w-32 rounded" />
+                <Skeleton className="h-3 w-full rounded" />
+                <Skeleton className="h-3 w-3/4 rounded" />
+              </div>
+            </SkeletonCard>
+          </div>
         ))}
       </div>
-      <SkeletonPanel
-        className="mt-5"
-        height="h-64"
+      <div
         style={{
           animation: 'fadeInUp 500ms 200ms cubic-bezier(0.16, 1, 0.3, 1) both',
         }}
       >
-        <div className="p-6 space-y-4">
-          <Skeleton className="h-5 w-40 rounded" />
-          <Skeleton className="h-40 w-full rounded-xl" />
-        </div>
-      </SkeletonPanel>
+        <SkeletonPanel className="mt-5" height="h-64">
+          <div className="p-6 space-y-4">
+            <Skeleton className="h-5 w-40 rounded" />
+            <Skeleton className="h-40 w-full rounded-xl" />
+          </div>
+        </SkeletonPanel>
+      </div>
     </div>
   );
 }

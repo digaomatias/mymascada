@@ -103,6 +103,7 @@
     "more": "More",
     "logout": "Logout",
     "welcome": "Welcome, {name}",
+    "welcomeShort": "Welcome",
     "profile": "Profile",
     "help": "Help",
     "notifications": "Notifications",

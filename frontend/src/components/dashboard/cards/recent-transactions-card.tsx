@@ -88,8 +88,9 @@ export function RecentTransactionsCard() {
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-ink-800 truncate">{tx.description}</p>
                   <p className="mt-0.5 text-xs text-ink-400">
-                    {tx.categoryName || ''}{tx.categoryName && tx.accountName ? ' · ' : ''}{tx.accountName || ''}{' · '}
-                    {new Date(tx.transactionDate).toLocaleDateString()}
+                    {[tx.categoryName, tx.accountName, new Date(tx.transactionDate).toLocaleDateString()]
+                      .filter(Boolean)
+                      .join(' · ')}
                   </p>
                 </div>
                 <p className={cn('font-[var(--font-dash-mono)] text-sm font-semibold tabular-nums', positive ? 'text-emerald-600' : 'text-ink-800')}>

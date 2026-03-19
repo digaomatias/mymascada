@@ -214,7 +214,7 @@ export const GOAL_TYPE_CONFIGS: Record<string, GoalTypeConfig> = {
     accentColor: {
       bg: 'bg-primary-50',
       text: 'text-primary-700',
-      border: 'border-ink-200',
+      border: 'border-primary-200',
       bar: 'bg-primary-500',
     },
     journeyStage: 'growth',

@@ -96,7 +96,7 @@ export default function BillingPage() {
           <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-400 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <CreditCardIcon className="w-8 h-8 text-white" />
           </div>
-          <div className="mt-6 text-gray-700 font-medium">{tCommon('loading')}</div>
+          <div className="mt-6 text-ink-700 font-medium">{tCommon('loading')}</div>
         </div>
       </div>
     );

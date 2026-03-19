@@ -146,7 +146,7 @@ export function PeriodSelector({
                   'flex-1 rounded-lg px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] transition-all lg:flex-none',
                   isActive
                     ? 'bg-white text-primary-700 shadow-[0_10px_24px_-16px_rgba(47,129,112,0.25)]'
-                    : 'text-slate-500 hover:text-primary-700',
+                    : 'text-ink-500 hover:text-primary-700',
                 )}
                 aria-pressed={isActive}
               >
@@ -162,13 +162,13 @@ export function PeriodSelector({
               variant="ghost"
               size="icon"
               onClick={navigatePrevious}
-              className="h-8 w-8 rounded-lg text-slate-500 hover:text-primary-700"
+              className="h-8 w-8 rounded-lg text-ink-500 hover:text-primary-700"
               aria-label={t('previousPeriod')}
             >
               <ChevronLeftIcon className="h-4 w-4" />
             </Button>
 
-            <span className="min-w-[150px] text-center font-[var(--font-dash-sans)] text-sm font-semibold tracking-[-0.01em] text-slate-900">
+            <span className="min-w-[150px] text-center font-[var(--font-dash-sans)] text-sm font-semibold tracking-[-0.01em] text-ink-900">
               {getPeriodLabel()}
             </span>
 
@@ -177,14 +177,14 @@ export function PeriodSelector({
               size="icon"
               onClick={navigateNext}
               disabled={!canNavigateForward()}
-              className="h-8 w-8 rounded-lg text-slate-500 hover:text-primary-700"
+              className="h-8 w-8 rounded-lg text-ink-500 hover:text-primary-700"
               aria-label={t('nextPeriod')}
             >
               <ChevronRightIcon className="h-4 w-4" />
             </Button>
           </div>
         ) : (
-          <div className="inline-flex items-center rounded-xl border border-ink-200 bg-white/95 px-3 py-2 text-sm font-semibold text-slate-700">
+          <div className="inline-flex items-center rounded-xl border border-ink-200 bg-white/95 px-3 py-2 text-sm font-semibold text-ink-700">
             {getPeriodLabel()}
           </div>
         )}

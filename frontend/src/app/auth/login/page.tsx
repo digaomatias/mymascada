@@ -294,7 +294,7 @@ export default function LoginPage() {
                   type="checkbox"
                   checked={formData.rememberMe}
                   onChange={handleInputChange}
-                  className="h-4 w-4 text-primary border-ink-300 rounded-sm focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  className="h-4 w-4 accent-primary border-ink-300 rounded-sm focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 />
                 <label htmlFor="rememberMe" className="ml-2 block text-sm text-ink-600">
                   {t('rememberMe')}

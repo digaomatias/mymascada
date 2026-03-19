@@ -152,7 +152,7 @@ export function GoalSpotlightCard() {
                 href={`/goals/${primary.id}`}
                 className={cn(
                   'inline-flex items-center gap-1 rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-700',
-                  !primary.deadline || !primary.daysRemaining ? 'ml-auto' : '',
+                  !(primary.deadline && primary.daysRemaining != null && primary.daysRemaining > 0) ? 'ml-auto' : '',
                 )}
               >
                 {t('viewGoal')} <ArrowRightIcon className="h-3 w-3" />

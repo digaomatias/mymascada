@@ -203,7 +203,7 @@ export default function Navigation() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="px-5 pt-5 pb-3 border-b border-white/10">
-                <p className="text-xs text-primary-300/60">{t('welcome', { name: '' }).split(',')[0]}</p>
+                <p className="text-xs text-primary-300/60">{t('welcomeShort')}</p>
                 <p className="text-sm font-medium text-white truncate">{user?.email}</p>
               </div>
 

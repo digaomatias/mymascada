@@ -134,7 +134,7 @@ export function FinancialRunwayCard() {
             <div className="mt-6 grid grid-cols-2 gap-4 rounded-2xl border border-primary-100/50 bg-primary-50/20 p-4 sm:grid-cols-4">
               {[
                 { label: t('earned'), value: formatCurrency(data.monthlyIncome), accent: 'text-emerald-700' },
-                { label: t('spent'), value: formatCurrency(data.monthlyExpenses), accent: 'text-ink-900' },
+                { label: t('spent'), value: formatCurrency(data.monthlyExpenses), accent: 'text-rose-600' },
                 { label: t('kept'), value: formatCurrency(data.netSaved), accent: 'text-sky-700' },
                 { label: t('saved'), value: `${data.savingsRate}%`, accent: 'text-amber-700' },
               ].map((kpi) => (
