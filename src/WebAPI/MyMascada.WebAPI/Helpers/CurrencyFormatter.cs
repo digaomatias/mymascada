@@ -5,11 +5,34 @@ namespace MyMascada.WebAPI.Helpers;
 /// <summary>
 /// Provides static methods for formatting monetary amounts in various currencies.
 /// Negative amounts are displayed in accounting style (parentheses).
+/// Thread-safe: all static fields are read-only or lazily initialized with thread-safe defaults.
 /// </summary>
 public static class CurrencyFormatter
 {
     private static readonly CultureInfo NzCulture = CultureInfo.CreateSpecificCulture("en-NZ");
     private static readonly CultureInfo BrCulture = CultureInfo.CreateSpecificCulture("pt-BR");
+
+    /// <summary>
+    /// Lazily-built lookup from ISO 4217 currency code to a matching <see cref="CultureInfo"/>.
+    /// Initialized once on first access; thread-safe via <see cref="Lazy{T}"/>.
+    /// </summary>
+    private static readonly Lazy<Dictionary<string, CultureInfo>> CurrencyToCulture = new(() =>
+    {
+        var map = new Dictionary<string, CultureInfo>(StringComparer.OrdinalIgnoreCase);
+        foreach (var culture in CultureInfo.GetCultures(CultureTypes.SpecificCultures))
+        {
+            try
+            {
+                var region = new RegionInfo(culture.Name);
+                map.TryAdd(region.ISOCurrencySymbol, culture);
+            }
+            catch (ArgumentException)
+            {
+                // Some cultures don't have a valid region; skip them.
+            }
+        }
+        return map;
+    });
 
     /// <summary>
     /// Formats a decimal amount as New Zealand Dollars (NZD).
@@ -60,9 +83,7 @@ public static class CurrencyFormatter
         var formatted = Math.Abs(amount).ToString("N2", CultureInfo.InvariantCulture);
         return amount < 0
             ? $"({code} {formatted})"
-            : amount == 0
-                ? $"{code} {formatted}"
-                : $"{code} {formatted}";
+            : $"{code} {formatted}";
     }
 
     /// <summary>
@@ -71,11 +92,6 @@ public static class CurrencyFormatter
     /// </summary>
     private static string FormatWithAccountingStyle(decimal amount, CultureInfo culture)
     {
-        if (amount == 0)
-        {
-            return amount.ToString("C2", culture);
-        }
-
         if (amount < 0)
         {
             var positive = Math.Abs(amount).ToString("C2", culture);
@@ -87,6 +103,7 @@ public static class CurrencyFormatter
 
     /// <summary>
     /// Attempts to find a <see cref="CultureInfo"/> whose region uses the specified ISO 4217 currency code.
+    /// Uses a cached lookup for O(1) access after first initialization.
     /// </summary>
     private static CultureInfo? FindCultureForCurrency(string currencyCode)
     {
@@ -95,32 +112,7 @@ public static class CurrencyFormatter
         {
             "NZD" => NzCulture,
             "BRL" => BrCulture,
-            _ => FindCultureByCurrencyCode(currencyCode)
+            _ => CurrencyToCulture.Value.TryGetValue(currencyCode, out var culture) ? culture : null
         };
-    }
-
-    /// <summary>
-    /// Searches all specific cultures for one whose region matches the given currency code.
-    /// Returns the first match or null if none is found.
-    /// </summary>
-    private static CultureInfo? FindCultureByCurrencyCode(string currencyCode)
-    {
-        foreach (var culture in CultureInfo.GetCultures(CultureTypes.SpecificCultures))
-        {
-            try
-            {
-                var region = new RegionInfo(culture.Name);
-                if (string.Equals(region.ISOCurrencySymbol, currencyCode, StringComparison.OrdinalIgnoreCase))
-                {
-                    return culture;
-                }
-            }
-            catch (ArgumentException)
-            {
-                // Some cultures don't have a valid region; skip them.
-            }
-        }
-
-        return null;
     }
 }
