@@ -68,9 +68,9 @@ export function UpcomingBillsWidget() {
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
           <CalendarDaysIcon className="h-6 w-6 text-info-600" />
-          <CardTitle className="text-xl font-bold text-gray-900">{t('title')}</CardTitle>
+          <CardTitle className="text-xl font-bold text-ink-900">{t('title')}</CardTitle>
         </div>
-        <p className="text-sm text-gray-500">{t('next7Days')}</p>
+        <p className="text-sm text-ink-500">{t('next7Days')}</p>
       </CardHeader>
       <CardContent className="space-y-3">
         {/* Bill list (up to 3) */}
@@ -79,9 +79,9 @@ export function UpcomingBillsWidget() {
         ))}
 
         {/* Footer with total */}
-        <div className="pt-2 border-t border-gray-100">
+        <div className="pt-2 border-t border-ink-100">
           <div className="flex justify-between items-center text-sm">
-            <span className="text-gray-600">{t('totalExpected')}</span>
+            <span className="text-ink-600">{t('totalExpected')}</span>
             <span className="font-semibold text-red-600">
               {formatCurrency(data.totalExpectedAmount)}
             </span>
@@ -100,11 +100,11 @@ interface BillItemProps {
 
 function BillItem({ bill, formatDueDate, t }: BillItemProps) {
   return (
-    <div className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
+    <div className="flex items-center justify-between p-3 rounded-lg border border-ink-100 hover:bg-ink-50 transition-colors">
       <div className="flex-1 min-w-0">
-        <h4 className="font-medium text-gray-900 truncate">{bill.merchantName}</h4>
+        <h4 className="font-medium text-ink-900 truncate">{bill.merchantName}</h4>
         <div className="flex items-center gap-2 mt-1">
-          <span className="text-xs text-gray-500">{formatDueDate(bill.daysUntilDue)}</span>
+          <span className="text-xs text-ink-500">{formatDueDate(bill.daysUntilDue)}</span>
           <Badge
             variant="outline"
             className={
@@ -119,7 +119,7 @@ function BillItem({ bill, formatDueDate, t }: BillItemProps) {
       </div>
       <div className="text-right flex-shrink-0 ml-3">
         <p className="font-semibold text-red-600">{formatCurrency(bill.expectedAmount)}</p>
-        <p className="text-xs text-gray-500">{bill.interval}</p>
+        <p className="text-xs text-ink-500">{bill.interval}</p>
       </div>
     </div>
   );

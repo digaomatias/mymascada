@@ -4,7 +4,7 @@ export function ChatSkeleton() {
   return (
     <>
       {/* Header bar shimmer */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200 bg-white/90 backdrop-blur-xs animate-pulse">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-ink-200 bg-white/90 backdrop-blur-xs animate-pulse">
         <div className="flex items-center gap-2">
           <Skeleton className="w-5 h-5 rounded" variant="rounded-sm" />
           <Skeleton className="h-4 w-24" />
@@ -16,7 +16,7 @@ export function ChatSkeleton() {
       <div className="flex-1 overflow-hidden px-4 py-4 space-y-4 animate-pulse">
         {/* Assistant message */}
         <div className="flex justify-start">
-          <div className="max-w-[75%] rounded-2xl border border-slate-200 bg-white px-4 py-3 space-y-2">
+          <div className="max-w-[75%] rounded-2xl border border-ink-200 bg-white px-4 py-3 space-y-2">
             <Skeleton className="h-3 w-48" />
             <Skeleton className="h-3 w-64" />
             <Skeleton className="h-3 w-36" />
@@ -32,7 +32,7 @@ export function ChatSkeleton() {
 
         {/* Assistant message */}
         <div className="flex justify-start">
-          <div className="max-w-[75%] rounded-2xl border border-slate-200 bg-white px-4 py-3 space-y-2">
+          <div className="max-w-[75%] rounded-2xl border border-ink-200 bg-white px-4 py-3 space-y-2">
             <Skeleton className="h-3 w-56" />
             <Skeleton className="h-3 w-44" />
           </div>
@@ -40,7 +40,7 @@ export function ChatSkeleton() {
       </div>
 
       {/* Input area shimmer */}
-      <div className="border-t border-slate-200 bg-white px-4 py-3 animate-pulse">
+      <div className="border-t border-ink-200 bg-white px-4 py-3 animate-pulse">
         <div className="flex items-end gap-2">
           <Skeleton className="flex-1 h-10 rounded-xl" variant="rounded-sm" />
           <Skeleton className="shrink-0 w-10 h-10 rounded-xl" variant="rounded-sm" />

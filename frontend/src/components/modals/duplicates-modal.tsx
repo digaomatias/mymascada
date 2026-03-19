@@ -262,7 +262,7 @@ export function DuplicatesModal({ isOpen, onClose, onRefresh }: DuplicatesModalP
         : t('duplicates.confidence.low');
     
     return (
-      <Card key={group.id} className={`border shadow-sm ${isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
+      <Card key={group.id} className={`border shadow-sm ${isSelected ? 'border-blue-500 bg-blue-50' : 'border-ink-200'}`}>
         <CardContent className="p-4">
           {/* Group Header */}
           <div className="flex items-start justify-between mb-3">
@@ -275,7 +275,7 @@ export function DuplicatesModal({ isOpen, onClose, onRefresh }: DuplicatesModalP
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-2">
                   <DocumentDuplicateIcon className="w-5 h-5 text-orange-500" />
-                  <h3 className="font-medium text-gray-900 truncate">
+                  <h3 className="font-medium text-ink-900 truncate">
                     {group.description}
                   </h3>
                   <Badge 
@@ -285,7 +285,7 @@ export function DuplicatesModal({ isOpen, onClose, onRefresh }: DuplicatesModalP
                     {confidenceLabel} ({confidencePercent}%)
                   </Badge>
                 </div>
-                <div className="flex items-center gap-4 text-sm text-gray-600">
+                <div className="flex items-center gap-4 text-sm text-ink-600">
                   <span className="flex items-center gap-1">
                     <span className="font-medium">{formatCurrency(group.totalAmount)}</span>
                   </span>
@@ -330,17 +330,17 @@ export function DuplicatesModal({ isOpen, onClose, onRefresh }: DuplicatesModalP
 
           {/* Expanded Group Content */}
           {isExpanded && (
-            <div className="space-y-3 pt-3 border-t border-gray-100">
+            <div className="space-y-3 pt-3 border-t border-ink-100">
               {group.transactions.map((transaction) => (
-                <div key={transaction.id} className="bg-gray-50 rounded-lg p-3">
+                <div key={transaction.id} className="bg-ink-50 rounded-lg p-3">
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-sm font-medium text-gray-900">
+                        <span className="text-sm font-medium text-ink-900">
                           #{transaction.id}
                         </span>
                         {transaction.userDescription && transaction.userDescription !== transaction.description && (
-                          <span className="text-sm text-gray-600">
+                          <span className="text-sm text-ink-600">
                             ({transaction.userDescription})
                           </span>
                         )}
@@ -359,18 +359,18 @@ export function DuplicatesModal({ isOpen, onClose, onRefresh }: DuplicatesModalP
                           </Badge>
                         </div>
                         
-                        <div className="flex items-center gap-1 text-gray-600">
+                        <div className="flex items-center gap-1 text-ink-600">
                           <CalendarIcon className="w-4 h-4" />
                           {formatDate(transaction.transactionDate)}
                         </div>
                         
-                        <div className="flex items-center gap-1 text-gray-600">
+                        <div className="flex items-center gap-1 text-ink-600">
                           <WalletIcon className="w-4 h-4" />
                           {transaction.accountName}
                         </div>
                         
                         {transaction.categoryName && (
-                          <div className="flex items-center gap-1 text-gray-600">
+                          <div className="flex items-center gap-1 text-ink-600">
                             <TagIcon className="w-4 h-4" />
                             {transaction.categoryName}
                           </div>
@@ -447,7 +447,7 @@ export function DuplicatesModal({ isOpen, onClose, onRefresh }: DuplicatesModalP
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="minConfidence" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="minConfidence" className="text-sm font-medium text-ink-700">
                   {t('duplicates.minimumConfidence')}
                 </Label>
                 <Input
@@ -465,7 +465,7 @@ export function DuplicatesModal({ isOpen, onClose, onRefresh }: DuplicatesModalP
               {showAdvanced && (
                 <>
                   <div>
-                    <Label htmlFor="amountTolerance" className="text-sm font-medium text-gray-700">
+                    <Label htmlFor="amountTolerance" className="text-sm font-medium text-ink-700">
                       {t('duplicates.amountTolerance')}
                     </Label>
                     <Input
@@ -480,7 +480,7 @@ export function DuplicatesModal({ isOpen, onClose, onRefresh }: DuplicatesModalP
                   </div>
 
                   <div>
-                    <Label htmlFor="dateToleranceDays" className="text-sm font-medium text-gray-700">
+                    <Label htmlFor="dateToleranceDays" className="text-sm font-medium text-ink-700">
                       {t('duplicates.dateTolerance')}
                     </Label>
                     <Input
@@ -500,7 +500,7 @@ export function DuplicatesModal({ isOpen, onClose, onRefresh }: DuplicatesModalP
                       checked={params.includeReviewed}
                       onCheckedChange={(checked) => handleParamChange('includeReviewed', checked)}
                     />
-                    <Label htmlFor="includeReviewed" className="text-sm font-medium text-gray-700">
+                    <Label htmlFor="includeReviewed" className="text-sm font-medium text-ink-700">
                       {t('duplicates.includeReviewed')}
                     </Label>
                   </div>
@@ -511,7 +511,7 @@ export function DuplicatesModal({ isOpen, onClose, onRefresh }: DuplicatesModalP
                       checked={params.sameAccountOnly}
                       onCheckedChange={(checked) => handleParamChange('sameAccountOnly', checked)}
                     />
-                    <Label htmlFor="sameAccountOnly" className="text-sm font-medium text-gray-700">
+                    <Label htmlFor="sameAccountOnly" className="text-sm font-medium text-ink-700">
                       {t('duplicates.sameAccountOnly')}
                     </Label>
                   </div>
@@ -565,7 +565,7 @@ export function DuplicatesModal({ isOpen, onClose, onRefresh }: DuplicatesModalP
               {duplicates.duplicateGroups.length > 0 && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-medium text-gray-900">
+                    <h3 className="text-lg font-medium text-ink-900">
                       {t('duplicates.potentialDuplicates')}
                     </h3>
                     <Button

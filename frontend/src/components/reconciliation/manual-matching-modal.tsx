@@ -130,22 +130,22 @@ export function ManualMatchingModal({
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
                 <CheckCircleIcon className="w-10 h-10 text-green-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('matchSuccessful')}</h3>
-              <p className="text-gray-600">{t('matchSuccessfulDesc')}</p>
+              <h3 className="text-lg font-semibold text-ink-900 mb-2">{t('matchSuccessful')}</h3>
+              <p className="text-ink-600">{t('matchSuccessfulDesc')}</p>
             </div>
           </div>
         )}
         
         <div className="space-y-6">
         {/* Bank Transaction Header */}
-        <div className="border-b border-gray-200 pb-4">
-          <h3 className="text-lg font-medium text-gray-900 mb-3">{t('bankStatementTransaction')}</h3>
+        <div className="border-b border-ink-200 pb-4">
+          <h3 className="text-lg font-medium text-ink-900 mb-3">{t('bankStatementTransaction')}</h3>
           <Card className="bg-blue-50 border-blue-200">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-gray-900">{bankTransaction.description}</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="font-medium text-ink-900">{bankTransaction.description}</p>
+                  <p className="text-sm text-ink-600">
                     {new Date(bankTransaction.transactionDate).toLocaleDateString()}
                     {bankTransaction.bankCategory && ` • ${bankTransaction.bankCategory}`}
                   </p>
@@ -164,31 +164,31 @@ export function ManualMatchingModal({
 
         {/* Search */}
         <div className="relative">
-          <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-ink-400" />
           <input
             type="text"
             placeholder={t('searchSystemTransactions')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="w-full pl-10 px-3 py-2 border border-ink-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </div>
 
         {/* Potential Matches */}
         <div className="space-y-3">
-          <h3 className="text-lg font-medium text-gray-900">
+          <h3 className="text-lg font-medium text-ink-900">
             {t('systemTransactions', { count: sortedMatches.length })}
           </h3>
           
           {loading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="animate-pulse bg-gray-100 h-20 rounded-lg"></div>
+                <div key={i} className="animate-pulse bg-ink-100 h-20 rounded-lg"></div>
               ))}
             </div>
           ) : sortedMatches.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <ArrowsRightLeftIcon className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+            <div className="text-center py-8 text-ink-500">
+              <ArrowsRightLeftIcon className="w-12 h-12 mx-auto mb-4 text-ink-300" />
               <p>{t('noMatchingTransactions')}</p>
               {searchTerm && (
                 <p className="text-sm mt-2">
@@ -226,11 +226,11 @@ export function ManualMatchingModal({
                           )}
                         </div>
                         
-                        <p className="font-medium text-gray-900 mb-1">
+                        <p className="font-medium text-ink-900 mb-1">
                           {match.systemTransaction.description}
                         </p>
                         
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm text-ink-600">
                           <div>
                             <span className="font-medium">{tCommon('amount')}:</span>
                             <span className={`ml-1 ${
@@ -276,7 +276,7 @@ export function ManualMatchingModal({
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+        <div className="flex justify-end gap-3 pt-4 border-t border-ink-200">
           <Button variant="secondary" onClick={handleClose}>
             {tCommon('cancel')}
           </Button>

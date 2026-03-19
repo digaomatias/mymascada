@@ -50,10 +50,10 @@ export function StepComplete({ countdown, onGoNow }: StepCompleteProps) {
       </div>
 
       <div className="space-y-2">
-        <h2 className="font-[var(--font-onboarding-sans)] text-4xl font-semibold tracking-[-0.03em] text-slate-900">
+        <h2 className="font-[var(--font-onboarding-sans)] text-4xl font-semibold tracking-[-0.03em] text-ink-900">
           {t('complete.title')}
         </h2>
-        <p className="max-w-lg text-sm leading-relaxed text-slate-600 sm:text-base">
+        <p className="max-w-lg text-sm leading-relaxed text-ink-600 sm:text-base">
           {t('complete.subtitle')}
         </p>
       </div>

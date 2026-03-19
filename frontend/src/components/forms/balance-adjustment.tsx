@@ -109,39 +109,39 @@ export function BalanceAdjustment({
 
   if (showConfirmation) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
+      <div className="bg-white border border-ink-200 rounded-lg p-6">
         <div className="flex items-start gap-3 mb-4">
           <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-lg flex items-center justify-center">
             <ExclamationTriangleIcon className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h4 className="text-lg font-semibold text-gray-900">{t('confirmTitle')}</h4>
-            <p className="text-sm text-gray-600 mt-1">
+            <h4 className="text-lg font-semibold text-ink-900">{t('confirmTitle')}</h4>
+            <p className="text-sm text-ink-600 mt-1">
               {t('confirmDesc')}
             </p>
           </div>
         </div>
 
         {/* Adjustment Summary */}
-        <div className="bg-gray-50 rounded-lg p-4 mb-4">
+        <div className="bg-ink-50 rounded-lg p-4 mb-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="text-center">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{t('currentBalance')}</p>
-              <p className="text-lg font-bold text-gray-900">{formatCurrency(currentBalance)}</p>
+              <p className="text-xs font-medium text-ink-500 uppercase tracking-wide">{t('currentBalance')}</p>
+              <p className="text-lg font-bold text-ink-900">{formatCurrency(currentBalance)}</p>
             </div>
             
             <div className="flex items-center justify-center">
-              <ArrowRightIcon className="w-5 h-5 text-gray-400" />
+              <ArrowRightIcon className="w-5 h-5 text-ink-400" />
             </div>
             
             <div className="text-center">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{t('verifiedBalance')}</p>
-              <p className="text-lg font-bold text-gray-900">{formatCurrency(parseFloat(verifiedBalance))}</p>
+              <p className="text-xs font-medium text-ink-500 uppercase tracking-wide">{t('verifiedBalance')}</p>
+              <p className="text-lg font-bold text-ink-900">{formatCurrency(parseFloat(verifiedBalance))}</p>
             </div>
           </div>
           
-          <div className="mt-4 pt-4 border-t border-gray-200 text-center">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{t('adjustmentAmount')}</p>
+          <div className="mt-4 pt-4 border-t border-ink-200 text-center">
+            <p className="text-xs font-medium text-ink-500 uppercase tracking-wide">{t('adjustmentAmount')}</p>
             <p className={`text-xl font-bold ${adjustmentAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {adjustmentAmount >= 0 ? '+' : ''}{formatCurrency(adjustmentAmount)}
             </p>
@@ -216,34 +216,34 @@ export function BalanceAdjustment({
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6">
+    <div className="bg-white border border-ink-200 rounded-lg p-6">
       <div className="flex items-start gap-3 mb-4">
         <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-primary-600 rounded-lg flex items-center justify-center">
           <CalculatorIcon className="w-5 h-5 text-white" />
         </div>
         <div>
-          <h4 className="text-lg font-semibold text-gray-900">{t('title')}</h4>
-          <p className="text-sm text-gray-600 mt-1">
+          <h4 className="text-lg font-semibold text-ink-900">{t('title')}</h4>
+          <p className="text-sm text-ink-600 mt-1">
             {t('description')}
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-        <div className="bg-gray-50 rounded-lg p-4">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">{t('currentCalculatedBalance')}</p>
-          <p className="text-xl font-bold text-gray-900">{formatCurrency(currentBalance)}</p>
-          <p className="text-xs text-gray-500 mt-1">{t('basedOnTransactions')}</p>
+        <div className="bg-ink-50 rounded-lg p-4">
+          <p className="text-xs font-medium text-ink-500 uppercase tracking-wide mb-1">{t('currentCalculatedBalance')}</p>
+          <p className="text-xl font-bold text-ink-900">{formatCurrency(currentBalance)}</p>
+          <p className="text-xs text-ink-500 mt-1">{t('basedOnTransactions')}</p>
         </div>
         
         <div>
-          <label htmlFor="verifiedBalance" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="verifiedBalance" className="block text-sm font-medium text-ink-700 mb-2">
             <CurrencyDollarIcon className="w-4 h-4 inline mr-1" />
             {t('verifiedBalanceLabel')} *
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <span className="text-gray-500 text-sm">$</span>
+              <span className="text-ink-500 text-sm">$</span>
             </div>
             <Input
               id="verifiedBalance"

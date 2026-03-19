@@ -102,10 +102,10 @@ export function GoalProgressWidget({ heroMode = true }: GoalProgressWidgetProps)
     if (!heroMode) {
       // Classic: compact inline CTA
       return (
-        <div className="flex items-center justify-between bg-white/90 backdrop-blur-xs rounded-lg shadow-sm border border-gray-100 px-4 py-3">
+        <div className="flex items-center justify-between bg-white/90 backdrop-blur-xs rounded-lg shadow-sm border border-ink-100 px-4 py-3">
           <div className="flex items-center gap-3">
             <FlagIcon className="h-5 w-5 text-primary-600 flex-shrink-0" />
-            <p className="text-sm text-gray-600">{t('noGoalsDescription')}</p>
+            <p className="text-sm text-ink-600">{t('noGoalsDescription')}</p>
           </div>
           <Link href="/goals/new">
             <Button size="sm" variant="secondary" className="flex-shrink-0">
@@ -125,10 +125,10 @@ export function GoalProgressWidget({ heroMode = true }: GoalProgressWidgetProps)
             <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-primary-600 rounded-2xl shadow-lg flex items-center justify-center mx-auto mb-4">
               <FlagIcon className="w-8 h-8 text-white" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
+            <h3 className="text-xl font-bold text-ink-900 mb-2">
               {tHero('createGoal')}
             </h3>
-            <p className="text-sm text-gray-600 mb-6 max-w-md mx-auto">
+            <p className="text-sm text-ink-600 mb-6 max-w-md mx-auto">
               {tHero('createGoalDesc')}
             </p>
             <Link href="/goals/new">
@@ -156,7 +156,7 @@ export function GoalProgressWidget({ heroMode = true }: GoalProgressWidgetProps)
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <FlagIcon className="h-6 w-6 text-primary-600" />
-              <CardTitle className="text-xl font-bold text-gray-900">{t('title')}</CardTitle>
+              <CardTitle className="text-xl font-bold text-ink-900">{t('title')}</CardTitle>
             </div>
             <Link href="/goals">
               <Button variant="secondary" size="sm">
@@ -171,11 +171,11 @@ export function GoalProgressWidget({ heroMode = true }: GoalProgressWidgetProps)
             <Link
               key={goal.id}
               href={`/goals/${goal.id}`}
-              className="block p-3 rounded-lg border hover:bg-gray-50 transition-colors"
+              className="block p-3 rounded-lg border hover:bg-ink-50 transition-colors"
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="font-medium text-sm truncate">{goal.name}</span>
-                <span className="text-sm font-medium text-gray-600">
+                <span className="text-sm font-medium text-ink-600">
                   {goal.progressPercentage.toFixed(0)}%
                 </span>
               </div>
@@ -185,7 +185,7 @@ export function GoalProgressWidget({ heroMode = true }: GoalProgressWidgetProps)
                   style={{ width: `${Math.min(goal.progressPercentage, 100)}%` }}
                 />
               </div>
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <div className="flex justify-between text-xs text-ink-500 mt-1">
                 <span>{formatCurrency(goal.currentAmount)} / {formatCurrency(goal.targetAmount)}</span>
                 {goal.deadline && goal.daysRemaining !== undefined && goal.daysRemaining > 0 && (
                   <span>
@@ -217,7 +217,7 @@ export function GoalProgressWidget({ heroMode = true }: GoalProgressWidgetProps)
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FlagIcon className="h-6 w-6 text-primary-600" />
-            <CardTitle className="text-xl font-bold text-gray-900">
+            <CardTitle className="text-xl font-bold text-ink-900">
               {tHero('primaryGoal')}
             </CardTitle>
           </div>
@@ -233,7 +233,7 @@ export function GoalProgressWidget({ heroMode = true }: GoalProgressWidgetProps)
         {/* Primary goal with ring */}
         <Link
           href={`/goals/${primary.id}`}
-          className="flex items-center gap-6 p-4 rounded-xl border hover:bg-gray-50 transition-colors"
+          className="flex items-center gap-6 p-4 rounded-xl border hover:bg-ink-50 transition-colors"
         >
           <div className="flex-shrink-0">
             <GoalProgressRing
@@ -244,14 +244,14 @@ export function GoalProgressWidget({ heroMode = true }: GoalProgressWidgetProps)
             />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-gray-900 truncate">
+            <h3 className="text-lg font-semibold text-ink-900 truncate">
               {primary.name}
             </h3>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-ink-600 mt-1">
               {formatCurrency(primary.currentAmount)} / {formatCurrency(primary.targetAmount)}
             </p>
             {primary.deadline && primary.daysRemaining !== undefined && primary.daysRemaining > 0 && (
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-ink-500 mt-1">
                 {primary.daysRemaining === 1
                   ? t('detail.daysRemainingOne')
                   : t('detail.daysRemaining', { count: primary.daysRemaining })}
@@ -269,7 +269,7 @@ export function GoalProgressWidget({ heroMode = true }: GoalProgressWidgetProps)
         {/* Other goals - compact list */}
         {others.length > 0 && (
           <div className="mt-4 pt-4 border-t">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+            <p className="text-xs font-semibold text-ink-500 uppercase tracking-wide mb-3">
               {tHero('otherGoals')}
             </p>
             <div className="space-y-2">
@@ -277,13 +277,13 @@ export function GoalProgressWidget({ heroMode = true }: GoalProgressWidgetProps)
                 <Link
                   key={goal.id}
                   href={`/goals/${goal.id}`}
-                  className="block p-3 rounded-lg border hover:bg-gray-50 transition-colors"
+                  className="block p-3 rounded-lg border hover:bg-ink-50 transition-colors"
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-medium text-sm truncate">
                       {goal.name}
                     </span>
-                    <span className="text-sm font-medium text-gray-600">
+                    <span className="text-sm font-medium text-ink-600">
                       {goal.progressPercentage.toFixed(0)}%
                     </span>
                   </div>
@@ -297,7 +297,7 @@ export function GoalProgressWidget({ heroMode = true }: GoalProgressWidgetProps)
                       }}
                     />
                   </div>
-                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <div className="flex justify-between text-xs text-ink-500 mt-1">
                     <span>
                       {formatCurrency(goal.currentAmount)} /{' '}
                       {formatCurrency(goal.targetAmount)}

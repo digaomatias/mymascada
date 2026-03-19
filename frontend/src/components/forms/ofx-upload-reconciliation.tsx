@@ -207,22 +207,22 @@ export function OFXUploadForReconciliation({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-white border rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <DocumentTextIcon className="w-4 h-4 text-gray-600" />
-                  <span className="font-medium text-gray-900">{tReconciliation('ofxUpload.transactions')}</span>
+                  <DocumentTextIcon className="w-4 h-4 text-ink-600" />
+                  <span className="font-medium text-ink-900">{tReconciliation('ofxUpload.transactions')}</span>
                 </div>
-                <div className="text-2xl font-bold text-gray-900">
+                <div className="text-2xl font-bold text-ink-900">
                   {validationResult.transactions?.length || 0}
                 </div>
-                <div className="text-sm text-gray-600">{tReconciliation('ofxUpload.foundInFile')}</div>
+                <div className="text-sm text-ink-600">{tReconciliation('ofxUpload.foundInFile')}</div>
               </div>
 
               {validationResult.dateRange && (
                 <div className="bg-white border rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <DocumentTextIcon className="w-4 h-4 text-gray-600" />
-                    <span className="font-medium text-gray-900">{tReconciliation('ofxUpload.dateRange')}</span>
+                    <DocumentTextIcon className="w-4 h-4 text-ink-600" />
+                    <span className="font-medium text-ink-900">{tReconciliation('ofxUpload.dateRange')}</span>
                   </div>
-                  <div className="text-sm text-gray-900">
+                  <div className="text-sm text-ink-900">
                     {validationResult.dateRange.startDate.split('T')[0].split('-').reverse().join('/')} - {' '}
                     {validationResult.dateRange.endDate.split('T')[0].split('-').reverse().join('/')}
                   </div>
@@ -245,15 +245,15 @@ export function OFXUploadForReconciliation({
             {/* Sample Transactions Preview */}
             {validationResult.transactions && validationResult.transactions.length > 0 && (
               <div>
-                <h4 className="font-medium text-gray-900 mb-3">{tReconciliation('ofxUpload.previewTitle')}</h4>
+                <h4 className="font-medium text-ink-900 mb-3">{tReconciliation('ofxUpload.previewTitle')}</h4>
                 <div className="border rounded-lg overflow-hidden">
                   <table className="min-w-full">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-ink-50">
                       <tr>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">{tCommon('date')}</th>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">{tCommon('amount')}</th>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">{tCommon('description')}</th>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">{tCommon('type')}</th>
+                        <th className="px-4 py-2 text-left text-sm font-medium text-ink-700">{tCommon('date')}</th>
+                        <th className="px-4 py-2 text-left text-sm font-medium text-ink-700">{tCommon('amount')}</th>
+                        <th className="px-4 py-2 text-left text-sm font-medium text-ink-700">{tCommon('description')}</th>
+                        <th className="px-4 py-2 text-left text-sm font-medium text-ink-700">{tCommon('type')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -271,7 +271,7 @@ export function OFXUploadForReconciliation({
                             {transaction.description || transaction.memo}
                           </td>
                           <td className="px-4 py-2 text-sm">
-                            <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">
+                            <span className="px-2 py-1 text-xs rounded-full bg-ink-100 text-ink-800">
                               {transaction.transactionType}
                             </span>
                           </td>
@@ -280,7 +280,7 @@ export function OFXUploadForReconciliation({
                     </tbody>
                   </table>
                   {validationResult.transactions.length > 5 && (
-                    <div className="px-4 py-2 bg-gray-50 text-sm text-gray-600">
+                    <div className="px-4 py-2 bg-ink-50 text-sm text-ink-600">
                       {tReconciliation('ofxUpload.moreTransactions', { count: validationResult.transactions.length - 5 })}
                     </div>
                   )}
@@ -346,7 +346,7 @@ export function OFXUploadForReconciliation({
             className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
               dragActive 
                 ? 'border-blue-400 bg-blue-50' 
-                : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
+                : 'border-ink-300 hover:border-blue-400 hover:bg-ink-50'
             }`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -356,20 +356,20 @@ export function OFXUploadForReconciliation({
             {isProcessing ? (
               <div className="flex flex-col items-center">
                 <ArrowPathIcon className="w-12 h-12 text-blue-600 animate-spin mb-4" />
-                <h4 className="text-lg font-medium text-gray-900 mb-2">
+                <h4 className="text-lg font-medium text-ink-900 mb-2">
                   {tReconciliation('ofxUpload.processingTitle')}
                 </h4>
-                <p className="text-gray-600">
+                <p className="text-ink-600">
                   {tReconciliation('ofxUpload.processingSubtitle')}
                 </p>
               </div>
             ) : (
               <div className="flex flex-col items-center">
-                <DocumentTextIcon className="w-12 h-12 text-gray-400 mb-4" />
-                <h4 className="text-lg font-medium text-gray-900 mb-2">
+                <DocumentTextIcon className="w-12 h-12 text-ink-400 mb-4" />
+                <h4 className="text-lg font-medium text-ink-900 mb-2">
                   {tReconciliation('ofxUpload.uploadPrompt')}
                 </h4>
-                <p className="text-gray-600 mb-4">
+                <p className="text-ink-600 mb-4">
                   {tReconciliation('ofxUpload.uploadHelp')}
                 </p>
                 <Button 
@@ -386,7 +386,7 @@ export function OFXUploadForReconciliation({
           </div>
 
           {/* File Requirements */}
-          <div className="text-xs text-gray-500 space-y-1">
+          <div className="text-xs text-ink-500 space-y-1">
             <p>{tReconciliation('ofxUpload.requirements.format')}</p>
             <p>{tReconciliation('ofxUpload.requirements.maxSize')}</p>
             <p>{tReconciliation('ofxUpload.requirements.compatibility')}</p>
@@ -395,8 +395,8 @@ export function OFXUploadForReconciliation({
 
           {/* OFX Features */}
           <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-4">
-            <h4 className="font-medium text-gray-900 mb-2">{tReconciliation('ofxUpload.featuresTitle')}</h4>
-            <ul className="text-sm text-gray-700 space-y-1">
+            <h4 className="font-medium text-ink-900 mb-2">{tReconciliation('ofxUpload.featuresTitle')}</h4>
+            <ul className="text-sm text-ink-700 space-y-1">
               <li>{tReconciliation('ofxUpload.features.standardized')}</li>
               <li>{tReconciliation('ofxUpload.features.noMapping')}</li>
               <li>{tReconciliation('ofxUpload.features.detailsIncluded')}</li>

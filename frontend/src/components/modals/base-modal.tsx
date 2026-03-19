@@ -38,7 +38,7 @@ export function BaseModal({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-gray-900/75 transition-opacity" />
+          <div className="fixed inset-0 bg-ink-900/75 transition-opacity" />
         </Transition.Child>
 
         <div className="fixed inset-0 z-10 overflow-y-auto">
@@ -56,7 +56,7 @@ export function BaseModal({
                 <div className="absolute right-0 top-0 pr-4 pt-4 z-10">
                   <button
                     type="button"
-                    className="rounded-md bg-white text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    className="rounded-md bg-white text-ink-400 hover:text-ink-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     onClick={onClose}
                   >
                     <span className="sr-only">Close</span>
@@ -64,7 +64,7 @@ export function BaseModal({
                   </button>
                 </div>
                 <div className="p-6 pr-12 flex-shrink-0">
-                  <Dialog.Title as="h3" className="text-lg font-semibold leading-6 text-gray-900">
+                  <Dialog.Title as="h3" className="text-lg font-semibold leading-6 text-ink-900">
                     {title}
                   </Dialog.Title>
                 </div>

@@ -28,7 +28,7 @@ export function RulesSkeleton() {
       <div className="rounded-[26px] border border-ink-200 bg-white/90 shadow-lg shadow-primary-200/20 backdrop-blur-xs">
         <div className="p-0">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="border-b border-slate-100 last:border-b-0 p-5 animate-pulse">
+            <div key={i} className="border-b border-ink-100 last:border-b-0 p-5 animate-pulse">
               <div className="flex items-start gap-3">
                 <Skeleton className="w-4 h-4 mt-1 rounded" variant="rounded-sm" />
                 <div className="flex-1 space-y-2">

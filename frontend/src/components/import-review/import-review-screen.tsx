@@ -399,7 +399,7 @@ export function ImportReviewScreen({
               </div>
               <div>
                 <span className="text-lg font-semibold">{title}</span>
-                <span className="ml-2 text-sm text-gray-500">({items.length})</span>
+                <span className="ml-2 text-sm text-ink-500">({items.length})</span>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -410,13 +410,13 @@ export function ImportReviewScreen({
                 />
               )}
               {isExpanded ? (
-                <ChevronUpIcon className="w-5 h-5 text-gray-400" />
+                <ChevronUpIcon className="w-5 h-5 text-ink-400" />
               ) : (
-                <ChevronDownIcon className="w-5 h-5 text-gray-400" />
+                <ChevronDownIcon className="w-5 h-5 text-ink-400" />
               )}
             </div>
           </CardTitle>
-          <p className="text-sm text-gray-600">{description}</p>
+          <p className="text-sm text-ink-600">{description}</p>
         </CardHeader>
         
         {isExpanded && (
@@ -452,8 +452,8 @@ export function ImportReviewScreen({
             {tCommon('back')}
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{tImport('review.title')}</h1>
-            <p className="text-gray-600">
+            <h1 className="text-2xl font-bold text-ink-900">{tImport('review.title')}</h1>
+            <p className="text-ink-600">
               {accountName ? tImport('review.subtitleImporting', { accountName }) : tImport('review.subtitleReview')}
             </p>
           </div>
@@ -467,11 +467,11 @@ export function ImportReviewScreen({
             <div className="flex items-start gap-3">
               <InformationCircleIcon className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
               <div className="text-sm">
-                <p className="font-medium text-gray-900 mb-1">{tImport('review.guidance.title')}</p>
-                <p className="text-gray-600 mb-2">
+                <p className="font-medium text-ink-900 mb-1">{tImport('review.guidance.title')}</p>
+                <p className="text-ink-600 mb-2">
                   {tImport('review.guidance.body')}
                 </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-500">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-ink-500">
                   <div>• {tImport('review.guidance.individual')}</div>
                   <div>• {tImport('review.guidance.bulk')}</div>
                 </div>
@@ -495,10 +495,10 @@ export function ImportReviewScreen({
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <DocumentCheckIcon className="w-8 h-8 text-blue-600" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">
+              <h3 className="font-semibold text-ink-900 mb-2">
                 {tImport('review.progress.reviewedPercent', { percent: progressStats.progressPercent })}
               </h3>
-              <div className="text-sm text-gray-600 mb-4 space-y-1">
+              <div className="text-sm text-ink-600 mb-4 space-y-1">
                 <p>{tImport('review.progress.itemsRemaining', { count: progressStats.pending })}</p>
                 {progressStats.toImport > 0 && (
                   <p className="text-green-600 font-medium">
@@ -506,13 +506,13 @@ export function ImportReviewScreen({
                   </p>
                 )}
                 {progressStats.toSkip > 0 && (
-                  <p className="text-gray-500">{tImport('review.progress.willBeSkipped', { count: progressStats.toSkip })}</p>
+                  <p className="text-ink-500">{tImport('review.progress.willBeSkipped', { count: progressStats.toSkip })}</p>
                 )}
               </div>
               <Button
                 onClick={handleExecuteImport}
                 disabled={!canProceed || isImporting}
-                className={`w-full ${importCompleted ? 'bg-green-600 hover:bg-green-700' : progressStats.toImport > 0 ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700'}`}
+                className={`w-full ${importCompleted ? 'bg-green-600 hover:bg-green-700' : progressStats.toImport > 0 ? 'bg-blue-600 hover:bg-blue-700' : 'bg-ink-600 hover:bg-ink-700'}`}
               >
                 {isImporting ? (
                   <>

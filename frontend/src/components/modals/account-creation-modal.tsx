@@ -51,15 +51,15 @@ export default function AccountCreationModal({
           <CardHeader className="relative">
             <button
               onClick={onClose}
-              className="absolute right-4 top-4 p-2 rounded-md hover:bg-gray-100 transition-colors"
+              className="absolute right-4 top-4 p-2 rounded-md hover:bg-ink-100 transition-colors"
               disabled={loading}
             >
-              <XMarkIcon className="w-5 h-5 text-gray-500" />
+              <XMarkIcon className="w-5 h-5 text-ink-500" />
             </button>
-            <CardTitle className="text-xl font-bold text-gray-900 pr-10">
+            <CardTitle className="text-xl font-bold text-ink-900 pr-10">
               Create Account
             </CardTitle>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-ink-600 mt-1">
               Quickly create a new account to continue adding your transaction.
             </p>
           </CardHeader>

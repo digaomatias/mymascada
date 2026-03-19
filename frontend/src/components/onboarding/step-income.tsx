@@ -94,10 +94,10 @@ export function StepIncome({ value, onChange, currency, onNext, onBack }: StepIn
         </div>
 
         <div className="mt-5 space-y-2">
-          <h2 className="font-[var(--font-onboarding-sans)] text-3xl font-semibold tracking-[-0.02em] text-slate-900">
+          <h2 className="font-[var(--font-onboarding-sans)] text-3xl font-semibold tracking-[-0.02em] text-ink-900">
             {t('income.title')}
           </h2>
-          <p className="text-sm leading-relaxed text-slate-600 sm:text-base">
+          <p className="text-sm leading-relaxed text-ink-600 sm:text-base">
             {t('income.subtitle')}
           </p>
         </div>
@@ -110,9 +110,9 @@ export function StepIncome({ value, onChange, currency, onNext, onBack }: StepIn
             label={t('income.label')}
             allowNegative={false}
             placeholder="0.00"
-            className="h-16 rounded-2xl border-ink-200 bg-white px-5 text-3xl font-semibold tracking-tight text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] [font-family:var(--font-onboarding-mono)] [font-variant-numeric:tabular-nums] focus:border-primary-400 focus:ring-4 focus:ring-primary-200/60"
+            className="h-16 rounded-2xl border-ink-200 bg-white px-5 text-3xl font-semibold tracking-tight text-ink-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] [font-family:var(--font-onboarding-mono)] [font-variant-numeric:tabular-nums] focus:border-primary-400 focus:ring-4 focus:ring-primary-200/60"
           />
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="mt-2 text-sm text-ink-500">
             {t('income.helper')}
           </p>
         </div>
@@ -121,7 +121,7 @@ export function StepIncome({ value, onChange, currency, onNext, onBack }: StepIn
           <Button
             variant="ghost"
             onClick={onBack}
-            className="rounded-xl border border-slate-200 bg-white px-5 text-slate-700 hover:border-ink-200 hover:bg-primary-50"
+            className="rounded-xl border border-ink-200 bg-white px-5 text-ink-700 hover:border-ink-200 hover:bg-primary-50"
           >
             {t('back')}
           </Button>

@@ -48,7 +48,7 @@ export function ResponsiveDropdown({
         <div
           ref={dropdownRef}
           className={`bg-white shadow-lg overflow-hidden ${
-            isMobile ? 'z-50' : 'z-20 rounded-md border border-gray-200'
+            isMobile ? 'z-50' : 'z-20 rounded-md border border-ink-200'
           } ${className}`}
           style={getDropdownStyles()}
         >
@@ -57,7 +57,7 @@ export function ResponsiveDropdown({
               <h3 className="text-lg font-semibold">{title}</h3>
               <button
                 onClick={onClose}
-                className="p-2 rounded-full hover:bg-gray-100"
+                className="p-2 rounded-full hover:bg-ink-100"
                 aria-label={tCommon('close')}
               >
                 <XMarkIcon className="w-5 h-5" />

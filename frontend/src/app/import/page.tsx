@@ -518,7 +518,7 @@ function ImportPageContent() {
           <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-400 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <DocumentArrowUpIcon className="w-8 h-8 text-white" />
           </div>
-          <div className="mt-6 text-gray-700 font-medium">{t('loading')}</div>
+          <div className="mt-6 text-ink-700 font-medium">{t('loading')}</div>
         </div>
       </div>
     );
@@ -548,21 +548,21 @@ function ImportPageContent() {
           <div key={step.key} className="flex items-center">
             <div
               className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
-                isCompleted || isActive ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-500'
+                isCompleted || isActive ? 'bg-primary-600 text-white' : 'bg-ink-200 text-ink-500'
               }`}
             >
               {isCompleted ? <CheckCircleIcon className="w-5 h-5" /> : index + 1}
             </div>
             <span
               className={`ml-2 text-sm whitespace-nowrap ${
-                isActive ? 'text-primary-600 font-medium' : 'text-gray-400'
+                isActive ? 'text-primary-600 font-medium' : 'text-ink-400'
               }`}
             >
               {step.label}
             </span>
             {index < steps.length - 1 && (
               <div
-                className={`w-12 h-px mx-3 ${isCompleted ? 'bg-primary-600' : 'bg-gray-200'}`}
+                className={`w-12 h-px mx-3 ${isCompleted ? 'bg-primary-600' : 'bg-ink-200'}`}
               />
             )}
           </div>
@@ -579,7 +579,7 @@ function ImportPageContent() {
       <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
         <div className="p-6">
           <div
-            className="border-2 border-dashed border-gray-300 rounded-xl p-10 text-center hover:border-primary-400 transition-colors cursor-pointer"
+            className="border-2 border-dashed border-ink-300 rounded-xl p-10 text-center hover:border-primary-400 transition-colors cursor-pointer"
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onClick={() => !selectedFile && fileInputRef.current?.click()}
@@ -588,8 +588,8 @@ function ImportPageContent() {
               <div className="space-y-3">
                 <CheckCircleIcon className="w-12 h-12 text-green-500 mx-auto" />
                 <div>
-                  <p className="text-lg font-semibold text-gray-900">{selectedFile.name}</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-lg font-semibold text-ink-900">{selectedFile.name}</p>
+                  <p className="text-sm text-ink-500">
                     {(selectedFile.size / 1024).toFixed(1)} KB &mdash;{' '}
                     <span className="font-medium text-primary-600 uppercase">{fileFormat}</span>
                   </p>
@@ -600,10 +600,10 @@ function ImportPageContent() {
               </div>
             ) : (
               <div className="space-y-4">
-                <CloudArrowUpIcon className="w-12 h-12 text-gray-400 mx-auto" />
+                <CloudArrowUpIcon className="w-12 h-12 text-ink-400 mx-auto" />
                 <div>
-                  <p className="text-lg font-semibold text-gray-900">{t('unified.dropHere')}</p>
-                  <p className="text-sm text-gray-500 mt-1">{t('unified.supports')}</p>
+                  <p className="text-lg font-semibold text-ink-900">{t('unified.dropHere')}</p>
+                  <p className="text-sm text-ink-500 mt-1">{t('unified.supports')}</p>
                 </div>
                 <Button variant="secondary" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
                   <DocumentArrowUpIcon className="w-4 h-4 mr-2" />
@@ -646,7 +646,7 @@ function ImportPageContent() {
                     onChange={() => setCreateAccount(false)}
                     className="h-4 w-4 text-primary-600"
                   />
-                  <span className="text-sm text-gray-700">{t('account.useExisting')}</span>
+                  <span className="text-sm text-ink-700">{t('account.useExisting')}</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -655,7 +655,7 @@ function ImportPageContent() {
                     onChange={() => setCreateAccount(true)}
                     className="h-4 w-4 text-primary-600"
                   />
-                  <span className="text-sm text-gray-700">{t('account.createNew')}</span>
+                  <span className="text-sm text-ink-700">{t('account.createNew')}</span>
                 </label>
               </div>
 
@@ -683,7 +683,7 @@ function ImportPageContent() {
                     placeholder={t('account.enterAccountName')}
                     className="input w-full"
                   />
-                  <p className="text-xs text-gray-500">{t('account.detailsFromOfx')}</p>
+                  <p className="text-xs text-ink-500">{t('account.detailsFromOfx')}</p>
                 </div>
               )}
             </div>
@@ -747,7 +747,7 @@ function ImportPageContent() {
                     </>
                   )}
                 </Button>
-                <p className="text-center text-xs text-gray-400">{tCommon('or')}</p>
+                <p className="text-center text-xs text-ink-400">{tCommon('or')}</p>
                 <Button
                   variant="secondary"
                   onClick={handleMapCSVManually}
@@ -794,7 +794,7 @@ function ImportPageContent() {
       return (
         <Card>
           <CardContent className="p-6 text-center">
-            <p className="text-gray-600">{t('aiCsv.missingResult')}</p>
+            <p className="text-ink-600">{t('aiCsv.missingResult')}</p>
             <Button onClick={() => setCurrentStep('configure')} className="mt-4">
               {t('aiCsv.backToUpload')}
             </Button>
@@ -823,7 +823,7 @@ function ImportPageContent() {
               <ExclamationTriangleIcon className="w-8 h-8 text-orange-600" />
             </div>
             <h3 className="text-lg font-semibold mb-2">{t('review.analyzingImport')}</h3>
-            <p className="text-gray-600 mb-4">{t('review.checkingConflicts')}</p>
+            <p className="text-ink-600 mb-4">{t('review.checkingConflicts')}</p>
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto" />
           </CardContent>
         </Card>
@@ -859,7 +859,7 @@ function ImportPageContent() {
                 ? t('aiCsv.success.importSuccessful')
                 : t('aiCsv.success.reviewCompleted')}
             </h3>
-            <p className="text-gray-600">
+            <p className="text-ink-600">
               {((importResult?.importedTransactionsCount ?? 0) +
                 (importResult?.mergedTransactionsCount ?? 0)) > 0
                 ? t('aiCsv.success.importedMessage')
@@ -925,10 +925,10 @@ function ImportPageContent() {
           <div className="w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-600 rounded-3xl shadow-2xl flex items-center justify-center mx-auto mb-4">
             <DocumentArrowUpIcon className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-ink-900 mb-2">
             {t('unified.title')}
           </h1>
-          <p className="text-gray-600 max-w-2xl mx-auto">{t('unified.subtitle')}</p>
+          <p className="text-ink-600 max-w-2xl mx-auto">{t('unified.subtitle')}</p>
         </div>
       </div>
 
@@ -954,7 +954,7 @@ function ImportPageFallback() {
         <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-400 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
           <DocumentArrowUpIcon className="w-8 h-8 text-white" />
         </div>
-        <div className="mt-6 text-gray-700 font-medium">{t('loading')}</div>
+        <div className="mt-6 text-ink-700 font-medium">{t('loading')}</div>
       </div>
     </div>
   );

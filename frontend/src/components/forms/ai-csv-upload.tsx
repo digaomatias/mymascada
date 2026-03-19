@@ -174,7 +174,7 @@ export function AICSVUpload({
             className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
               dragActive 
                 ? 'border-primary-400 bg-primary-50' 
-                : 'border-gray-300 hover:border-primary-400 hover:bg-gray-50'
+                : 'border-ink-300 hover:border-primary-400 hover:bg-ink-50'
             }`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -184,20 +184,20 @@ export function AICSVUpload({
             {isAnalyzing ? (
               <div className="flex flex-col items-center">
                 <ArrowPathIcon className="w-12 h-12 text-primary-600 animate-spin mb-4" />
-                <h4 className="text-lg font-medium text-gray-900 mb-2">
+                <h4 className="text-lg font-medium text-ink-900 mb-2">
                   {t('analyzingTitle')}
                 </h4>
-                <p className="text-gray-600">
+                <p className="text-ink-600">
                   {t('analyzingDescription')}
                 </p>
               </div>
             ) : (
               <div className="flex flex-col items-center">
-                <DocumentArrowUpIcon className="w-12 h-12 text-gray-400 mb-4" />
-                <h4 className="text-lg font-medium text-gray-900 mb-2">
+                <DocumentArrowUpIcon className="w-12 h-12 text-ink-400 mb-4" />
+                <h4 className="text-lg font-medium text-ink-900 mb-2">
                   {t('uploadTitle')}
                 </h4>
-                <p className="text-gray-600 mb-4">
+                <p className="text-ink-600 mb-4">
                   {t('uploadDescription')}
                 </p>
                 <Button 
@@ -214,7 +214,7 @@ export function AICSVUpload({
           </div>
 
           {/* File Requirements */}
-          <div className="text-xs text-gray-500 space-y-1">
+          <div className="text-xs text-ink-500 space-y-1">
             <p>{t('requirements.format')}</p>
             <p>{t('requirements.maxSize')}</p>
             <p>{t('requirements.compatibility')}</p>
@@ -222,8 +222,8 @@ export function AICSVUpload({
 
           {/* AI Features */}
           <div className="bg-gradient-to-r from-primary-50 to-blue-50 rounded-lg p-4">
-            <h4 className="font-medium text-gray-900 mb-2">{t('featuresTitle')}</h4>
-            <ul className="text-sm text-gray-700 space-y-1">
+            <h4 className="font-medium text-ink-900 mb-2">{t('featuresTitle')}</h4>
+            <ul className="text-sm text-ink-700 space-y-1">
               <li>{t('features.detectFormat')}</li>
               <li>{t('features.identifyColumns')}</li>
               <li>{t('features.detectDebitsCredits')}</li>

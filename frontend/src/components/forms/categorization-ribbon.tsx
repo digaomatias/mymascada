@@ -378,7 +378,7 @@ export function CategorizationRibbon({
             <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-primary-500 rounded-lg flex items-center justify-center">
               <SparklesIcon className="w-4 h-4 text-white animate-pulse" />
             </div>
-            <p className="text-sm text-gray-600 animate-pulse">
+            <p className="text-sm text-ink-600 animate-pulse">
               {tTransactions('aiCategorization.checkingAvailability')}
             </p>
           </div>
@@ -400,8 +400,8 @@ export function CategorizationRibbon({
                   <SparklesIcon className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">{tTransactions('categorizationRibbon.title')}</h3>
-                  <p className="text-xs text-gray-600">{tTransactions('categorizationRibbon.subtitle')}</p>
+                  <h3 className="font-semibold text-ink-900">{tTransactions('categorizationRibbon.title')}</h3>
+                  <p className="text-xs text-ink-600">{tTransactions('categorizationRibbon.subtitle')}</p>
                 </div>
               </div>
               
@@ -455,8 +455,8 @@ export function CategorizationRibbon({
                   <LightBulbIcon className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-gray-900">{tTransactions('ruleCategorization.previewTitle')}</h4>
-                  <p className="text-sm text-gray-600">{rulePreview.summary}</p>
+                  <h4 className="font-semibold text-ink-900">{tTransactions('ruleCategorization.previewTitle')}</h4>
+                  <p className="text-sm text-ink-600">{rulePreview.summary}</p>
                 </div>
               </div>
               <Button
@@ -471,19 +471,19 @@ export function CategorizationRibbon({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
               <div className="text-center p-2 bg-white rounded-lg">
                 <div className="font-semibold text-blue-600">{rulePreview.totalExamined}</div>
-                <div className="text-gray-600">{tTransactions('ruleCategorization.examined')}</div>
+                <div className="text-ink-600">{tTransactions('ruleCategorization.examined')}</div>
               </div>
               <div className="text-center p-2 bg-white rounded-lg">
                 <div className="font-semibold text-green-600">{rulePreview.transactionsMatched}</div>
-                <div className="text-gray-600">{tTransactions('ruleCategorization.wouldMatch')}</div>
+                <div className="text-ink-600">{tTransactions('ruleCategorization.wouldMatch')}</div>
               </div>
               <div className="text-center p-2 bg-white rounded-lg">
                 <div className="font-semibold text-yellow-600">{rulePreview.transactionsSkipped}</div>
-                <div className="text-gray-600">{tTransactions('ruleCategorization.skipped')}</div>
+                <div className="text-ink-600">{tTransactions('ruleCategorization.skipped')}</div>
               </div>
               <div className="text-center p-2 bg-white rounded-lg">
-                <div className="font-semibold text-gray-600">{rulePreview.transactionsUnmatched}</div>
-                <div className="text-gray-600">{tTransactions('ruleCategorization.noMatch')}</div>
+                <div className="font-semibold text-ink-600">{rulePreview.transactionsUnmatched}</div>
+                <div className="text-ink-600">{tTransactions('ruleCategorization.noMatch')}</div>
               </div>
             </div>
             
@@ -491,7 +491,7 @@ export function CategorizationRibbon({
             {rulePreview.ruleMatches && rulePreview.ruleMatches.length > 0 && (
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-3">
-                  <h5 className="font-medium text-gray-900 text-sm">
+                  <h5 className="font-medium text-ink-900 text-sm">
                     {tTransactions('ruleCategorization.ruleSuggestions', {
                       selected: rulePreview.ruleMatches.filter(m => m.isSelected).length,
                       total: rulePreview.ruleMatches.length
@@ -511,8 +511,8 @@ export function CategorizationRibbon({
                   </div>
                 </div>
                 
-                <div className="bg-white rounded-lg border border-gray-200 max-h-80 overflow-y-auto">
-                  <div className="divide-y divide-gray-100">
+                <div className="bg-white rounded-lg border border-ink-200 max-h-80 overflow-y-auto">
+                  <div className="divide-y divide-ink-100">
                     {rulePreview.ruleMatches.map((match, index) => (
                       <div key={index} className="p-3 text-sm">
                         <div className="flex items-start gap-3">
@@ -521,7 +521,7 @@ export function CategorizationRibbon({
                               type="checkbox"
                               checked={match.isSelected}
                               onChange={() => handleToggleRuleMatch(index)}
-                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              className="rounded border-ink-300 text-blue-600 focus:ring-blue-500"
                             />
                           </div>
                           
@@ -529,7 +529,7 @@ export function CategorizationRibbon({
                             <div className="flex justify-between items-start mb-2">
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
-                                  <p className="font-medium text-gray-900 truncate">
+                                  <p className="font-medium text-ink-900 truncate">
                                     {match.transactionDescription}
                                   </p>
                                   {match.isExistingCandidate && (
@@ -544,11 +544,11 @@ export function CategorizationRibbon({
                                   )}
                                 </div>
                                 <div className="flex items-center gap-2 mt-1">
-                                  <span className="text-xs text-gray-500">
+                                  <span className="text-xs text-ink-500">
                                     {new Date(match.transactionDate).toLocaleDateString()}
                                   </span>
-                                  <span className="text-xs text-gray-400">•</span>
-                                  <span className="text-xs text-gray-500">
+                                  <span className="text-xs text-ink-400">•</span>
+                                  <span className="text-xs text-ink-500">
                                     {match.accountName}
                                   </span>
                                 </div>
@@ -563,16 +563,16 @@ export function CategorizationRibbon({
                             
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-2 text-xs">
-                                <span className="text-gray-500">{tTransactions('ruleCategorization.ruleLabel')}</span>
+                                <span className="text-ink-500">{tTransactions('ruleCategorization.ruleLabel')}</span>
                                 <span className="font-medium text-blue-600">{match.ruleName}</span>
                                 {match.rulePattern && (
                                   <>
-                                    <span className="text-gray-400">•</span>
-                                    <span className="text-gray-500 font-mono">&quot;{match.rulePattern}&quot;</span>
+                                    <span className="text-ink-400">•</span>
+                                    <span className="text-ink-500 font-mono">&quot;{match.rulePattern}&quot;</span>
                                   </>
                                 )}
                               </div>
-                              <div className="text-xs text-gray-500">
+                              <div className="text-xs text-ink-500">
                                 {tTransactions('ruleCategorization.confidencePercent', {
                                   percent: Math.round(match.confidenceScore * 100)
                                 })}
@@ -582,23 +582,23 @@ export function CategorizationRibbon({
                             <div className="flex items-center gap-2 text-xs">
                               {match.wouldChangeCategory && match.currentCategoryName ? (
                                 <>
-                                  <span className="text-gray-500">{tTransactions('ruleCategorization.changeLabel')}</span>
+                                  <span className="text-ink-500">{tTransactions('ruleCategorization.changeLabel')}</span>
                                   <span className="px-2 py-1 bg-red-100 text-red-700 rounded">
                                     {match.currentCategoryName}
                                   </span>
-                                  <span className="text-gray-400">→</span>
+                                  <span className="text-ink-400">→</span>
                                   <span className="px-2 py-1 bg-green-100 text-green-700 rounded">
                                     {match.categoryName}
                                   </span>
                                 </>
                               ) : (
                                 <>
-                                  <span className="text-gray-500">{tTransactions('ruleCategorization.assignTo')}</span>
+                                  <span className="text-ink-500">{tTransactions('ruleCategorization.assignTo')}</span>
                                   <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded">
                                     {match.categoryName}
                                   </span>
                                   {!match.wouldChangeCategory && (
-                                    <span className="text-gray-400">{tTransactions('ruleCategorization.noChangeNeeded')}</span>
+                                    <span className="text-ink-400">{tTransactions('ruleCategorization.noChangeNeeded')}</span>
                                   )}
                                 </>
                               )}
@@ -613,7 +613,7 @@ export function CategorizationRibbon({
             )}
             
             <div className="flex justify-between items-center">
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-ink-600">
                 {rulePreview.ruleMatches && (
                   <>
                     {tTransactions('ruleCategorization.rulesSelected', {
@@ -673,8 +673,8 @@ export function CategorizationRibbon({
                   <SparklesIcon className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{tTransactions('aiCategorization.title')}</h3>
-                  <p className="text-sm text-gray-600">
+                  <h3 className="text-lg font-semibold text-ink-900">{tTransactions('aiCategorization.title')}</h3>
+                  <p className="text-sm text-ink-600">
                     {tTransactions('aiCategorization.subtitleLimited', { limit: 25 })}
                   </p>
                 </div>
@@ -701,9 +701,9 @@ export function CategorizationRibbon({
                     type="checkbox"
                     checked={selectedTransactions.length === Math.min(transactions.length, 25) && transactions.length > 0}
                     onChange={handleSelectAll}
-                    className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                    className="rounded border-ink-300 text-primary-600 focus:ring-primary-500"
                   />
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-ink-700">
                     {tTransactions('aiCategorization.selectAllCount', {
                       selected: selectedTransactions.length,
                       total: Math.min(transactions.length, 25)
@@ -733,14 +733,14 @@ export function CategorizationRibbon({
               {/* Quick transaction selection - Limited to 25 */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-40 overflow-y-auto">
                 {transactions.slice(0, 25).map((transaction) => (
-                  <label key={transaction.id} className="flex items-center gap-2 p-2 rounded border hover:bg-gray-50 cursor-pointer">
+                  <label key={transaction.id} className="flex items-center gap-2 p-2 rounded border hover:bg-ink-50 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={selectedTransactions.includes(transaction.id)}
                       onChange={() => handleSelectTransaction(transaction.id)}
-                      className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                      className="rounded border-ink-300 text-primary-600 focus:ring-primary-500"
                     />
-                    <span className="text-xs text-gray-600 truncate">
+                    <span className="text-xs text-ink-600 truncate">
                       {transaction.userDescription || transaction.description}
                     </span>
                   </label>
@@ -748,7 +748,7 @@ export function CategorizationRibbon({
               </div>
               
               {transactions.length > 25 && (
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-ink-500 mt-2">
                   {tTransactions('aiCategorization.limitNotice', { total: transactions.length })}
                 </p>
               )}
@@ -759,8 +759,8 @@ export function CategorizationRibbon({
               <div className="border-t border-primary-200 pt-4">
                 <div className="flex items-center gap-2 mb-3">
                   <LightBulbIcon className="w-5 h-5 text-primary-600" />
-                  <h4 className="font-medium text-gray-900">{tTransactions('aiCategorization.suggestionsTitle')}</h4>
-                  <span className="text-sm text-gray-500">{tTransactions('aiCategorization.suggestionsReady', { count: suggestions.length })}</span>
+                  <h4 className="font-medium text-ink-900">{tTransactions('aiCategorization.suggestionsTitle')}</h4>
+                  <span className="text-sm text-ink-500">{tTransactions('aiCategorization.suggestionsReady', { count: suggestions.length })}</span>
                 </div>
                 
                 <div className="space-y-3 max-h-80 overflow-y-auto">
@@ -774,7 +774,7 @@ export function CategorizationRibbon({
                       <div key={suggestion.transactionId} className="p-3 bg-white rounded-lg border border-primary-200">
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">
+                            <p className="text-sm font-medium text-ink-900 truncate">
                               {transaction.userDescription || transaction.description}
                             </p>
                             <div className="flex items-center gap-3 mt-1">
@@ -784,7 +784,7 @@ export function CategorizationRibbon({
                               <ConfidenceIndicator confidence={bestSuggestion.confidence} />
                             </div>
                             {bestSuggestion.reasoning && (
-                              <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                              <p className="text-xs text-ink-600 mt-1 line-clamp-2">
                                 {bestSuggestion.reasoning}
                               </p>
                             )}
@@ -805,7 +805,7 @@ export function CategorizationRibbon({
                               size="sm"
                               variant="secondary"
                               onClick={() => handleRejectSuggestion(suggestion)}
-                              className="text-gray-600 border-gray-200 hover:bg-gray-100"
+                              className="text-ink-600 border-ink-200 hover:bg-ink-100"
                             >
                               <XMarkIcon className="w-3 h-3 mr-1" />
                               {tTransactions('aiCategorization.skip')}

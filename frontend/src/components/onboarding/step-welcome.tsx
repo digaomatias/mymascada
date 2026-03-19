@@ -89,10 +89,10 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
       </div>
 
       <div className="max-w-2xl space-y-3 text-center">
-        <h1 className="font-[var(--font-onboarding-sans)] text-4xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-5xl">
+        <h1 className="font-[var(--font-onboarding-sans)] text-4xl font-semibold tracking-[-0.03em] text-ink-900 sm:text-5xl">
           {t('welcome.title')}
         </h1>
-        <p className="mx-auto max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
+        <p className="mx-auto max-w-xl text-base leading-relaxed text-ink-600 sm:text-lg">
           {t('welcome.subtitle')}
         </p>
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-500/80">

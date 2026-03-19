@@ -39,8 +39,8 @@ export function CookieConsent() {
       aria-label={t('ariaLabel')}
       className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-xl"
     >
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 rounded-2xl border border-slate-200 bg-white/95 backdrop-blur-sm shadow-lg px-5 py-4">
-        <p className="flex-1 text-sm text-slate-600 leading-relaxed">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 rounded-2xl border border-ink-200 bg-white/95 backdrop-blur-sm shadow-lg px-5 py-4">
+        <p className="flex-1 text-sm text-ink-600 leading-relaxed">
           {t('message')}{' '}
           <Link
             href="/privacy"

@@ -46,17 +46,17 @@ export function Pagination({
   }
 
   return (
-    <div className={`flex items-center justify-between border-t border-gray-100 bg-white px-4 py-3 sm:px-6 ${className}`}>
+    <div className={`flex items-center justify-between border-t border-ink-100 bg-white px-4 py-3 sm:px-6 ${className}`}>
       {/* Results info */}
       <div className="flex flex-1 justify-between sm:hidden">
-        <span className="text-sm text-gray-700">
+        <span className="text-sm text-ink-700">
           {tPagination('rangeOfTotal', {
             start: startItem,
             end: endItem,
             total: totalCount.toLocaleString()
           })}
         </span>
-        <span className="text-sm text-gray-700">
+        <span className="text-sm text-ink-700">
           {tPagination('pageOfTotal', { current: currentPage, total: totalPages })}
         </span>
       </div>
@@ -64,7 +64,7 @@ export function Pagination({
       <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
         {/* Desktop: Results info and page size selector */}
         <div className="flex items-center gap-4">
-          <p className="text-sm text-gray-700">
+          <p className="text-sm text-ink-700">
             {tPagination('showingResults', {
               start: startItem.toLocaleString(),
               end: endItem.toLocaleString(),
@@ -74,7 +74,7 @@ export function Pagination({
           
           {/* Page size selector */}
           <div className="flex items-center gap-2">
-            <label htmlFor="pageSize" className="text-sm text-gray-700">
+            <label htmlFor="pageSize" className="text-sm text-ink-700">
               {tPagination('show')}
             </label>
             <select
@@ -82,7 +82,7 @@ export function Pagination({
               value={pageSize}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
               disabled={loading}
-              className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:opacity-50"
+              className="rounded-md border border-ink-300 bg-white px-2 py-1 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:opacity-50"
             >
               {pageSizeOptions.map((size) => (
                 <option key={size} value={size}>
@@ -90,7 +90,7 @@ export function Pagination({
                 </option>
               ))}
             </select>
-            <span className="text-sm text-gray-700">{tPagination('perPage')}</span>
+            <span className="text-sm text-ink-700">{tPagination('perPage')}</span>
           </div>
         </div>
 
@@ -182,7 +182,7 @@ function renderPageNumbers(
   return pages.map((page, index) => {
     if (page === '...') {
       return (
-        <span key={`ellipsis-${index}`} className="px-2 py-1 text-sm text-gray-500">
+        <span key={`ellipsis-${index}`} className="px-2 py-1 text-sm text-ink-500">
           ...
         </span>
       );
@@ -200,7 +200,7 @@ function renderPageNumbers(
           px-3 py-1 text-sm font-medium rounded-md transition-colors
           ${isCurrent
             ? 'bg-primary-600 text-white'
-            : 'text-gray-700 hover:bg-gray-100 focus:bg-gray-100'
+            : 'text-ink-700 hover:bg-ink-100 focus:bg-ink-100'
           }
           disabled:opacity-50 disabled:cursor-not-allowed
         `}

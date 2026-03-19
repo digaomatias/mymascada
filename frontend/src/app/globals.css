@@ -109,7 +109,7 @@
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: var(--color-gray-200, currentcolor);
+    border-color: var(--color-ink-200, currentcolor);
   }
 }
 
@@ -194,7 +194,7 @@
   box-shadow: var(--shadow-card);
 
   @media (prefers-contrast: high) {
-    @apply border-2 border-gray-900 bg-white;
+    @apply border-2 border-ink-900 bg-white;
   }
 }
 

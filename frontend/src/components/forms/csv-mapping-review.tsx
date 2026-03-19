@@ -657,12 +657,12 @@ export function CSVMappingReview({
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <h4 className="font-medium text-gray-900">{tImport('aiCsv.mappingReview.detectedFormat')}</h4>
-              <p className="text-sm text-gray-600">{analysisResult.detectedBankFormat}</p>
+              <h4 className="font-medium text-ink-900">{tImport('aiCsv.mappingReview.detectedFormat')}</h4>
+              <p className="text-sm text-ink-600">{analysisResult.detectedBankFormat}</p>
             </div>
             <div>
-              <h4 className="font-medium text-gray-900">{tImport('aiCsv.mappingReview.amountConventionTitle')}</h4>
-              <p className="text-sm text-gray-600">
+              <h4 className="font-medium text-ink-900">{tImport('aiCsv.mappingReview.amountConventionTitle')}</h4>
+              <p className="text-sm text-ink-600">
                 {analysisResult.amountConvention === 'negative-debits' || analysisResult.amountConvention === 'negative-expense'
                   ? tImport('aiCsv.mappingReview.amountConventionSummary.negativeExpense')
                   : analysisResult.amountConvention === 'positive-expense'
@@ -673,8 +673,8 @@ export function CSVMappingReview({
               </p>
             </div>
             <div>
-              <h4 className="font-medium text-gray-900">{tImport('aiCsv.mappingReview.dateFormat')}</h4>
-              <p className="text-sm text-gray-600">{analysisResult.dateFormats[0] || 'MM/dd/yyyy'}</p>
+              <h4 className="font-medium text-ink-900">{tImport('aiCsv.mappingReview.dateFormat')}</h4>
+              <p className="text-sm text-ink-600">{analysisResult.dateFormats[0] || 'MM/dd/yyyy'}</p>
             </div>
           </div>
 
@@ -712,7 +712,7 @@ export function CSVMappingReview({
         <CardContent>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-ink-700 mb-2">
                 {tImport('aiCsv.mappingReview.importExistingAccount')}
               </label>
               <Select
@@ -732,13 +732,13 @@ export function CSVMappingReview({
             </div>
             
             <div className="flex items-center">
-              <div className="flex-1 border-t border-gray-300"></div>
-              <span className="px-3 text-sm text-gray-500">{tCommon('or')}</span>
-              <div className="flex-1 border-t border-gray-300"></div>
+              <div className="flex-1 border-t border-ink-300"></div>
+              <span className="px-3 text-sm text-ink-500">{tCommon('or')}</span>
+              <div className="flex-1 border-t border-ink-300"></div>
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-ink-700 mb-2">
                 {tImport('aiCsv.mappingReview.createNewAccount')}
               </label>
               <Input
@@ -750,7 +750,7 @@ export function CSVMappingReview({
                 }}
                 placeholder={tImport('aiCsv.mappingReview.newAccountPlaceholder')}
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-ink-500 mt-1">
                 {tImport('aiCsv.mappingReview.newAccountHelp')}
               </p>
             </div>
@@ -771,7 +771,7 @@ export function CSVMappingReview({
             {fieldMappings.map(({ key, label, field, required }) => (
               <div key={key} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
                 <div>
-                  <label className="font-medium text-gray-900">
+                  <label className="font-medium text-ink-900">
                     {label}
                     {required && <span className="text-red-500 ml-1">*</span>}
                   </label>
@@ -793,7 +793,7 @@ export function CSVMappingReview({
                 </div>
                 <div>
                   {analysisResult.suggestedMappings[field] && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-ink-500">
                       {analysisResult.suggestedMappings[field].interpretation}
                     </p>
                   )}
@@ -803,11 +803,11 @@ export function CSVMappingReview({
           </div>
 
           {/* Additional Settings */}
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <h4 className="font-medium text-gray-900 mb-4">{tImport('aiCsv.mappingReview.importSettings')}</h4>
+          <div className="mt-6 pt-6 border-t border-ink-200">
+            <h4 className="font-medium text-ink-900 mb-4">{tImport('aiCsv.mappingReview.importSettings')}</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-ink-700 mb-2">
                   {tImport('aiCsv.mappingReview.dateFormat')}
                 </label>
                 <Select
@@ -823,12 +823,12 @@ export function CSVMappingReview({
                   <option value="M/d/yyyy">{tImport('aiCsv.mappingReview.dateFormatOptions.mDyyyy')}</option>
                   <option value="d/M/yyyy">{tImport('aiCsv.mappingReview.dateFormatOptions.dMyyyy')}</option>
                 </Select>
-                <p className="text-xs text-gray-500 mt-1.5">
+                <p className="text-xs text-ink-500 mt-1.5">
                   {tImport('aiCsv.mappingReview.autoDetectedFormat', { format: mappings.dateFormat })}
                 </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-ink-700 mb-2">
                   {tImport('aiCsv.mappingReview.amountConvention')}
                 </label>
                 <Select
@@ -840,7 +840,7 @@ export function CSVMappingReview({
                   <option value="positive-expense">{tImport('aiCsv.mappingReview.amountConventionOptions.positiveExpense')}</option>
                   <option value="type-column">{tImport('aiCsv.mappingReview.amountConventionOptions.typeColumn')}</option>
                 </Select>
-                <p className="text-xs text-gray-500 mt-1.5">
+                <p className="text-xs text-ink-500 mt-1.5">
                   {tImport('aiCsv.mappingReview.amountConventionHelp')}
                 </p>
               </div>
@@ -848,11 +848,11 @@ export function CSVMappingReview({
               {/* Type Value Mapping - only show when type-column is selected */}
               {mappings.amountConvention === 'type-column' && mappings.typeColumn && uniqueTypeValues.length > 0 && (
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <label className="block text-sm font-medium text-ink-700 mb-3">
                     {tImport('aiCsv.mappingReview.typeValueMappingTitle')}
                   </label>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="text-sm text-gray-600 mb-3">
+                  <div className="bg-ink-50 p-4 rounded-lg">
+                    <p className="text-sm text-ink-600 mb-3">
                       {tImport('aiCsv.mappingReview.typeValueMappingHelp', { column: mappings.typeColumn })}
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -862,7 +862,7 @@ export function CSVMappingReview({
                         
                         return (
                           <div key={`${value}-${index}`} className="bg-white p-3 rounded border">
-                            <div className="font-medium text-sm mb-2 text-gray-900">&quot;{value}&quot;</div>
+                            <div className="font-medium text-sm mb-2 text-ink-900">&quot;{value}&quot;</div>
                             <div className="flex gap-2">
                               <button
                                 type="button"
@@ -870,7 +870,7 @@ export function CSVMappingReview({
                                 className={`px-3 py-1 text-xs rounded-full font-medium ${
                                   isIncome 
                                     ? 'bg-green-100 text-green-800 border border-green-300' 
-                                    : 'bg-gray-100 text-gray-600 border border-gray-300 hover:bg-green-50'
+                                    : 'bg-ink-100 text-ink-600 border border-ink-300 hover:bg-green-50'
                                 }`}
                               >
                                 {tCommon('income')}
@@ -881,7 +881,7 @@ export function CSVMappingReview({
                                 className={`px-3 py-1 text-xs rounded-full font-medium ${
                                   isExpense 
                                     ? 'bg-red-100 text-red-800 border border-red-300' 
-                                    : 'bg-gray-100 text-gray-600 border border-gray-300 hover:bg-red-50'
+                                    : 'bg-ink-100 text-ink-600 border border-ink-300 hover:bg-red-50'
                                 }`}
                               >
                                 {tCommon('expense')}
@@ -913,7 +913,7 @@ export function CSVMappingReview({
               <EyeIcon className="w-5 h-5 text-blue-600" />
               {tImport('aiCsv.mappingReview.previewTitle')}
             </CardTitle>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-ink-600 mt-1">
               {tImport('aiCsv.mappingReview.previewSubtitle')}
             </p>
           </CardHeader>
@@ -922,8 +922,8 @@ export function CSVMappingReview({
               {previewData.map((row, index) => (
                 <div key={index} className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4 border rounded-lg">
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-2">{tImport('aiCsv.mappingReview.originalRow')}</h4>
-                    <div className="text-sm text-gray-600 space-y-1">
+                    <h4 className="font-medium text-ink-900 mb-2">{tImport('aiCsv.mappingReview.originalRow')}</h4>
+                    <div className="text-sm text-ink-600 space-y-1">
                       {Object.entries(row.original).map(([key, value]) => (
                         <div key={key} className="flex">
                           <span className="font-medium w-24">{key}:</span>
@@ -933,7 +933,7 @@ export function CSVMappingReview({
                     </div>
                   </div>
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-2">{tImport('aiCsv.mappingReview.willImportAs')}</h4>
+                    <h4 className="font-medium text-ink-900 mb-2">{tImport('aiCsv.mappingReview.willImportAs')}</h4>
                     <div className="text-sm space-y-2">
                       <div className="flex items-center">
                         <span className="font-medium w-24">{tImport('aiCsv.mappingReview.previewLabels.datePreview')}</span>
@@ -960,7 +960,7 @@ export function CSVMappingReview({
                       {row.mapped.type && (
                         <div className="flex items-center">
                           <span className="font-medium w-24">{tImport('aiCsv.mappingReview.previewLabels.csvType')}</span>
-                          <span className="flex-1 text-gray-500">{row.mapped.type}</span>
+                          <span className="flex-1 text-ink-500">{row.mapped.type}</span>
                         </div>
                       )}
                     </div>

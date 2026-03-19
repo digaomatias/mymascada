@@ -98,9 +98,9 @@ export const TRACKING_STATE_STYLES: Record<
     label: 'Complete',
   },
   paused: {
-    bg: 'bg-slate-100',
-    text: 'text-slate-600',
-    border: 'border-slate-200',
+    bg: 'bg-ink-100',
+    text: 'text-ink-600',
+    border: 'border-ink-200',
     label: 'Paused',
   },
   overdue: {
@@ -122,9 +122,9 @@ export const TRACKING_STATE_STYLES: Record<
     label: 'On Track',
   },
   noDeadline: {
-    bg: 'bg-slate-50',
-    text: 'text-slate-500',
-    border: 'border-slate-200',
+    bg: 'bg-ink-50',
+    text: 'text-ink-500',
+    border: 'border-ink-200',
     label: 'No Deadline',
   },
 };
@@ -237,10 +237,10 @@ export const GOAL_TYPE_CONFIGS: Record<string, GoalTypeConfig> = {
   Custom: {
     icon: FlagIcon,
     accentColor: {
-      bg: 'bg-slate-50',
-      text: 'text-slate-700',
-      border: 'border-slate-200',
-      bar: 'bg-slate-500',
+      bg: 'bg-ink-50',
+      text: 'text-ink-700',
+      border: 'border-ink-200',
+      bar: 'bg-ink-500',
     },
     journeyStage: 'dreams',
     journeyPriority: 4,

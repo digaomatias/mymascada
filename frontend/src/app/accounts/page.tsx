@@ -480,12 +480,12 @@ function AccountCard({
                   <EllipsisVerticalIcon className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 bg-white border border-gray-200 shadow-lg z-50">
+              <DropdownMenuContent align="end" className="w-48 bg-white border border-ink-200 shadow-lg z-50">
                 {(!account.isSharedWithMe || account.shareRole === 2) && (
                   <DropdownMenuItem asChild>
                     <Link
                       href={`/transactions/new?accountId=${account.id}`}
-                      className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-sm"
+                      className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-ink-700 hover:bg-ink-50 rounded-sm"
                     >
                       <DocumentArrowUpIcon className="w-4 h-4" />
                       {t('addTransaction')}
@@ -504,7 +504,7 @@ function AccountCard({
                     <DropdownMenuItem asChild>
                       <Link
                         href={`/accounts/${account.id}/edit`}
-                        className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-sm"
+                        className="flex items-center gap-2 cursor-pointer px-3 py-2 text-sm text-ink-700 hover:bg-ink-50 rounded-sm"
                       >
                         <PencilIcon className="w-4 h-4" />
                         {t('editAccount')}
@@ -518,7 +518,7 @@ function AccountCard({
                       <TrashIcon className="w-4 h-4" />
                       {t('archiveAccount')}
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator className="my-1 bg-gray-200" />
+                    <DropdownMenuSeparator className="my-1 bg-ink-200" />
                     <DropdownMenuItem
                       variant="destructive"
                       onClick={() => onDelete(account)}

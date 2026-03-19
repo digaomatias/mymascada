@@ -55,7 +55,7 @@ export function CoachingInsightCard({
             <p className="text-xs font-semibold text-primary-600 uppercase tracking-wide mb-1">
               {t('title')}
             </p>
-            <p className="text-sm text-gray-700 leading-relaxed">
+            <p className="text-sm text-ink-700 leading-relaxed">
               {t(insight.insightKey, insight.insightParams ?? {})}
             </p>
           </div>

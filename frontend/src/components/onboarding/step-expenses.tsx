@@ -14,10 +14,10 @@ interface StepExpensesProps {
 }
 
 const BREAKDOWN_ITEMS = [
-  { key: 'housing', width: 'w-4/5', color: 'bg-slate-700' },
-  { key: 'food', width: 'w-3/5', color: 'bg-slate-500' },
-  { key: 'transport', width: 'w-2/5', color: 'bg-slate-400' },
-  { key: 'entertainment', width: 'w-1/4', color: 'bg-slate-300' },
+  { key: 'housing', width: 'w-4/5', color: 'bg-ink-700' },
+  { key: 'food', width: 'w-3/5', color: 'bg-ink-500' },
+  { key: 'transport', width: 'w-2/5', color: 'bg-ink-400' },
+  { key: 'entertainment', width: 'w-1/4', color: 'bg-ink-300' },
 ] as const;
 
 export function StepExpenses({ value, onChange, currency, onNext, onBack }: StepExpensesProps) {
@@ -122,10 +122,10 @@ export function StepExpenses({ value, onChange, currency, onNext, onBack }: Step
         </div>
 
         <div className="mt-5 space-y-2">
-          <h2 className="font-[var(--font-onboarding-sans)] text-3xl font-semibold tracking-[-0.02em] text-slate-900">
+          <h2 className="font-[var(--font-onboarding-sans)] text-3xl font-semibold tracking-[-0.02em] text-ink-900">
             {t('expenses.title')}
           </h2>
-          <p className="text-sm leading-relaxed text-slate-600 sm:text-base">
+          <p className="text-sm leading-relaxed text-ink-600 sm:text-base">
             {t('expenses.subtitle')}
           </p>
         </div>
@@ -138,22 +138,22 @@ export function StepExpenses({ value, onChange, currency, onNext, onBack }: Step
             label={t('expenses.label')}
             allowNegative={false}
             placeholder="0.00"
-            className="h-16 rounded-2xl border-amber-200 bg-white px-5 text-3xl font-semibold tracking-tight text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] [font-family:var(--font-onboarding-mono)] [font-variant-numeric:tabular-nums] focus:border-amber-400 focus:ring-4 focus:ring-amber-200/65"
+            className="h-16 rounded-2xl border-amber-200 bg-white px-5 text-3xl font-semibold tracking-tight text-ink-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] [font-family:var(--font-onboarding-mono)] [font-variant-numeric:tabular-nums] focus:border-amber-400 focus:ring-4 focus:ring-amber-200/65"
           />
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="mt-2 text-sm text-ink-500">
             {t('expenses.helper')}
           </p>
         </div>
 
-        <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+        <div className="mt-5 rounded-2xl border border-ink-200 bg-ink-50/80 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-500">
             {t('expenses.snapshot')}
           </p>
           <div className="mt-3 flex flex-wrap gap-2.5">
             {BREAKDOWN_ITEMS.slice(0, 3).map((item) => (
               <span
                 key={item.key}
-                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600"
+                className="rounded-full border border-ink-200 bg-white px-3 py-1.5 text-xs font-medium text-ink-600"
               >
                 {t(`expenses.${item.key}`)}
               </span>
@@ -165,7 +165,7 @@ export function StepExpenses({ value, onChange, currency, onNext, onBack }: Step
           <Button
             variant="ghost"
             onClick={onBack}
-            className="rounded-xl border border-slate-200 bg-white px-5 text-slate-700 hover:border-amber-200 hover:bg-amber-50"
+            className="rounded-xl border border-ink-200 bg-white px-5 text-ink-700 hover:border-amber-200 hover:bg-amber-50"
           >
             {t('back')}
           </Button>

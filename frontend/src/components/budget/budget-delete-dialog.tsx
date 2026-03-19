@@ -51,15 +51,15 @@ export function BudgetDeleteDialog({
           <div className="mb-2 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
             <ExclamationTriangleIcon className="h-5 w-5" />
           </div>
-          <AlertDialogTitle className="text-2xl font-semibold tracking-[-0.02em] text-slate-900">
+          <AlertDialogTitle className="text-2xl font-semibold tracking-[-0.02em] text-ink-900">
             {t('deleteBudget')}
           </AlertDialogTitle>
-          <AlertDialogDescription className="mt-2 text-sm leading-relaxed text-slate-600">
+          <AlertDialogDescription className="mt-2 text-sm leading-relaxed text-ink-600">
             {t('deleteConfirm', { name: budgetName })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="p-6 pt-4">
-          <AlertDialogCancel className="rounded-xl border-ink-200 bg-white text-slate-700 hover:bg-primary-50 hover:text-primary-700">
+          <AlertDialogCancel className="rounded-xl border-ink-200 bg-white text-ink-700 hover:bg-primary-50 hover:text-primary-700">
             {tCommon('cancel')}
           </AlertDialogCancel>
           <AlertDialogAction

@@ -120,15 +120,15 @@ export function MonthlySummary() {
       <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
         <CardHeader>
           <div className="animate-pulse">
-            <div className="h-6 bg-gray-300 rounded w-1/3 mb-2"></div>
-            <div className="h-4 bg-gray-300 rounded w-1/4"></div>
+            <div className="h-6 bg-ink-300 rounded w-1/3 mb-2"></div>
+            <div className="h-4 bg-ink-300 rounded w-1/4"></div>
           </div>
         </CardHeader>
         <CardContent>
           <div className="animate-pulse space-y-4">
             <div className="grid grid-cols-3 gap-4">
               {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="h-16 bg-gray-300 rounded"></div>
+                <div key={i} className="h-16 bg-ink-300 rounded"></div>
               ))}
             </div>
           </div>
@@ -142,7 +142,7 @@ export function MonthlySummary() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-xl font-bold text-gray-900">
+            <CardTitle className="text-xl font-bold text-ink-900">
               {summary?.monthName
                 ? formatMonthYearFromName(summary.monthName, summary.year, locale)
                 : (() => {
@@ -151,7 +151,7 @@ export function MonthlySummary() {
                   })()}
             </CardTitle>
             {isCurrentMonth() && (
-              <p className="text-sm text-gray-600 mt-1">{t('currentMonth')}</p>
+              <p className="text-sm text-ink-600 mt-1">{t('currentMonth')}</p>
             )}
           </div>
           <div className="flex items-center gap-2">
@@ -238,7 +238,7 @@ export function MonthlySummary() {
             
             {/* Detailed List View */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-ink-900 mb-4 flex items-center gap-2">
                 <TagIcon className="w-5 h-5" />
                 {t('categoryDetails')}
               </h3>
@@ -248,7 +248,7 @@ export function MonthlySummary() {
                     key={category.categoryId}
                     type="button"
                     onClick={() => handleCategoryClick(category.categoryId)}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg w-full text-left transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 cursor-pointer"
+                    className="flex items-center justify-between p-3 bg-ink-50 rounded-lg w-full text-left transition-colors hover:bg-ink-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 cursor-pointer"
                     aria-label={`View ${category.categoryName} transactions`}
                   >
                     <div className="flex items-center gap-3">
@@ -257,8 +257,8 @@ export function MonthlySummary() {
                         style={{ backgroundColor: category.categoryColor || '#6B7280' }}
                       ></div>
                       <div>
-                        <p className="font-medium text-gray-900">{category.categoryName}</p>
-                        <p className="text-sm text-gray-600">
+                        <p className="font-medium text-ink-900">{category.categoryName}</p>
+                        <p className="text-sm text-ink-600">
                           {category.transactionCount === 1
                             ? t('nTransactions', { count: category.transactionCount })
                             : t('nTransactionsPlural', { count: category.transactionCount })}
@@ -266,8 +266,8 @@ export function MonthlySummary() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-gray-900">{formatCurrency(category.amount)}</p>
-                      <p className="text-sm text-gray-600">{category.percentage.toFixed(1)}%</p>
+                      <p className="font-bold text-ink-900">{formatCurrency(category.amount)}</p>
+                      <p className="text-sm text-ink-600">{category.percentage.toFixed(1)}%</p>
                     </div>
                   </button>
                 ))}
@@ -279,7 +279,7 @@ export function MonthlySummary() {
         {/* Empty State */}
         {summary && summary.transactionCount === 0 && (
           <div className="text-center py-8">
-            <p className="text-gray-600">{t('noTransactionsMonth')}</p>
+            <p className="text-ink-600">{t('noTransactionsMonth')}</p>
           </div>
         )}
       </CardContent>

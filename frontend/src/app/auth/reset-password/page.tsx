@@ -122,17 +122,17 @@ function ResetPasswordForm() {
                 <CheckCircleIcon className="w-12 h-12 text-white" />
               </div>
             </div>
-            <h2 className="text-h1 text-slate-900">{t('passwordResetSuccessTitle')}</h2>
+            <h2 className="text-h1 text-ink-900">{t('passwordResetSuccessTitle')}</h2>
           </div>
 
           <Card>
             <CardContent className="p-8">
               <div className="text-center space-y-4">
-                <p className="text-slate-700">
+                <p className="text-ink-700">
                   {t('passwordResetSuccessDescription')}
                 </p>
 
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-ink-500">
                   {t('passwordResetSecurityNote')}
                 </p>
 
@@ -163,13 +163,13 @@ function ResetPasswordForm() {
                 <XCircleIcon className="w-12 h-12 text-white" />
               </div>
             </div>
-            <h2 className="text-h1 text-slate-900">{t('invalidResetLinkTitle')}</h2>
+            <h2 className="text-h1 text-ink-900">{t('invalidResetLinkTitle')}</h2>
           </div>
 
           <Card>
             <CardContent className="p-8">
               <div className="text-center space-y-4">
-                <p className="text-slate-700">
+                <p className="text-ink-700">
                   {t('invalidResetLinkDescription')}
                 </p>
 
@@ -206,8 +206,8 @@ function ResetPasswordForm() {
               <AppIcon size={80} />
             </div>
           </div>
-          <h2 className="text-h1 text-slate-900">{t('resetPasswordTitle')}</h2>
-          <p className="mt-2 text-slate-600">
+          <h2 className="text-h1 text-ink-900">{t('resetPasswordTitle')}</h2>
+          <p className="mt-2 text-ink-600">
             {t('resetPasswordSubtitle')}
           </p>
         </div>
@@ -229,7 +229,7 @@ function ResetPasswordForm() {
               )}
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="email" className="block text-sm font-medium text-ink-700 mb-1">
                   {t('email')}
                 </label>
                 <input
@@ -246,7 +246,7 @@ function ResetPasswordForm() {
               </div>
 
               <div>
-                <label htmlFor="newPassword" className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="newPassword" className="block text-sm font-medium text-ink-700 mb-1">
                   {t('newPassword')}
                 </label>
                 <div className="relative">
@@ -267,7 +267,7 @@ function ResetPasswordForm() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-ink-400 hover:text-ink-600"
                   >
                     {showPassword ? (
                       <EyeSlashIcon className="w-5 h-5" />
@@ -282,21 +282,21 @@ function ResetPasswordForm() {
 
                 {/* Password requirements checklist */}
                 <div className="mt-3 space-y-1">
-                  <p className="text-xs font-medium text-slate-600">{t('passwordRequirementsTitle')}</p>
+                  <p className="text-xs font-medium text-ink-600">{t('passwordRequirementsTitle')}</p>
                   <ul className="text-xs space-y-1">
-                    <li className={passwordChecks.minLength ? 'text-green-600' : 'text-slate-500'}>
+                    <li className={passwordChecks.minLength ? 'text-green-600' : 'text-ink-500'}>
                       {passwordChecks.minLength ? '✓' : '○'} {t('passwordRequirements.minLength')}
                     </li>
-                    <li className={passwordChecks.hasUppercase ? 'text-green-600' : 'text-slate-500'}>
+                    <li className={passwordChecks.hasUppercase ? 'text-green-600' : 'text-ink-500'}>
                       {passwordChecks.hasUppercase ? '✓' : '○'} {t('passwordRequirements.uppercase')}
                     </li>
-                    <li className={passwordChecks.hasLowercase ? 'text-green-600' : 'text-slate-500'}>
+                    <li className={passwordChecks.hasLowercase ? 'text-green-600' : 'text-ink-500'}>
                       {passwordChecks.hasLowercase ? '✓' : '○'} {t('passwordRequirements.lowercase')}
                     </li>
-                    <li className={passwordChecks.hasNumber ? 'text-green-600' : 'text-slate-500'}>
+                    <li className={passwordChecks.hasNumber ? 'text-green-600' : 'text-ink-500'}>
                       {passwordChecks.hasNumber ? '✓' : '○'} {t('passwordRequirements.number')}
                     </li>
-                    <li className={passwordChecks.hasSpecial ? 'text-green-600' : 'text-slate-500'}>
+                    <li className={passwordChecks.hasSpecial ? 'text-green-600' : 'text-ink-500'}>
                       {passwordChecks.hasSpecial ? '✓' : '○'} {t('passwordRequirements.special')}
                     </li>
                   </ul>
@@ -304,7 +304,7 @@ function ResetPasswordForm() {
               </div>
 
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-ink-700 mb-1">
                   {t('confirmPassword')}
                 </label>
                 <div className="relative">
@@ -325,7 +325,7 @@ function ResetPasswordForm() {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-ink-400 hover:text-ink-600"
                   >
                     {showConfirmPassword ? (
                       <EyeSlashIcon className="w-5 h-5" />
@@ -376,7 +376,7 @@ export default function ResetPasswordPage() {
       <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-slate-600">{tCommon('loading')}</p>
+          <p className="mt-4 text-ink-600">{tCommon('loading')}</p>
         </div>
       </div>
     }>

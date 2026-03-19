@@ -74,8 +74,8 @@ export default function VerifyEmailPage() {
             <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto mb-6">
               <EnvelopeIcon className="w-8 h-8 text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">{t('verifying')}</h2>
-            <p className="text-slate-600">{t('pleaseWait')}</p>
+            <h2 className="text-2xl font-bold text-ink-900 mb-2">{t('verifying')}</h2>
+            <p className="text-ink-600">{t('pleaseWait')}</p>
           </div>
         );
 
@@ -85,8 +85,8 @@ export default function VerifyEmailPage() {
             <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-700 rounded-2xl shadow-2xl flex items-center justify-center mx-auto mb-6">
               <CheckCircleIcon className="w-8 h-8 text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">{t('successTitle')}</h2>
-            <p className="text-slate-600 mb-6">{message}</p>
+            <h2 className="text-2xl font-bold text-ink-900 mb-2">{t('successTitle')}</h2>
+            <p className="text-ink-600 mb-6">{message}</p>
             <Button onClick={() => router.push('/auth/login')} className="w-full">
               {t('proceedToLogin')}
             </Button>
@@ -99,11 +99,11 @@ export default function VerifyEmailPage() {
             <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-red-700 rounded-2xl shadow-2xl flex items-center justify-center mx-auto mb-6">
               <ExclamationCircleIcon className="w-8 h-8 text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">{t('errorTitle')}</h2>
-            <p className="text-slate-600 mb-6">{message}</p>
+            <h2 className="text-2xl font-bold text-ink-900 mb-2">{t('errorTitle')}</h2>
+            <p className="text-ink-600 mb-6">{message}</p>
 
             <div className="space-y-4">
-              <p className="text-sm text-slate-500">{t('needNewLink')}</p>
+              <p className="text-sm text-ink-500">{t('needNewLink')}</p>
               <Input
                 type="email"
                 placeholder={t('emailPlaceholder')}
@@ -137,8 +137,8 @@ export default function VerifyEmailPage() {
             <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl shadow-2xl flex items-center justify-center mx-auto mb-6">
               <EnvelopeIcon className="w-8 h-8 text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">{t('resendTitle')}</h2>
-            <p className="text-slate-600 mb-6">{message}</p>
+            <h2 className="text-2xl font-bold text-ink-900 mb-2">{t('resendTitle')}</h2>
+            <p className="text-ink-600 mb-6">{message}</p>
 
             <div className="space-y-4">
               <Input

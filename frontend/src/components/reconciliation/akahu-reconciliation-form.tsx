@@ -91,8 +91,8 @@ export function AkahuReconciliationForm({
   return (
     <div className="space-y-6">
       <div>
-        <h4 className="text-sm font-medium text-gray-700 mb-2">{t('reconcileWithAkahu')}</h4>
-        <p className="text-sm text-gray-500 mb-4">
+        <h4 className="text-sm font-medium text-ink-700 mb-2">{t('reconcileWithAkahu')}</h4>
+        <p className="text-sm text-ink-500 mb-4">
           {t('akahuDescription')}
         </p>
       </div>
@@ -131,7 +131,7 @@ export function AkahuReconciliationForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-ink-700 mb-2">
           {t('statementBalanceOptional')}
         </label>
         <input
@@ -139,23 +139,23 @@ export function AkahuReconciliationForm({
           step="0.01"
           value={statementEndBalance}
           onChange={(e) => setStatementEndBalance(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="w-full px-3 py-2 border border-ink-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
           placeholder={t('enterStatementBalance')}
         />
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-ink-500 mt-1">
           {t('akahuBalanceNote')}
         </p>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-ink-700 mb-2">
           {t('notesOptional')}
         </label>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           rows={2}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="w-full px-3 py-2 border border-ink-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
           placeholder={t('notesPlaceholder')}
         />
       </div>

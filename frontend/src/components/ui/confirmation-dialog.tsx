@@ -45,21 +45,21 @@ export function ConfirmationDialog({
               <ExclamationTriangleIcon className="w-6 h-6" />
             </div>
             <div className="flex-1">
-              <AlertDialogTitle className="text-xl font-semibold text-gray-900 mb-2">
+              <AlertDialogTitle className="text-xl font-semibold text-ink-900 mb-2">
                 {title}
               </AlertDialogTitle>
-              <AlertDialogDescription className="text-gray-600 leading-relaxed">
+              <AlertDialogDescription className="text-ink-600 leading-relaxed">
                 {description}
               </AlertDialogDescription>
             </div>
           </div>
         </AlertDialogHeader>
-        <AlertDialogFooter className="pt-6 border-t border-gray-100">
+        <AlertDialogFooter className="pt-6 border-t border-ink-100">
           <div className="flex gap-3 justify-end w-full">
             <Button
               variant="secondary"
               onClick={onClose}
-              className="px-6 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 border-0"
+              className="px-6 py-2 bg-ink-100 text-ink-700 hover:bg-ink-200 border-0"
             >
               {cancelText}
             </Button>

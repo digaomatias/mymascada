@@ -80,7 +80,7 @@ export function CategoryTrendChart({ categories, selectedCategoryIds }: Category
 
       return (
         <div className="max-w-xs rounded-xl border border-ink-200 bg-white/98 p-4 shadow-[0_18px_36px_-26px_rgba(47,129,112,0.25)] backdrop-blur-xs">
-          <p className="mb-2 font-[var(--font-dash-sans)] text-sm font-semibold text-slate-900">{label}</p>
+          <p className="mb-2 font-[var(--font-dash-sans)] text-sm font-semibold text-ink-900">{label}</p>
           {payload.map((entry: { name: string; value: number; color: string }, index: number) => {
             const percentage = total > 0 ? ((entry.value / total) * 100).toFixed(1) : 0;
             return (
@@ -93,20 +93,20 @@ export function CategoryTrendChart({ categories, selectedCategoryIds }: Category
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: entry.color }}
                   />
-                  <span className="max-w-[120px] truncate text-slate-700">{entry.name}</span>
+                  <span className="max-w-[120px] truncate text-ink-700">{entry.name}</span>
                 </div>
                 <div className="text-right">
-                  <span className="font-[var(--font-dash-mono)] font-medium text-slate-900">
+                  <span className="font-[var(--font-dash-mono)] font-medium text-ink-900">
                     {formatCurrency(entry.value)}
                   </span>
-                  <span className="ml-1 text-slate-500">({percentage}%)</span>
+                  <span className="ml-1 text-ink-500">({percentage}%)</span>
                 </div>
               </div>
             );
           })}
-          <div className="mt-2 flex items-center justify-between border-t border-slate-200 pt-2 text-sm">
-            <span className="font-medium text-slate-700">{t('total')}</span>
-            <span className="font-[var(--font-dash-mono)] font-bold text-slate-900">
+          <div className="mt-2 flex items-center justify-between border-t border-ink-200 pt-2 text-sm">
+            <span className="font-medium text-ink-700">{t('total')}</span>
+            <span className="font-[var(--font-dash-mono)] font-bold text-ink-900">
               {formatCurrency(total)}
             </span>
           </div>
@@ -118,7 +118,7 @@ export function CategoryTrendChart({ categories, selectedCategoryIds }: Category
 
   if (displayCategories.length === 0) {
     return (
-      <div className="flex h-[420px] items-center justify-center rounded-2xl border border-dashed border-ink-200 bg-primary-50/30 text-slate-500">
+      <div className="flex h-[420px] items-center justify-center rounded-2xl border border-dashed border-ink-200 bg-primary-50/30 text-ink-500">
         <div className="text-center">
           <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-primary-100 text-primary-600">
             <ChartBarIcon className="h-5 w-5" />

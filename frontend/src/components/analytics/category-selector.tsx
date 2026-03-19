@@ -73,29 +73,29 @@ export function CategorySelector({
   return (
     <aside className="rounded-[26px] border border-ink-200 bg-white/92 p-4 shadow-[0_20px_44px_-32px_rgba(47,129,112,0.18)] backdrop-blur-xs">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="font-[var(--font-dash-sans)] text-base font-semibold tracking-[-0.01em] text-slate-900">
+        <h3 className="font-[var(--font-dash-sans)] text-base font-semibold tracking-[-0.01em] text-ink-900">
           {t('selectCategories')}
         </h3>
-        <span className="text-xs text-slate-500">
+        <span className="text-xs text-ink-500">
           {t('nOfMaxSelected', { count: selectedCategoryIds.length, max: maxSelections })}
         </span>
       </div>
 
       {/* Search input */}
       <div className="relative mb-3">
-        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-400" />
         <input
           type="text"
           placeholder={t('searchCategories')}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full rounded-xl border border-ink-200 bg-white pl-9 pr-8 py-2 text-sm text-slate-700 transition-colors placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-primary-200 focus:border-primary-300"
+          className="w-full rounded-xl border border-ink-200 bg-white pl-9 pr-8 py-2 text-sm text-ink-700 transition-colors placeholder:text-ink-400 focus:outline-hidden focus:ring-2 focus:ring-primary-200 focus:border-primary-300"
         />
         {searchTerm && (
           <button
             type="button"
             onClick={() => setSearchTerm('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink-600"
           >
             <XMarkIcon className="w-4 h-4" />
           </button>
@@ -153,7 +153,7 @@ export function CategorySelector({
                 'w-full rounded-xl border p-2.5 text-left transition-all',
                 isSelected &&
                   'border-ink-200 bg-primary-50/75 shadow-[0_12px_26px_-20px_rgba(47,129,112,0.25)]',
-                isDisabled && 'border-slate-100 bg-slate-50 opacity-55 cursor-not-allowed',
+                isDisabled && 'border-ink-100 bg-ink-50 opacity-55 cursor-not-allowed',
                 !isSelected && !isDisabled && 'border-transparent hover:border-primary-100 hover:bg-primary-50/40'
               )}
             >
@@ -162,7 +162,7 @@ export function CategorySelector({
                   <span
                     className={cn(
                       'flex h-4 w-4 items-center justify-center rounded border transition-colors',
-                      isSelected ? 'border-primary-500 bg-primary-500 text-white' : 'border-slate-300 bg-white',
+                      isSelected ? 'border-primary-500 bg-primary-500 text-white' : 'border-ink-300 bg-white',
                     )}
                   >
                     {isSelected && <CheckIcon className="h-3 w-3" />}
@@ -171,14 +171,14 @@ export function CategorySelector({
                     className="h-3 w-3 shrink-0 rounded-full"
                     style={{ backgroundColor: category.categoryColor || '#8B5CF6' }}
                   />
-                  <span className="truncate text-sm font-medium text-slate-800">
+                  <span className="truncate text-sm font-medium text-ink-800">
                     {category.categoryName}
                   </span>
                 </div>
                 <div
                   className={cn(
                     'font-[var(--font-dash-mono)] text-sm',
-                    isSelected ? 'text-primary-700' : 'text-slate-500',
+                    isSelected ? 'text-primary-700' : 'text-ink-500',
                   )}
                 >
                   {formatCurrency(category.totalSpent)}
@@ -201,7 +201,7 @@ export function CategorySelector({
       )}
 
       {filteredCategories.length === 0 && (
-        <p className="py-4 text-center text-sm text-slate-500">
+        <p className="py-4 text-center text-sm text-ink-500">
           {t('noMatchingCategories')}
         </p>
       )}

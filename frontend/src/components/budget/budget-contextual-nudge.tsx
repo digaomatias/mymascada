@@ -70,7 +70,7 @@ export function BudgetContextualNudge({ budgets, basePath }: BudgetContextualNud
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-slate-800">{message}</p>
+          <p className="text-sm font-medium text-ink-800">{message}</p>
           {ctaLabel && ctaHref && (
             <Link
               href={ctaHref}

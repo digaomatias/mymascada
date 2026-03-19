@@ -569,7 +569,7 @@ export function CSVMappingReviewForReconciliation({
               <AdjustmentsHorizontalIcon className="w-6 h-6 text-primary-600" />
               <div>
                 <CardTitle>{tImport('aiCsvReconciliation.mappingReview.title')}</CardTitle>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-sm text-ink-600 mt-1">
                   {tImport('aiCsvReconciliation.mappingReview.subtitle')}
                 </p>
               </div>
@@ -624,7 +624,7 @@ export function CSVMappingReviewForReconciliation({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Date Column */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-ink-700 mb-2">
                 {tImport('aiCsvReconciliation.mappingReview.dateColumn')}
                 {analysisResult.suggestedMappings.date && (
                   <span className={`ml-2 inline-flex items-center gap-1 text-xs ${getConfidenceColor(analysisResult.suggestedMappings.date.confidence)}`}>
@@ -646,7 +646,7 @@ export function CSVMappingReviewForReconciliation({
 
             {/* Amount Column */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-ink-700 mb-2">
                 {tImport('aiCsvReconciliation.mappingReview.amountColumn')}
                 {analysisResult.suggestedMappings.amount && (
                   <span className={`ml-2 inline-flex items-center gap-1 text-xs ${getConfidenceColor(analysisResult.suggestedMappings.amount.confidence)}`}>
@@ -669,7 +669,7 @@ export function CSVMappingReviewForReconciliation({
 
             {/* Description Column */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-ink-700 mb-2">
                 {tImport('aiCsvReconciliation.mappingReview.descriptionColumn')}
                 {analysisResult.suggestedMappings.description && (
                   <span className={`ml-2 inline-flex items-center gap-1 text-xs ${getConfidenceColor(analysisResult.suggestedMappings.description.confidence)}`}>
@@ -691,7 +691,7 @@ export function CSVMappingReviewForReconciliation({
 
             {/* Reference Column */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-ink-700 mb-2">
                 {tImport('aiCsvReconciliation.mappingReview.referenceColumn')}
               </label>
               <Select
@@ -708,9 +708,9 @@ export function CSVMappingReviewForReconciliation({
 
           {/* Date Format */}
           <div className="mt-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-ink-700 mb-2">
               {tImport('aiCsvReconciliation.mappingReview.dateFormat')}
-              <span className="ml-2 text-xs text-gray-500">
+              <span className="ml-2 text-xs text-ink-500">
                 {tImport('aiCsvReconciliation.mappingReview.autoDetectedFormat', { format: mappings.dateFormat })}
               </span>
             </label>
@@ -735,7 +735,7 @@ export function CSVMappingReviewForReconciliation({
 
           {/* Amount Convention */}
           <div className="mt-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-ink-700 mb-2">
               {tImport('aiCsvReconciliation.mappingReview.amountConvention')}
             </label>
             <Select
@@ -757,7 +757,7 @@ export function CSVMappingReviewForReconciliation({
         <Card>
           <CardHeader>
             <CardTitle>{tImport('aiCsvReconciliation.mappingReview.typeValueMappingTitle')}</CardTitle>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-ink-600">
               {tImport('aiCsvReconciliation.mappingReview.typeValueMappingSubtitle')}
             </p>
           </CardHeader>
@@ -768,7 +768,7 @@ export function CSVMappingReviewForReconciliation({
                 const isExpense = mappings.typeValueMappings?.expenseValues.includes(value);
                 
                 return (
-                  <div key={value} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div key={value} className="flex items-center justify-between p-3 bg-ink-50 rounded-lg">
                     <span className="font-medium">{value}</span>
                     <div className="flex gap-2">
                       <Button
@@ -825,21 +825,21 @@ export function CSVMappingReviewForReconciliation({
         <Card>
           <CardHeader>
             <CardTitle>{tImport('aiCsvReconciliation.mappingReview.previewTitle')}</CardTitle>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-ink-600">
               {tImport('aiCsvReconciliation.mappingReview.previewSubtitle')}
             </p>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-              <table className="min-w-full border border-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full border border-ink-200">
+                <thead className="bg-ink-50">
                   <tr>
-                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b w-1/3">
+                    <th className="px-4 py-2 text-left text-sm font-medium text-ink-700 border-b w-1/3">
                       {tImport('aiCsvReconciliation.mappingReview.tableHeaders.datePreview')}
                     </th>
-                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b">{tCommon('amount')}</th>
-                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b">{tCommon('description')}</th>
-                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b">{tCommon('type')}</th>
+                    <th className="px-4 py-2 text-left text-sm font-medium text-ink-700 border-b">{tCommon('amount')}</th>
+                    <th className="px-4 py-2 text-left text-sm font-medium text-ink-700 border-b">{tCommon('description')}</th>
+                    <th className="px-4 py-2 text-left text-sm font-medium text-ink-700 border-b">{tCommon('type')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -863,7 +863,7 @@ export function CSVMappingReviewForReconciliation({
               </table>
             </div>
             {previewData.length > 10 && (
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-sm text-ink-500 mt-2">
                 {tImport('aiCsvReconciliation.mappingReview.moreRows', { count: previewData.length - 10 })}
               </p>
             )}

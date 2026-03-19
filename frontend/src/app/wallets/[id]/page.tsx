@@ -540,7 +540,7 @@ export default function WalletDetailPage() {
                         : 'bg-ink-50 hover:bg-ink-100',
                     )}
                   >
-                    <item.icon className="h-5 w-5 text-gray-700" />
+                    <item.icon className="h-5 w-5 text-ink-700" />
                   </button>
                 ))}
               </div>

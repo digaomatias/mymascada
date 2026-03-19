@@ -38,8 +38,8 @@ export function BudgetWizardStepShell({
   return (
     <div className={cn('space-y-5', className)}>
       <div>
-        <h2 className="text-[1.65rem] font-semibold tracking-[-0.03em] text-slate-900">{title}</h2>
-        <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
+        <h2 className="text-[1.65rem] font-semibold tracking-[-0.03em] text-ink-900">{title}</h2>
+        <p className="mt-1 text-sm text-ink-500">{subtitle}</p>
       </div>
 
       <div className="flex items-center">
@@ -52,7 +52,7 @@ export function BudgetWizardStepShell({
                   ? 'border-primary-600 bg-primary-600 text-white'
                   : index === step
                     ? 'border-primary-600 bg-primary-600 text-white'
-                    : 'border-slate-300 bg-white text-slate-500',
+                    : 'border-ink-300 bg-white text-ink-500',
               )}
             >
               {index < step ? <CheckIcon className="h-4 w-4" /> : index}
@@ -61,7 +61,7 @@ export function BudgetWizardStepShell({
               <div
                 className={cn(
                   'mx-1.5 h-1 w-8 rounded-full sm:w-16',
-                  index < step ? 'bg-primary-600' : 'bg-slate-300',
+                  index < step ? 'bg-primary-600' : 'bg-ink-300',
                 )}
               />
             )}

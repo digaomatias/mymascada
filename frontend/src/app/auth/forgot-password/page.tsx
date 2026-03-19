@@ -50,7 +50,7 @@ export default function ForgotPasswordPage() {
                 <CheckCircleIcon className="w-12 h-12 text-white" />
               </div>
             </div>
-            <h2 className="text-h1 text-slate-900">{t('checkYourEmail')}</h2>
+            <h2 className="text-h1 text-ink-900">{t('checkYourEmail')}</h2>
           </div>
 
           <Card>
@@ -60,11 +60,11 @@ export default function ForgotPasswordPage() {
                   <EnvelopeIcon className="w-8 h-8 text-green-600" />
                 </div>
 
-                <p className="text-slate-700">
+                <p className="text-ink-700">
                   {t('forgotPasswordSentDescription')}
                 </p>
 
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-ink-500">
                   {t('forgotPasswordSpamNote')}
                 </p>
 
@@ -105,8 +105,8 @@ export default function ForgotPasswordPage() {
               <AppIcon size={80} />
             </div>
           </div>
-          <h2 className="text-h1 text-slate-900">{t('forgotPassword')}</h2>
-          <p className="mt-2 text-slate-600">
+          <h2 className="text-h1 text-ink-900">{t('forgotPassword')}</h2>
+          <p className="mt-2 text-ink-600">
             {t('forgotPasswordHelper')}
           </p>
         </div>

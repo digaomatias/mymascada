@@ -77,23 +77,23 @@ export function StepGoalSuggestion({
         </div>
 
         <div className="mt-5 space-y-2">
-          <h2 className="font-[var(--font-onboarding-sans)] text-3xl font-semibold tracking-[-0.02em] text-slate-900">
+          <h2 className="font-[var(--font-onboarding-sans)] text-3xl font-semibold tracking-[-0.02em] text-ink-900">
             {t('goalSuggestion.title')}
           </h2>
-          <p className="text-sm leading-relaxed text-slate-600 sm:text-base">
+          <p className="text-sm leading-relaxed text-ink-600 sm:text-base">
             {t('goalSuggestion.subtitle')}
           </p>
         </div>
 
-        <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
+        <div className="mt-5 rounded-2xl border border-ink-200 bg-white p-4">
           {!isEditing ? (
             <div className="space-y-3">
               <div className="relative rounded-2xl border border-ink-200 bg-gradient-to-br from-primary-50 to-primary-50 p-4">
                 <span className="absolute right-3 top-3 rounded-full bg-primary-600 px-2 py-0.5 text-xs font-semibold text-white">
                   {t('goalSuggestion.recommended')}
                 </span>
-                <p className="pr-24 text-sm font-medium text-slate-600">{t('goalSuggestion.goalNameLabel')}</p>
-                <p className="mt-1 text-lg font-semibold text-slate-900">{goalName}</p>
+                <p className="pr-24 text-sm font-medium text-ink-600">{t('goalSuggestion.goalNameLabel')}</p>
+                <p className="mt-1 text-lg font-semibold text-ink-900">{goalName}</p>
                 <p className="mt-2 font-[var(--font-onboarding-mono)] text-3xl font-semibold text-primary-700">
                   {formatCurrency(goalTargetAmount)}
                 </p>
@@ -118,7 +118,7 @@ export function StepGoalSuggestion({
                   </p>
                 )}
               </div>
-              <p className="text-sm leading-relaxed text-slate-600">
+              <p className="text-sm leading-relaxed text-ink-600">
                 {t('goalSuggestion.why')}
               </p>
               <Button
@@ -157,7 +157,7 @@ export function StepGoalSuggestion({
               )}
               {accounts && accounts.length > 0 && (
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-slate-700">
+                  <label className="text-sm font-medium text-ink-700">
                     {t('goalSuggestion.linkedAccountLabel')}
                   </label>
                   <Select
@@ -175,7 +175,7 @@ export function StepGoalSuggestion({
                       </option>
                     ))}
                   </Select>
-                  <p className="text-xs text-slate-500">{t('goalSuggestion.linkedAccountHelp')}</p>
+                  <p className="text-xs text-ink-500">{t('goalSuggestion.linkedAccountHelp')}</p>
                   {linkedAccount && (
                     <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
                       {t('goalSuggestion.startingBalance')}: {formatCurrency(linkedAccount.currentBalance)}
@@ -188,7 +188,7 @@ export function StepGoalSuggestion({
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsEditing(false)}
-                  className="rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-ink-200 hover:bg-primary-50"
+                  className="rounded-lg border border-ink-200 bg-white text-ink-600 hover:border-ink-200 hover:bg-primary-50"
                 >
                   {t('goalSuggestion.doneEditing')}
                 </Button>
@@ -201,7 +201,7 @@ export function StepGoalSuggestion({
           <Button
             variant="ghost"
             onClick={onBack}
-            className="rounded-xl border border-slate-200 bg-white px-5 text-slate-700 hover:border-ink-200 hover:bg-primary-50"
+            className="rounded-xl border border-ink-200 bg-white px-5 text-ink-700 hover:border-ink-200 hover:bg-primary-50"
           >
             {t('back')}
           </Button>
@@ -260,9 +260,9 @@ export function StepGoalSuggestion({
           <div className="mt-4 space-y-3">
             {timelineProgress.map((progress, index) => (
               <div key={index} className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs font-medium text-slate-500">
+                <div className="flex items-center justify-between text-xs font-medium text-ink-500">
                   <span>{t('goalSuggestion.monthLabel', { month: index + 1 })}</span>
-                  <span className="font-[var(--font-onboarding-mono)] text-slate-600">
+                  <span className="font-[var(--font-onboarding-mono)] text-ink-600">
                     {Math.round(progress)}%
                   </span>
                 </div>
@@ -275,7 +275,7 @@ export function StepGoalSuggestion({
               </div>
             ))}
           </div>
-          <p className="mt-4 text-xs leading-relaxed text-slate-500">
+          <p className="mt-4 text-xs leading-relaxed text-ink-500">
             {monthlyAvailable > 0 ? t('goalSuggestion.timelineHintPositive') : t('goalSuggestion.timelineHintNegative')}
           </p>
         </div>

@@ -152,7 +152,7 @@ export function CreateTransactionModal({
           <h2 className="text-lg font-semibold">{t('createFromBankImport')}</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-ink-400 hover:text-ink-600"
             disabled={isLoading}
           >
             <XMarkIcon className="w-5 h-5" />
@@ -175,7 +175,7 @@ export function CreateTransactionModal({
 
           {/* Amount */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink-700 mb-1">
               {tCommon('amount')}
             </label>
             <CurrencyInput
@@ -189,7 +189,7 @@ export function CreateTransactionModal({
 
           {/* Date */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink-700 mb-1">
               {tCommon('date')}
             </label>
             <DateTimePicker
@@ -203,7 +203,7 @@ export function CreateTransactionModal({
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink-700 mb-1">
               {tCommon('description')}
             </label>
             <Input
@@ -218,7 +218,7 @@ export function CreateTransactionModal({
 
           {/* User Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink-700 mb-1">
               {t('userDescriptionLabel')}
             </label>
             <Input
@@ -232,7 +232,7 @@ export function CreateTransactionModal({
 
           {/* Category */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink-700 mb-1">
               {t('categoryOptional')}
             </label>
             <CategoryPicker
@@ -247,7 +247,7 @@ export function CreateTransactionModal({
 
           {/* Status */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink-700 mb-1">
               {tCommon('status')}
             </label>
             <Select
@@ -263,7 +263,7 @@ export function CreateTransactionModal({
 
           {/* Notes */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink-700 mb-1">
               {tCommon('notes')}
             </label>
             <textarea

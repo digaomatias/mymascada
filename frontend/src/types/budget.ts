@@ -95,9 +95,9 @@ export function getTrendColor(trend: SpendingTrend): string {
     case 'Decreasing':
       return 'text-green-600';
     case 'Stable':
-      return 'text-gray-600';
+      return 'text-ink-600';
     default:
-      return 'text-gray-600';
+      return 'text-ink-600';
   }
 }
 
@@ -106,13 +106,13 @@ export function getRecommendationBadgeColor(type: RecommendationType): string {
     case 'Essential':
       return 'bg-blue-100 text-blue-800';
     case 'Regular':
-      return 'bg-gray-100 text-gray-800';
+      return 'bg-ink-100 text-ink-800';
     case 'Discretionary':
       return 'bg-yellow-100 text-yellow-800';
     case 'SavingsOpportunity':
       return 'bg-green-100 text-green-800';
     default:
-      return 'bg-gray-100 text-gray-800';
+      return 'bg-ink-100 text-ink-800';
   }
 }
 
@@ -163,7 +163,7 @@ export function getBudgetStatusColor(status: BudgetStatus): string {
     case 'Over':
       return 'text-red-600 bg-red-100';
     default:
-      return 'text-gray-600 bg-gray-100';
+      return 'text-ink-600 bg-ink-100';
   }
 }
 

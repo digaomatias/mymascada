@@ -72,7 +72,7 @@ function MobileActionsOverflow({
       >
         <EllipsisVerticalIcon className="w-5 h-5" aria-hidden="true" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" collisionPadding={8} className="min-w-[180px] bg-white shadow-lg border border-gray-200 rounded-lg">
+      <DropdownMenuContent align="end" collisionPadding={8} className="min-w-[180px] bg-white shadow-lg border border-ink-200 rounded-lg">
         {visibleActions.map((action) => {
           const itemContent = (
             <>

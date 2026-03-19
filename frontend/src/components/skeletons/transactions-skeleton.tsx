@@ -9,7 +9,7 @@ export function TransactionsSkeleton() {
       {/* Transaction list card */}
       <div className="rounded-[26px] border border-ink-200 bg-white/90 shadow-[0_20px_44px_-32px_rgba(47,129,112,0.20)]">
         <div className="p-0">
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-ink-100">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="flex items-center gap-3 p-4 animate-pulse">
                 <Skeleton className="w-12 h-12 rounded-xl" variant="rounded-sm" />
