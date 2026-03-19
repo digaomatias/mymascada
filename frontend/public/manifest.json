@@ -2,7 +2,7 @@
   "name": "MyMascada - Personal Finance Manager",
   "short_name": "MyMascada",
   "description": "AI-powered personal finance management application",
-  "theme_color": "#6b46c1",
+  "theme_color": "#0f4543",
   "background_color": "#ffffff",
   "display": "standalone",
   "orientation": "portrait",
