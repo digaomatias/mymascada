@@ -1,10 +1,10 @@
 using Asp.Versioning;
-using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Accounts.DTOs;
+using MyMascada.Application.Features.Accounts.Mappings;
 using MyMascada.Application.Features.Accounts.Queries;
 using MyMascada.Domain.Common;
 using MyMascada.Domain.Entities;
@@ -21,7 +21,6 @@ public class AccountsController : ControllerBase
 {
     private readonly IAccountRepository _accountRepository;
     private readonly ITransactionRepository _transactionRepository;
-    private readonly IMapper _mapper;
     private readonly IMediator _mediator;
     private readonly ICurrentUserService _currentUserService;
     private readonly IAccountAccessService _accountAccess;
@@ -30,7 +29,6 @@ public class AccountsController : ControllerBase
     public AccountsController(
         IAccountRepository accountRepository,
         ITransactionRepository transactionRepository,
-        IMapper mapper,
         IMediator mediator,
         ICurrentUserService currentUserService,
         IAccountAccessService accountAccess,
@@ -38,7 +36,6 @@ public class AccountsController : ControllerBase
     {
         _accountRepository = accountRepository;
         _transactionRepository = transactionRepository;
-        _mapper = mapper;
         _mediator = mediator;
         _currentUserService = currentUserService;
         _accountAccess = accountAccess;
@@ -50,7 +47,7 @@ public class AccountsController : ControllerBase
     {
         var userId = _currentUserService.GetUserId();
         var accounts = await _accountRepository.GetByUserIdAsync(userId);
-        var accountDtos = _mapper.Map<List<AccountDto>>(accounts);
+        var accountDtos = accounts.Select(AccountMapper.ToDto).ToList();
         await PopulateSharingMetadataAsync(accountDtos, userId);
 
         return Ok(accountDtos);
@@ -66,7 +63,7 @@ public class AccountsController : ControllerBase
             return NotFound();
         }
 
-        var accountDto = _mapper.Map<AccountDto>(account);
+        var accountDto = AccountMapper.ToDto(account);
         await PopulateSharingMetadataAsync(new List<AccountDto> { accountDto }, userId);
 
         return Ok(accountDto);
@@ -98,13 +95,13 @@ public class AccountsController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var account = _mapper.Map<Account>(request);
+        var account = AccountMapper.ToEntity(request);
         account.UserId = _currentUserService.GetUserId();
         account.CreatedAt = DateTimeProvider.UtcNow;
         account.UpdatedAt = DateTimeProvider.UtcNow;
 
         var createdAccount = await _accountRepository.AddAsync(account);
-        var accountDto = _mapper.Map<AccountDto>(createdAccount);
+        var accountDto = AccountMapper.ToDto(createdAccount);
         
         return CreatedAtAction(nameof(GetAccount), new { id = createdAccount.Id }, accountDto);
     }
@@ -134,13 +131,12 @@ public class AccountsController : ControllerBase
             return NotFound();
         }
 
-        // Update properties using AutoMapper
-        _mapper.Map(request, existingAccount);
+        AccountMapper.ApplyTo(request, existingAccount);
         existingAccount.UpdatedAt = DateTimeProvider.UtcNow;
 
         await _accountRepository.UpdateAsync(existingAccount);
 
-        var accountDto = _mapper.Map<AccountDto>(existingAccount);
+        var accountDto = AccountMapper.ToDto(existingAccount);
         return Ok(accountDto);
     }
 
@@ -201,7 +197,7 @@ public class AccountsController : ControllerBase
         var accountBalances = await _transactionRepository.GetAccountBalancesAsync(userId);
 
         var accountsWithBalances = accounts.Select(account => {
-            var dto = _mapper.Map<AccountWithBalanceDto>(account);
+            var dto = AccountMapper.ToWithBalanceDto(account);
             dto.CalculatedBalance = accountBalances.GetValueOrDefault(account.Id, 0m);
             return dto;
         }).ToList();
@@ -225,7 +221,7 @@ public class AccountsController : ControllerBase
         // Get calculated balance using the repository method that includes initial balance
         var calculatedBalance = await _transactionRepository.GetAccountBalanceAsync(id, userId);
 
-        var accountWithBalance = _mapper.Map<AccountWithBalanceDto>(account);
+        var accountWithBalance = AccountMapper.ToWithBalanceDto(account);
         accountWithBalance.CalculatedBalance = calculatedBalance;
 
         await PopulateSharingMetadataAsync(new List<AccountWithBalanceDto> { accountWithBalance }, userId);

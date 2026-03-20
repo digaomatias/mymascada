@@ -24,9 +24,6 @@ public static class ApplicationServiceExtensions
         // Add FluentValidation
         services.AddValidatorsFromAssembly(typeof(MyMascada.Application.Features.Authentication.Commands.RegisterCommand).Assembly);
 
-        // Add AutoMapper
-        services.AddAutoMapper(cfg => cfg.AddMaps(typeof(MyMascada.Application.Features.Accounts.Mappings.AccountMappingProfile).Assembly));
-
         // Account access service (central authorization choke point)
         services.AddScoped<IAccountAccessService, AccountAccessService>();
 
