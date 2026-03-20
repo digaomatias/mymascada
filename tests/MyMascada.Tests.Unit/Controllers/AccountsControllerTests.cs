@@ -9,6 +9,7 @@ using MyMascada.Application.Features.Accounts.Mappings;
 using MyMascada.Application.Features.Accounts.Queries;
 using MyMascada.Domain.Entities;
 using MyMascada.Domain.Enums;
+using Microsoft.Extensions.Logging.Abstractions;
 using MyMascada.WebAPI.Controllers;
 
 namespace MyMascada.Tests.Unit.Controllers;
@@ -40,7 +41,7 @@ public class AccountsControllerTests
         var configuration = new MapperConfiguration(cfg =>
         {
             cfg.AddProfile<AccountMappingProfile>();
-        });
+        }, NullLoggerFactory.Instance);
         _mapper = configuration.CreateMapper();
 
         _controller = new AccountsController(_accountRepository, _transactionRepository, _mapper, _mediator, _currentUserService, _accountAccess, _accountShareRepository);
