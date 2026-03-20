@@ -39,8 +39,8 @@ public static partial class TransactionMapper
         dto.CategoryColor = transaction.Category?.Color;
         dto.CategoryIcon = transaction.Category?.Icon;
         dto.RelatedAccountName = transaction.RelatedTransaction?.Account?.Name;
-        dto.Splits = transaction.Splits?.Any() == true
-            ? transaction.Splits.Select(ToSplitDto).ToList()
+        dto.Splits = transaction.Splits is { Count: > 0 } splits
+            ? splits.Select(ToSplitDto).ToList()
             : null;
         return dto;
     }
@@ -71,4 +71,9 @@ public static partial class TransactionMapper
     [MapperIgnoreTarget(nameof(TransactionSplitDto.CategoryName))]
     [MapperIgnoreTarget(nameof(TransactionSplitDto.CategoryColor))]
     private static partial TransactionSplitDto SplitToDtoGenerated(TransactionSplit split);
+
+    // Note: CreateTransactionDto -> Transaction and UpdateTransactionDto -> Transaction mappings
+    // are intentionally NOT included here. Those mappings contained business logic (amount sign-flipping
+    // based on type, enum parsing, setting Source=Manual, IsReviewed=true) that belongs in command
+    // handlers, not in a mapping layer. The handlers already perform this logic manually.
 }

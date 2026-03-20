@@ -85,6 +85,7 @@ public static partial class AccountMapper
             AccountType.Investment => "Investment Account",
             AccountType.Loan => "Loan Account",
             AccountType.Cash => "Cash Account",
+            AccountType.Other => "Other Account",
             _ => type.ToString()
         };
     }
