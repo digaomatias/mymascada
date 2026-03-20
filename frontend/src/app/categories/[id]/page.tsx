@@ -18,6 +18,7 @@ import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { TransactionList } from '@/components/transaction-list';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 interface Category {
   id: number;
@@ -83,6 +84,7 @@ export default function CategoryDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [loadingStats, setLoadingStats] = useState(false);
   const [dateFilter, setDateFilter] = useState<DateFilter>('thisMonth');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -187,10 +189,6 @@ export default function CategoryDetailsPage() {
   const handleDeleteCategory = async () => {
     if (!category) return;
 
-    if (!confirm(t('details.deleteConfirmMessage', { name: category.name }))) {
-      return;
-    }
-
     try {
       await apiClient.deleteCategory(category.id);
       toast.success(tToasts('categoryDeleted'));
@@ -198,6 +196,8 @@ export default function CategoryDetailsPage() {
     } catch (error) {
       console.error('Failed to delete category:', error);
       toast.error(tToasts('categoryDeleteFailed'));
+    } finally {
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -232,7 +232,7 @@ export default function CategoryDetailsPage() {
               variant="secondary"
               size="sm"
               className="flex items-center gap-2 border-red-300 text-red-600 hover:bg-red-50"
-              onClick={handleDeleteCategory}
+              onClick={() => setShowDeleteConfirm(true)}
             >
               <TrashIcon className="w-4 h-4" />
               <span className="hidden sm:inline">{tCommon('delete')}</span>
@@ -439,6 +439,17 @@ export default function CategoryDetailsPage() {
           </div>
         </section>
       </div>
+
+      <ConfirmationDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDeleteCategory}
+        title={t('deleteCategory')}
+        description={category ? t('details.deleteConfirmMessage', { name: category.name }) : ''}
+        confirmText={tCommon('delete')}
+        cancelText={tCommon('cancel')}
+        variant="danger"
+      />
     </AppLayout>
   );
 }

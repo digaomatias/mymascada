@@ -2985,6 +2985,7 @@
     "mapToCategory": "Map to Category",
     "bankCategoryName": "Bank Category Name",
     "bankCategoryHelp": "Enter the exact bank category name as it appears from your bank",
+    "deleteMapping": "Delete Mapping",
     "deleteMappingConfirm": "Are you sure you want to delete the mapping for \"{name}\"?",
     "mappingValidation": "Please enter a bank category name and select a category",
     "adjustSearchTerms": "Try adjusting your search terms.",

@@ -27,6 +27,7 @@ import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 type RuleType = 'Contains' | 'StartsWith' | 'EndsWith' | 'Equals' | 'Regex';
 type RuleTypeValue = RuleType | 1 | 2 | 3 | 4 | 5;
@@ -106,6 +107,8 @@ export default function RulesPage() {
   const [showRulePreview, setShowRulePreview] = useState(false);
   const [testResult, setTestResult] = useState<RuleTestResult | null>(null);
   const [testingRuleId, setTestingRuleId] = useState<number | null>(null);
+  const [deleteRuleTarget, setDeleteRuleTarget] = useState<{ id: number; name: string } | null>(null);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (isAuthResolved) {
@@ -158,18 +161,22 @@ export default function RulesPage() {
     }
   };
 
-  const deleteRule = async (ruleId: number, ruleName: string) => {
-    if (!confirm(t('toasts.deleteConfirm', { name: ruleName }))) {
-      return;
-    }
+  const confirmDeleteRule = (ruleId: number, ruleName: string) => {
+    setDeleteRuleTarget({ id: ruleId, name: ruleName });
+  };
+
+  const handleDeleteRule = async () => {
+    if (!deleteRuleTarget) return;
 
     try {
-      await apiClient.delete(`/api/rules/${ruleId}`);
+      await apiClient.delete(`/api/rules/${deleteRuleTarget.id}`);
       await refreshRulesData();
       toast.success(t('toasts.deleteSuccess'));
     } catch (error) {
       console.error('Failed to delete rule:', error);
       toast.error(t('toasts.deleteFailed'));
+    } finally {
+      setDeleteRuleTarget(null);
     }
   };
 
@@ -449,15 +456,12 @@ export default function RulesPage() {
     }
   };
 
-  const runBulkDelete = async () => {
-    if (selectedRuleIds.size === 0) {
-      return;
-    }
+  const confirmBulkDelete = () => {
+    if (selectedRuleIds.size === 0) return;
+    setShowBulkDeleteConfirm(true);
+  };
 
-    if (!confirm(t('toasts.bulkDeleteConfirm', { count: selectedRuleIds.size }))) {
-      return;
-    }
-
+  const handleBulkDelete = async () => {
     const selectedIds = [...selectedRuleIds];
 
     try {
@@ -471,6 +475,7 @@ export default function RulesPage() {
       toast.error(t('toasts.bulkUpdateFailed'));
     } finally {
       setIsBulkUpdating(false);
+      setShowBulkDeleteConfirm(false);
     }
   };
 
@@ -687,7 +692,7 @@ export default function RulesPage() {
                 size="sm"
                 variant="secondary"
                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                onClick={runBulkDelete}
+                onClick={confirmBulkDelete}
                 disabled={isBulkUpdating}
               >
                 {t('bulk.delete')}
@@ -961,7 +966,7 @@ export default function RulesPage() {
                           <Button
                             variant="secondary"
                             size="sm"
-                            onClick={() => deleteRule(rule.id, rule.name)}
+                            onClick={() => confirmDeleteRule(rule.id, rule.name)}
                             className="w-8 h-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                             disabled={isReorderMode || isBulkUpdating}
                             title={t('deleteRule')}
@@ -1090,6 +1095,27 @@ export default function RulesPage() {
           </div>
         </div>
       )}
+      <ConfirmationDialog
+        isOpen={deleteRuleTarget !== null}
+        onClose={() => setDeleteRuleTarget(null)}
+        onConfirm={handleDeleteRule}
+        title={t('deleteRule')}
+        description={deleteRuleTarget ? t('toasts.deleteConfirm', { name: deleteRuleTarget.name }) : ''}
+        confirmText={tCommon('delete')}
+        cancelText={tCommon('cancel')}
+        variant="danger"
+      />
+
+      <ConfirmationDialog
+        isOpen={showBulkDeleteConfirm}
+        onClose={() => setShowBulkDeleteConfirm(false)}
+        onConfirm={handleBulkDelete}
+        title={t('bulk.delete')}
+        description={t('toasts.bulkDeleteConfirm', { count: selectedRuleIds.size })}
+        confirmText={tCommon('delete')}
+        cancelText={tCommon('cancel')}
+        variant="danger"
+      />
     </AppLayout>
   );
 }

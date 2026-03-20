@@ -47,6 +47,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { toast } from 'sonner';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 interface Category {
   id: number;
@@ -78,6 +79,7 @@ export default function CategoriesPage() {
   const [activeTab, setActiveTab] = useState<'categories' | 'bank-mappings'>('categories');
   const [showAll, setShowAll] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [deleteCategoryTarget, setDeleteCategoryTarget] = useState<{ id: number; name: string } | null>(null);
 
   useEffect(() => {
     if (isAuthResolved) {
@@ -128,13 +130,15 @@ export default function CategoriesPage() {
     }
   };
 
-  const handleDeleteCategory = async (id: number, name: string) => {
-    if (!confirm(`${t('deleteConfirm', { name })}\n\n${t('deleteCannotUndo')}`)) {
-      return;
-    }
+  const confirmDeleteCategory = (id: number, name: string) => {
+    setDeleteCategoryTarget({ id, name });
+  };
+
+  const handleDeleteCategory = async () => {
+    if (!deleteCategoryTarget) return;
 
     try {
-      await apiClient.deleteCategory(id);
+      await apiClient.deleteCategory(deleteCategoryTarget.id);
       loadCategories();
     } catch (error: unknown) {
       console.error('Failed to delete category:', error);
@@ -146,6 +150,8 @@ export default function CategoriesPage() {
       } else {
         toast.error(t('errors.deleteFailed'));
       }
+    } finally {
+      setDeleteCategoryTarget(null);
     }
   };
 
@@ -513,7 +519,7 @@ export default function CategoriesPage() {
                               </DropdownMenuItem>
                               <DropdownMenuSeparator className="my-1 bg-ink-200" />
                               <DropdownMenuItem
-                                onClick={() => handleDeleteCategory(category.id, category.name)}
+                                onClick={() => confirmDeleteCategory(category.id, category.name)}
                                 className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-sm cursor-pointer"
                               >
                                 <TrashIcon className="w-4 h-4" />
@@ -548,6 +554,16 @@ export default function CategoriesPage() {
         </Card>
         </>
         )}
+      <ConfirmationDialog
+        isOpen={deleteCategoryTarget !== null}
+        onClose={() => setDeleteCategoryTarget(null)}
+        onConfirm={handleDeleteCategory}
+        title={t('deleteCategory')}
+        description={deleteCategoryTarget ? `${t('deleteConfirm', { name: deleteCategoryTarget.name })} ${t('deleteCannotUndo')}` : ''}
+        confirmText={tCommon('delete')}
+        cancelText={tCommon('cancel')}
+        variant="danger"
+      />
     </AppLayout>
   );
 }

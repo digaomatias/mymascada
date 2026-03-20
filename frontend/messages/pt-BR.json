@@ -2985,6 +2985,7 @@
     "mapToCategory": "Mapear para categoria",
     "bankCategoryName": "Nome da categoria do banco",
     "bankCategoryHelp": "Insira o nome exato da categoria do banco conforme aparece no seu banco",
+    "deleteMapping": "Excluir Mapeamento",
     "deleteMappingConfirm": "Tem certeza de que deseja excluir o mapeamento de \"{name}\"?",
     "mappingValidation": "Informe um nome de categoria do banco e selecione uma categoria",
     "adjustSearchTerms": "Tente ajustar os termos de busca.",

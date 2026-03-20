@@ -22,6 +22,7 @@ import {
 import { BaseModal } from '@/components/modals/base-modal';
 import { CategoryPicker } from '@/components/forms/category-picker';
 import { useTranslations } from 'next-intl';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 interface BankCategoryMapping {
   id: number;
@@ -84,6 +85,7 @@ export default function BankCategoryMappings() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newBankCategoryName, setNewBankCategoryName] = useState('');
   const [newCategoryId, setNewCategoryId] = useState<number | null>(null);
+  const [deleteMappingTarget, setDeleteMappingTarget] = useState<BankCategoryMapping | null>(null);
 
   useEffect(() => {
     loadMappings();
@@ -180,18 +182,22 @@ export default function BankCategoryMappings() {
     }
   };
 
-  const handleDeleteMapping = async (mapping: BankCategoryMapping) => {
-    if (!confirm(t('deleteMappingConfirm', { name: mapping.bankCategoryName }))) {
-      return;
-    }
+  const confirmDeleteMapping = (mapping: BankCategoryMapping) => {
+    setDeleteMappingTarget(mapping);
+  };
+
+  const handleDeleteMapping = async () => {
+    if (!deleteMappingTarget) return;
 
     try {
-      await apiClient.deleteBankCategoryMapping(mapping.id);
+      await apiClient.deleteBankCategoryMapping(deleteMappingTarget.id);
       toast.success(tToasts('bankCategoryMappingDeleted'));
       loadMappings();
     } catch (error) {
       console.error('Failed to delete mapping:', error);
       toast.error(tToasts('bankCategoryMappingDeleteFailed'));
+    } finally {
+      setDeleteMappingTarget(null);
     }
   };
 
@@ -436,7 +442,7 @@ export default function BankCategoryMappings() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDeleteMapping(mapping)}
+                      onClick={() => confirmDeleteMapping(mapping)}
                       className="w-8 h-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
                       <TrashIcon className="w-4 h-4" />
@@ -537,6 +543,17 @@ export default function BankCategoryMappings() {
           </div>
         </div>
       </BaseModal>
+
+      <ConfirmationDialog
+        isOpen={deleteMappingTarget !== null}
+        onClose={() => setDeleteMappingTarget(null)}
+        onConfirm={handleDeleteMapping}
+        title={t('deleteMapping')}
+        description={deleteMappingTarget ? t('deleteMappingConfirm', { name: deleteMappingTarget.bankCategoryName }) : ''}
+        confirmText={tCommon('delete')}
+        cancelText={tCommon('cancel')}
+        variant="danger"
+      />
     </div>
   );
 }
