@@ -612,7 +612,7 @@ export function CategorizationRibbon({
               </div>
             )}
             
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
               <div className="text-sm text-ink-600">
                 {rulePreview.ruleMatches && (
                   <>
@@ -630,12 +630,13 @@ export function CategorizationRibbon({
                   </>
                 )}
               </div>
-              
+
               <div className="flex gap-2">
                 <Button
                   variant="secondary"
                   size="sm"
                   onClick={() => setShowRulePreview(false)}
+                  className="flex-1 sm:flex-none"
                 >
                   {tCommon('cancel')}
                 </Button>
@@ -643,7 +644,7 @@ export function CategorizationRibbon({
                   onClick={handleApplySelectedRules}
                   disabled={isApplyingRules || !rulePreview.ruleMatches?.some(m => m.isSelected)}
                   size="sm"
-                  className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-primary-600"
+                  className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-primary-600 flex-1 sm:flex-none"
                 >
                   {isApplyingRules ? (
                     <>
@@ -695,7 +696,7 @@ export function CategorizationRibbon({
 
             {/* Transaction Selection */}
             <div className="mb-4">
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
@@ -710,11 +711,11 @@ export function CategorizationRibbon({
                     })}
                   </span>
                 </div>
-                
+
                 <Button
                   onClick={handleBatchCategorize}
                   disabled={isProcessing || selectedTransactions.length === 0}
-                  className="bg-gradient-to-r from-primary-500 to-blue-500 hover:from-primary-600 hover:to-primary-600"
+                  className="bg-gradient-to-r from-primary-500 to-blue-500 hover:from-primary-600 hover:to-primary-600 w-full sm:w-auto"
                 >
                   {isProcessing ? (
                     <>
