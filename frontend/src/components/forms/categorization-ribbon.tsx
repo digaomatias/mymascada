@@ -394,9 +394,9 @@ export function CategorizationRibbon({
       {!showRulePreview && !showAiSection && (
         <Card className="bg-gradient-to-r from-blue-50 to-primary-50 border-blue-200">
           <CardContent className="p-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-primary-500 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-primary-500 rounded-lg flex items-center justify-center shrink-0">
                   <SparklesIcon className="w-4 h-4 text-white" />
                 </div>
                 <div>
@@ -404,8 +404,8 @@ export function CategorizationRibbon({
                   <p className="text-xs text-ink-600">{tTransactions('categorizationRibbon.subtitle')}</p>
                 </div>
               </div>
-              
-              <div className="flex items-center gap-3">
+
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                 {/* AI Assistant Button */}
                 <Button
                   onClick={() => setShowAiSection(true)}
@@ -418,7 +418,7 @@ export function CategorizationRibbon({
                   {tTransactions('aiCategorization.title')}
                   {isHealthy === false && <span className="ml-1 text-xs">({tTransactions('aiCategorization.unavailableShort')})</span>}
                 </Button>
-                
+
                 {/* Auto-Categorize with Rules Button */}
                 <Button
                   onClick={handleRuleAutoCategorization}
@@ -667,9 +667,9 @@ export function CategorizationRibbon({
       {showAiSection && isHealthy && (
         <Card className="bg-gradient-to-r from-primary-50 to-blue-50 border-primary-200">
           <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-primary-500 to-blue-500 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-to-r from-primary-500 to-blue-500 rounded-lg flex items-center justify-center shrink-0">
                   <SparklesIcon className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -679,13 +679,13 @@ export function CategorizationRibbon({
                   </p>
                 </div>
               </div>
-              
+
               {suggestions.length > 0 && (
                 <Button
                   onClick={handleApplyAllHighConfidence}
                   disabled={isProcessing}
                   size="sm"
-                  className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                  className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 w-full sm:w-auto"
                 >
                   <CheckIcon className="w-4 h-4 mr-2" />
                   {tTransactions('aiCategorization.applyAllHighConfidence')}
