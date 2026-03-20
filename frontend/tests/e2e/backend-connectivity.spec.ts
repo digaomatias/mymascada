@@ -1,11 +1,12 @@
 import { test, expect } from '@playwright/test';
+import { API_BASE_URL } from './helpers/config';
 
 test.describe('Backend Connectivity', () => {
   test('should connect to backend API health endpoint', async ({ request }) => {
-    const response = await request.get('https://localhost:5126/api/v1/auth/health', {
+    const response = await request.get(`${API_BASE_URL}/auth/health`, {
       ignoreHTTPSErrors: true,
     });
-    
+
     expect(response.status()).toBe(200);
     console.log('✅ Backend health check passed:', await response.text());
   });
@@ -21,7 +22,7 @@ test.describe('Backend Connectivity', () => {
     };
 
     // Register user
-    const registerResponse = await request.post('https://localhost:5126/api/v1/auth/register', {
+    const registerResponse = await request.post(`${API_BASE_URL}/auth/register`, {
       data: testUser,
       ignoreHTTPSErrors: true,
     });
@@ -39,7 +40,7 @@ test.describe('Backend Connectivity', () => {
     console.log('✅ Registration successful');
 
     // Login with same user
-    const loginResponse = await request.post('https://localhost:5126/api/v1/auth/login', {
+    const loginResponse = await request.post(`${API_BASE_URL}/auth/login`, {
       data: {
         email: testUser.email,
         password: testUser.password
