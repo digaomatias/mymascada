@@ -33,6 +33,7 @@ async function globalSetup(config: FullConfig) {
       try {
         await page.request.get(`${API_BASE_URL}/auth/health`, {
           ignoreHTTPSErrors: true,
+          failOnStatusCode: true,
           timeout: 5000
         });
         apiReady = true;
