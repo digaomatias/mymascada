@@ -88,7 +88,7 @@ const SelectContent = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      'relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border bg-white text-gray-950 shadow-md',
+      'relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border bg-white text-ink-950 shadow-md',
       'animate-in fade-in-0 zoom-in-95',
       position === 'popper' &&
         'data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
@@ -125,7 +125,7 @@ const SelectItem = React.forwardRef<
     ref={ref}
     className={cn(
       'relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none',
-      'focus:bg-gray-100 focus:text-gray-900 hover:bg-gray-100',
+      'focus:bg-ink-100 focus:text-ink-900 hover:bg-ink-100',
       'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
       className
     )}
@@ -146,7 +146,7 @@ const SelectSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn('-mx-1 my-1 h-px bg-gray-100', className)}
+    className={cn('-mx-1 my-1 h-px bg-ink-100', className)}
     {...props}
   />
 ));

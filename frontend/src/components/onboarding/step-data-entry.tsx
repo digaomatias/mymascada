@@ -37,10 +37,10 @@ export function StepDataEntry({ value, onChange, onNext, onBack, isSubmitting = 
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h2 className="font-[var(--font-onboarding-sans)] text-3xl font-semibold tracking-[-0.02em] text-slate-900">
+        <h2 className="font-[var(--font-onboarding-sans)] text-3xl font-semibold tracking-[-0.02em] text-ink-900">
           {t('dataEntry.title')}
         </h2>
-        <p className="max-w-xl text-sm leading-relaxed text-slate-600 sm:text-base">
+        <p className="max-w-xl text-sm leading-relaxed text-ink-600 sm:text-base">
           {t('dataEntry.subtitle')}
         </p>
       </div>
@@ -56,10 +56,10 @@ export function StepDataEntry({ value, onChange, onNext, onBack, isSubmitting = 
               key={option.key}
               className={`group relative min-h-[168px] overflow-hidden rounded-2xl border p-4 text-left transition-all duration-200 ${
                 option.disabled
-                  ? 'cursor-not-allowed border-slate-200 bg-slate-50/90'
+                  ? 'cursor-not-allowed border-ink-200 bg-ink-50/90'
                   : isSelected
-                    ? 'border-violet-500 bg-violet-50 shadow-[0_20px_35px_-28px_rgba(124,58,237,0.95)] ring-4 ring-violet-200/60'
-                    : 'border-slate-200 bg-white hover:-translate-y-0.5 hover:border-violet-300 hover:shadow-[0_20px_35px_-28px_rgba(124,58,237,0.7)]'
+                    ? 'border-primary-500 bg-primary-50 shadow-[0_20px_35px_-28px_rgba(47,129,112,0.40)] ring-4 ring-primary-200/60'
+                    : 'border-ink-200 bg-white hover:-translate-y-0.5 hover:border-primary-300 hover:shadow-[0_20px_35px_-28px_rgba(47,129,112,0.28)]'
               }`}
               onClick={() => {
                 if (!option.disabled) {
@@ -78,13 +78,13 @@ export function StepDataEntry({ value, onChange, onNext, onBack, isSubmitting = 
               )}
 
               {option.recommended && !option.disabled && (
-                <span className="absolute right-3 top-3 rounded-full bg-violet-600 px-2 py-0.5 text-xs font-semibold text-white">
+                <span className="absolute right-3 top-3 rounded-full bg-primary-600 px-2 py-0.5 text-xs font-semibold text-white">
                   {t('dataEntry.recommended')}
                 </span>
               )}
 
               {option.disabled && (
-                <span className="absolute right-3 top-3 rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-600">
+                <span className="absolute right-3 top-3 rounded-full bg-ink-200 px-2 py-0.5 text-xs font-medium text-ink-600">
                   {t('dataEntry.bankDisabled')}
                 </span>
               )}
@@ -92,29 +92,29 @@ export function StepDataEntry({ value, onChange, onNext, onBack, isSubmitting = 
               <div className="relative flex h-full flex-col">
                 <div className={`grid h-11 w-11 place-items-center rounded-xl ${
                   option.disabled
-                    ? 'bg-slate-100 ring-1 ring-slate-200'
+                    ? 'bg-ink-100 ring-1 ring-ink-200'
                     : isSelected
-                      ? 'bg-violet-100 ring-1 ring-violet-200'
-                      : 'bg-violet-50 ring-1 ring-violet-100'
+                      ? 'bg-primary-100 ring-1 ring-primary-200'
+                      : 'bg-primary-50 ring-1 ring-primary-100'
                 }`}>
                   <Icon className={`w-6 h-6 ${
-                    option.disabled ? 'text-slate-400' : isSelected ? 'text-violet-700' : 'text-violet-600'
+                    option.disabled ? 'text-ink-400' : isSelected ? 'text-primary-700' : 'text-primary-600'
                   }`} />
                 </div>
                 <div className="mt-4 flex-1">
                   <p className={`text-base font-semibold ${
-                    option.disabled ? 'text-slate-500' : 'text-slate-900'
+                    option.disabled ? 'text-ink-500' : 'text-ink-900'
                   }`}>
                     {t(`dataEntry.${option.key}`)}
                   </p>
                   <p className={`mt-1 text-sm leading-relaxed ${
-                    option.disabled ? 'text-slate-400' : 'text-slate-600'
+                    option.disabled ? 'text-ink-400' : 'text-ink-600'
                   }`}>
                     {t(`dataEntry.${option.key}Desc`)}
                   </p>
                 </div>
                 {!option.disabled && isSelected && (
-                  <CheckCircleIcon className="absolute bottom-1 right-1 h-7 w-7 text-violet-600" />
+                  <CheckCircleIcon className="absolute bottom-1 right-1 h-7 w-7 text-primary-600" />
                 )}
               </div>
             </button>
@@ -126,7 +126,7 @@ export function StepDataEntry({ value, onChange, onNext, onBack, isSubmitting = 
         <Button
           variant="ghost"
           onClick={onBack}
-          className="rounded-xl border border-slate-200 bg-white px-5 text-slate-700 hover:border-violet-200 hover:bg-violet-50"
+          className="rounded-xl border border-ink-200 bg-white px-5 text-ink-700 hover:border-primary-200 hover:bg-primary-50"
         >
           {t('back')}
         </Button>
@@ -134,7 +134,7 @@ export function StepDataEntry({ value, onChange, onNext, onBack, isSubmitting = 
           onClick={onNext}
           disabled={!value || isSubmitting}
           loading={isSubmitting}
-          className="rounded-xl bg-violet-600 px-6 text-white shadow-[0_12px_25px_-15px_rgba(124,58,237,1)] hover:bg-violet-700"
+          className="rounded-xl bg-primary-600 px-6 text-white shadow-[0_12px_25px_-15px_rgba(47,129,112,0.45)] hover:bg-primary-700"
         >
           {t('finish')}
         </Button>

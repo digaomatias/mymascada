@@ -90,7 +90,7 @@ export function CategoryFilter({
   return (
     <div className="relative" ref={inputRef}>
       <div className="relative">
-        <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-ink-400" />
         <Input
           type="text"
           placeholder={selectedCategory ? selectedCategory.name : resolvedPlaceholder}
@@ -107,18 +107,18 @@ export function CategoryFilter({
                 e.stopPropagation();
                 handleClear();
               }}
-              className="p-1 hover:bg-gray-100 rounded cursor-pointer"
+              className="p-1 hover:bg-ink-100 rounded cursor-pointer"
               title={t('clearFilter')}
             >
-              <XMarkIcon className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+              <XMarkIcon className="w-4 h-4 text-ink-400 hover:text-ink-600" />
             </button>
           )}
-          <ChevronDownIcon className="w-4 h-4 text-gray-400" />
+          <ChevronDownIcon className="w-4 h-4 text-ink-400" />
         </div>
       </div>
 
       {isOpen && (
-        <div className="absolute z-20 mt-1 w-full bg-white rounded-lg shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
+        <div className="absolute z-20 mt-1 w-full bg-white rounded-lg shadow-lg border border-ink-200 max-h-60 overflow-y-auto">
           {searchResults.length > 0 ? (
             <div className="p-2">
               {searchResults.map((cat) => (
@@ -128,17 +128,17 @@ export function CategoryFilter({
                   onClick={() => handleSelect(cat.id)}
                   className={`
                     w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-colors
-                    ${cat.id === Number(value) ? 'bg-primary-100 text-primary-700' : 'hover:bg-gray-50'}
+                    ${cat.id === Number(value) ? 'bg-primary-100 text-primary-700' : 'hover:bg-ink-50'}
                   `}
                 >
-                  <FolderIcon className="w-4 h-4 text-gray-400" />
+                  <FolderIcon className="w-4 h-4 text-ink-400" />
                   <span className="text-sm">{cat.name}</span>
                 </button>
               ))}
             </div>
           ) : (
             <div className="p-4 text-center">
-              <p className="text-gray-500 text-sm">{t('filter.noCategoriesFound')}</p>
+              <p className="text-ink-500 text-sm">{t('filter.noCategoriesFound')}</p>
             </div>
           )}
         </div>

@@ -60,7 +60,7 @@ export function BankConnectionCard({
 
   return (
     <>
-      <Card className="bg-white border border-gray-200 hover:shadow-md transition-shadow">
+      <Card className="bg-white border border-ink-200 hover:shadow-md transition-shadow">
         <CardContent className="p-4">
           <div className="flex items-start gap-4">
             {/* Provider Icon */}
@@ -72,14 +72,14 @@ export function BankConnectionCard({
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <h3 className="text-lg font-semibold text-gray-900 truncate">
+                  <h3 className="text-lg font-semibold text-ink-900 truncate">
                     {connection.accountName}
                   </h3>
-                  <p className="text-sm text-gray-500 mt-0.5">
+                  <p className="text-sm text-ink-500 mt-0.5">
                     {t('viaProvider', { name: connection.providerName })}
                   </p>
                   {connection.externalAccountName && (
-                    <p className="text-sm text-gray-600 mt-1 flex items-center gap-1">
+                    <p className="text-sm text-ink-600 mt-1 flex items-center gap-1">
                       <LinkIcon className="w-3.5 h-3.5" />
                       {connection.externalAccountName}
                     </p>

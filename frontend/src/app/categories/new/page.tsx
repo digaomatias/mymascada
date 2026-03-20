@@ -134,12 +134,12 @@ export default function NewCategoryPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
+      <div className="min-h-screen bg-surface-alt flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
+          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-400 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <TagIcon className="w-8 h-8 text-white" />
           </div>
-          <div className="mt-6 text-slate-700 font-medium">{tCommon('loading')}</div>
+          <div className="mt-6 text-ink-700 font-medium">{tCommon('loading')}</div>
         </div>
       </div>
     );
@@ -151,15 +151,15 @@ export default function NewCategoryPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
-        <Card className="mx-4 max-w-md w-full rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92">
+      <div className="min-h-screen bg-surface-alt flex items-center justify-center">
+        <Card className="mx-4 max-w-md w-full rounded-[26px] border border-ink-200 shadow-[0_20px_46px_-30px_rgba(47,129,112,0.20)] backdrop-blur-xs bg-white/92">
           <CardContent className="p-8 text-center">
             <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl shadow-2xl flex items-center justify-center mx-auto mb-6">
               <CheckIcon className="w-8 h-8 text-white" />
             </div>
-            <h2 className="font-[var(--font-dash-sans)] text-2xl font-semibold text-slate-900 mb-2">{t('new.categoryCreated')}</h2>
-            <p className="text-slate-600 mb-6">{t('new.categoryCreatedDesc')}</p>
-            <div className="text-sm text-slate-500">{t('new.redirectingToCategories')}</div>
+            <h2 className="font-[var(--font-dash-sans)] text-2xl font-semibold text-ink-900 mb-2">{t('new.categoryCreated')}</h2>
+            <p className="text-ink-600 mb-6">{t('new.categoryCreatedDesc')}</p>
+            <div className="text-sm text-ink-500">{t('new.redirectingToCategories')}</div>
           </CardContent>
         </Card>
       </div>
@@ -180,10 +180,10 @@ export default function NewCategoryPage() {
 
           {/* Page Title */}
           <div className="mb-6">
-            <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
+            <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-ink-900 sm:text-[2.1rem]">
               {t('new.title')}
             </h1>
-            <p className="text-[15px] text-slate-500 mt-1.5">
+            <p className="text-[15px] text-ink-500 mt-1.5">
               {t('new.subtitle')}
             </p>
           </div>
@@ -191,10 +191,10 @@ export default function NewCategoryPage() {
 
         {/* Category Form */}
         <div className="max-w-2xl mx-auto">
-          <Card className="rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92">
+          <Card className="rounded-[26px] border border-ink-200 shadow-[0_20px_46px_-30px_rgba(47,129,112,0.20)] backdrop-blur-xs bg-white/92">
             <CardHeader>
-              <CardTitle className="font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900 flex items-center gap-2">
-                <TagIcon className="w-5 h-5 text-violet-600" />
+              <CardTitle className="font-[var(--font-dash-sans)] text-lg font-semibold text-ink-900 flex items-center gap-2">
+                <TagIcon className="w-5 h-5 text-primary-600" />
                 {t('categoryDetails')}
               </CardTitle>
             </CardHeader>
@@ -214,7 +214,7 @@ export default function NewCategoryPage() {
 
                 {/* Name Field */}
                 <div>
-                  <label htmlFor="name" className="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 mb-2">
+                  <label htmlFor="name" className="block text-xs font-semibold uppercase tracking-[0.08em] text-ink-500 mb-2">
                     {t('edit.categoryName')}
                   </label>
                   <Input
@@ -233,7 +233,7 @@ export default function NewCategoryPage() {
                 {/* Parent Category Field */}
                 {parentCategoryOptions.length > 0 && (
                   <div>
-                    <label htmlFor="parentCategoryId" className="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 mb-2">
+                    <label htmlFor="parentCategoryId" className="block text-xs font-semibold uppercase tracking-[0.08em] text-ink-500 mb-2">
                       {t('new.parentCategoryOptional')}
                     </label>
                     <select
@@ -249,7 +249,7 @@ export default function NewCategoryPage() {
                         </option>
                       ))}
                     </select>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-ink-500">
                       {t('new.parentHelp')}
                     </p>
                   </div>
@@ -257,7 +257,7 @@ export default function NewCategoryPage() {
 
                 {/* Color Field */}
                 <div>
-                  <label htmlFor="color" className="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 mb-2">
+                  <label htmlFor="color" className="block text-xs font-semibold uppercase tracking-[0.08em] text-ink-500 mb-2">
                     {t('edit.color')}
                   </label>
                   <div className="flex gap-2 flex-wrap">
@@ -267,7 +267,7 @@ export default function NewCategoryPage() {
                         type="button"
                         onClick={() => handleInputChange('color', color)}
                         className={`w-8 h-8 rounded-full border-2 ${
-                          formData.color === color ? 'border-slate-800' : 'border-slate-300'
+                          formData.color === color ? 'border-ink-800' : 'border-ink-200'
                         }`}
                         style={{ backgroundColor: color }}
                         aria-label={`Select color ${color}`}
@@ -286,7 +286,7 @@ export default function NewCategoryPage() {
 
                 {/* Description Field */}
                 <div>
-                  <label htmlFor="description" className="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 mb-2">
+                  <label htmlFor="description" className="block text-xs font-semibold uppercase tracking-[0.08em] text-ink-500 mb-2">
                     {t('new.descriptionLabel')}
                   </label>
                   <textarea

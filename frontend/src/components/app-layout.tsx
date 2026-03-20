@@ -13,7 +13,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, mainClassName, noBackground }: AppLayoutProps) {
   return (
-    <div className="flex flex-col lg:flex-row min-h-dvh bg-[#faf8ff]">
+    <div className="flex flex-col lg:flex-row min-h-dvh bg-surface-alt">
       <Navigation />
 
       {/* Main content area — offset by sidebar width on lg+ */}

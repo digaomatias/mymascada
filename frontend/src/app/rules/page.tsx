@@ -27,6 +27,7 @@ import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 type RuleType = 'Contains' | 'StartsWith' | 'EndsWith' | 'Equals' | 'Regex';
 type RuleTypeValue = RuleType | 1 | 2 | 3 | 4 | 5;
@@ -106,6 +107,8 @@ export default function RulesPage() {
   const [showRulePreview, setShowRulePreview] = useState(false);
   const [testResult, setTestResult] = useState<RuleTestResult | null>(null);
   const [testingRuleId, setTestingRuleId] = useState<number | null>(null);
+  const [deleteRuleTarget, setDeleteRuleTarget] = useState<{ id: number; name: string } | null>(null);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (isAuthResolved) {
@@ -158,18 +161,22 @@ export default function RulesPage() {
     }
   };
 
-  const deleteRule = async (ruleId: number, ruleName: string) => {
-    if (!confirm(t('toasts.deleteConfirm', { name: ruleName }))) {
-      return;
-    }
+  const confirmDeleteRule = (ruleId: number, ruleName: string) => {
+    setDeleteRuleTarget({ id: ruleId, name: ruleName });
+  };
+
+  const handleDeleteRule = async () => {
+    if (!deleteRuleTarget) return;
 
     try {
-      await apiClient.delete(`/api/rules/${ruleId}`);
+      await apiClient.delete(`/api/rules/${deleteRuleTarget.id}`);
       await refreshRulesData();
       toast.success(t('toasts.deleteSuccess'));
     } catch (error) {
       console.error('Failed to delete rule:', error);
       toast.error(t('toasts.deleteFailed'));
+    } finally {
+      setDeleteRuleTarget(null);
     }
   };
 
@@ -222,9 +229,9 @@ export default function RulesPage() {
       case 'Contains': return 'bg-blue-100 text-blue-800';
       case 'StartsWith': return 'bg-emerald-100 text-emerald-800';
       case 'EndsWith': return 'bg-amber-100 text-amber-800';
-      case 'Equals': return 'bg-violet-100 text-violet-800';
+      case 'Equals': return 'bg-primary-100 text-primary-800';
       case 'Regex': return 'bg-red-100 text-red-800';
-      default: return 'bg-slate-100 text-slate-800';
+      default: return 'bg-ink-100 text-ink-800';
     }
   };
 
@@ -449,15 +456,12 @@ export default function RulesPage() {
     }
   };
 
-  const runBulkDelete = async () => {
-    if (selectedRuleIds.size === 0) {
-      return;
-    }
+  const confirmBulkDelete = () => {
+    if (selectedRuleIds.size === 0) return;
+    setShowBulkDeleteConfirm(true);
+  };
 
-    if (!confirm(t('toasts.bulkDeleteConfirm', { count: selectedRuleIds.size }))) {
-      return;
-    }
-
+  const handleBulkDelete = async () => {
     const selectedIds = [...selectedRuleIds];
 
     try {
@@ -471,6 +475,7 @@ export default function RulesPage() {
       toast.error(t('toasts.bulkUpdateFailed'));
     } finally {
       setIsBulkUpdating(false);
+      setShowBulkDeleteConfirm(false);
     }
   };
 
@@ -482,10 +487,10 @@ export default function RulesPage() {
       <div className="mb-5">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
+            <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-ink-900 sm:text-[2.1rem]">
               {t('page.title')}
             </h1>
-            <p className="text-[15px] text-slate-500 mt-1.5">
+            <p className="text-[15px] text-ink-500 mt-1.5">
               {t('page.subtitle')}
             </p>
           </div>
@@ -511,19 +516,19 @@ export default function RulesPage() {
       <div className="space-y-5">
         {/* Statistics Cards */}
         {statistics && (
-          <section className="rounded-[26px] border border-violet-100/60 bg-white/90 p-6 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
+          <section className="rounded-[26px] border border-ink-200 bg-white/90 p-6 shadow-lg shadow-primary-200/20 backdrop-blur-xs">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                   {t('statistics.totalRules')}
                 </p>
-                <p className="mt-1 font-[var(--font-dash-mono)] text-2xl font-semibold text-slate-900">
+                <p className="mt-1 font-[var(--font-dash-mono)] text-2xl font-semibold text-ink-900">
                   {statistics.totalRules}
                 </p>
               </div>
 
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                   {t('statistics.activeRules')}
                 </p>
                 <p className="mt-1 font-[var(--font-dash-mono)] text-2xl font-semibold text-emerald-600">
@@ -532,19 +537,19 @@ export default function RulesPage() {
               </div>
 
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                   {t('statistics.applications')}
                 </p>
-                <p className="mt-1 font-[var(--font-dash-mono)] text-2xl font-semibold text-slate-900">
+                <p className="mt-1 font-[var(--font-dash-mono)] text-2xl font-semibold text-ink-900">
                   {statistics.totalApplications}
                 </p>
               </div>
 
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                   {t('statistics.accuracy')}
                 </p>
-                <p className="mt-1 font-[var(--font-dash-mono)] text-2xl font-semibold text-slate-900">
+                <p className="mt-1 font-[var(--font-dash-mono)] text-2xl font-semibold text-ink-900">
                   {formatAccuracy(statistics.overallAccuracy)}
                 </p>
               </div>
@@ -553,20 +558,20 @@ export default function RulesPage() {
         )}
 
         {/* Filters */}
-        <section className="rounded-[20px] border border-violet-100/60 bg-white/90 p-4 shadow-sm shadow-violet-200/20 backdrop-blur-xs space-y-3">
+        <section className="rounded-[20px] border border-ink-200 bg-white/90 p-4 shadow-sm shadow-primary-200/20 backdrop-blur-xs space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
                 checked={includeInactive}
                 onChange={(e) => setIncludeInactive(e.target.checked)}
-                className="rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                className="rounded border-ink-200 text-primary-600 focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
               />
-              <span className="text-sm text-slate-600">{t('filters.showInactive')}</span>
+              <span className="text-sm text-ink-600">{t('filters.showInactive')}</span>
             </label>
-            <div className="flex items-center gap-2 text-sm text-slate-500">
+            <div className="flex items-center gap-2 text-sm text-ink-500">
               {loading && (
-                <div className="w-3.5 h-3.5 animate-spin rounded-full border-2 border-slate-300 border-t-violet-500" />
+                <div className="w-3.5 h-3.5 animate-spin rounded-full border-2 border-ink-200 border-t-primary-500" />
               )}
               <span>{t('filters.rulesFound', { count: visibleRules.length })}</span>
             </div>
@@ -574,7 +579,7 @@ export default function RulesPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
-              <label htmlFor="ruleSearch" className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <label htmlFor="ruleSearch" className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                 {t('filters.search')}
               </label>
               <Input
@@ -587,7 +592,7 @@ export default function RulesPage() {
             </div>
 
             <div>
-              <label htmlFor="ruleTypeFilter" className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <label htmlFor="ruleTypeFilter" className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                 {t('filters.type')}
               </label>
               <select
@@ -606,7 +611,7 @@ export default function RulesPage() {
             </div>
 
             <div>
-              <label htmlFor="ruleSort" className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <label htmlFor="ruleSort" className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                 {t('filters.sort')}
               </label>
               <select
@@ -641,7 +646,7 @@ export default function RulesPage() {
             >
               {t('bulk.clearSelection')}
             </Button>
-            <span className="text-sm text-slate-500">
+            <span className="text-sm text-ink-500">
               {t('bulk.selectedCount', { count: selectedCount })}
             </span>
 
@@ -658,7 +663,7 @@ export default function RulesPage() {
                   {t('reorder.start')}
                 </Button>
               ) : (
-                <Badge variant="secondary" className="bg-violet-100 text-violet-700">
+                <Badge variant="secondary" className="bg-primary-100 text-primary-700">
                   {t('reorder.modeActive')}
                 </Badge>
               )}
@@ -666,7 +671,7 @@ export default function RulesPage() {
           </div>
 
           {selectedCount > 0 && !isReorderMode && (
-            <div className="rounded-xl border border-violet-100 bg-violet-50/50 p-3 flex flex-wrap items-center gap-2">
+            <div className="rounded-xl border border-ink-200 bg-primary-50/50 p-3 flex flex-wrap items-center gap-2">
               <Button
                 size="sm"
                 variant="secondary"
@@ -687,7 +692,7 @@ export default function RulesPage() {
                 size="sm"
                 variant="secondary"
                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                onClick={runBulkDelete}
+                onClick={confirmBulkDelete}
                 disabled={isBulkUpdating}
               >
                 {t('bulk.delete')}
@@ -697,13 +702,13 @@ export default function RulesPage() {
         </section>
 
         {isReorderMode && (
-          <section className="rounded-[26px] border border-violet-100/60 bg-white/90 p-5 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
+          <section className="rounded-[26px] border border-ink-200 bg-white/90 p-5 shadow-lg shadow-primary-200/20 backdrop-blur-xs">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
-                <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900">
+                <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold text-ink-900">
                   {t('reorder.title')}
                 </h3>
-                <p className="text-sm text-slate-500">{t('reorder.help')}</p>
+                <p className="text-sm text-ink-500">{t('reorder.help')}</p>
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -749,19 +754,19 @@ export default function RulesPage() {
                     setDragOverRuleId(null);
                   }}
                   className={cn(
-                    'flex items-center justify-between gap-3 rounded-2xl border border-slate-200 px-4 py-3 bg-white cursor-grab',
-                    dragOverRuleId === rule.id && draggedRuleId !== rule.id && 'border-violet-300 bg-violet-50',
+                    'flex items-center justify-between gap-3 rounded-2xl border border-ink-200 px-4 py-3 bg-white cursor-grab',
+                    dragOverRuleId === rule.id && draggedRuleId !== rule.id && 'border-primary-300 bg-primary-50',
                     draggedRuleId === rule.id && 'opacity-70'
                   )}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <Bars3Icon className="w-4 h-4 text-slate-400 shrink-0" />
-                    <span className="font-[var(--font-dash-mono)] text-xs text-slate-400 w-8">
+                    <Bars3Icon className="w-4 h-4 text-ink-400 shrink-0" />
+                    <span className="font-[var(--font-dash-mono)] text-xs text-ink-400 w-8">
                       #{index}
                     </span>
-                    <span className="text-sm font-medium text-slate-900 truncate">{rule.name}</span>
+                    <span className="text-sm font-medium text-ink-900 truncate">{rule.name}</span>
                     {!rule.isActive && (
-                      <Badge variant="secondary" className="bg-slate-100 text-slate-500 text-[10px]">
+                      <Badge variant="secondary" className="bg-ink-100 text-ink-500 text-[10px]">
                         {t('badges.inactive')}
                       </Badge>
                     )}
@@ -796,23 +801,23 @@ export default function RulesPage() {
         )}
 
         {/* Rules List */}
-        <Card className="rounded-[26px] border border-violet-100/60 bg-white/90 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
+        <Card className="rounded-[26px] border border-ink-200 bg-white/90 shadow-lg shadow-primary-200/20 backdrop-blur-xs">
           <CardContent className="p-0">
             {loading && rules.length === 0 ? (
               <div className="p-6 space-y-3">
                 {Array.from({ length: 4 }).map((_, index) => (
-                  <div key={index} className="animate-pulse h-20 rounded-2xl bg-slate-100" />
+                  <div key={index} className="animate-pulse h-20 rounded-2xl bg-ink-100" />
                 ))}
               </div>
             ) : rules.length === 0 ? (
               <div className="text-center py-12 px-6">
-                <div className="w-20 h-20 bg-gradient-to-br from-violet-400 to-fuchsia-500 rounded-3xl shadow-2xl flex items-center justify-center mx-auto mb-6">
+                <div className="w-20 h-20 bg-gradient-to-br from-primary-400 to-primary-400 rounded-3xl shadow-2xl flex items-center justify-center mx-auto mb-6">
                   <AdjustmentsHorizontalIcon className="w-10 h-10 text-white" />
                 </div>
-                <h3 className="font-[var(--font-dash-sans)] text-xl font-semibold text-slate-900 mb-2">
+                <h3 className="font-[var(--font-dash-sans)] text-xl font-semibold text-ink-900 mb-2">
                   {t('empty.title')}
                 </h3>
-                <p className="text-slate-500 mb-6">
+                <p className="text-ink-500 mb-6">
                   {t('empty.description')}
                 </p>
                 <Link href="/rules/new">
@@ -824,7 +829,7 @@ export default function RulesPage() {
               </div>
             ) : visibleRules.length === 0 ? (
               <div className="text-center py-12 px-6">
-                <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900 mb-2">
+                <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold text-ink-900 mb-2">
                   {t('filters.noMatches')}
                 </h3>
                 <Button
@@ -844,7 +849,7 @@ export default function RulesPage() {
                   <div
                     key={rule.id}
                     className={cn(
-                      'group border-b border-slate-100 last:border-b-0 hover:bg-slate-50/60 transition-colors p-5',
+                      'group border-b border-ink-100 last:border-b-0 hover:bg-ink-50/60 transition-colors p-5',
                       !rule.isActive && 'opacity-60'
                     )}
                   >
@@ -854,7 +859,7 @@ export default function RulesPage() {
                         checked={selectedRuleIds.has(rule.id)}
                         onChange={(event) => toggleRuleSelection(rule.id, event.target.checked)}
                         disabled={isReorderMode}
-                        className="mt-1 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                        className="mt-1 rounded border-ink-200 text-primary-600 focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
                         aria-label={t('bulk.selectRule', { name: rule.name })}
                       />
 
@@ -862,50 +867,50 @@ export default function RulesPage() {
                         {/* Rule name + badges */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                            <h3 className="font-[var(--font-dash-sans)] text-base font-semibold text-slate-900 truncate">
+                            <h3 className="font-[var(--font-dash-sans)] text-base font-semibold text-ink-900 truncate">
                               {rule.name}
                             </h3>
                             <Badge className={cn('text-[10px] font-medium', getRuleTypeColor(rule.type))}>
                               {getRuleTypeLabel(rule.type)}
                             </Badge>
                             {rule.isAiGenerated && (
-                              <Badge variant="secondary" className="bg-violet-100 text-violet-800 text-[10px]">
+                              <Badge variant="secondary" className="bg-primary-100 text-primary-800 text-[10px]">
                                 <SparklesIcon className="w-3 h-3 mr-1" />
                                 {t('badges.aiGenerated')}
                               </Badge>
                             )}
                             {!rule.isActive && (
-                              <Badge variant="secondary" className="bg-slate-100 text-slate-500 text-[10px]">
+                              <Badge variant="secondary" className="bg-ink-100 text-ink-500 text-[10px]">
                                 {t('badges.inactive')}
                               </Badge>
                             )}
                           </div>
 
                           {rule.description && (
-                            <p className="text-sm text-slate-500 mb-2">{rule.description}</p>
+                            <p className="text-sm text-ink-500 mb-2">{rule.description}</p>
                           )}
 
                           {/* Rule metadata */}
-                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500 mb-2">
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-500 mb-2">
                             <span>
                               {t('card.pattern')}{' '}
-                              <code className="bg-slate-100 px-2 py-0.5 rounded text-xs text-slate-700">{rule.pattern}</code>
+                              <code className="bg-ink-100 px-2 py-0.5 rounded text-xs text-ink-700">{rule.pattern}</code>
                             </span>
                             <span>
                               {t('card.category')}{' '}
-                              <strong className="text-slate-700">{rule.categoryName}</strong>
+                              <strong className="text-ink-700">{rule.categoryName}</strong>
                             </span>
                             <span>{t('priority')}: {rule.priority}</span>
                             {rule.accuracyRate > 0 && (
                               <span>
                                 {t('statistics.accuracy')}:{' '}
-                                <strong className="font-[var(--font-dash-mono)] text-slate-700">{formatAccuracy(rule.accuracyRate)}</strong>
+                                <strong className="font-[var(--font-dash-mono)] text-ink-700">{formatAccuracy(rule.accuracyRate)}</strong>
                               </span>
                             )}
                           </div>
 
                           {/* Stats row */}
-                          <div className="flex items-center gap-4 text-xs text-slate-400">
+                          <div className="flex items-center gap-4 text-xs text-ink-400">
                             <span className="font-[var(--font-dash-mono)]">{rule.matchCount} {t('card.matches')}</span>
                             {rule.correctionCount > 0 && (
                               <span className="font-[var(--font-dash-mono)]">{rule.correctionCount} {t('card.corrections')}</span>
@@ -961,7 +966,7 @@ export default function RulesPage() {
                           <Button
                             variant="secondary"
                             size="sm"
-                            onClick={() => deleteRule(rule.id, rule.name)}
+                            onClick={() => confirmDeleteRule(rule.id, rule.name)}
                             className="w-8 h-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                             disabled={isReorderMode || isBulkUpdating}
                             title={t('deleteRule')}
@@ -982,14 +987,14 @@ export default function RulesPage() {
       {/* Rule Preview Modal */}
       {showRulePreview && testResult && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="rounded-[26px] border border-violet-100/60 bg-white shadow-lg shadow-violet-200/20 max-w-4xl w-full max-h-[90vh] overflow-hidden">
-            <div className="p-6 border-b border-slate-200">
+          <div className="rounded-[26px] border border-ink-200 bg-white shadow-lg shadow-primary-200/20 max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="p-6 border-b border-ink-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="font-[var(--font-dash-sans)] text-xl font-semibold text-slate-900">
+                  <h2 className="font-[var(--font-dash-sans)] text-xl font-semibold text-ink-900">
                     {t('preview.title', { name: testResult.ruleName })}
                   </h2>
-                  <p className="text-[15px] text-slate-500 mt-1">
+                  <p className="text-[15px] text-ink-500 mt-1">
                     {t('preview.subtitle')}
                   </p>
                 </div>
@@ -998,7 +1003,7 @@ export default function RulesPage() {
                     setShowRulePreview(false);
                     setTestResult(null);
                   }}
-                  className="text-slate-400 hover:text-slate-600 transition-colors"
+                  className="text-ink-400 hover:text-ink-600 transition-colors"
                 >
                   <span className="sr-only">{tCommon('close')}</span>
                   <XMarkIcon className="w-6 h-6" />
@@ -1009,41 +1014,41 @@ export default function RulesPage() {
             <div className="p-6">
               {testResult.matchingTransactions.length === 0 ? (
                 <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-gradient-to-br from-slate-200 to-slate-300 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <EyeIcon className="w-8 h-8 text-slate-500" />
+                  <div className="w-16 h-16 bg-gradient-to-br from-ink-200 to-ink-300 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <EyeIcon className="w-8 h-8 text-ink-500" />
                   </div>
-                  <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900 mb-2">
+                  <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold text-ink-900 mb-2">
                     {t('preview.noMatchesTitle')}
                   </h3>
-                  <p className="text-slate-500">
+                  <p className="text-ink-500">
                     {t('preview.noMatchesDesc')}
                   </p>
                 </div>
               ) : (
                 <>
                   <div className="mb-4">
-                    <p className="text-sm text-slate-600">
+                    <p className="text-sm text-ink-600">
                       {t('preview.foundTransactions', { count: testResult.matchingTransactions.length })}{' '}
-                      <strong className="text-violet-600">{testResult.matchingTransactions[0]?.suggestedCategoryName}</strong>
+                      <strong className="text-primary-600">{testResult.matchingTransactions[0]?.suggestedCategoryName}</strong>
                     </p>
                   </div>
 
-                  <div className="max-h-96 overflow-y-auto rounded-[16px] border border-slate-200">
+                  <div className="max-h-96 overflow-y-auto rounded-[16px] border border-ink-200">
                     <div className="space-y-0">
                       {testResult.matchingTransactions.map((transaction, index) => (
                         <div
                           key={transaction.id}
                           className={cn(
                             'p-4',
-                            index !== testResult.matchingTransactions.length - 1 && 'border-b border-slate-100'
+                            index !== testResult.matchingTransactions.length - 1 && 'border-b border-ink-100'
                           )}
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-3">
                                 <div className="flex-1 min-w-0">
-                                  <p className="font-medium text-slate-900 truncate">{transaction.description}</p>
-                                  <div className="flex items-center gap-4 text-sm text-slate-500 mt-0.5">
+                                  <p className="font-medium text-ink-900 truncate">{transaction.description}</p>
+                                  <div className="flex items-center gap-4 text-sm text-ink-500 mt-0.5">
                                     <span>{transaction.accountName}</span>
                                     <span>{new Date(transaction.transactionDate).toLocaleDateString()}</span>
                                   </div>
@@ -1058,8 +1063,8 @@ export default function RulesPage() {
                                 </div>
                               </div>
                               <div className="mt-2 flex items-center gap-2">
-                                <span className="text-sm text-slate-500">{t('preview.wouldCategorizeAs')}</span>
-                                <span className="px-2 py-0.5 bg-violet-100 text-violet-700 rounded-full text-xs font-medium">
+                                <span className="text-sm text-ink-500">{t('preview.wouldCategorizeAs')}</span>
+                                <span className="px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full text-xs font-medium">
                                   {transaction.suggestedCategoryName}
                                 </span>
                               </div>
@@ -1071,7 +1076,7 @@ export default function RulesPage() {
                   </div>
 
                   <div className="mt-6 flex items-center justify-between">
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-ink-400">
                       {t('preview.autoInfo')}
                     </p>
                     <Button
@@ -1090,6 +1095,27 @@ export default function RulesPage() {
           </div>
         </div>
       )}
+      <ConfirmationDialog
+        isOpen={deleteRuleTarget !== null}
+        onClose={() => setDeleteRuleTarget(null)}
+        onConfirm={handleDeleteRule}
+        title={t('deleteRule')}
+        description={deleteRuleTarget ? t('toasts.deleteConfirm', { name: deleteRuleTarget.name }) : ''}
+        confirmText={tCommon('delete')}
+        cancelText={tCommon('cancel')}
+        variant="danger"
+      />
+
+      <ConfirmationDialog
+        isOpen={showBulkDeleteConfirm}
+        onClose={() => setShowBulkDeleteConfirm(false)}
+        onConfirm={handleBulkDelete}
+        title={t('bulk.delete')}
+        description={t('toasts.bulkDeleteConfirm', { count: selectedRuleIds.size })}
+        confirmText={tCommon('delete')}
+        cancelText={tCommon('cancel')}
+        variant="danger"
+      />
     </AppLayout>
   );
 }

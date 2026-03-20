@@ -14,7 +14,7 @@ export const buttonVariants = (props?: { variant?: string; size?: string }) => {
     primary: 'btn-primary',
     secondary: 'btn-secondary', 
     danger: 'btn-danger',
-    ghost: 'bg-transparent hover:bg-violet-50 text-slate-600',
+    ghost: 'bg-transparent hover:bg-ink-50 text-ink-600 hover:text-ink-800',
     default: 'btn-primary',
     destructive: 'btn-danger',
     outline: 'btn-secondary',
@@ -41,7 +41,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       primary: 'btn-primary',
       secondary: 'btn-secondary',
       danger: 'btn-danger',
-      ghost: 'bg-transparent hover:bg-violet-50 text-slate-600',
+      ghost: 'bg-transparent hover:bg-ink-50 text-ink-600 hover:text-ink-800',
       outline: 'btn-secondary',
     };
 

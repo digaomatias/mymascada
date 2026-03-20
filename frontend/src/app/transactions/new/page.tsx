@@ -77,12 +77,12 @@ function NewTransactionPageContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
+      <div className="min-h-screen bg-surface-alt flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
+          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-400 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <BanknotesIcon className="w-8 h-8 text-white" />
           </div>
-          <div className="mt-6 text-slate-700 font-medium">{tCommon('loading')}</div>
+          <div className="mt-6 text-ink-700 font-medium">{tCommon('loading')}</div>
         </div>
       </div>
     );
@@ -94,14 +94,14 @@ function NewTransactionPageContent() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
+      <div className="min-h-screen bg-surface-alt flex items-center justify-center">
         <div className="mx-4 max-w-md w-full form-card p-8 text-center">
           <div className="w-16 h-16 bg-gradient-to-br from-success-500 to-success-600 rounded-2xl shadow-2xl flex items-center justify-center mx-auto mb-6">
             <CheckIcon className="w-8 h-8 text-white" />
           </div>
-          <h2 className="text-2xl font-semibold text-slate-900 mb-2">{t('transactionCreated')}</h2>
-          <p className="text-slate-600 mb-6">{t('transactionCreatedDesc')}</p>
-          <div className="text-sm text-slate-500">{t('redirectingToTransactions')}</div>
+          <h2 className="text-2xl font-semibold text-ink-900 mb-2">{t('transactionCreated')}</h2>
+          <p className="text-ink-600 mb-6">{t('transactionCreatedDesc')}</p>
+          <div className="text-sm text-ink-500">{t('redirectingToTransactions')}</div>
         </div>
       </div>
     );
@@ -118,10 +118,10 @@ function NewTransactionPageContent() {
 
       {/* Page Title */}
       <div className="mb-6">
-        <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
+        <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-ink-900 sm:text-[2.1rem]">
           {t('addTransaction')}
         </h1>
-        <p className="mt-1.5 text-[15px] text-slate-500">
+        <p className="mt-1.5 text-[15px] text-ink-500">
           {t('newTransactionDesc')}
         </p>
       </div>
@@ -130,7 +130,7 @@ function NewTransactionPageContent() {
       <div className="form-card p-6">
         <div className="flex items-center gap-2 mb-5">
           <BanknotesIcon className="w-5 h-5 text-primary-600" />
-          <h2 className="text-base font-semibold text-slate-900">{t('transactionDetails')}</h2>
+          <h2 className="text-base font-semibold text-ink-900">{t('transactionDetails')}</h2>
         </div>
         <TransactionForm
           initialData={accountIdFromUrl ? { accountId: accountIdFromUrl } : undefined}

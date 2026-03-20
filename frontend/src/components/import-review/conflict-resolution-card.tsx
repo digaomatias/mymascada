@@ -47,11 +47,11 @@ export function ConflictResolutionCard({
       case ConflictType.PotentialDuplicate:
         return 'bg-orange-100 text-orange-800 border-orange-200';
       case ConflictType.TransferConflict:
-        return 'bg-purple-100 text-purple-800 border-purple-200';
+        return 'bg-primary-100 text-primary-800 border-primary-200';
       case ConflictType.ManualEntryConflict:
         return 'bg-blue-100 text-blue-800 border-blue-200';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-ink-100 text-ink-800 border-ink-200';
     }
   };
 
@@ -116,7 +116,7 @@ export function ConflictResolutionCard({
       case ConflictResolution.MergeWithExisting:
         return 'bg-blue-500 hover:bg-blue-600';
       case ConflictResolution.ReplaceExisting:
-        return 'bg-purple-500 hover:bg-purple-600';
+        return 'bg-primary-500 hover:bg-primary-600';
       default:
         return 'bg-yellow-500 hover:bg-yellow-600';
     }
@@ -134,7 +134,7 @@ export function ConflictResolutionCard({
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <div className="font-medium text-gray-900">
+              <div className="font-medium text-ink-900">
                 {importCandidate.description}
               </div>
               {hasConflicts && (
@@ -147,7 +147,7 @@ export function ConflictResolutionCard({
               )}
             </div>
             
-            <div className="flex items-center gap-4 text-sm text-gray-600">
+            <div className="flex items-center gap-4 text-sm text-ink-600">
               <span className={`font-medium ${
                 importCandidate.amount > 0 ? 'text-success-600' : 'text-red-600'
               }`}>
@@ -155,7 +155,7 @@ export function ConflictResolutionCard({
               </span>
               <span>{formatDate(importCandidate.date)}</span>
               {importCandidate.referenceNumber && (
-                <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                <span className="text-xs bg-ink-100 px-2 py-1 rounded">
                   {tImport('review.referenceLabel', { reference: importCandidate.referenceNumber })}
                 </span>
               )}
@@ -181,21 +181,21 @@ export function ConflictResolutionCard({
         {/* Conflict Details */}
         {hasConflicts && isExpanded && (
           <div className="mb-4 p-3 bg-white rounded-lg border">
-            <h4 className="font-medium text-gray-900 mb-3">{tImport('review.conflictingTransaction')}</h4>
+            <h4 className="font-medium text-ink-900 mb-3">{tImport('review.conflictingTransaction')}</h4>
             
             <div className="space-y-3">
               {conflicts.map((conflict, index) => (
                 <div key={index} className="flex justify-between items-start">
                   <div className="flex-1">
-                    <div className="font-medium text-gray-700 mb-1">
+                    <div className="font-medium text-ink-700 mb-1">
                       {conflict.message}
                     </div>
                     {conflict.conflictingTransaction && (
                       <>
-                        <div className="font-medium text-gray-700">
+                        <div className="font-medium text-ink-700">
                           {conflict.conflictingTransaction.description}
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
+                        <div className="flex items-center gap-4 text-sm text-ink-500 mt-1">
                           <span className={`font-medium ${
                             conflict.conflictingTransaction.amount >= 0 ? 'text-green-600' : 'text-red-600'
                           }`}>
@@ -215,7 +215,7 @@ export function ConflictResolutionCard({
                           ? 'border-red-300 text-red-700'
                           : conflict.severity === ConflictSeverity.Medium
                           ? 'border-orange-300 text-orange-700'
-                          : 'border-gray-300 text-gray-600'
+                          : 'border-ink-300 text-ink-600'
                       }`}>
                         {tImport('review.severityLabel', { severity: ConflictSeverity[conflict.severity] })}
                       </Badge>
@@ -223,7 +223,7 @@ export function ConflictResolutionCard({
                   </div>
                   
                   <div className="ml-4 text-right">
-                    <div className="text-sm font-medium text-gray-700">
+                    <div className="text-sm font-medium text-ink-700">
                       {tImport('review.confidenceLabel', { percent: Math.round(conflict.confidenceScore * 100) })}
                     </div>
                     <ConfidenceIndicator confidence={conflict.confidenceScore} size="sm" />
@@ -289,7 +289,7 @@ export function ConflictResolutionCard({
                 value={userNotes}
                 onChange={(e) => setUserNotes(e.target.value)}
                 placeholder={tImport('review.notesPlaceholder')}
-                className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 resize-none"
+                className="w-full text-sm border border-ink-200 rounded-md px-3 py-2 resize-none"
                 rows={2}
               />
             </div>
@@ -304,7 +304,7 @@ export function ConflictResolutionCard({
               <span>{getDecisionLabel(reviewDecision)}</span>
             </div>
             {userNotes && (
-              <span className="text-sm text-gray-600">&quot;{userNotes}&quot;</span>
+              <span className="text-sm text-ink-600">&quot;{userNotes}&quot;</span>
             )}
           </div>
         )}

@@ -320,7 +320,7 @@ export default function ReconcileAccountPage() {
     setStep('review');
   };
 
-  const cardClass = 'rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92';
+  const cardClass = 'rounded-[26px] border border-ink-200 shadow-[0_20px_46px_-30px_rgba(47,129,112,0.20)] backdrop-blur-xs bg-white/92';
 
   const renderStepContent = () => {
     switch (step) {
@@ -329,8 +329,8 @@ export default function ReconcileAccountPage() {
           <div className={cn(cardClass, 'p-6')}>
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-4">{t('startReconciliation')}</h3>
-                <p className="text-slate-600 mb-6">
+                <h3 className="text-lg font-semibold text-ink-900 mb-4">{t('startReconciliation')}</h3>
+                <p className="text-ink-600 mb-6">
                   {t('startReconciliationDesc')}
                 </p>
               </div>
@@ -364,7 +364,7 @@ export default function ReconcileAccountPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-ink-700 mb-2">
                     {t('notesOptional')}
                   </label>
                   <textarea
@@ -374,7 +374,7 @@ export default function ReconcileAccountPage() {
                       notes: e.target.value
                     }))}
                     rows={3}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 py-2 border border-ink-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                     placeholder={t('notesPlaceholder')}
                   />
                 </div>
@@ -405,8 +405,8 @@ export default function ReconcileAccountPage() {
             {/* Header Card */}
             <div className={cn(cardClass, 'p-6')}>
               <div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-4">{t('importTransactions')}</h3>
-                <p className="text-slate-600 mb-4">
+                <h3 className="text-lg font-semibold text-ink-900 mb-4">{t('importTransactions')}</h3>
+                <p className="text-ink-600 mb-4">
                   {akahuAvailability?.isAvailable
                     ? t('importDescAkahu')
                     : t('importDescFile')
@@ -416,14 +416,14 @@ export default function ReconcileAccountPage() {
 
               {/* Source Toggle - Show only if Akahu is available */}
               {akahuAvailability?.isAvailable && (
-                <div className="flex rounded-lg border border-slate-200 p-1 bg-slate-50">
+                <div className="flex rounded-lg border border-ink-200 p-1 bg-ink-50">
                   <button
                     onClick={() => setImportSource('akahu')}
                     className={cn(
                       'flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors',
                       importSource === 'akahu'
                         ? 'bg-white text-primary-700 shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900'
+                        : 'text-ink-600 hover:text-ink-900'
                     )}
                   >
                     <CloudArrowDownIcon className="w-4 h-4" />
@@ -435,7 +435,7 @@ export default function ReconcileAccountPage() {
                       'flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors',
                       importSource === 'file'
                         ? 'bg-white text-primary-700 shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900'
+                        : 'text-ink-600 hover:text-ink-900'
                     )}
                   >
                     <DocumentArrowUpIcon className="w-4 h-4" />
@@ -446,10 +446,10 @@ export default function ReconcileAccountPage() {
 
               {/* Show connection status if checking */}
               {checkingAkahu && (
-                <div className="mt-4 bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <div className="mt-4 bg-ink-50 border border-ink-200 rounded-xl p-4">
                   <div className="flex items-center gap-3">
-                    <ArrowPathIcon className="w-5 h-5 text-slate-500 animate-spin" />
-                    <span className="text-slate-600">{t('checkingConnection')}</span>
+                    <ArrowPathIcon className="w-5 h-5 text-ink-500 animate-spin" />
+                    <span className="text-ink-600">{t('checkingConnection')}</span>
                   </div>
                 </div>
               )}
@@ -501,13 +501,13 @@ export default function ReconcileAccountPage() {
                 {bankTransactions.length > 0 && (
                   <div className={cn(cardClass, 'p-6')}>
                     <div>
-                      <h4 className="font-medium text-slate-900 mb-3">{t('bankTransactionsCount', { count: bankTransactions.length })}</h4>
+                      <h4 className="font-medium text-ink-900 mb-3">{t('bankTransactionsCount', { count: bankTransactions.length })}</h4>
                       <div className="space-y-2 max-h-60 overflow-y-auto">
                         {bankTransactions.map((transaction, index) => (
-                          <div key={index} className="flex justify-between items-center p-3 bg-white rounded-xl border border-slate-200">
+                          <div key={index} className="flex justify-between items-center p-3 bg-white rounded-xl border border-ink-200">
                             <div>
-                              <div className="font-medium text-slate-900">{transaction.description}</div>
-                              <div className="text-sm text-slate-500">
+                              <div className="font-medium text-ink-900">{transaction.description}</div>
+                              <div className="text-sm text-ink-500">
                                 {transaction.transactionDate.split('T')[0].split('-').reverse().join('/')}
                                 {transaction.reference && ` • Ref: ${transaction.reference}`}
                               </div>
@@ -523,11 +523,11 @@ export default function ReconcileAccountPage() {
                 )}
 
                 {/* Demo: Manual transaction entry for testing */}
-                <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 backdrop-blur-xs p-4">
+                <div className="rounded-2xl border border-ink-200/80 bg-ink-50/80 backdrop-blur-xs p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="font-medium text-slate-900">{t('demoAddSample')}</h4>
-                      <p className="text-sm text-slate-600">{t('demoDesc')}</p>
+                      <h4 className="font-medium text-ink-900">{t('demoAddSample')}</h4>
+                      <p className="text-sm text-ink-600">{t('demoDesc')}</p>
                     </div>
                     <Button onClick={addSampleTransaction} variant="secondary" size="sm">
                       {t('addSampleTransaction')}
@@ -572,8 +572,8 @@ export default function ReconcileAccountPage() {
           <div className={cn(cardClass, 'p-6')}>
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-4">{t('matchTransactions')}</h3>
-                <p className="text-slate-600 mb-6">
+                <h3 className="text-lg font-semibold text-ink-900 mb-4">{t('matchTransactions')}</h3>
+                <p className="text-ink-600 mb-6">
                   {t('matchTransactionsDesc')}
                 </p>
               </div>
@@ -651,8 +651,8 @@ export default function ReconcileAccountPage() {
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-2">{t('reconciliationComplete')}</h3>
-                <p className="text-slate-600">
+                <h3 className="text-lg font-semibold text-ink-900 mb-2">{t('reconciliationComplete')}</h3>
+                <p className="text-ink-600">
                   {t('reconciliationCompleteDesc')}
                 </p>
               </div>
@@ -686,20 +686,20 @@ export default function ReconcileAccountPage() {
               'w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium',
               stepItem.completed || stepItem.key === step
                 ? 'bg-primary-600 text-white'
-                : 'bg-slate-200 text-slate-600'
+                : 'bg-ink-200 text-ink-600'
             )}>
               {stepItem.completed ? <CheckCircleIcon className="w-5 h-5" /> : index + 1}
             </div>
             <span className={cn(
               'ml-2 text-sm',
-              stepItem.key === step ? 'text-primary-600 font-medium' : 'text-slate-500'
+              stepItem.key === step ? 'text-primary-600 font-medium' : 'text-ink-500'
             )}>
               {stepItem.label}
             </span>
             {index < steps.length - 1 && (
               <div className={cn(
                 'w-12 h-px mx-4',
-                stepItem.completed ? 'bg-primary-600' : 'bg-slate-200'
+                stepItem.completed ? 'bg-primary-600' : 'bg-ink-200'
               )} />
             )}
           </div>
@@ -710,12 +710,12 @@ export default function ReconcileAccountPage() {
 
   if (authLoading || !account) {
     return (
-      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
+      <div className="min-h-screen bg-surface-alt flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
+          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-400 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <ScaleIcon className="w-8 h-8 text-white" />
           </div>
-          <div className="mt-6 text-slate-700 font-medium">{t('loading')}</div>
+          <div className="mt-6 text-ink-700 font-medium">{t('loading')}</div>
         </div>
       </div>
     );
@@ -730,10 +730,10 @@ export default function ReconcileAccountPage() {
 
       {/* Page Title */}
       <div className="mb-6">
-        <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
+        <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-ink-900 sm:text-[2.1rem]">
           {t('reconcileAccount', { name: account.name })}
         </h1>
-        <p className="mt-1.5 text-[15px] text-slate-500">
+        <p className="mt-1.5 text-[15px] text-ink-500">
           {t('balanceWithStatement')}
         </p>
       </div>

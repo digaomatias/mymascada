@@ -39,12 +39,12 @@ function FloatingActionButton({
         "w-14 h-14",
         // Shape and appearance
         "rounded-full",
-        "bg-gradient-to-r from-purple-600 to-indigo-600",
+        "bg-gradient-to-r from-primary-600 to-indigo-600",
         "text-white",
         // Shadow
         "shadow-lg hover:shadow-xl",
         // Focus and accessibility
-        "focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2",
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2",
         // Animation
         "transition-all duration-200 ease-in-out",
         "active:scale-95 hover:scale-105",

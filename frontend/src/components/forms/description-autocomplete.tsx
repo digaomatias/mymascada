@@ -132,7 +132,7 @@ export default function DescriptionAutocomplete({
         {/* Dropdown indicator */}
         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
           <ChevronDownIcon 
-            className={`w-4 h-4 text-gray-400 transition-transform ${
+            className={`w-4 h-4 text-ink-400 transition-transform ${
               showSuggestions ? 'rotate-180' : ''
             }`} 
           />
@@ -144,12 +144,12 @@ export default function DescriptionAutocomplete({
         <div 
           ref={suggestionsRef}
           data-testid="description-suggestions"
-          className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
+          className="absolute z-50 w-full mt-1 bg-white border border-ink-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
         >
           {loading ? (
-            <div className="px-4 py-3 text-sm text-gray-500 text-center" data-testid="suggestions-loading">
+            <div className="px-4 py-3 text-sm text-ink-500 text-center" data-testid="suggestions-loading">
               <div className="flex items-center justify-center gap-2">
-                <div className="w-4 h-4 border-2 border-gray-300 border-t-primary-500 rounded-full animate-spin"></div>
+                <div className="w-4 h-4 border-2 border-ink-300 border-t-primary-500 rounded-full animate-spin"></div>
                 Loading suggestions...
               </div>
             </div>
@@ -161,8 +161,8 @@ export default function DescriptionAutocomplete({
                   type="button"
                   data-testid="suggestion-item"
                   onClick={() => handleSuggestionClick(suggestion)}
-                  className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 focus:bg-gray-100 focus:outline-none ${
-                    index === highlightedIndex ? 'bg-gray-100 highlighted' : ''
+                  className={`w-full text-left px-4 py-2 text-sm hover:bg-ink-100 focus:bg-ink-100 focus:outline-none ${
+                    index === highlightedIndex ? 'bg-ink-100 highlighted' : ''
                   }`}
                   onMouseEnter={() => setHighlightedIndex(index)}
                   onMouseLeave={() => setHighlightedIndex(-1)}
@@ -172,11 +172,11 @@ export default function DescriptionAutocomplete({
               ))}
             </div>
           ) : value.length > 0 ? (
-            <div className="px-4 py-3 text-sm text-gray-500 text-center">
+            <div className="px-4 py-3 text-sm text-ink-500 text-center">
               No matching descriptions found
             </div>
           ) : (
-            <div className="px-4 py-3 text-sm text-gray-500 text-center">
+            <div className="px-4 py-3 text-sm text-ink-500 text-center">
               Start typing to see suggestions
             </div>
           )}

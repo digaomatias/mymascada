@@ -298,7 +298,7 @@ export default function CategoryAutocomplete({
           {/* Selected category color indicator */}
           {selectedCategory?.color && (
             <div 
-              className="w-4 h-4 rounded-full border border-gray-300" 
+              className="w-4 h-4 rounded-full border border-ink-300" 
               style={{ backgroundColor: selectedCategory.color }}
             />
           )}
@@ -306,7 +306,7 @@ export default function CategoryAutocomplete({
           {isCreating ? (
             <div className="w-4 h-4 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
           ) : (
-            <TagIcon className="w-4 h-4 text-gray-400" />
+            <TagIcon className="w-4 h-4 text-ink-400" />
           )}
         </div>
       </div>
@@ -316,7 +316,7 @@ export default function CategoryAutocomplete({
       )}
 
       {isOpen && suggestions.length > 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+        <div className="absolute z-50 w-full mt-1 bg-white border border-ink-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
           {suggestions.map((suggestion, index) => (
             <div
               key={`${suggestion.fullPath}-${index}`}
@@ -324,7 +324,7 @@ export default function CategoryAutocomplete({
               className={`px-4 py-2 cursor-pointer flex items-center gap-2 ${
                 index === selectedIndex
                   ? 'bg-primary-50 text-primary-700'
-                  : 'hover:bg-gray-50'
+                  : 'hover:bg-ink-50'
               }`}
             >
               {suggestion.isExisting ? (
@@ -352,11 +352,11 @@ export default function CategoryAutocomplete({
                       <>
                         {suggestion.fullPath.split(' -> ').map((part, partIndex, parts) => (
                           <span key={partIndex} className="flex items-center gap-1">
-                            <span className={partIndex === parts.length - 1 ? 'font-medium' : 'text-gray-500'}>
+                            <span className={partIndex === parts.length - 1 ? 'font-medium' : 'text-ink-500'}>
                               {part}
                             </span>
                             {partIndex < parts.length - 1 && (
-                              <ChevronRightIcon className="w-3 h-3 text-gray-400" />
+                              <ChevronRightIcon className="w-3 h-3 text-ink-400" />
                             )}
                           </span>
                         ))}
@@ -368,7 +368,7 @@ export default function CategoryAutocomplete({
                 </div>
                 
                 {!suggestion.isExisting && (
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-ink-500">
                     Press Enter to create
                   </div>
                 )}
@@ -377,7 +377,7 @@ export default function CategoryAutocomplete({
           ))}
           
           {inputValue.trim() && !suggestions.some(s => s.fullPath.toLowerCase() === inputValue.toLowerCase()) && (
-            <div className="border-t border-gray-100 px-4 py-2 text-sm text-gray-500">
+            <div className="border-t border-ink-100 px-4 py-2 text-sm text-ink-500">
               Press Enter to create &quot;{inputValue}&quot;
             </div>
           )}

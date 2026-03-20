@@ -93,14 +93,6 @@ export function ImportReviewScreen({
       progressPercent: total > 0 ? Math.round((reviewed / total) * 100) : 0
     };
 
-    // Debug logging to help identify the issue
-    console.log('🔢 Progress Stats:', stats);
-    console.log('📋 Review Items Summary:', reviewItems.map(item => ({
-      id: item.id.substring(0, 8),
-      decision: item.reviewDecision,
-      conflicts: item.conflicts.length
-    })));
-
     return stats;
   }, [reviewItems]);
 
@@ -209,38 +201,14 @@ export function ImportReviewScreen({
         decisions
       };
 
-      // Debug: Log decision candidates to see their transaction types
-      console.log('🔍 Decision Candidates Debug:');
-      decisions.forEach((decision, index) => {
-        if (decision.candidate) {
-          console.log(`Decision ${index}: amount=${decision.candidate.amount}, type=${decision.candidate.type}, decision=${decision.decision}`);
-        }
-      });
-
-      // Debug: Log analysis result structure
-      console.log('🔍 Analysis Result Debug:', {
-        hasAnalysisId: !!analysisResult.analysisId,
-        hasAnalysisTimestamp: !!analysisResult.analysisTimestamp,
-        analysisId: analysisResult.analysisId,
-        analysisTimestamp: analysisResult.analysisTimestamp,
-        allKeys: Object.keys(analysisResult)
-      });
-
       // Validate request structure
       if (!request.analysisId) {
-        console.error('❌ Missing analysis ID in request:', request);
         toast.error(tToasts('importReviewMissingAnalysisId'));
         return;
       }
 
-      console.log('Executing import with request:', request);
-
       // Use the correct API endpoint
       const result = await apiClient.executeImportReview(request);
-
-      // Debug: Log the actual response structure
-      console.log('🔍 Raw API Response:', result);
-      console.log('🔍 Response keys:', Object.keys(result));
 
       // Validate response
       if (!result) {
@@ -260,24 +228,12 @@ export function ImportReviewScreen({
       const mergedCount = resultAny.statistics?.mergedCount || resultAny.mergedTransactionsCount || resultAny.Statistics?.MergedCount || 0;
       const errorCount = resultAny.statistics?.errorCount || resultAny.errors?.length || resultAny.Statistics?.ErrorCount || 0;
 
-      // Debug: Log the parsed values
-      console.log('📊 Parsed Response Values:', {
-        success,
-        importedCount,
-        skippedCount,
-        mergedCount,
-        errorCount,
-        rawErrors: resultAny.errors,
-        rawStatistics: resultAny.statistics
-      });
-
       // Determine success based on multiple criteria
       const hasImportedTransactions = importedCount > 0 || mergedCount > 0;
       const hasPositiveResult = hasImportedTransactions || skippedCount > 0;
       const actualSuccess = success || hasPositiveResult;
 
       if (actualSuccess && errorCount === 0) {
-        console.log('✅ Import completed successfully without errors');
         const totalProcessed = importedCount + mergedCount;
         const message = totalProcessed > 0 
           ? tToasts('importReviewCompleted', {
@@ -305,7 +261,6 @@ export function ImportReviewScreen({
         };
         onImportComplete(normalizedResult);
       } else if (actualSuccess && errorCount > 0) {
-        console.log(`⚠️  Import completed with warnings: ${errorCount} errors, ${importedCount} imported, ${mergedCount} merged`);
         const totalProcessed = importedCount + mergedCount;
         toast.warning(tToasts('importReviewCompletedWithErrors', {
           errors: errorCount,
@@ -329,7 +284,6 @@ export function ImportReviewScreen({
         };
         onImportComplete(normalizedResult);
       } else {
-        console.log('❌ Import failed:', resultAny.message);
         throw new Error(resultAny.message || tToasts('importReviewFailedNoTransactions'));
       }
 
@@ -353,21 +307,6 @@ export function ImportReviewScreen({
         toast.error(tToasts('importReviewUnexpectedError'));
       }
 
-      // Log detailed error information for debugging
-      console.error('Detailed import error info:', {
-        error,
-        analysisResult,
-        reviewItems: reviewItems.map(item => ({
-          id: item.id,
-          decision: item.reviewDecision,
-          conflicts: item.conflicts.length
-        })),
-        requestWouldBe: {
-          analysisId: analysisResult?.analysisId,
-          accountId: analysisResult?.accountId,
-          decisionsCount: reviewItems.filter(item => item.reviewDecision !== ConflictResolution.Pending).length
-        }
-      });
     } finally {
       setIsImporting(false);
     }
@@ -399,7 +338,7 @@ export function ImportReviewScreen({
               </div>
               <div>
                 <span className="text-lg font-semibold">{title}</span>
-                <span className="ml-2 text-sm text-gray-500">({items.length})</span>
+                <span className="ml-2 text-sm text-ink-500">({items.length})</span>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -410,13 +349,13 @@ export function ImportReviewScreen({
                 />
               )}
               {isExpanded ? (
-                <ChevronUpIcon className="w-5 h-5 text-gray-400" />
+                <ChevronUpIcon className="w-5 h-5 text-ink-400" />
               ) : (
-                <ChevronDownIcon className="w-5 h-5 text-gray-400" />
+                <ChevronDownIcon className="w-5 h-5 text-ink-400" />
               )}
             </div>
           </CardTitle>
-          <p className="text-sm text-gray-600">{description}</p>
+          <p className="text-sm text-ink-600">{description}</p>
         </CardHeader>
         
         {isExpanded && (
@@ -452,8 +391,8 @@ export function ImportReviewScreen({
             {tCommon('back')}
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{tImport('review.title')}</h1>
-            <p className="text-gray-600">
+            <h1 className="text-2xl font-bold text-ink-900">{tImport('review.title')}</h1>
+            <p className="text-ink-600">
               {accountName ? tImport('review.subtitleImporting', { accountName }) : tImport('review.subtitleReview')}
             </p>
           </div>
@@ -462,16 +401,16 @@ export function ImportReviewScreen({
 
       {/* Workflow Guidance */}
       {progressStats.total > 0 && progressStats.pending > 0 && (
-        <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+        <Card className="bg-gradient-to-r from-blue-50 to-primary-50 border-blue-200">
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
               <InformationCircleIcon className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
               <div className="text-sm">
-                <p className="font-medium text-gray-900 mb-1">{tImport('review.guidance.title')}</p>
-                <p className="text-gray-600 mb-2">
+                <p className="font-medium text-ink-900 mb-1">{tImport('review.guidance.title')}</p>
+                <p className="text-ink-600 mb-2">
                   {tImport('review.guidance.body')}
                 </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-500">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-ink-500">
                   <div>• {tImport('review.guidance.individual')}</div>
                   <div>• {tImport('review.guidance.bulk')}</div>
                 </div>
@@ -495,10 +434,10 @@ export function ImportReviewScreen({
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <DocumentCheckIcon className="w-8 h-8 text-blue-600" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">
+              <h3 className="font-semibold text-ink-900 mb-2">
                 {tImport('review.progress.reviewedPercent', { percent: progressStats.progressPercent })}
               </h3>
-              <div className="text-sm text-gray-600 mb-4 space-y-1">
+              <div className="text-sm text-ink-600 mb-4 space-y-1">
                 <p>{tImport('review.progress.itemsRemaining', { count: progressStats.pending })}</p>
                 {progressStats.toImport > 0 && (
                   <p className="text-green-600 font-medium">
@@ -506,13 +445,13 @@ export function ImportReviewScreen({
                   </p>
                 )}
                 {progressStats.toSkip > 0 && (
-                  <p className="text-gray-500">{tImport('review.progress.willBeSkipped', { count: progressStats.toSkip })}</p>
+                  <p className="text-ink-500">{tImport('review.progress.willBeSkipped', { count: progressStats.toSkip })}</p>
                 )}
               </div>
               <Button
                 onClick={handleExecuteImport}
                 disabled={!canProceed || isImporting}
-                className={`w-full ${importCompleted ? 'bg-green-600 hover:bg-green-700' : progressStats.toImport > 0 ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700'}`}
+                className={`w-full ${importCompleted ? 'bg-green-600 hover:bg-green-700' : progressStats.toImport > 0 ? 'bg-blue-600 hover:bg-blue-700' : 'bg-ink-600 hover:bg-ink-700'}`}
               >
                 {isImporting ? (
                   <>
@@ -581,8 +520,8 @@ export function ImportReviewScreen({
         {renderConflictGroup(
           tImport('review.groups.transfer.title'),
           groupedItems.transferConflicts,
-          <ExclamationTriangleIcon className="w-5 h-5 text-purple-600" />,
-          'bg-purple-100',
+          <ExclamationTriangleIcon className="w-5 h-5 text-primary-600" />,
+          'bg-primary-100',
           tImport('review.groups.transfer.description')
         )}
 

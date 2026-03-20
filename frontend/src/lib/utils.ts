@@ -126,10 +126,10 @@ const accountTypeColors: Record<number, string> = {
   [BackendAccountType.Checking]: 'bg-blue-100 text-blue-800',
   [BackendAccountType.Savings]: 'bg-green-100 text-green-800',
   [BackendAccountType.CreditCard]: 'bg-red-100 text-red-800',
-  [BackendAccountType.Investment]: 'bg-purple-100 text-purple-800',
+  [BackendAccountType.Investment]: 'bg-primary-100 text-primary-800',
   [BackendAccountType.Loan]: 'bg-yellow-100 text-yellow-800',
-  [BackendAccountType.Cash]: 'bg-gray-100 text-gray-800',
-  [BackendAccountType.Other]: 'bg-slate-100 text-slate-800'
+  [BackendAccountType.Cash]: 'bg-ink-100 text-ink-800',
+  [BackendAccountType.Other]: 'bg-ink-100 text-ink-800'
 };
 
 // Convert backend account type to display label

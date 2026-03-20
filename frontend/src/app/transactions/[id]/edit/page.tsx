@@ -184,12 +184,12 @@ export default function EditTransactionPage() {
 
   if (isLoading || loadingTransaction) {
     return (
-      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
+      <div className="min-h-screen bg-surface-alt flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
+          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-400 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <PencilIcon className="w-8 h-8 text-white" />
           </div>
-          <div className="mt-6 text-slate-700 font-medium">{t('loadingTransaction')}</div>
+          <div className="mt-6 text-ink-700 font-medium">{t('loadingTransaction')}</div>
         </div>
       </div>
     );
@@ -204,8 +204,8 @@ export default function EditTransactionPage() {
       <AppLayout>
         <div className="form-card p-8 text-center">
           <ExclamationTriangleIcon className="w-16 h-16 text-danger-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">{t('notFound')}</h2>
-          <p className="text-slate-600 mb-6">{error}</p>
+          <h2 className="text-xl font-semibold text-ink-900 mb-2">{t('notFound')}</h2>
+          <p className="text-ink-600 mb-6">{error}</p>
           <TransactionBackButton />
         </div>
       </AppLayout>
@@ -236,10 +236,10 @@ export default function EditTransactionPage() {
 
       {/* Page Title */}
       <div className="mb-6">
-        <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
+        <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-ink-900 sm:text-[2.1rem]">
           {t('editTransaction')}
         </h1>
-        <p className="mt-1.5 text-[15px] text-slate-500">
+        <p className="mt-1.5 text-[15px] text-ink-500">
           {t('editTransactionDesc')}
         </p>
       </div>

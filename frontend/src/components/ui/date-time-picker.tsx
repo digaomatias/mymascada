@@ -164,7 +164,7 @@ export function DateTimePicker({
   return (
     <div className={cn("relative date-time-picker-container", className)} ref={containerRef}>
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-ink-700 mb-2">
           {label}
         </label>
       )}
@@ -180,15 +180,15 @@ export function DateTimePicker({
             "w-full px-4 py-3 text-left bg-white border rounded-xl shadow-sm transition-all duration-200",
             "hover:border-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400",
             "flex items-center justify-between",
-            disabled && "bg-gray-50 cursor-not-allowed",
+            disabled && "bg-ink-50 cursor-not-allowed",
             error && "border-red-300 focus:ring-red-200 focus:border-red-400"
           )}
         >
           <span className={cn(
             "flex items-center gap-2",
-            !displayValue && "text-gray-500"
+            !displayValue && "text-ink-500"
           )}>
-            <CalendarIcon className="w-5 h-5 text-gray-400" />
+            <CalendarIcon className="w-5 h-5 text-ink-400" />
             {displayValue || resolvedPlaceholder}
           </span>
         </button>
@@ -200,9 +200,9 @@ export function DateTimePicker({
               e.stopPropagation();
               handleClear();
             }}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full transition-colors"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-ink-100 rounded-full transition-colors"
           >
-            <XMarkIcon className="w-4 h-4 text-gray-400" />
+            <XMarkIcon className="w-4 h-4 text-ink-400" />
           </button>
         )}
 
@@ -215,7 +215,7 @@ export function DateTimePicker({
       {isOpen && isMounted && createPortal(
         <div
           ref={dropdownRef}
-          className="fixed bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden animate-fade-in-up w-80"
+          className="fixed bg-white rounded-xl shadow-2xl border border-ink-200 overflow-hidden animate-fade-in-up w-80"
           style={{
             zIndex: 99999,
             top: dropdownPosition.top,
@@ -242,7 +242,7 @@ export function DateTimePicker({
                 months: "flex flex-col w-full",
                 month: "w-full",
                 caption: "flex justify-center pb-2 relative items-center w-full",
-                caption_label: "text-base font-semibold text-gray-900",
+                caption_label: "text-base font-semibold text-ink-900",
                 nav: "space-x-1 flex items-center",
                 nav_button: cn(
                   "inline-flex items-center justify-center rounded-md w-7 h-7",
@@ -253,7 +253,7 @@ export function DateTimePicker({
                 nav_button_next: "absolute right-1",
                 table: "w-full border-collapse mx-auto",
                 head_row: "flex w-full justify-between",
-                head_cell: "text-gray-600 rounded flex-1 font-medium text-xs text-center pb-1",
+                head_cell: "text-ink-600 rounded flex-1 font-medium text-xs text-center pb-1",
                 row: "flex w-full justify-between mt-0.5",
                 cell: "flex-1 p-0 text-center text-sm focus-within:relative focus-within:z-20",
                 day: cn(
@@ -267,18 +267,18 @@ export function DateTimePicker({
                   "hover:from-primary-600 hover:to-primary-700",
                   "focus:from-primary-600 focus:to-primary-700"
                 ),
-                day_outside: "text-gray-300 hover:bg-gray-50",
-                day_disabled: "text-gray-300 opacity-50 cursor-not-allowed hover:bg-transparent",
+                day_outside: "text-ink-300 hover:bg-ink-50",
+                day_disabled: "text-ink-300 opacity-50 cursor-not-allowed hover:bg-transparent",
                 day_hidden: "invisible",
               }}
             />
 
             {/* Time Picker */}
             {showTime && selectedDate && (
-              <div className="mt-4 pt-4 border-t border-gray-100">
+              <div className="mt-4 pt-4 border-t border-ink-100">
                 <div className="flex items-center gap-2 mb-3">
-                  <ClockIcon className="w-4 h-4 text-gray-400" />
-                  <label className="text-sm font-medium text-gray-700">{tCommon('time')}</label>
+                  <ClockIcon className="w-4 h-4 text-ink-400" />
+                  <label className="text-sm font-medium text-ink-700">{tCommon('time')}</label>
                 </div>
                 
                 <div className="flex justify-center">
@@ -296,7 +296,7 @@ export function DateTimePicker({
             )}
 
             {/* Compact Footer */}
-            <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between">
+            <div className="mt-2 pt-2 border-t border-ink-100 flex items-center justify-between">
               <button
                 type="button"
                 onClick={() => {

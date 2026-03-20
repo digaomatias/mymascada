@@ -306,8 +306,8 @@ export function RuleBuilderWizard() {
             <div className={cn(
               'flex items-center justify-center w-10 h-10 rounded-full border-2 text-sm font-semibold transition-colors',
               currentStep > step.number && 'bg-emerald-500 border-emerald-500 text-white',
-              currentStep === step.number && 'bg-violet-500 border-violet-500 text-white',
-              currentStep < step.number && 'bg-white border-slate-300 text-slate-400'
+              currentStep === step.number && 'bg-primary-500 border-primary-500 text-white',
+              currentStep < step.number && 'bg-white border-ink-300 text-ink-400'
             )}>
               {currentStep > step.number ? (
                 <CheckCircleIcon className="w-6 h-6" />
@@ -318,20 +318,20 @@ export function RuleBuilderWizard() {
             {index < steps.length - 1 && (
               <div className={cn(
                 'w-16 h-1 mx-2 rounded-full transition-colors',
-                currentStep > step.number ? 'bg-emerald-500' : 'bg-slate-200'
+                currentStep > step.number ? 'bg-emerald-500' : 'bg-ink-200'
               )} />
             )}
           </div>
         ))}
       </div>
 
-      <section className="rounded-[26px] border border-violet-100/60 bg-white/90 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
+      <section className="rounded-[26px] border border-ink-200 bg-white/90 shadow-lg shadow-primary-200/20 backdrop-blur-xs">
         {/* Card Header */}
         <div className="p-6 pb-0">
-          <h2 className="font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900">
+          <h2 className="font-[var(--font-dash-sans)] text-lg font-semibold text-ink-900">
             {steps[currentStep - 1].title}
           </h2>
-          <p className="text-sm text-slate-500 mt-1">{steps[currentStep - 1].description}</p>
+          <p className="text-sm text-ink-500 mt-1">{steps[currentStep - 1].description}</p>
         </div>
 
         <div className="p-6">
@@ -366,7 +366,7 @@ export function RuleBuilderWizard() {
                   onChange={(e) => updateFormData('priority', parseInt(e.target.value) || 0)}
                   min="0"
                 />
-                <p className="text-sm text-slate-500 mt-1">{t('builder.form.priorityHelp')}</p>
+                <p className="text-sm text-ink-500 mt-1">{t('builder.form.priorityHelp')}</p>
               </div>
             </div>
           )}
@@ -397,7 +397,7 @@ export function RuleBuilderWizard() {
                   onChange={(e) => updateFormData('pattern', e.target.value)}
                   placeholder={t('builder.form.patternPlaceholder')}
                 />
-                <p className="text-sm text-slate-500 mt-1">
+                <p className="text-sm text-ink-500 mt-1">
                   {t('builder.form.patternHelp')}
                 </p>
               </div>
@@ -407,7 +407,7 @@ export function RuleBuilderWizard() {
                   id="caseSensitive"
                   checked={formData.isCaseSensitive}
                   onChange={(e) => updateFormData('isCaseSensitive', e.target.checked)}
-                  className="rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                  className="rounded border-ink-300 text-primary-600 focus:ring-primary-500"
                 />
                 <Label htmlFor="caseSensitive" className="cursor-pointer">{t('builder.form.caseSensitive')}</Label>
               </label>
@@ -426,14 +426,14 @@ export function RuleBuilderWizard() {
                   placeholder={t('builder.form.selectTargetCategory')}
                   disableQuickPicks={false}
                 />
-                <p className="text-sm text-slate-500 mt-1">
+                <p className="text-sm text-ink-500 mt-1">
                   {t('builder.form.targetCategoryHelp')}
                 </p>
               </div>
               {selectedCategory && (
-                <div className="p-4 bg-violet-50 rounded-2xl">
-                  <h4 className="font-medium text-violet-900">{t('builder.form.selectedCategory')}</h4>
-                  <p className="text-violet-700">{selectedCategory.name}</p>
+                <div className="p-4 bg-primary-50 rounded-2xl">
+                  <h4 className="font-medium text-primary-900">{t('builder.form.selectedCategory')}</h4>
+                  <p className="text-primary-700">{selectedCategory.name}</p>
                 </div>
               )}
             </div>
@@ -444,7 +444,7 @@ export function RuleBuilderWizard() {
             <div className="space-y-6">
               {/* Amount Range */}
               <div>
-                <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3">
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-400 mb-3">
                   {t('builder.advanced.amountRange')}
                 </h4>
                 <div className="grid grid-cols-2 gap-4">
@@ -475,7 +475,7 @@ export function RuleBuilderWizard() {
 
               {/* Account Types */}
               <div>
-                <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3">
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-400 mb-3">
                   {t('builder.advanced.accountTypes')}
                 </h4>
                 <div className="grid grid-cols-2 gap-2">
@@ -491,13 +491,13 @@ export function RuleBuilderWizard() {
                             updateFormData('accountTypes', formData.accountTypes.filter(t => t !== type.value));
                           }
                         }}
-                        className="rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                        className="rounded border-ink-300 text-primary-600 focus:ring-primary-500"
                       />
-                      <span className="text-sm text-slate-700">{t(`builder.accountTypes.${type.labelKey}`)}</span>
+                      <span className="text-sm text-ink-700">{t(`builder.accountTypes.${type.labelKey}`)}</span>
                     </label>
                   ))}
                 </div>
-                <p className="text-sm text-slate-500 mt-2">
+                <p className="text-sm text-ink-500 mt-2">
                   {t('builder.advanced.accountTypesHelp')}
                 </p>
               </div>
@@ -505,7 +505,7 @@ export function RuleBuilderWizard() {
               {/* Advanced Conditions */}
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                     {t('builder.advanced.advancedConditions')}
                   </h4>
                   <Button variant="secondary" size="sm" onClick={addCondition} className="flex items-center gap-1.5">
@@ -530,16 +530,16 @@ export function RuleBuilderWizard() {
                     </div>
 
                     {formData.conditions.map((condition, index) => (
-                      <div key={index} className="p-4 border border-slate-200 rounded-2xl space-y-3">
+                      <div key={index} className="p-4 border border-ink-200 rounded-2xl space-y-3">
                         <div className="flex items-center justify-between">
-                          <h5 className="text-sm font-medium text-slate-700">
+                          <h5 className="text-sm font-medium text-ink-700">
                             {t('builder.advanced.condition', { number: index + 1 })}
                           </h5>
                           <Button
                             variant="secondary"
                             size="sm"
                             onClick={() => removeCondition(index)}
-                            className="w-8 h-8 p-0 text-slate-400 hover:text-red-600"
+                            className="w-8 h-8 p-0 text-ink-400 hover:text-red-600"
                           >
                             <XMarkIcon className="w-4 h-4" />
                           </Button>
@@ -593,9 +593,9 @@ export function RuleBuilderWizard() {
                             type="checkbox"
                             checked={condition.isCaseSensitive}
                             onChange={(e) => updateCondition(index, 'isCaseSensitive', e.target.checked)}
-                            className="rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                            className="rounded border-ink-300 text-primary-600 focus:ring-primary-500"
                           />
-                          <span className="text-sm text-slate-600">{t('builder.advanced.caseSensitiveCondition')}</span>
+                          <span className="text-sm text-ink-600">{t('builder.advanced.caseSensitiveCondition')}</span>
                         </label>
                       </div>
                     ))}
@@ -622,23 +622,23 @@ export function RuleBuilderWizard() {
                     </>
                   )}
                 </Button>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-ink-500">
                   {t('builder.test.testHelp')}
                 </p>
               </div>
 
               {testResults.length > 0 && (
                 <div>
-                  <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3">
+                  <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-400 mb-3">
                     {t('builder.test.results', { count: testResults.length })}
                   </h4>
                   <div className="space-y-2 max-h-96 overflow-y-auto">
                     {testResults.map((transaction) => (
-                      <div key={transaction.id} className="p-3 bg-slate-50 rounded-xl">
+                      <div key={transaction.id} className="p-3 bg-ink-50 rounded-xl">
                         <div className="flex justify-between items-start gap-4">
                           <div className="min-w-0 flex-1">
-                            <p className="font-medium text-slate-900 truncate">{transaction.description}</p>
-                            <p className="text-sm text-slate-500 mt-0.5">
+                            <p className="font-medium text-ink-900 truncate">{transaction.description}</p>
+                            <p className="text-sm text-ink-500 mt-0.5">
                               {transaction.accountName} &middot; {new Date(transaction.transactionDate).toLocaleDateString()}
                             </p>
                           </div>
@@ -650,7 +650,7 @@ export function RuleBuilderWizard() {
                               ${Math.abs(transaction.amount).toFixed(2)}
                             </p>
                             {transaction.categoryName && (
-                              <p className="text-xs text-slate-400">{transaction.categoryName}</p>
+                              <p className="text-xs text-ink-400">{transaction.categoryName}</p>
                             )}
                           </div>
                         </div>
@@ -661,7 +661,7 @@ export function RuleBuilderWizard() {
               )}
 
               {testResults.length === 0 && testLoading === false && (
-                <div className="text-center py-8 text-slate-400">
+                <div className="text-center py-8 text-ink-400">
                   <p>{t('builder.test.noResults')}</p>
                 </div>
               )}
@@ -671,42 +671,42 @@ export function RuleBuilderWizard() {
           {/* Step 6: Review */}
           {currentStep === 6 && (
             <div className="space-y-6">
-              <div className="bg-slate-50 p-6 rounded-2xl">
-                <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-4">
+              <div className="bg-ink-50 p-6 rounded-2xl">
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-400 mb-4">
                   {t('builder.review.summary')}
                 </h4>
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <span className="text-xs text-slate-500">{t('builder.review.name')}</span>
-                      <p className="font-medium text-slate-900">{formData.name}</p>
+                      <span className="text-xs text-ink-500">{t('builder.review.name')}</span>
+                      <p className="font-medium text-ink-900">{formData.name}</p>
                     </div>
                     <div>
-                      <span className="text-xs text-slate-500">{t('builder.review.type')}</span>
-                      <p className="font-medium text-slate-900">{formData.type}</p>
+                      <span className="text-xs text-ink-500">{t('builder.review.type')}</span>
+                      <p className="font-medium text-ink-900">{formData.type}</p>
                     </div>
                     <div>
-                      <span className="text-xs text-slate-500">{t('builder.review.pattern')}</span>
-                      <code className="bg-white px-2 py-0.5 rounded text-sm text-slate-700">{formData.pattern}</code>
+                      <span className="text-xs text-ink-500">{t('builder.review.pattern')}</span>
+                      <code className="bg-white px-2 py-0.5 rounded text-sm text-ink-700">{formData.pattern}</code>
                     </div>
                     <div>
-                      <span className="text-xs text-slate-500">{t('builder.review.category')}</span>
-                      <p className="font-medium text-slate-900">{selectedCategory?.name}</p>
+                      <span className="text-xs text-ink-500">{t('builder.review.category')}</span>
+                      <p className="font-medium text-ink-900">{selectedCategory?.name}</p>
                     </div>
                     <div>
-                      <span className="text-xs text-slate-500">{t('builder.review.priority')}</span>
-                      <p className="font-[var(--font-dash-mono)] font-medium text-slate-900">{formData.priority}</p>
+                      <span className="text-xs text-ink-500">{t('builder.review.priority')}</span>
+                      <p className="font-[var(--font-dash-mono)] font-medium text-ink-900">{formData.priority}</p>
                     </div>
                     <div>
-                      <span className="text-xs text-slate-500">{t('builder.review.caseSensitive')}</span>
-                      <p className="font-medium text-slate-900">{formData.isCaseSensitive ? t('builder.review.yes') : t('builder.review.no')}</p>
+                      <span className="text-xs text-ink-500">{t('builder.review.caseSensitive')}</span>
+                      <p className="font-medium text-ink-900">{formData.isCaseSensitive ? t('builder.review.yes') : t('builder.review.no')}</p>
                     </div>
                   </div>
 
                   {(formData.minAmount || formData.maxAmount) && (
                     <div>
-                      <span className="text-xs text-slate-500">{t('builder.review.amountRange')}</span>
-                      <p className="font-[var(--font-dash-mono)] font-medium text-slate-900">
+                      <span className="text-xs text-ink-500">{t('builder.review.amountRange')}</span>
+                      <p className="font-[var(--font-dash-mono)] font-medium text-ink-900">
                         {formData.minAmount ? `$${formData.minAmount}` : t('builder.review.noMinimum')} - {formData.maxAmount ? `$${formData.maxAmount}` : t('builder.review.noMaximum')}
                       </p>
                     </div>
@@ -714,12 +714,12 @@ export function RuleBuilderWizard() {
 
                   {formData.accountTypes.length > 0 && (
                     <div>
-                      <span className="text-xs text-slate-500">{t('builder.review.accountTypes')}</span>
+                      <span className="text-xs text-ink-500">{t('builder.review.accountTypes')}</span>
                       <div className="flex flex-wrap gap-2 mt-1">
                         {formData.accountTypes.map((type) => {
                           const accountType = ACCOUNT_TYPES.find(at => at.value === type);
                           return (
-                            <Badge key={type} variant="secondary" className="bg-slate-100 text-slate-700">
+                            <Badge key={type} variant="secondary" className="bg-ink-100 text-ink-700">
                               {accountType ? t(`builder.accountTypes.${accountType.labelKey}`) : type}
                             </Badge>
                           );
@@ -730,10 +730,10 @@ export function RuleBuilderWizard() {
 
                   {formData.conditions.length > 0 && (
                     <div>
-                      <span className="text-xs text-slate-500">{t('builder.review.advancedConditions', { logic: formData.logic })}</span>
+                      <span className="text-xs text-ink-500">{t('builder.review.advancedConditions', { logic: formData.logic })}</span>
                       <div className="space-y-2 mt-2">
                         {formData.conditions.map((condition, index) => (
-                          <div key={index} className="text-sm bg-white p-2 rounded-lg text-slate-700">
+                          <div key={index} className="text-sm bg-white p-2 rounded-lg text-ink-700">
                             {condition.field} {condition.operator} &quot;{condition.value}&quot;
                             {condition.isCaseSensitive && ` ${t('builder.review.caseSensitiveNote')}`}
                           </div>
@@ -744,8 +744,8 @@ export function RuleBuilderWizard() {
 
                   {formData.description && (
                     <div>
-                      <span className="text-xs text-slate-500">{t('builder.review.description')}</span>
-                      <p className="text-sm text-slate-700">{formData.description}</p>
+                      <span className="text-xs text-ink-500">{t('builder.review.description')}</span>
+                      <p className="text-sm text-ink-700">{formData.description}</p>
                     </div>
                   )}
                 </div>
@@ -757,7 +757,7 @@ export function RuleBuilderWizard() {
                   id="isActive"
                   checked={formData.isActive}
                   onChange={(e) => updateFormData('isActive', e.target.checked)}
-                  className="rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                  className="rounded border-ink-300 text-primary-600 focus:ring-primary-500"
                 />
                 <Label htmlFor="isActive" className="cursor-pointer">{t('builder.review.activateImmediately')}</Label>
               </label>

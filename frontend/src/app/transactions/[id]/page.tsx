@@ -214,12 +214,12 @@ export default function TransactionDetailsPage() {
 
   if (isLoading || loadingTransaction) {
     return (
-      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
+      <div className="min-h-screen bg-surface-alt flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
+          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-400 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <EyeIcon className="w-8 h-8 text-white" />
           </div>
-          <div className="mt-6 text-slate-700 font-medium">{t('loadingTransaction')}</div>
+          <div className="mt-6 text-ink-700 font-medium">{t('loadingTransaction')}</div>
         </div>
       </div>
     );
@@ -232,10 +232,10 @@ export default function TransactionDetailsPage() {
   if (error && !transaction) {
     return (
       <AppLayout>
-        <div className="rounded-[26px] border border-violet-100/60 bg-white/90 p-8 shadow-lg shadow-violet-200/20 backdrop-blur-xs max-w-2xl mx-auto text-center">
+        <div className="rounded-[26px] border border-ink-200 bg-white/90 p-8 shadow-lg shadow-primary-200/20 backdrop-blur-xs max-w-2xl mx-auto text-center">
           <ExclamationTriangleIcon className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="font-[var(--font-dash-sans)] text-xl font-semibold text-slate-900 mb-2">{t('transactionNotFound')}</h2>
-          <p className="text-slate-600 mb-6">{error}</p>
+          <h2 className="font-[var(--font-dash-sans)] text-xl font-semibold text-ink-900 mb-2">{t('transactionNotFound')}</h2>
+          <p className="text-ink-600 mb-6">{error}</p>
           <TransactionBackButton />
         </div>
       </AppLayout>
@@ -282,13 +282,13 @@ export default function TransactionDetailsPage() {
 
       <div className="space-y-5">
         {/* Hero Section */}
-        <section className="rounded-[26px] border border-violet-100/60 bg-white/90 p-6 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
+        <section className="rounded-[26px] border border-ink-200 bg-white/90 p-6 shadow-lg shadow-primary-200/20 backdrop-blur-xs">
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
             {/* Left: Transaction identity + amount */}
             <div className="min-w-0 flex-1">
               {/* Description */}
               <h1
-                className="font-[var(--font-dash-sans)] text-2xl sm:text-3xl font-semibold tracking-[-0.03em] text-slate-900 line-clamp-2"
+                className="font-[var(--font-dash-sans)] text-2xl sm:text-3xl font-semibold tracking-[-0.03em] text-ink-900 line-clamp-2"
                 title={transaction.userDescription || transaction.description}
               >
                 {transaction.userDescription || transaction.description}
@@ -321,22 +321,22 @@ export default function TransactionDetailsPage() {
             <div className="flex items-start gap-5 lg:gap-6">
               {/* Date */}
               <div className="text-left lg:text-right">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                   {tCommon('date')}
                 </p>
                 <div className="mt-1 flex items-center lg:justify-end gap-1.5">
-                  <CalendarIcon className="w-4 h-4 text-slate-400" />
-                  <p className="font-[var(--font-dash-mono)] text-lg font-semibold text-slate-900">
+                  <CalendarIcon className="w-4 h-4 text-ink-400" />
+                  <p className="font-[var(--font-dash-mono)] text-lg font-semibold text-ink-900">
                     {formatDate(transaction.transactionDate)}
                   </p>
                 </div>
               </div>
 
-              <div className="h-12 w-px bg-slate-200 self-center" />
+              <div className="h-12 w-px bg-ink-200 self-center" />
 
               {/* Account */}
               <div className="text-left lg:text-right">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                   {tCommon('account')}
                 </p>
                 {transaction.accountName ? (
@@ -344,13 +344,13 @@ export default function TransactionDetailsPage() {
                     href={`/accounts/${transaction.accountId}`}
                     className="mt-1 flex items-center lg:justify-end gap-1.5 group"
                   >
-                    <WalletIcon className="w-4 h-4 text-slate-400 group-hover:text-violet-500 transition-colors" />
-                    <p className="font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900 group-hover:text-violet-600 transition-colors">
+                    <WalletIcon className="w-4 h-4 text-ink-400 group-hover:text-primary-500 transition-colors" />
+                    <p className="font-[var(--font-dash-sans)] text-lg font-semibold text-ink-900 group-hover:text-primary-600 transition-colors">
                       {transaction.accountName}
                     </p>
                   </Link>
                 ) : (
-                  <p className="mt-1 text-sm font-medium text-slate-400">—</p>
+                  <p className="mt-1 text-sm font-medium text-ink-400">—</p>
                 )}
               </div>
             </div>
@@ -358,14 +358,14 @@ export default function TransactionDetailsPage() {
         </section>
 
         {/* Details Card */}
-        <section className="rounded-[26px] border border-violet-100/60 bg-white/90 p-5 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
-          <h2 className="font-[var(--font-dash-sans)] text-base font-semibold text-slate-900 mb-4">
+        <section className="rounded-[26px] border border-ink-200 bg-white/90 p-5 shadow-lg shadow-primary-200/20 backdrop-blur-xs">
+          <h2 className="font-[var(--font-dash-sans)] text-base font-semibold text-ink-900 mb-4">
             {tCommon('details')}
           </h2>
           <div className="space-y-4">
             {/* Category */}
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <span className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                 {tCommon('category')}
               </span>
               {transaction.categoryName ? (
@@ -381,8 +381,8 @@ export default function TransactionDetailsPage() {
                 <div className="flex-1 max-w-xs ml-4">
                   {updatingCategory ? (
                     <div className="flex items-center justify-center py-2">
-                      <div className="w-4 h-4 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
-                      <span className="ml-2 text-sm text-slate-500">{t('saving')}</span>
+                      <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                      <span className="ml-2 text-sm text-ink-500">{t('saving')}</span>
                     </div>
                   ) : (
                     <CategoryPicker
@@ -398,11 +398,11 @@ export default function TransactionDetailsPage() {
               )}
             </div>
 
-            <div className="h-px bg-slate-100" />
+            <div className="h-px bg-ink-100" />
 
             {/* Source */}
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <span className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                 {tCommon('source')}
               </span>
               <Badge variant="outline">
@@ -410,11 +410,11 @@ export default function TransactionDetailsPage() {
               </Badge>
             </div>
 
-            <div className="h-px bg-slate-100" />
+            <div className="h-px bg-ink-100" />
 
             {/* Reviewed Status + Toggle */}
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <span className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                 {tCommon('reviewed')}
               </span>
               <div className="flex items-center gap-2">
@@ -433,7 +433,7 @@ export default function TransactionDetailsPage() {
                   >
                     {reviewingTransaction ? (
                       <>
-                        <div className="w-3.5 h-3.5 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+                        <div className="w-3.5 h-3.5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
                         {t('reviewing')}
                       </>
                     ) : (
@@ -447,14 +447,14 @@ export default function TransactionDetailsPage() {
               </div>
             </div>
 
-            <div className="h-px bg-slate-100" />
+            <div className="h-px bg-ink-100" />
 
             {/* Transaction ID */}
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <span className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                 {t('id')}
               </span>
-              <span className="font-[var(--font-dash-mono)] text-sm text-slate-700">
+              <span className="font-[var(--font-dash-mono)] text-sm text-ink-700">
                 #{transaction.id}
               </span>
             </div>
@@ -463,45 +463,45 @@ export default function TransactionDetailsPage() {
 
         {/* Additional Information Card */}
         {hasAdditionalInfo && (
-          <section className="rounded-[26px] border border-violet-100/60 bg-white/90 p-5 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
-            <h2 className="font-[var(--font-dash-sans)] flex items-center gap-2 text-base font-semibold text-slate-900 mb-4">
-              <DocumentTextIcon className="w-5 h-5 text-violet-600" />
+          <section className="rounded-[26px] border border-ink-200 bg-white/90 p-5 shadow-lg shadow-primary-200/20 backdrop-blur-xs">
+            <h2 className="font-[var(--font-dash-sans)] flex items-center gap-2 text-base font-semibold text-ink-900 mb-4">
+              <DocumentTextIcon className="w-5 h-5 text-primary-600" />
               {t('additionalInformation')}
             </h2>
             <div className="space-y-4">
               {transaction.description !== transaction.userDescription && (
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1 block">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-ink-400 mb-1 block">
                     {t('originalDescription')}
                   </label>
-                  <p className="text-sm text-slate-700">{transaction.description}</p>
+                  <p className="text-sm text-ink-700">{transaction.description}</p>
                 </div>
               )}
 
               {transaction.notes && (
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1 block">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-ink-400 mb-1 block">
                     {tCommon('notes')}
                   </label>
-                  <p className="text-sm text-slate-700 whitespace-pre-wrap">{transaction.notes}</p>
+                  <p className="text-sm text-ink-700 whitespace-pre-wrap">{transaction.notes}</p>
                 </div>
               )}
 
               {transaction.location && (
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1 block">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-ink-400 mb-1 block">
                     {t('location')}
                   </label>
                   <div className="flex items-center gap-2">
-                    <MapPinIcon className="w-4 h-4 text-slate-400" />
-                    <span className="text-sm text-slate-700">{transaction.location}</span>
+                    <MapPinIcon className="w-4 h-4 text-ink-400" />
+                    <span className="text-sm text-ink-700">{transaction.location}</span>
                   </div>
                 </div>
               )}
 
               {Array.isArray(transaction.tags) && transaction.tags.length > 0 && (
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2 block">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-ink-400 mb-2 block">
                     {t('tags')}
                   </label>
                   <div className="flex flex-wrap gap-2">
@@ -516,10 +516,10 @@ export default function TransactionDetailsPage() {
 
               {transaction.externalId && (
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1 block">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-ink-400 mb-1 block">
                     {t('externalId')}
                   </label>
-                  <code className="text-xs bg-slate-100 px-2 py-1 rounded font-[var(--font-dash-mono)] text-slate-600">
+                  <code className="text-xs bg-ink-100 px-2 py-1 rounded font-[var(--font-dash-mono)] text-ink-600">
                     {transaction.externalId}
                   </code>
                 </div>

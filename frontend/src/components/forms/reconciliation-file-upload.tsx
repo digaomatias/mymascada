@@ -70,7 +70,7 @@ export function ReconciliationFileUpload({
             </Button>
           </div>
           
-          <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+          <div className="mt-4 p-3 bg-ink-50 rounded-lg">
             <div className="text-sm">
               {mode === 'csv' && features.aiCategorization ? (
                 <>

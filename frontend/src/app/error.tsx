@@ -18,7 +18,7 @@ export default function GlobalError({ error, reset }: ErrorProps) {
   }, [error]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-ink-50 px-4">
       <div className="max-w-md w-full text-center">
         <div className="mb-6 flex justify-center">
           <div className="w-16 h-16 rounded-full bg-danger-100 flex items-center justify-center">
@@ -39,10 +39,10 @@ export default function GlobalError({ error, reset }: ErrorProps) {
           </div>
         </div>
 
-        <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+        <h1 className="text-2xl font-semibold text-ink-900 mb-2">
           {t('error')}
         </h1>
-        <p className="text-gray-500 mb-8">
+        <p className="text-ink-500 mb-8">
           {error.message || 'An unexpected error occurred. Please try again.'}
         </p>
 

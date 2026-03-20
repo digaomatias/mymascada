@@ -113,58 +113,58 @@ export function TrendSummaryTable({ categories, selectedCategoryIds }: TrendSumm
       case 'down':
         return <ArrowTrendingDownIcon className="h-4 w-4 text-emerald-500" />;
       default:
-        return <MinusIcon className="h-4 w-4 text-slate-400" />;
+        return <MinusIcon className="h-4 w-4 text-ink-400" />;
     }
   };
 
   if (categoriesWithTrend.length === 0) {
     return (
-      <div className="text-center py-8 text-slate-500">
+      <div className="text-center py-8 text-ink-500">
         {t('selectToView')}
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-violet-100/70 bg-white/95">
-      <table className="min-w-full divide-y divide-slate-200">
-        <thead className="bg-violet-50/45">
+    <div className="overflow-x-auto rounded-2xl border border-ink-200 bg-white/95">
+      <table className="min-w-full divide-y divide-ink-200">
+        <thead className="bg-primary-50/45">
           <tr>
-            <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
+            <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-500">
               {t('category')}
             </th>
-            <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
+            <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-500">
               {t('avgMonthly')}
             </th>
-            <th className="px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
+            <th className="px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-500">
               {t('trend')}
             </th>
-            <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
+            <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-500">
               {t('highestMonth')}
             </th>
-            <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
+            <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-500">
               {t('lowestMonth')}
             </th>
-            <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
+            <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-500">
               {t('total')}
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100 bg-white">
+        <tbody className="divide-y divide-ink-100 bg-white">
           {categoriesWithTrend.map((cat) => (
-            <tr key={cat.categoryId} className="transition-colors hover:bg-violet-50/45">
+            <tr key={cat.categoryId} className="transition-colors hover:bg-primary-50/45">
               <td className="px-4 py-3 whitespace-nowrap">
                 <div className="flex items-center gap-2">
                   <div
                     className="w-3 h-3 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: cat.categoryColor || '#8B5CF6' }}
+                    style={{ backgroundColor: cat.categoryColor || '#2f8170' }}
                   />
-                  <span className="text-sm font-medium text-slate-900">
+                  <span className="text-sm font-medium text-ink-900">
                     {cat.categoryName}
                   </span>
                 </div>
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-right font-[var(--font-dash-mono)] text-sm text-slate-900">
+              <td className="px-4 py-3 whitespace-nowrap text-right font-[var(--font-dash-mono)] text-sm text-ink-900">
                 {formatCurrency(cat.averageMonthlySpent)}
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-center">
@@ -175,7 +175,7 @@ export function TrendSummaryTable({ categories, selectedCategoryIds }: TrendSumm
                       'text-sm font-medium',
                       cat.trend === 'up' && 'text-rose-600',
                       cat.trend === 'down' && 'text-emerald-600',
-                      cat.trend === 'stable' && 'text-slate-500'
+                      cat.trend === 'stable' && 'text-ink-500'
                     )}
                   >
                     {cat.trendPercentage > 0 ? '+' : ''}
@@ -185,25 +185,25 @@ export function TrendSummaryTable({ categories, selectedCategoryIds }: TrendSumm
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-right">
                 <div className="text-sm">
-                  <span className="font-[var(--font-dash-mono)] font-medium text-slate-900">
+                  <span className="font-[var(--font-dash-mono)] font-medium text-ink-900">
                     {formatCurrency(cat.highestMonth.amount)}
                   </span>
-                  <span className="text-slate-500 ml-1">
+                  <span className="text-ink-500 ml-1">
                     ({cat.highestMonth.label})
                   </span>
                 </div>
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-right">
                 <div className="text-sm">
-                  <span className="font-[var(--font-dash-mono)] font-medium text-slate-900">
+                  <span className="font-[var(--font-dash-mono)] font-medium text-ink-900">
                     {formatCurrency(cat.lowestMonth.amount)}
                   </span>
-                  <span className="text-slate-500 ml-1">
+                  <span className="text-ink-500 ml-1">
                     ({cat.lowestMonth.label})
                   </span>
                 </div>
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-right font-[var(--font-dash-mono)] text-sm font-bold text-slate-900">
+              <td className="px-4 py-3 whitespace-nowrap text-right font-[var(--font-dash-mono)] text-sm font-bold text-ink-900">
                 {formatCurrency(cat.totalSpent)}
               </td>
             </tr>

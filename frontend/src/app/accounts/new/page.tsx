@@ -52,12 +52,12 @@ export default function NewAccountPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
+      <div className="min-h-screen bg-surface-alt flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
+          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-400 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <BuildingOffice2Icon className="w-8 h-8 text-white" />
           </div>
-          <div className="mt-6 text-slate-700 font-medium">{tCommon('loading')}</div>
+          <div className="mt-6 text-ink-700 font-medium">{tCommon('loading')}</div>
         </div>
       </div>
     );
@@ -69,14 +69,14 @@ export default function NewAccountPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
-        <div className="mx-4 max-w-md w-full rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92 p-8 text-center">
+      <div className="min-h-screen bg-surface-alt flex items-center justify-center">
+        <div className="mx-4 max-w-md w-full rounded-[26px] border border-ink-200 shadow-[0_20px_46px_-30px_rgba(47,129,112,0.20)] backdrop-blur-xs bg-white/92 p-8 text-center">
           <div className="w-16 h-16 bg-gradient-to-br from-success-500 to-success-600 rounded-2xl shadow-2xl flex items-center justify-center mx-auto mb-6">
             <CheckIcon className="w-8 h-8 text-white" />
           </div>
-          <h2 className="text-2xl font-semibold text-slate-900 mb-2">{t('accountCreated')}</h2>
-          <p className="text-slate-600 mb-6">{t('accountCreatedDesc')}</p>
-          <div className="text-sm text-slate-500">{t('redirectingToAccounts')}</div>
+          <h2 className="text-2xl font-semibold text-ink-900 mb-2">{t('accountCreated')}</h2>
+          <p className="text-ink-600 mb-6">{t('accountCreatedDesc')}</p>
+          <div className="text-sm text-ink-500">{t('redirectingToAccounts')}</div>
         </div>
       </div>
     );
@@ -91,16 +91,16 @@ export default function NewAccountPage() {
 
       {/* Page Title */}
       <div className="mb-6">
-        <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
+        <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-ink-900 sm:text-[2.1rem]">
           {t('createNewAccount')}
         </h1>
-        <p className="mt-1.5 text-[15px] text-slate-500">
+        <p className="mt-1.5 text-[15px] text-ink-500">
           {t('createNewAccountDesc')}
         </p>
       </div>
 
       {/* Account Form */}
-      <div className="rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92 p-6">
+      <div className="rounded-[26px] border border-ink-200 shadow-[0_20px_46px_-30px_rgba(47,129,112,0.20)] backdrop-blur-xs bg-white/92 p-6">
         <AccountForm
           variant="full"
           initialData={{ currency: user?.currency || 'NZD' }}

@@ -102,7 +102,7 @@ export function ReconciliationBalanceCards({
               )}>
                 {formatCurrency(unmatchedBankTotal)}
               </p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-ink-500 mt-1">
                 {t('balanceCards.expectedBalance', { amount: formatCurrency(expectedBalance) })}
               </p>
             </div>
@@ -142,7 +142,7 @@ export function ReconciliationBalanceCards({
               )}>
                 {formatCurrency(unmatchedSystemTotal)}
               </p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-ink-500 mt-1">
                 {t('balanceCards.systemBalance', { amount: formatCurrency(systemBalance) })}
               </p>
             </div>
@@ -186,7 +186,7 @@ export function ReconciliationBalanceCards({
               )}>
                 {formatCurrency(discrepancy)}
               </p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-ink-500 mt-1">
                 {isReconciled ? t('balanceCards.reconciled') : t('balanceCards.needsReview')}
               </p>
             </div>

@@ -230,7 +230,7 @@ export function DraggableTransactionCard({
               checked={isSelected}
               onChange={(e) => onSelectionChange(e.target.checked)}
               onClick={(e) => e.stopPropagation()}
-              className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500 focus:ring-2"
+              className="w-4 h-4 text-primary-600 border-ink-300 rounded focus:ring-primary-500 focus:ring-2"
             />
           </div>
         )}
@@ -242,16 +242,16 @@ export function DraggableTransactionCard({
           }`}>
             <div className="flex flex-col gap-0.5 p-1">
               <div className="flex gap-0.5">
-                <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                <div className="w-1 h-1 bg-ink-400 rounded-full"></div>
+                <div className="w-1 h-1 bg-ink-400 rounded-full"></div>
               </div>
               <div className="flex gap-0.5">
-                <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                <div className="w-1 h-1 bg-ink-400 rounded-full"></div>
+                <div className="w-1 h-1 bg-ink-400 rounded-full"></div>
               </div>
               <div className="flex gap-0.5">
-                <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                <div className="w-1 h-1 bg-ink-400 rounded-full"></div>
+                <div className="w-1 h-1 bg-ink-400 rounded-full"></div>
               </div>
             </div>
           </div>
@@ -271,21 +271,21 @@ export function DraggableTransactionCard({
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <span className="font-medium text-gray-900">{transaction.description}</span>
+              <span className="font-medium text-ink-900">{transaction.description}</span>
               {showPreviewButton && !previewedDescription && !isPreviewing && onPreview && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onPreview();
                   }}
-                  className="p-1 text-purple-500 hover:text-purple-700 hover:bg-purple-50 rounded transition-colors"
+                  className="p-1 text-primary-500 hover:text-primary-700 hover:bg-primary-50 rounded transition-colors"
                   title={t('previewAiDescription')}
                 >
                   <SparklesIcon className="w-4 h-4" />
                 </button>
               )}
               {isPreviewing && (
-                <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
               )}
               {bankTransaction?.bankCategory && (
                 <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">
@@ -293,7 +293,7 @@ export function DraggableTransactionCard({
                 </span>
               )}
               {systemTransaction?.categoryName && (
-                <span className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-700">
+                <span className="text-xs px-2 py-1 rounded-full bg-primary-100 text-primary-700">
                   {systemTransaction.categoryName}
                 </span>
               )}
@@ -307,7 +307,7 @@ export function DraggableTransactionCard({
             
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-gray-500">{tCommon('amount')}:</span>
+                <span className="text-ink-500">{tCommon('amount')}:</span>
                 <span className={`ml-2 font-medium ${
                   transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'
                 }`}>
@@ -316,8 +316,8 @@ export function DraggableTransactionCard({
               </div>
               
               <div>
-                <span className="text-gray-500">{tCommon('date')}:</span>
-                <span className="ml-2 text-gray-900">
+                <span className="text-ink-500">{tCommon('date')}:</span>
+                <span className="ml-2 text-ink-900">
                   {new Date(transaction.transactionDate).toLocaleDateString()}
                 </span>
               </div>

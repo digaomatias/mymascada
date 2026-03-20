@@ -22,6 +22,7 @@ import {
 import { BaseModal } from '@/components/modals/base-modal';
 import { CategoryPicker } from '@/components/forms/category-picker';
 import { useTranslations } from 'next-intl';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 interface BankCategoryMapping {
   id: number;
@@ -84,6 +85,7 @@ export default function BankCategoryMappings() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newBankCategoryName, setNewBankCategoryName] = useState('');
   const [newCategoryId, setNewCategoryId] = useState<number | null>(null);
+  const [deleteMappingTarget, setDeleteMappingTarget] = useState<BankCategoryMapping | null>(null);
 
   useEffect(() => {
     loadMappings();
@@ -180,18 +182,22 @@ export default function BankCategoryMappings() {
     }
   };
 
-  const handleDeleteMapping = async (mapping: BankCategoryMapping) => {
-    if (!confirm(t('deleteMappingConfirm', { name: mapping.bankCategoryName }))) {
-      return;
-    }
+  const confirmDeleteMapping = (mapping: BankCategoryMapping) => {
+    setDeleteMappingTarget(mapping);
+  };
+
+  const handleDeleteMapping = async () => {
+    if (!deleteMappingTarget) return;
 
     try {
-      await apiClient.deleteBankCategoryMapping(mapping.id);
+      await apiClient.deleteBankCategoryMapping(deleteMappingTarget.id);
       toast.success(tToasts('bankCategoryMappingDeleted'));
       loadMappings();
     } catch (error) {
       console.error('Failed to delete mapping:', error);
       toast.error(tToasts('bankCategoryMappingDeleteFailed'));
+    } finally {
+      setDeleteMappingTarget(null);
     }
   };
 
@@ -238,7 +244,7 @@ export default function BankCategoryMappings() {
   const getSourceIcon = (source: string) => {
     switch (source) {
       case 'AI':
-        return <SparklesIcon className="w-4 h-4 text-purple-500" />;
+        return <SparklesIcon className="w-4 h-4 text-primary-500" />;
       case 'User':
         return <UserIcon className="w-4 h-4 text-blue-500" />;
       case 'Learned':
@@ -267,26 +273,26 @@ export default function BankCategoryMappings() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-sm">
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-gray-900">{statistics.totalMappings}</div>
-              <div className="text-sm text-gray-600">{t('totalMappings')}</div>
+              <div className="text-2xl font-bold text-ink-900">{statistics.totalMappings}</div>
+              <div className="text-sm text-ink-600">{t('totalMappings')}</div>
             </CardContent>
           </Card>
           <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-sm">
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-purple-600">{statistics.aiCreatedMappings}</div>
-              <div className="text-sm text-gray-600">{t('aiCreated')}</div>
+              <div className="text-2xl font-bold text-primary-600">{statistics.aiCreatedMappings}</div>
+              <div className="text-sm text-ink-600">{t('aiCreated')}</div>
             </CardContent>
           </Card>
           <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-sm">
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-green-600">{statistics.highConfidenceCount}</div>
-              <div className="text-sm text-gray-600">{t('highConfidence')}</div>
+              <div className="text-sm text-ink-600">{t('highConfidence')}</div>
             </CardContent>
           </Card>
           <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-sm">
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-blue-600">{statistics.totalApplications}</div>
-              <div className="text-sm text-gray-600">{t('timesApplied')}</div>
+              <div className="text-sm text-ink-600">{t('timesApplied')}</div>
             </CardContent>
           </Card>
         </div>
@@ -313,7 +319,7 @@ export default function BankCategoryMappings() {
 
           {/* Search */}
           <div className="mt-4 relative">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-ink-400" />
             <Input
               type="text"
               placeholder={t('searchMappings')}
@@ -329,12 +335,12 @@ export default function BankCategoryMappings() {
             <div className="space-y-4">
               {Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="animate-pulse">
-                  <div className="flex items-center gap-4 p-4 bg-gray-100 rounded-lg">
+                  <div className="flex items-center gap-4 p-4 bg-ink-100 rounded-lg">
                     <div className="flex-1">
-                      <div className="h-4 bg-gray-300 rounded w-1/3 mb-2"></div>
-                      <div className="h-3 bg-gray-300 rounded w-1/4"></div>
+                      <div className="h-4 bg-ink-300 rounded w-1/3 mb-2"></div>
+                      <div className="h-3 bg-ink-300 rounded w-1/4"></div>
                     </div>
-                    <div className="h-6 bg-gray-300 rounded w-20"></div>
+                    <div className="h-6 bg-ink-300 rounded w-20"></div>
                   </div>
                 </div>
               ))}
@@ -344,10 +350,10 @@ export default function BankCategoryMappings() {
               <div className="w-20 h-20 bg-gradient-to-br from-primary-400 to-primary-600 rounded-3xl shadow-2xl flex items-center justify-center mx-auto mb-6">
                 <ArrowPathIcon className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              <h3 className="text-xl font-semibold text-ink-900 mb-2">
                 {mappings.length === 0 ? t('noMappings') : t('noMappingsMatch')}
               </h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-ink-600 mb-6">
                 {mappings.length === 0
                   ? t('mappingsAutoCreated')
                   : t('adjustSearchTerms')
@@ -368,13 +374,13 @@ export default function BankCategoryMappings() {
                   className={`flex items-center gap-4 p-4 border rounded-lg transition-colors ${
                     mapping.isExcluded
                       ? 'border-orange-200 bg-orange-50/50 hover:bg-orange-50'
-                      : 'border-gray-200 hover:bg-gray-50'
+                      : 'border-ink-200 hover:bg-ink-50'
                   }`}
                 >
                   {/* Bank Category */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className={`font-medium truncate ${mapping.isExcluded ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
+                      <span className={`font-medium truncate ${mapping.isExcluded ? 'text-ink-500 line-through' : 'text-ink-900'}`}>
                         {mapping.bankCategoryName}
                       </span>
                       {getSourceIcon(mapping.source)}
@@ -384,7 +390,7 @@ export default function BankCategoryMappings() {
                         </span>
                       )}
                     </div>
-                    <div className="text-sm text-gray-500 flex items-center gap-1">
+                    <div className="text-sm text-ink-500 flex items-center gap-1">
                       <span className={`truncate ${mapping.isExcluded ? 'line-through' : ''}`}>
                         {mapping.categoryFullPath || mapping.categoryName}
                       </span>
@@ -407,7 +413,7 @@ export default function BankCategoryMappings() {
                   </div>
 
                   {/* Usage Stats */}
-                  <div className="hidden sm:block text-sm text-gray-500 text-right min-w-[80px]">
+                  <div className="hidden sm:block text-sm text-ink-500 text-right min-w-[80px]">
                     <div>{t('usageCount', { count: mapping.applicationCount })}</div>
                     {mapping.overrideCount > 0 && (
                       <div className="text-yellow-600">{t('overrideCount', { count: mapping.overrideCount })}</div>
@@ -420,7 +426,7 @@ export default function BankCategoryMappings() {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleToggleExclusion(mapping)}
-                      className={`w-8 h-8 p-0 ${mapping.isExcluded ? 'text-orange-600 hover:text-orange-700 hover:bg-orange-50' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
+                      className={`w-8 h-8 p-0 ${mapping.isExcluded ? 'text-orange-600 hover:text-orange-700 hover:bg-orange-50' : 'text-ink-400 hover:text-ink-600 hover:bg-ink-100'}`}
                       title={mapping.isExcluded ? t('includeInAutoCategorization') : t('excludeFromAutoCategorization')}
                     >
                       <NoSymbolIcon className="w-4 h-4" />
@@ -436,7 +442,7 @@ export default function BankCategoryMappings() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDeleteMapping(mapping)}
+                      onClick={() => confirmDeleteMapping(mapping)}
                       className="w-8 h-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
                       <TrashIcon className="w-4 h-4" />
@@ -459,15 +465,15 @@ export default function BankCategoryMappings() {
         {editingMapping && (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink-700 mb-1">
                 {t('bankCategory')}
               </label>
-              <div className="p-3 bg-gray-100 rounded-lg text-gray-900 font-medium">
+              <div className="p-3 bg-ink-100 rounded-lg text-ink-900 font-medium">
                 {editingMapping.bankCategoryName}
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink-700 mb-1">
                 {t('mapToCategory')}
               </label>
               <CategoryPicker
@@ -499,7 +505,7 @@ export default function BankCategoryMappings() {
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink-700 mb-1">
               {t('bankCategoryName')}
             </label>
             <Input
@@ -508,12 +514,12 @@ export default function BankCategoryMappings() {
               value={newBankCategoryName}
               onChange={(e) => setNewBankCategoryName(e.target.value)}
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-ink-500 mt-1">
               {t('bankCategoryHelp')}
             </p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink-700 mb-1">
               {t('mapToCategory')}
             </label>
             <CategoryPicker
@@ -537,6 +543,17 @@ export default function BankCategoryMappings() {
           </div>
         </div>
       </BaseModal>
+
+      <ConfirmationDialog
+        isOpen={deleteMappingTarget !== null}
+        onClose={() => setDeleteMappingTarget(null)}
+        onConfirm={handleDeleteMapping}
+        title={t('deleteMapping')}
+        description={deleteMappingTarget ? t('deleteMappingConfirm', { name: deleteMappingTarget.bankCategoryName }) : ''}
+        confirmText={tCommon('delete')}
+        cancelText={tCommon('cancel')}
+        variant="danger"
+      />
     </div>
   );
 }

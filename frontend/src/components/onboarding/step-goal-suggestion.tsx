@@ -70,31 +70,31 @@ export function StepGoalSuggestion({
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)] lg:gap-8">
-      <section className="flex flex-col rounded-[24px] border border-violet-100 bg-white/80 p-5 sm:p-6">
-        <div className="inline-flex w-fit items-center gap-2 rounded-full border border-violet-100 bg-violet-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-violet-600">
+      <section className="flex flex-col rounded-[24px] border border-ink-200 bg-white/80 p-5 sm:p-6">
+        <div className="inline-flex w-fit items-center gap-2 rounded-full border border-ink-200 bg-primary-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-primary-600">
           <ShieldCheckIcon className="h-4 w-4" />
           {t('goalSuggestion.recommended')}
         </div>
 
         <div className="mt-5 space-y-2">
-          <h2 className="font-[var(--font-onboarding-sans)] text-3xl font-semibold tracking-[-0.02em] text-slate-900">
+          <h2 className="font-[var(--font-onboarding-sans)] text-3xl font-semibold tracking-[-0.02em] text-ink-900">
             {t('goalSuggestion.title')}
           </h2>
-          <p className="text-sm leading-relaxed text-slate-600 sm:text-base">
+          <p className="text-sm leading-relaxed text-ink-600 sm:text-base">
             {t('goalSuggestion.subtitle')}
           </p>
         </div>
 
-        <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
+        <div className="mt-5 rounded-2xl border border-ink-200 bg-white p-4">
           {!isEditing ? (
             <div className="space-y-3">
-              <div className="relative rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 to-fuchsia-50 p-4">
-                <span className="absolute right-3 top-3 rounded-full bg-violet-600 px-2 py-0.5 text-xs font-semibold text-white">
+              <div className="relative rounded-2xl border border-ink-200 bg-gradient-to-br from-primary-50 to-primary-50 p-4">
+                <span className="absolute right-3 top-3 rounded-full bg-primary-600 px-2 py-0.5 text-xs font-semibold text-white">
                   {t('goalSuggestion.recommended')}
                 </span>
-                <p className="pr-24 text-sm font-medium text-slate-600">{t('goalSuggestion.goalNameLabel')}</p>
-                <p className="mt-1 text-lg font-semibold text-slate-900">{goalName}</p>
-                <p className="mt-2 font-[var(--font-onboarding-mono)] text-3xl font-semibold text-violet-700">
+                <p className="pr-24 text-sm font-medium text-ink-600">{t('goalSuggestion.goalNameLabel')}</p>
+                <p className="mt-1 text-lg font-semibold text-ink-900">{goalName}</p>
+                <p className="mt-2 font-[var(--font-onboarding-mono)] text-3xl font-semibold text-primary-700">
                   {formatCurrency(goalTargetAmount)}
                 </p>
                 {isBelowMinimum && (
@@ -118,14 +118,14 @@ export function StepGoalSuggestion({
                   </p>
                 )}
               </div>
-              <p className="text-sm leading-relaxed text-slate-600">
+              <p className="text-sm leading-relaxed text-ink-600">
                 {t('goalSuggestion.why')}
               </p>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsEditing(true)}
-                className="rounded-lg border border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100"
+                className="rounded-lg border border-ink-200 bg-primary-50 text-primary-700 hover:bg-primary-100"
               >
                 <AdjustmentsHorizontalIcon className="mr-1.5 h-4 w-4" />
                 {t('goalSuggestion.editGoal')}
@@ -138,7 +138,7 @@ export function StepGoalSuggestion({
                 value={goalName}
                 onChange={(event) => onGoalNameChange(event.target.value)}
                 maxLength={100}
-                className="rounded-xl border-violet-200 focus:border-violet-400 focus:ring-violet-200"
+                className="rounded-xl border-ink-200 focus:border-primary-400 focus:ring-primary-200"
               />
               <CurrencyInput
                 value={goalTargetAmount}
@@ -148,7 +148,7 @@ export function StepGoalSuggestion({
                 allowNegative={false}
                 error={isBelowMinimum}
                 errorMessage={isBelowMinimum ? t('goalSuggestion.belowMinimum', { amount: formatCurrency(monthlyExpenses) }) : undefined}
-                className="rounded-xl border-violet-200 bg-white [font-family:var(--font-onboarding-mono)] focus:border-violet-400 focus:ring-violet-200"
+                className="rounded-xl border-ink-200 bg-white [font-family:var(--font-onboarding-mono)] focus:border-primary-400 focus:ring-primary-200"
               />
               {isBelowRecommended && (
                 <p className="text-xs font-medium text-amber-600">
@@ -157,7 +157,7 @@ export function StepGoalSuggestion({
               )}
               {accounts && accounts.length > 0 && (
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-slate-700">
+                  <label className="text-sm font-medium text-ink-700">
                     {t('goalSuggestion.linkedAccountLabel')}
                   </label>
                   <Select
@@ -166,7 +166,7 @@ export function StepGoalSuggestion({
                       const val = e.target.value;
                       onLinkedAccountChange?.(val ? Number(val) : undefined);
                     }}
-                    className="rounded-xl border-violet-200 focus:border-violet-400 focus:ring-violet-200"
+                    className="rounded-xl border-ink-200 focus:border-primary-400 focus:ring-primary-200"
                   >
                     <option value="">{t('goalSuggestion.noLinkedAccount')}</option>
                     {accounts.map((account) => (
@@ -175,7 +175,7 @@ export function StepGoalSuggestion({
                       </option>
                     ))}
                   </Select>
-                  <p className="text-xs text-slate-500">{t('goalSuggestion.linkedAccountHelp')}</p>
+                  <p className="text-xs text-ink-500">{t('goalSuggestion.linkedAccountHelp')}</p>
                   {linkedAccount && (
                     <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
                       {t('goalSuggestion.startingBalance')}: {formatCurrency(linkedAccount.currentBalance)}
@@ -188,7 +188,7 @@ export function StepGoalSuggestion({
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsEditing(false)}
-                  className="rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-violet-200 hover:bg-violet-50"
+                  className="rounded-lg border border-ink-200 bg-white text-ink-600 hover:border-ink-200 hover:bg-primary-50"
                 >
                   {t('goalSuggestion.doneEditing')}
                 </Button>
@@ -201,14 +201,14 @@ export function StepGoalSuggestion({
           <Button
             variant="ghost"
             onClick={onBack}
-            className="rounded-xl border border-slate-200 bg-white px-5 text-slate-700 hover:border-violet-200 hover:bg-violet-50"
+            className="rounded-xl border border-ink-200 bg-white px-5 text-ink-700 hover:border-ink-200 hover:bg-primary-50"
           >
             {t('back')}
           </Button>
           <Button
             onClick={onNext}
             disabled={!goalName.trim() || goalTargetAmount <= 0 || isBelowMinimum || isSubmitting}
-            className="rounded-xl bg-violet-600 px-6 text-white shadow-[0_12px_25px_-15px_rgba(124,58,237,1)] hover:bg-violet-700"
+            className="rounded-xl bg-primary-600 px-6 text-white shadow-[0_12px_25px_-15px_rgba(47,129,112,0.45)] hover:bg-primary-700"
           >
             {isSubmitting ? t('submitting') : t('finish')}
             {!isSubmitting && <ArrowRightIcon className="ml-2 h-4 w-4" />}
@@ -216,7 +216,7 @@ export function StepGoalSuggestion({
         </div>
       </section>
 
-      <aside className="relative overflow-hidden rounded-[24px] border border-violet-100 bg-gradient-to-br from-violet-50 via-white to-teal-50 p-5 sm:p-6">
+      <aside className="relative overflow-hidden rounded-[24px] border border-ink-200 bg-gradient-to-br from-primary-50 via-white to-teal-50 p-5 sm:p-6">
         <div className="pointer-events-none absolute -bottom-12 -left-16 h-44 w-44 rounded-full bg-teal-200/45 blur-2xl" />
         <svg
           viewBox="0 0 280 190"
@@ -225,57 +225,57 @@ export function StepGoalSuggestion({
           aria-label="Financial goal illustration"
         >
           {/* Ground line */}
-          <path d="M20 170h240" stroke="#c4b5fd" strokeWidth="2" strokeLinecap="round" />
+          <path d="M20 170h240" stroke="#5eead4" strokeWidth="2" strokeLinecap="round" />
 
           {/* Rising steps / staircase — centered in viewBox */}
           <g transform="translate(69,170)">
             {/* Step 1 */}
-            <rect x="0" y="-28" width="40" height="28" rx="4" fill="#ede9fe" stroke="#8b5cf6" strokeWidth="2" />
-            <text x="20" y="-10" textAnchor="middle" fontSize="11" fontWeight="700" fill="#7c3aed" fontFamily="system-ui">1</text>
+            <rect x="0" y="-28" width="40" height="28" rx="4" fill="#ccfbf1" stroke="#14b8a6" strokeWidth="2" />
+            <text x="20" y="-10" textAnchor="middle" fontSize="11" fontWeight="700" fill="#0d9488" fontFamily="system-ui">1</text>
 
             {/* Step 2 */}
-            <rect x="48" y="-56" width="40" height="56" rx="4" fill="#ddd6fe" stroke="#8b5cf6" strokeWidth="2" />
-            <text x="68" y="-32" textAnchor="middle" fontSize="11" fontWeight="700" fill="#7c3aed" fontFamily="system-ui">2</text>
+            <rect x="48" y="-56" width="40" height="56" rx="4" fill="#99f6e4" stroke="#14b8a6" strokeWidth="2" />
+            <text x="68" y="-32" textAnchor="middle" fontSize="11" fontWeight="700" fill="#0d9488" fontFamily="system-ui">2</text>
 
             {/* Step 3 */}
-            <rect x="96" y="-84" width="40" height="84" rx="4" fill="#c4b5fd" stroke="#7c3aed" strokeWidth="2" />
-            <text x="116" y="-56" textAnchor="middle" fontSize="11" fontWeight="700" fill="#6d28d9" fontFamily="system-ui">3</text>
+            <rect x="96" y="-84" width="40" height="84" rx="4" fill="#5eead4" stroke="#0d9488" strokeWidth="2" />
+            <text x="116" y="-56" textAnchor="middle" fontSize="11" fontWeight="700" fill="#0f766e" fontFamily="system-ui">3</text>
           </g>
 
           {/* Flag on top of step 3 */}
           <g transform="translate(185,62)">
             {/* Flagpole */}
-            <path d="M0 24 v-48" stroke="#7c3aed" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M0 24 v-48" stroke="#0d9488" strokeWidth="2.5" strokeLinecap="round" />
             {/* Flag */}
-            <path d="M0-24 l26 10 l-26 10 z" fill="#8b5cf6" stroke="#7c3aed" strokeWidth="1.5" strokeLinejoin="round" />
+            <path d="M0-24 l26 10 l-26 10 z" fill="#14b8a6" stroke="#0d9488" strokeWidth="1.5" strokeLinejoin="round" />
             {/* Star on flag */}
-            <circle cx="12" cy="-14" r="3" fill="#ede9fe" />
+            <circle cx="12" cy="-14" r="3" fill="#ccfbf1" />
           </g>
         </svg>
 
-        <div className="rounded-2xl border border-violet-200/85 bg-white/80 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.17em] text-violet-500">
+        <div className="rounded-2xl border border-ink-200/85 bg-white/80 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.17em] text-primary-500">
             {t('goalSuggestion.timelineTitle')}
           </p>
           <div className="mt-4 space-y-3">
             {timelineProgress.map((progress, index) => (
               <div key={index} className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs font-medium text-slate-500">
+                <div className="flex items-center justify-between text-xs font-medium text-ink-500">
                   <span>{t('goalSuggestion.monthLabel', { month: index + 1 })}</span>
-                  <span className="font-[var(--font-onboarding-mono)] text-slate-600">
+                  <span className="font-[var(--font-onboarding-mono)] text-ink-600">
                     {Math.round(progress)}%
                   </span>
                 </div>
-                <div className="h-2 rounded-full bg-violet-100">
+                <div className="h-2 rounded-full bg-primary-100">
                   <div
-                    className="h-2 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-all duration-700"
+                    className="h-2 rounded-full bg-gradient-to-r from-primary-500 to-primary-500 transition-all duration-700"
                     style={{ width: `${Math.max(progress, 6)}%` }}
                   />
                 </div>
               </div>
             ))}
           </div>
-          <p className="mt-4 text-xs leading-relaxed text-slate-500">
+          <p className="mt-4 text-xs leading-relaxed text-ink-500">
             {monthlyAvailable > 0 ? t('goalSuggestion.timelineHintPositive') : t('goalSuggestion.timelineHintNegative')}
           </p>
         </div>

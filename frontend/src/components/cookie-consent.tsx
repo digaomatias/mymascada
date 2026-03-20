@@ -39,19 +39,19 @@ export function CookieConsent() {
       aria-label={t('ariaLabel')}
       className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-xl"
     >
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 rounded-2xl border border-slate-200 bg-white/95 backdrop-blur-sm shadow-lg px-5 py-4">
-        <p className="flex-1 text-sm text-slate-600 leading-relaxed">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 rounded-2xl border border-ink-200 bg-white/95 backdrop-blur-sm shadow-lg px-5 py-4">
+        <p className="flex-1 text-sm text-ink-600 leading-relaxed">
           {t('message')}{' '}
           <Link
             href="/privacy"
-            className="font-medium text-violet-600 underline underline-offset-2 hover:text-violet-700 transition-colors"
+            className="font-medium text-primary-600 underline underline-offset-2 hover:text-primary-700 transition-colors"
           >
             {t('learnMore')}
           </Link>
         </p>
         <button
           onClick={handleAccept}
-          className="shrink-0 rounded-xl bg-violet-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-violet-700 active:bg-violet-800 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-600"
+          className="shrink-0 rounded-xl bg-primary-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-700 active:bg-primary-800 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
         >
           {t('accept')}
         </button>

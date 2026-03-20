@@ -78,10 +78,10 @@ export function BudgetSummaryWidget() {
   // No budgets case - compact inline CTA
   if (budgets.length === 0) {
     return (
-      <div className="flex items-center justify-between bg-white/90 backdrop-blur-xs rounded-lg shadow-sm border border-gray-100 px-4 py-3">
+      <div className="flex items-center justify-between bg-white/90 backdrop-blur-xs rounded-lg shadow-sm border border-ink-100 px-4 py-3">
         <div className="flex items-center gap-3">
           <WalletIcon className="h-5 w-5 text-primary-600 flex-shrink-0" />
-          <p className="text-sm text-gray-600">{t('noBudgetsDescription')}</p>
+          <p className="text-sm text-ink-600">{t('noBudgetsDescription')}</p>
         </div>
         <Link href="/budgets/new">
           <Button size="sm" variant="secondary" className="flex-shrink-0">
@@ -99,7 +99,7 @@ export function BudgetSummaryWidget() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <WalletIcon className="h-6 w-6 text-primary-600" />
-            <CardTitle className="text-xl font-bold text-gray-900">{t('title')}</CardTitle>
+            <CardTitle className="text-xl font-bold text-ink-900">{t('title')}</CardTitle>
           </div>
           <Link href="/budgets">
             <Button variant="secondary" size="sm">
@@ -113,7 +113,7 @@ export function BudgetSummaryWidget() {
         {/* Overall Progress */}
         <div className="space-y-2">
           <div className="flex justify-between items-center text-sm">
-            <span className="text-gray-600">{t('overview')}</span>
+            <span className="text-ink-600">{t('overview')}</span>
             <span className="font-medium">
               {t('spentOfBudget', {
                 spent: formatCurrency(totalSpent),
@@ -122,7 +122,7 @@ export function BudgetSummaryWidget() {
             </span>
           </div>
           <BudgetProgressBar usedPercentage={overallPercentage} size="md" />
-          <div className="flex justify-between text-xs text-gray-500">
+          <div className="flex justify-between text-xs text-ink-500">
             <span>{t('percentUsed', { percent: overallPercentage.toFixed(0) })}</span>
             <span>
               {budgets.length === 1
@@ -156,7 +156,7 @@ export function BudgetSummaryWidget() {
             <Link
               key={budget.id}
               href={`/budgets/${budget.id}`}
-              className="block p-3 rounded-lg border hover:bg-gray-50 transition-colors"
+              className="block p-3 rounded-lg border hover:bg-ink-50 transition-colors"
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="font-medium text-sm truncate">{budget.name}</span>
@@ -168,7 +168,7 @@ export function BudgetSummaryWidget() {
                 </Badge>
               </div>
               <BudgetProgressBar usedPercentage={budget.usedPercentage} size="sm" />
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <div className="flex justify-between text-xs text-ink-500 mt-1">
                 <span>{formatCurrency(budget.totalSpent)} / {formatCurrency(budget.totalBudgeted)}</span>
                 <span>
                   {budget.daysRemaining > 0

@@ -16,7 +16,7 @@ export default function CategoriesLoading() {
         </div>
 
         {/* Tabs shimmer */}
-        <div className="mt-4 border-b border-slate-200">
+        <div className="mt-4 border-b border-ink-200">
           <div className="flex gap-4 sm:gap-6 -mb-px">
             <Skeleton className="h-10 w-28" />
             <Skeleton className="h-10 w-32" />

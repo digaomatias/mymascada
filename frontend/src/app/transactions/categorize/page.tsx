@@ -265,12 +265,12 @@ export default function CategorizePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
+      <div className="min-h-screen bg-surface-alt flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
+          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-400 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <WalletIcon className="w-8 h-8 text-white" />
           </div>
-          <div className="mt-6 text-slate-700 font-medium">{t('loading')}</div>
+          <div className="mt-6 text-ink-700 font-medium">{t('loading')}</div>
         </div>
       </div>
     );
@@ -290,10 +290,10 @@ export default function CategorizePage() {
 
         {/* Page Title */}
         <div className="mb-6">
-          <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
+          <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-ink-900 sm:text-[2.1rem]">
             {t('categorizeTitle')}
           </h1>
-          <div className="mt-1.5 flex flex-wrap items-center gap-3 text-[15px] text-slate-500">
+          <div className="mt-1.5 flex flex-wrap items-center gap-3 text-[15px] text-ink-500">
             <span>
               {t('categorizeCountLabel', {
                 count: paginationInfo.totalCount,
@@ -306,7 +306,7 @@ export default function CategorizePage() {
               </span>
             )}
           </div>
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-xs text-ink-400">
             {t('categorizeTransferExclusion')}
           </p>
         </div>
@@ -315,7 +315,7 @@ export default function CategorizePage() {
         <div className="mb-6">
           <div className="flex gap-2 mb-4">
             <div className="flex-1 relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-ink-400" />
               <Input
                 type="text"
                 placeholder={t('searchPlaceholder')}
@@ -337,10 +337,10 @@ export default function CategorizePage() {
 
           {/* Filters */}
           {showFilters && (
-            <div className="rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92 p-4">
+            <div className="rounded-[26px] border border-ink-200 shadow-[0_20px_46px_-30px_rgba(47,129,112,0.20)] backdrop-blur-xs bg-white/92 p-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 mb-2">
+                  <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-ink-500 mb-2">
                     {tCommon('account')}
                   </label>
                   <Select
@@ -358,7 +358,7 @@ export default function CategorizePage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 mb-2">
+                  <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-ink-500 mb-2">
                     {t('categorizeFilter.label')}
                   </label>
                   <Select
@@ -399,19 +399,19 @@ export default function CategorizePage() {
         )}
 
         {/* Transaction List */}
-        <div className="rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92 overflow-hidden">
+        <div className="rounded-[26px] border border-ink-200 shadow-[0_20px_46px_-30px_rgba(47,129,112,0.20)] backdrop-blur-xs bg-white/92 overflow-hidden">
           {loading ? (
             <div className="p-6">
               <div className="space-y-4">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <div key={i} className="animate-pulse">
-                    <div className="flex items-center gap-4 p-4 bg-slate-100 rounded-xl">
-                      <div className="w-12 h-12 bg-slate-300 rounded-xl"></div>
+                    <div className="flex items-center gap-4 p-4 bg-ink-100 rounded-xl">
+                      <div className="w-12 h-12 bg-ink-300 rounded-xl"></div>
                       <div className="flex-1">
-                        <div className="h-4 bg-slate-300 rounded w-1/2 mb-2"></div>
-                        <div className="h-3 bg-slate-300 rounded w-1/4"></div>
+                        <div className="h-4 bg-ink-300 rounded w-1/2 mb-2"></div>
+                        <div className="h-3 bg-ink-300 rounded w-1/4"></div>
                       </div>
-                      <div className="h-6 bg-slate-300 rounded w-20"></div>
+                      <div className="h-6 bg-ink-300 rounded w-20"></div>
                     </div>
                   </div>
                 ))}
@@ -425,8 +425,8 @@ export default function CategorizePage() {
                   <div className="w-20 h-20 bg-gradient-to-br from-success-400 to-success-600 rounded-3xl shadow-2xl flex items-center justify-center mx-auto mb-6">
                     <CheckIcon className="w-10 h-10 text-white" />
                   </div>
-                  <h3 className="text-xl font-semibold text-slate-900 mb-2">{t('categorizeAllDoneTitle')}</h3>
-                  <p className="text-slate-600 mb-6">
+                  <h3 className="text-xl font-semibold text-ink-900 mb-2">{t('categorizeAllDoneTitle')}</h3>
+                  <p className="text-ink-600 mb-6">
                     {categorizedCount > 0
                       ? t('categorizeAllDoneWithCount', { count: categorizedCount })
                       : t('categorizeAllDoneEmpty')
@@ -438,11 +438,11 @@ export default function CategorizePage() {
                 </>
               ) : (
                 <>
-                  <div className="w-20 h-20 bg-gradient-to-br from-slate-400 to-slate-600 rounded-3xl shadow-2xl flex items-center justify-center mx-auto mb-6">
+                  <div className="w-20 h-20 bg-gradient-to-br from-ink-400 to-ink-600 rounded-3xl shadow-2xl flex items-center justify-center mx-auto mb-6">
                     <FunnelIcon className="w-10 h-10 text-white" />
                   </div>
-                  <h3 className="text-xl font-semibold text-slate-900 mb-2">{t('categorizeNoMatchesTitle')}</h3>
-                  <p className="text-slate-600 mb-6">
+                  <h3 className="text-xl font-semibold text-ink-900 mb-2">{t('categorizeNoMatchesTitle')}</h3>
+                  <p className="text-ink-600 mb-6">
                     {t('categorizeNoMatchesDescription', {
                       status: showAll ? t('categorizeFilter.allTransactions') : t('categorizeFilter.uncategorized')
                     })}
@@ -468,15 +468,15 @@ export default function CategorizePage() {
           ) : (
             <div className="p-0">
               {/* Transaction Cards */}
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-ink-100">
                 {transactions.map((transaction) => {
                   const isIncome = transaction.amount > 0;
 
                   return (
                     <div key={transaction.id} className={cn(
                       isMobile ? 'p-3 border-l-4' : 'p-4',
-                      isIncome ? 'border-success-500' : 'border-slate-300',
-                      'hover:bg-slate-50 transition-colors'
+                      isIncome ? 'border-success-500' : 'border-ink-200',
+                      'hover:bg-ink-50 transition-colors'
                     )}>
                       <div className={cn('flex items-center', isMobile ? 'gap-2' : 'gap-3')}>
                         {/* Transaction Icon - Desktop Only */}
@@ -485,12 +485,12 @@ export default function CategorizePage() {
                             'w-12 h-12 rounded-xl flex items-center justify-center shadow-sm',
                             isIncome
                               ? 'bg-gradient-to-br from-success-100 to-success-200'
-                              : 'bg-gradient-to-br from-slate-100 to-slate-200'
+                              : 'bg-gradient-to-br from-ink-100 to-ink-200'
                           )}>
                             {isIncome ? (
                               <ArrowTrendingUpIcon className="w-6 h-6 text-success-600" />
                             ) : (
-                              <ArrowTrendingDownIcon className="w-6 h-6 text-slate-600" />
+                              <ArrowTrendingDownIcon className="w-6 h-6 text-ink-600" />
                             )}
                           </div>
                         )}
@@ -499,11 +499,11 @@ export default function CategorizePage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between">
                             <div className="min-w-0 flex-1">
-                              <p className="text-sm font-semibold text-slate-900 truncate">
+                              <p className="text-sm font-semibold text-ink-900 truncate">
                                 {transaction.userDescription || transaction.description}
                               </p>
 
-                              <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
+                              <div className="flex items-center gap-3 mt-1 text-xs text-ink-500">
                                 <span className="flex items-center gap-1">
                                   <CalendarIcon className="w-3 h-3" />
                                   {formatDate(transaction.transactionDate)}
@@ -527,7 +527,7 @@ export default function CategorizePage() {
 
                             {/* Amount */}
                             <div className="text-right ml-3">
-                              <p className={cn('text-sm font-bold', isIncome ? 'text-emerald-600' : 'text-slate-900')}>
+                              <p className={cn('text-sm font-bold', isIncome ? 'text-emerald-600' : 'text-ink-900')}>
                                 {isIncome ? '+' : ''}{formatCurrency(Math.abs(transaction.amount))}
                               </p>
                             </div>

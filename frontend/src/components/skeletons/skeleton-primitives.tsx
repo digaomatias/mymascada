@@ -1,20 +1,23 @@
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
-/** A shimmer card matching the app's rounded-[26px] card style */
+/** A shimmer card matching the app's card style */
 export function SkeletonCard({
   className,
   children,
+  style,
 }: {
   className?: string;
   children?: React.ReactNode;
+  style?: React.CSSProperties;
 }) {
   return (
     <div
       className={cn(
-        'rounded-[26px] border border-violet-100/80 bg-white/80 animate-pulse',
+        'rounded-2xl border border-ink-200/60 bg-surface animate-pulse',
         className,
       )}
+      style={style}
     >
       {children}
     </div>
@@ -28,7 +31,7 @@ export function SkeletonTableRows({ count = 5 }: { count?: number }) {
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
-          className="flex items-center gap-3 rounded-[26px] border border-violet-100/80 bg-white/80 p-5 animate-pulse"
+          className="flex items-center gap-3 rounded-2xl border border-ink-200/60 bg-surface p-5 animate-pulse"
         >
           <Skeleton className="h-10 w-10 rounded-xl" variant="rounded-sm" />
           <div className="flex-1 space-y-2">
@@ -58,7 +61,7 @@ export function SkeletonHero({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'rounded-[26px] border border-violet-100/60 bg-white/80 p-6 animate-pulse',
+        'rounded-2xl border border-ink-200/60 bg-surface p-6 animate-pulse',
         className,
       )}
     >
@@ -78,7 +81,7 @@ export function SkeletonStatCards({ count = 4 }: { count?: number }) {
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
-          className="h-32 rounded-2xl border border-violet-100/80 bg-white/85 animate-pulse"
+          className="h-32 rounded-2xl border border-ink-200/60 bg-surface animate-pulse"
         />
       ))}
     </div>
@@ -90,18 +93,21 @@ export function SkeletonPanel({
   className,
   height = 'h-[390px]',
   children,
+  style,
 }: {
   className?: string;
   height?: string;
   children?: React.ReactNode;
+  style?: React.CSSProperties;
 }) {
   return (
     <div
       className={cn(
-        'rounded-[26px] border border-violet-100/80 bg-white/85 animate-pulse',
+        'rounded-2xl border border-ink-200/60 bg-surface animate-pulse',
         height,
         className,
       )}
+      style={style}
     >
       {children}
     </div>
@@ -111,7 +117,7 @@ export function SkeletonPanel({
 /** Settings-style card skeleton */
 export function SkeletonSettingsCard() {
   return (
-    <div className="rounded-[26px] border border-violet-100/70 bg-white/80 p-6 animate-pulse">
+    <div className="rounded-2xl border border-ink-200/60 bg-surface p-6 animate-pulse">
       <div className="flex items-start gap-4">
         <Skeleton className="h-12 w-12 rounded-xl" variant="rounded-sm" />
         <div className="flex-1 space-y-2">

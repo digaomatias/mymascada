@@ -18,12 +18,12 @@ export default function HomePage() {
   }, [isAuthenticated, isLoading, router]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-primary-50 to-primary-200 flex items-center justify-center">
       <div className="text-center">
         <div className="w-16 h-16 mb-4 mx-auto animate-pulse">
           <AppIcon size={64} />
         </div>
-        <p className="text-gray-600">{tCommon('loading')}</p>
+        <p className="text-ink-600">{tCommon('loading')}</p>
       </div>
     </div>
   );

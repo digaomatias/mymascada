@@ -112,8 +112,8 @@ export function ShareAccountModal({
       case 1: return 'bg-yellow-100 text-yellow-800';
       case 2: return 'bg-green-100 text-green-800';
       case 3: return 'bg-red-100 text-red-800';
-      case 4: return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 4: return 'bg-ink-100 text-ink-800';
+      default: return 'bg-ink-100 text-ink-800';
     }
   };
 
@@ -132,7 +132,7 @@ export function ShareAccountModal({
           {/* Invite Form */}
           <form onSubmit={handleSendInvitation} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink-700 mb-1">
                 {t('shareWith')}
               </label>
               <input
@@ -146,7 +146,7 @@ export function ShareAccountModal({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink-700 mb-1">
                 {t('selectRole')}
               </label>
               <Select
@@ -170,21 +170,21 @@ export function ShareAccountModal({
 
           {/* Current Shares List */}
           <div>
-            <h4 className="text-sm font-semibold text-gray-900 mb-3">
+            <h4 className="text-sm font-semibold text-ink-900 mb-3">
               {t('currentShares')}
             </h4>
 
             {loadingShares ? (
               <div className="space-y-2">
                 {Array.from({ length: 2 }).map((_, i) => (
-                  <div key={i} className="animate-pulse flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <div className="h-4 bg-gray-300 rounded w-1/3"></div>
-                    <div className="h-4 bg-gray-300 rounded w-1/4"></div>
+                  <div key={i} className="animate-pulse flex items-center gap-3 p-3 bg-ink-50 rounded-lg">
+                    <div className="h-4 bg-ink-300 rounded w-1/3"></div>
+                    <div className="h-4 bg-ink-300 rounded w-1/4"></div>
                   </div>
                 ))}
               </div>
             ) : shares.filter((s) => isActiveShare(s.status)).length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-4">
+              <p className="text-sm text-ink-500 text-center py-4">
                 {t('noShares')}
               </p>
             ) : (
@@ -194,10 +194,10 @@ export function ShareAccountModal({
                   .map((share) => (
                   <div
                     key={share.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    className="flex items-center justify-between p-3 bg-ink-50 rounded-lg"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
+                      <p className="text-sm font-medium text-ink-900 truncate">
                         {share.sharedWithUserName || share.sharedWithUserEmail}
                       </p>
                       <div className="flex items-center gap-2 mt-1">

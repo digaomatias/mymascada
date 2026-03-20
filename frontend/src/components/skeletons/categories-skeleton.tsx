@@ -2,7 +2,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function CategoriesSkeleton() {
   return (
-    <div className="rounded-[26px] border border-violet-100/60 bg-white/90 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
+    <div className="rounded-[26px] border border-ink-200 bg-white/90 shadow-lg shadow-primary-200/20 backdrop-blur-xs">
       <div className="p-6 space-y-4">
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="flex items-center gap-4 animate-pulse">

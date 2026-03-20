@@ -4,7 +4,7 @@ export function AnalyticsSkeleton() {
   return (
     <>
       {/* Insight banner skeleton */}
-      <div className="mb-6 h-20 rounded-[24px] border border-violet-100/80 bg-white/85 animate-pulse" />
+      <div className="mb-6 h-20 rounded-[24px] border border-ink-200 bg-white/85 animate-pulse" />
 
       {/* Stat cards skeleton */}
       <div className="mb-6">

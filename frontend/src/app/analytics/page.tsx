@@ -67,14 +67,14 @@ interface MonthlySummary {
 }
 
 const PANEL_CLASS =
-  'rounded-[26px] border border-violet-100/70 bg-white/92 p-5 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs';
+  'rounded-[26px] border border-ink-200 bg-white/92 p-5 shadow-[0_20px_46px_-30px_rgba(47,129,112,0.20)] backdrop-blur-xs';
 
 const STAT_CARD_CLASS =
-  'rounded-2xl border border-violet-100/80 bg-white/92 p-4 shadow-[0_16px_34px_-26px_rgba(76,29,149,0.4)]';
+  'rounded-2xl border border-ink-200 bg-white/92 p-4 shadow-[0_16px_34px_-26px_rgba(47,129,112,0.18)]';
 
-const SKELETON_BANNER_CLASS = 'h-20 rounded-[24px] border border-violet-100/80 bg-white/85';
-const SKELETON_STAT_CARD_CLASS = 'h-32 rounded-2xl border border-violet-100/80 bg-white/85';
-const SKELETON_PANEL_CLASS = 'rounded-[26px] border border-violet-100/80 bg-white/85';
+const SKELETON_BANNER_CLASS = 'h-20 rounded-[24px] border border-ink-200 bg-white/85';
+const SKELETON_STAT_CARD_CLASS = 'h-32 rounded-2xl border border-ink-200 bg-white/85';
+const SKELETON_PANEL_CLASS = 'rounded-[26px] border border-ink-200 bg-white/85';
 
 interface StatCardProps {
   label: string;
@@ -91,9 +91,9 @@ function StatCard({ label, value, hint, tone, iconBg, iconColor, icon: Icon }: S
     <article className={STAT_CARD_CLASS}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">{label}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-500">{label}</p>
           <p className={cn('mt-1 font-[var(--font-dash-mono)] text-2xl font-semibold', tone)}>{value}</p>
-          {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
+          {hint && <p className="mt-1 text-xs text-ink-500">{hint}</p>}
         </div>
         <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl', iconBg)}>
           <Icon className={cn('h-5 w-5', iconColor)} />
@@ -185,8 +185,8 @@ export default function AnalyticsPage() {
   const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string }) => {
     if (active && payload && payload[0]) {
       return (
-        <div className="rounded-xl border border-violet-100/70 bg-white/98 p-3 shadow-[0_18px_36px_-26px_rgba(76,29,149,0.55)] backdrop-blur-xs">
-          <p className="font-[var(--font-dash-sans)] text-sm font-semibold text-slate-900">{label}</p>
+        <div className="rounded-xl border border-ink-200 bg-white/98 p-3 shadow-[0_18px_36px_-26px_rgba(47,129,112,0.25)] backdrop-blur-xs">
+          <p className="font-[var(--font-dash-sans)] text-sm font-semibold text-ink-900">{label}</p>
           {payload.map((entry: { name: string; value: number; color: string }, index: number) => (
             <p key={index} className="font-[var(--font-dash-mono)] text-sm" style={{ color: entry.color }}>
               {entry.name}: {formatCurrency(entry.value)}
@@ -233,10 +233,10 @@ export default function AnalyticsPage() {
       {/* Header and filters are ALWAYS visible */}
       <header className="mb-5 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
+          <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-ink-900 sm:text-[2.1rem]">
             {t('title')}
           </h1>
-          <p className="mt-1.5 text-[15px] text-slate-500">{t('subtitle')}</p>
+          <p className="mt-1.5 text-[15px] text-ink-500">{t('subtitle')}</p>
         </div>
 
         <Link href="/analytics/trends">
@@ -278,17 +278,17 @@ export default function AnalyticsPage() {
                 <SparklesIcon className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-slate-800">
+                <p className="text-sm font-semibold text-ink-800">
                   {netAmount >= 0 ? t('onTrack') : t('behindSchedule')}
                 </p>
-                <p className="text-sm text-slate-600">
+                <p className="text-sm text-ink-600">
                   {t('summary.totalSaved')}: <span className="font-[var(--font-dash-mono)]">{formatCurrency(netAmount)}</span>{' '}
                   • {t('summary.savingsRate')}: <span className="font-[var(--font-dash-mono)]">{savingsRate.toFixed(1)}%</span>
                 </p>
               </div>
             </div>
 
-            <p className="text-xs font-medium uppercase tracking-[0.08em] text-slate-500">
+            <p className="text-xs font-medium uppercase tracking-[0.08em] text-ink-500">
               {t('dateRange')} • {analyticsSummary?.monthCount ?? monthlyTrends.length}
             </p>
           </div>
@@ -334,8 +334,8 @@ export default function AnalyticsPage() {
             value={formatCurrency(netAmount)}
             hint={netAmount >= 0 ? t('onTrack') : t('behindSchedule')}
             tone={netAmount >= 0 ? 'text-emerald-600' : 'text-rose-600'}
-            iconBg="bg-violet-50"
-            iconColor="text-violet-600"
+            iconBg="bg-primary-50"
+            iconColor="text-primary-600"
             icon={BanknotesIcon}
           />
 
@@ -343,9 +343,9 @@ export default function AnalyticsPage() {
             label={t('stats.totalSpending')}
             value={formatCurrency(totalCategorySpend)}
             hint={`${categoryData.length} ${t('byCategory').toLowerCase()}`}
-            tone="text-slate-900"
-            iconBg="bg-slate-100"
-            iconColor="text-slate-700"
+            tone="text-ink-900"
+            iconBg="bg-ink-100"
+            iconColor="text-ink-700"
             icon={CurrencyDollarIcon}
           />
         </section>
@@ -360,14 +360,14 @@ export default function AnalyticsPage() {
             className={cn(PANEL_CLASS, 'xl:col-span-2', loadingTrends && 'opacity-60 transition-opacity duration-200')}
           >
             <div className="flex items-center justify-between gap-3">
-              <h2 className="flex items-center gap-2 font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900">
-                <ChartBarIcon className="h-5 w-5 text-violet-600" />
+              <h2 className="flex items-center gap-2 font-[var(--font-dash-sans)] text-lg font-semibold text-ink-900">
+                <ChartBarIcon className="h-5 w-5 text-primary-600" />
                 {t('charts.incomeVsExpenses')}
               </h2>
-              <span className="text-xs uppercase tracking-[0.08em] text-slate-500">{t('trends')}</span>
+              <span className="text-xs uppercase tracking-[0.08em] text-ink-500">{t('trends')}</span>
             </div>
 
-            <div className="mt-4 h-[330px] rounded-2xl bg-slate-50/55 p-2">
+            <div className="mt-4 h-[330px] rounded-2xl bg-ink-50/55 p-2">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={monthlyTrends} margin={{ top: 8, right: 8, left: -12, bottom: 4 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -410,13 +410,13 @@ export default function AnalyticsPage() {
         ) : (
           <section className={cn(PANEL_CLASS, loadingTrends && 'opacity-60 transition-opacity duration-200')}>
             <div className="flex items-center justify-between gap-3">
-              <h2 className="flex items-center gap-2 font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900">
-                <CalendarIcon className="h-5 w-5 text-violet-600" />
+              <h2 className="flex items-center gap-2 font-[var(--font-dash-sans)] text-lg font-semibold text-ink-900">
+                <CalendarIcon className="h-5 w-5 text-primary-600" />
                 {t('charts.netIncomeTrend')}
               </h2>
             </div>
 
-            <div className="mt-4 h-[240px] rounded-2xl bg-slate-50/55 p-2">
+            <div className="mt-4 h-[240px] rounded-2xl bg-ink-50/55 p-2">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={monthlyTrends} margin={{ top: 10, right: 8, left: -12, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -442,15 +442,15 @@ export default function AnalyticsPage() {
             </div>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-              <div className="rounded-xl border border-violet-100/80 bg-violet-50/35 p-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">{t('stats.highestMonth')}</p>
-                <p className="mt-1 font-[var(--font-dash-mono)] text-sm font-semibold text-slate-900">
+              <div className="rounded-xl border border-ink-200 bg-primary-50/35 p-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-500">{t('stats.highestMonth')}</p>
+                <p className="mt-1 font-[var(--font-dash-mono)] text-sm font-semibold text-ink-900">
                   {bestMonth ? `${bestMonth.month} • ${formatCurrency(bestMonth.net)}` : '—'}
                 </p>
               </div>
-              <div className="rounded-xl border border-violet-100/80 bg-violet-50/35 p-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">{t('stats.lowestMonth')}</p>
-                <p className="mt-1 font-[var(--font-dash-mono)] text-sm font-semibold text-slate-900">
+              <div className="rounded-xl border border-ink-200 bg-primary-50/35 p-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-500">{t('stats.lowestMonth')}</p>
+                <p className="mt-1 font-[var(--font-dash-mono)] text-sm font-semibold text-ink-900">
                   {lowestMonth ? `${lowestMonth.month} • ${formatCurrency(lowestMonth.net)}` : '—'}
                 </p>
               </div>
@@ -468,7 +468,7 @@ export default function AnalyticsPage() {
             {categoryData.length > 0 ? (
               <CategorySpendingChart data={categoryData} title={t('charts.spendingByCategory')} />
             ) : (
-              <div className="flex h-[320px] items-center justify-center rounded-2xl border border-dashed border-violet-200/80 bg-violet-50/30 text-slate-500">
+              <div className="flex h-[320px] items-center justify-center rounded-2xl border border-dashed border-ink-200 bg-primary-50/30 text-ink-500">
                 <p className="text-sm font-medium">{t('charts.noCategoryData')}</p>
               </div>
             )}
@@ -481,12 +481,12 @@ export default function AnalyticsPage() {
         ) : (
           <section className={cn(PANEL_CLASS, loadingTrends && 'opacity-60 transition-opacity duration-200')}>
             <div className="flex items-center justify-between gap-3">
-              <h2 className="font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900">
+              <h2 className="font-[var(--font-dash-sans)] text-lg font-semibold text-ink-900">
                 {t('charts.yearlyComparison')}
               </h2>
             </div>
 
-            <div className="mt-4 h-[240px] rounded-2xl bg-slate-50/55 p-2">
+            <div className="mt-4 h-[240px] rounded-2xl bg-ink-50/55 p-2">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={yearlyData} margin={{ top: 10, right: 8, left: -14, bottom: 4 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -505,9 +505,9 @@ export default function AnalyticsPage() {
               </ResponsiveContainer>
             </div>
 
-            <div className="mt-4 rounded-xl border border-violet-100/80 bg-violet-50/35 p-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">{t('summary.totalSaved')}</p>
-              <p className="mt-1 font-[var(--font-dash-mono)] text-sm font-semibold text-slate-900">
+            <div className="mt-4 rounded-xl border border-ink-200 bg-primary-50/35 p-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-500">{t('summary.totalSaved')}</p>
+              <p className="mt-1 font-[var(--font-dash-mono)] text-sm font-semibold text-ink-900">
                 {bestYear ? `${bestYear.year} • ${formatCurrency(bestYear.netIncome)}` : '—'}
               </p>
             </div>

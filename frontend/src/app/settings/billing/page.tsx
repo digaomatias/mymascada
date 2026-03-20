@@ -91,12 +91,12 @@ export default function BillingPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
+      <div className="min-h-screen bg-surface-alt flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
+          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-400 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <CreditCardIcon className="w-8 h-8 text-white" />
           </div>
-          <div className="mt-6 text-gray-700 font-medium">{tCommon('loading')}</div>
+          <div className="mt-6 text-ink-700 font-medium">{tCommon('loading')}</div>
         </div>
       </div>
     );
@@ -131,10 +131,10 @@ export default function BillingPage() {
             <CreditCardIcon className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-ink-900">
               {t('title')}
             </h1>
-            <p className="text-gray-600 mt-0.5">{t('subtitle')}</p>
+            <p className="text-ink-600 mt-0.5">{t('subtitle')}</p>
           </div>
         </div>
       </div>
@@ -143,10 +143,10 @@ export default function BillingPage() {
         <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
           <CardContent className="p-6">
             <div className="animate-pulse space-y-4">
-              <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-              <div className="h-10 bg-gray-200 rounded"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-              <div className="h-10 bg-gray-200 rounded"></div>
+              <div className="h-4 bg-ink-200 rounded w-1/3"></div>
+              <div className="h-10 bg-ink-200 rounded"></div>
+              <div className="h-4 bg-ink-200 rounded w-1/4"></div>
+              <div className="h-10 bg-ink-200 rounded"></div>
             </div>
           </CardContent>
         </Card>
@@ -162,17 +162,17 @@ export default function BillingPage() {
                   <ExclamationCircleIcon className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
                 )}
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h3 className="text-lg font-semibold text-ink-900">
                     {t('currentPlan')}
                   </h3>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-ink-600 mt-1">
                     {t('planName', { plan: billingStatus.planName })}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-ink-600">
                     {t('planStatus', { status: billingStatus.status })}
                   </p>
                   {billingStatus.currentPeriodEnd && (
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-ink-500 mt-1">
                       {t('periodEnd')}: {new Date(billingStatus.currentPeriodEnd).toLocaleDateString(locale)}
                     </p>
                   )}
@@ -189,20 +189,20 @@ export default function BillingPage() {
           {/* Usage Card */}
           <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
             <CardContent className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <h3 className="text-lg font-semibold text-ink-900 mb-4">
                 {t('currentUsage')}
               </h3>
               <div className="space-y-4">
                 {/* Accounts usage */}
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-600">{t('accounts')}</span>
-                    <span className="font-medium text-gray-900">
+                    <span className="text-ink-600">{t('accounts')}</span>
+                    <span className="font-medium text-ink-900">
                       {billingStatus.currentAccountCount} / {formatLimit(billingStatus.maxAccounts)}
                     </span>
                   </div>
                   {billingStatus.maxAccounts > 0 && (
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="w-full bg-ink-200 rounded-full h-2">
                       <div
                         className={`h-2 rounded-full transition-all ${
                           getUsagePercent(billingStatus.currentAccountCount, billingStatus.maxAccounts) >= 90
@@ -220,13 +220,13 @@ export default function BillingPage() {
                 {/* Transactions usage */}
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-600">{t('transactionsThisMonth')}</span>
-                    <span className="font-medium text-gray-900">
+                    <span className="text-ink-600">{t('transactionsThisMonth')}</span>
+                    <span className="font-medium text-ink-900">
                       {billingStatus.currentMonthTransactionCount} / {formatLimit(billingStatus.maxTransactionsPerMonth)}
                     </span>
                   </div>
                   {billingStatus.maxTransactionsPerMonth > 0 && (
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="w-full bg-ink-200 rounded-full h-2">
                       <div
                         className={`h-2 rounded-full transition-all ${
                           getUsagePercent(billingStatus.currentMonthTransactionCount, billingStatus.maxTransactionsPerMonth) >= 90
@@ -279,7 +279,7 @@ export default function BillingPage() {
               <ExclamationCircleIcon className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm text-amber-800">{t('noBilling')}</p>
-                <p className="text-sm text-gray-600 mt-2">
+                <p className="text-sm text-ink-600 mt-2">
                   {t('setupBilling')}
                 </p>
               </div>

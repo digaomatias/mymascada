@@ -27,7 +27,7 @@ export function BackButton({ href, onClick, label, variant = 'button', className
         <button
           type="button"
           onClick={onClick}
-          className={cn('inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 mb-4', className)}
+          className={cn('inline-flex items-center gap-2 text-sm text-ink-600 hover:text-ink-900 mb-4', className)}
         >
           {icon}
           {desktopText}
@@ -41,7 +41,7 @@ export function BackButton({ href, onClick, label, variant = 'button', className
     return (
       <Link
         href={href}
-        className={cn('inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 mb-4', className)}
+        className={cn('inline-flex items-center gap-2 text-sm text-ink-600 hover:text-ink-900 mb-4', className)}
       >
         {icon}
         {desktopText}

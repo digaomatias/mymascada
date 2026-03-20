@@ -299,10 +299,10 @@ export function TransactionForm({
 
         {/* Transaction Type Toggle */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3">
+          <label className="block text-sm font-medium text-ink-700 mb-3">
             {t('transactionType')}
           </label>
-          <div className="grid grid-cols-2 gap-2 p-1 bg-gray-100 rounded-lg">
+          <div className="grid grid-cols-2 gap-2 p-1 bg-ink-100 rounded-lg">
             {[
               { type: 'expense' as const, label: t('expense'), icon: MinusIcon, color: 'text-red-600 bg-red-50 border-red-200' },
               { type: 'income' as const, label: t('income'), icon: PlusIcon, color: 'text-green-600 bg-green-50 border-green-200' }
@@ -314,7 +314,7 @@ export function TransactionForm({
                 className={`flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md border transition-all ${
                   formData.type === type
                     ? `${color} border-2 shadow-sm`
-                    : 'text-gray-600 bg-white border-gray-200 hover:bg-gray-50'
+                    : 'text-ink-600 bg-white border-ink-200 hover:bg-ink-50'
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -326,7 +326,7 @@ export function TransactionForm({
 
         {/* Transaction Status */}
         <div>
-          <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="status" className="block text-sm font-medium text-ink-700 mb-2">
             {tCommon('status')}
           </label>
           <select
@@ -343,19 +343,19 @@ export function TransactionForm({
           {errors.status && (
             <p className="mt-1 text-sm text-red-600">{errors.status}</p>
           )}
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-ink-500">
             {t('statusHelp')}
           </p>
         </div>
 
         {/* Amount Field */}
         <div>
-          <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="amount" className="block text-sm font-medium text-ink-700 mb-2">
             {t('amountLabel')}
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <span className="text-gray-500 text-lg font-medium">{tCommon('currencySymbol')}</span>
+              <span className="text-ink-500 text-lg font-medium">{tCommon('currencySymbol')}</span>
             </div>
             <Input
               id="amount"
@@ -371,7 +371,7 @@ export function TransactionForm({
           {errors.amount && (
             <p className="mt-1 text-sm text-red-600">{errors.amount}</p>
           )}
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-ink-500">
             {t('amountHelp')}
           </p>
         </div>
@@ -390,7 +390,7 @@ export function TransactionForm({
 
         {/* Description Field */}
         <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="description" className="block text-sm font-medium text-ink-700 mb-2">
             {t('descriptionLabel')}
           </label>
           <DescriptionAutocomplete
@@ -404,7 +404,7 @@ export function TransactionForm({
 
         {/* User Description Field */}
         <div>
-          <label htmlFor="userDescription" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="userDescription" className="block text-sm font-medium text-ink-700 mb-2">
             {t('personalNote')}
           </label>
           <Input
@@ -414,14 +414,14 @@ export function TransactionForm({
             value={formData.userDescription}
             onChange={(e) => handleInputChange('userDescription', e.target.value)}
           />
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-ink-500">
             {t('personalNoteHelp')}
           </p>
         </div>
 
         {/* Account Selection */}
         <div>
-          <label htmlFor="accountId" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="accountId" className="block text-sm font-medium text-ink-700 mb-2">
             <BuildingOffice2Icon className="w-4 h-4 inline mr-1" />
             {tCommon('account')} {accounts.length > 0 ? '*' : ''}
           </label>
@@ -471,7 +471,7 @@ export function TransactionForm({
 
         {/* Category Selection */}
         <div>
-          <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="categoryId" className="block text-sm font-medium text-ink-700 mb-2">
             <TagIcon className="w-4 h-4 inline mr-1" />
             {tCommon('category')}
           </label>
@@ -493,7 +493,7 @@ export function TransactionForm({
 
         {/* Location Field */}
         <div>
-          <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="location" className="block text-sm font-medium text-ink-700 mb-2">
             {tCommon('location')}
           </label>
           <Input
@@ -507,7 +507,7 @@ export function TransactionForm({
 
         {/* Notes Field */}
         <div>
-          <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="notes" className="block text-sm font-medium text-ink-700 mb-2">
             {tCommon('notes')}
           </label>
           <textarea
@@ -516,7 +516,7 @@ export function TransactionForm({
             placeholder={t('notesPlaceholder')}
             value={formData.notes}
             onChange={(e) => handleInputChange('notes', e.target.value)}
-            className="w-full px-4 py-3 text-sm border border-gray-300 rounded-md bg-white placeholder-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
+            className="w-full px-4 py-3 text-sm border border-ink-300 rounded-md bg-white placeholder-ink-400 focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
           />
         </div>
 

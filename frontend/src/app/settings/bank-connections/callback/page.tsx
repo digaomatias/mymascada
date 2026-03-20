@@ -108,17 +108,17 @@ function CallbackContent() {
   }, [searchParams, router, isAuthenticated, isLoading]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-primary-50 to-primary-200 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
         {status === 'processing' && (
           <>
             <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center mx-auto animate-pulse">
               <BuildingLibraryIcon className="w-8 h-8 text-white" />
             </div>
-            <h1 className="mt-6 text-xl font-semibold text-gray-900">
+            <h1 className="mt-6 text-xl font-semibold text-ink-900">
               {t('connecting')}
             </h1>
-            <p className="mt-2 text-gray-600">
+            <p className="mt-2 text-ink-600">
               {t('pleaseWait')}
             </p>
             <div className="mt-6 flex justify-center">
@@ -132,10 +132,10 @@ function CallbackContent() {
             <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center mx-auto">
               <CheckCircleIcon className="w-8 h-8 text-white" />
             </div>
-            <h1 className="mt-6 text-xl font-semibold text-gray-900">
+            <h1 className="mt-6 text-xl font-semibold text-ink-900">
               {t('authorized')}
             </h1>
-            <p className="mt-2 text-gray-600">
+            <p className="mt-2 text-ink-600">
               {t('redirecting')}
             </p>
           </>
@@ -146,10 +146,10 @@ function CallbackContent() {
             <div className="w-16 h-16 bg-gradient-to-br from-red-400 to-red-600 rounded-2xl flex items-center justify-center mx-auto">
               <ExclamationCircleIcon className="w-8 h-8 text-white" />
             </div>
-            <h1 className="mt-6 text-xl font-semibold text-gray-900">
+            <h1 className="mt-6 text-xl font-semibold text-ink-900">
               {t('failed')}
             </h1>
-            <p className="mt-2 text-gray-600">
+            <p className="mt-2 text-ink-600">
               {errorMessage || t('unexpectedError')}
             </p>
             <button
@@ -169,12 +169,12 @@ function CallbackFallback() {
   const t = useTranslations('settings.bankConnections.callback');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-purple-50 to-primary-200 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary-100 via-primary-50 to-primary-200 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
         <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center mx-auto animate-pulse">
           <BuildingLibraryIcon className="w-8 h-8 text-white" />
         </div>
-        <h1 className="mt-6 text-xl font-semibold text-gray-900">
+        <h1 className="mt-6 text-xl font-semibold text-ink-900">
           {t('loading')}
         </h1>
       </div>

@@ -84,9 +84,9 @@ export function AttentionItemsCard() {
         };
       default:
         return {
-          card: 'border-l-violet-400 bg-violet-50/30',
-          icon: 'text-violet-500',
-          tag: 'bg-violet-100 text-violet-700',
+          card: 'border-l-primary-400 bg-primary-50/30',
+          icon: 'text-primary-500',
+          tag: 'bg-primary-100 text-primary-700',
         };
     }
   };
@@ -95,10 +95,10 @@ export function AttentionItemsCard() {
     <DashboardCard cardId="attention-items" loading={loading} error={error}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-100">
-            <BellAlertIcon className="h-4 w-4 text-violet-600" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-100">
+            <BellAlertIcon className="h-4 w-4 text-primary-600" />
           </div>
-          <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold tracking-[-0.02em] text-slate-900">
+          <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold tracking-[-0.02em] text-ink-900">
             {t('title')}
           </h3>
         </div>
@@ -106,7 +106,7 @@ export function AttentionItemsCard() {
 
       <div className="mt-5 space-y-3">
         {items.length === 0 ? (
-          <p className="py-4 text-center text-sm text-slate-400">{t('allClear')}</p>
+          <p className="py-4 text-center text-sm text-ink-400">{t('allClear')}</p>
         ) : (
           items.map((item, i) => {
             const Icon = getIcon(item.severity);
@@ -122,9 +122,9 @@ export function AttentionItemsCard() {
               >
                 <Icon className={cn('mt-0.5 h-5 w-5 shrink-0', styles.icon)} />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-slate-800">{item.text}</p>
-                  <p className="mt-0.5 text-xs text-slate-500">{item.detail}</p>
-                  <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-violet-500">
+                  <p className="text-sm font-semibold text-ink-800">{item.text}</p>
+                  <p className="mt-0.5 text-xs text-ink-500">{item.detail}</p>
+                  <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-primary-500">
                     {item.category}
                   </p>
                 </div>

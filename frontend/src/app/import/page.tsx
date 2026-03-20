@@ -513,12 +513,12 @@ function ImportPageContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
+      <div className="min-h-screen bg-surface-alt flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
+          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-400 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <DocumentArrowUpIcon className="w-8 h-8 text-white" />
           </div>
-          <div className="mt-6 text-gray-700 font-medium">{t('loading')}</div>
+          <div className="mt-6 text-ink-700 font-medium">{t('loading')}</div>
         </div>
       </div>
     );
@@ -548,21 +548,21 @@ function ImportPageContent() {
           <div key={step.key} className="flex items-center">
             <div
               className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
-                isCompleted || isActive ? 'bg-violet-600 text-white' : 'bg-gray-200 text-gray-500'
+                isCompleted || isActive ? 'bg-primary-600 text-white' : 'bg-ink-200 text-ink-500'
               }`}
             >
               {isCompleted ? <CheckCircleIcon className="w-5 h-5" /> : index + 1}
             </div>
             <span
               className={`ml-2 text-sm whitespace-nowrap ${
-                isActive ? 'text-violet-600 font-medium' : 'text-gray-400'
+                isActive ? 'text-primary-600 font-medium' : 'text-ink-400'
               }`}
             >
               {step.label}
             </span>
             {index < steps.length - 1 && (
               <div
-                className={`w-12 h-px mx-3 ${isCompleted ? 'bg-violet-600' : 'bg-gray-200'}`}
+                className={`w-12 h-px mx-3 ${isCompleted ? 'bg-primary-600' : 'bg-ink-200'}`}
               />
             )}
           </div>
@@ -579,7 +579,7 @@ function ImportPageContent() {
       <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
         <div className="p-6">
           <div
-            className="border-2 border-dashed border-gray-300 rounded-xl p-10 text-center hover:border-violet-400 transition-colors cursor-pointer"
+            className="border-2 border-dashed border-ink-300 rounded-xl p-10 text-center hover:border-primary-400 transition-colors cursor-pointer"
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onClick={() => !selectedFile && fileInputRef.current?.click()}
@@ -588,10 +588,10 @@ function ImportPageContent() {
               <div className="space-y-3">
                 <CheckCircleIcon className="w-12 h-12 text-green-500 mx-auto" />
                 <div>
-                  <p className="text-lg font-semibold text-gray-900">{selectedFile.name}</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-lg font-semibold text-ink-900">{selectedFile.name}</p>
+                  <p className="text-sm text-ink-500">
                     {(selectedFile.size / 1024).toFixed(1)} KB &mdash;{' '}
-                    <span className="font-medium text-violet-600 uppercase">{fileFormat}</span>
+                    <span className="font-medium text-primary-600 uppercase">{fileFormat}</span>
                   </p>
                 </div>
                 <Button variant="secondary" size="sm" onClick={(e) => { e.stopPropagation(); removeFile(); }}>
@@ -600,10 +600,10 @@ function ImportPageContent() {
               </div>
             ) : (
               <div className="space-y-4">
-                <CloudArrowUpIcon className="w-12 h-12 text-gray-400 mx-auto" />
+                <CloudArrowUpIcon className="w-12 h-12 text-ink-400 mx-auto" />
                 <div>
-                  <p className="text-lg font-semibold text-gray-900">{t('unified.dropHere')}</p>
-                  <p className="text-sm text-gray-500 mt-1">{t('unified.supports')}</p>
+                  <p className="text-lg font-semibold text-ink-900">{t('unified.dropHere')}</p>
+                  <p className="text-sm text-ink-500 mt-1">{t('unified.supports')}</p>
                 </div>
                 <Button variant="secondary" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
                   <DocumentArrowUpIcon className="w-4 h-4 mr-2" />
@@ -634,7 +634,7 @@ function ImportPageContent() {
       {selectedFile && fileFormat === 'ofx' && (
         <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
           <div className="p-6 space-y-5">
-            <p className="text-sm text-slate-600">{t('unified.ofxReady')}</p>
+            <p className="text-sm text-ink-600">{t('unified.ofxReady')}</p>
 
             {/* Account selection */}
             <div className="space-y-3">
@@ -644,18 +644,18 @@ function ImportPageContent() {
                     type="radio"
                     checked={!createAccount}
                     onChange={() => setCreateAccount(false)}
-                    className="h-4 w-4 text-violet-600"
+                    className="h-4 w-4 text-primary-600"
                   />
-                  <span className="text-sm text-gray-700">{t('account.useExisting')}</span>
+                  <span className="text-sm text-ink-700">{t('account.useExisting')}</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
                     checked={createAccount}
                     onChange={() => setCreateAccount(true)}
-                    className="h-4 w-4 text-violet-600"
+                    className="h-4 w-4 text-primary-600"
                   />
-                  <span className="text-sm text-gray-700">{t('account.createNew')}</span>
+                  <span className="text-sm text-ink-700">{t('account.createNew')}</span>
                 </label>
               </div>
 
@@ -683,7 +683,7 @@ function ImportPageContent() {
                     placeholder={t('account.enterAccountName')}
                     className="input w-full"
                   />
-                  <p className="text-xs text-gray-500">{t('account.detailsFromOfx')}</p>
+                  <p className="text-xs text-ink-500">{t('account.detailsFromOfx')}</p>
                 </div>
               )}
             </div>
@@ -701,7 +701,7 @@ function ImportPageContent() {
               <Button
                 onClick={handleAnalyzeOFX}
                 disabled={isAnalyzingOFX || (!selectedAccount && !createAccount)}
-                className="flex-1 bg-linear-to-r from-violet-600 to-violet-700 hover:from-violet-700 hover:to-violet-800 text-white font-semibold"
+                className="flex-1 bg-linear-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-semibold"
               >
                 {isAnalyzingOFX ? (
                   <>
@@ -726,14 +726,14 @@ function ImportPageContent() {
           <div className="p-6 space-y-4">
             {features.aiCategorization ? (
               <>
-                <div className="flex items-start gap-3 rounded-xl bg-violet-50 p-4">
-                  <SparklesIcon className="w-5 h-5 text-violet-600 mt-0.5 shrink-0" />
-                  <p className="text-sm text-violet-800">{t('unified.csvWithAI')}</p>
+                <div className="flex items-start gap-3 rounded-xl bg-primary-50 p-4">
+                  <SparklesIcon className="w-5 h-5 text-primary-600 mt-0.5 shrink-0" />
+                  <p className="text-sm text-primary-800">{t('unified.csvWithAI')}</p>
                 </div>
                 <Button
                   onClick={handleAnalyzeCSVWithAI}
                   disabled={isAnalyzingCSV}
-                  className="w-full bg-linear-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white font-semibold py-3"
+                  className="w-full bg-linear-to-r from-primary-600 to-primary-600 hover:from-primary-700 hover:to-primary-700 text-white font-semibold py-3"
                 >
                   {isAnalyzingCSV ? (
                     <>
@@ -747,7 +747,7 @@ function ImportPageContent() {
                     </>
                   )}
                 </Button>
-                <p className="text-center text-xs text-gray-400">{tCommon('or')}</p>
+                <p className="text-center text-xs text-ink-400">{tCommon('or')}</p>
                 <Button
                   variant="secondary"
                   onClick={handleMapCSVManually}
@@ -760,14 +760,14 @@ function ImportPageContent() {
               </>
             ) : (
               <>
-                <div className="flex items-start gap-3 rounded-xl bg-slate-50 p-4">
-                  <AdjustmentsHorizontalIcon className="w-5 h-5 text-slate-500 mt-0.5 shrink-0" />
-                  <p className="text-sm text-slate-700">{t('unified.csvManual')}</p>
+                <div className="flex items-start gap-3 rounded-xl bg-ink-50 p-4">
+                  <AdjustmentsHorizontalIcon className="w-5 h-5 text-ink-500 mt-0.5 shrink-0" />
+                  <p className="text-sm text-ink-700">{t('unified.csvManual')}</p>
                 </div>
                 <Button
                   onClick={handleMapCSVManually}
                   disabled={isAnalyzingCSV}
-                  className="w-full bg-linear-to-r from-violet-600 to-violet-700 hover:from-violet-700 hover:to-violet-800 text-white font-semibold py-3"
+                  className="w-full bg-linear-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-semibold py-3"
                 >
                   {isAnalyzingCSV ? (
                     <>
@@ -794,7 +794,7 @@ function ImportPageContent() {
       return (
         <Card>
           <CardContent className="p-6 text-center">
-            <p className="text-gray-600">{t('aiCsv.missingResult')}</p>
+            <p className="text-ink-600">{t('aiCsv.missingResult')}</p>
             <Button onClick={() => setCurrentStep('configure')} className="mt-4">
               {t('aiCsv.backToUpload')}
             </Button>
@@ -823,7 +823,7 @@ function ImportPageContent() {
               <ExclamationTriangleIcon className="w-8 h-8 text-orange-600" />
             </div>
             <h3 className="text-lg font-semibold mb-2">{t('review.analyzingImport')}</h3>
-            <p className="text-gray-600 mb-4">{t('review.checkingConflicts')}</p>
+            <p className="text-ink-600 mb-4">{t('review.checkingConflicts')}</p>
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto" />
           </CardContent>
         </Card>
@@ -859,7 +859,7 @@ function ImportPageContent() {
                 ? t('aiCsv.success.importSuccessful')
                 : t('aiCsv.success.reviewCompleted')}
             </h3>
-            <p className="text-gray-600">
+            <p className="text-ink-600">
               {((importResult?.importedTransactionsCount ?? 0) +
                 (importResult?.mergedTransactionsCount ?? 0)) > 0
                 ? t('aiCsv.success.importedMessage')
@@ -922,13 +922,13 @@ function ImportPageContent() {
         </div>
 
         <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-gradient-to-br from-violet-500 to-fuchsia-600 rounded-3xl shadow-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-600 rounded-3xl shadow-2xl flex items-center justify-center mx-auto mb-4">
             <DocumentArrowUpIcon className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-ink-900 mb-2">
             {t('unified.title')}
           </h1>
-          <p className="text-gray-600 max-w-2xl mx-auto">{t('unified.subtitle')}</p>
+          <p className="text-ink-600 max-w-2xl mx-auto">{t('unified.subtitle')}</p>
         </div>
       </div>
 
@@ -949,12 +949,12 @@ function ImportPageContent() {
 function ImportPageFallback() {
   const t = useTranslations('import');
   return (
-    <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
+    <div className="min-h-screen bg-surface-alt flex items-center justify-center">
       <div className="text-center">
-        <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
+        <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-400 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
           <DocumentArrowUpIcon className="w-8 h-8 text-white" />
         </div>
-        <div className="mt-6 text-gray-700 font-medium">{t('loading')}</div>
+        <div className="mt-6 text-ink-700 font-medium">{t('loading')}</div>
       </div>
     </div>
   );

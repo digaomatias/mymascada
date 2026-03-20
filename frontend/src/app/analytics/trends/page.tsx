@@ -21,14 +21,14 @@ import {
 import { BackButton } from '@/components/ui/back-button';
 
 const PANEL_CLASS =
-  'rounded-[26px] border border-violet-100/70 bg-white/92 p-5 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs';
+  'rounded-[26px] border border-ink-200 bg-white/92 p-5 shadow-[0_20px_46px_-30px_rgba(47,129,112,0.20)] backdrop-blur-xs';
 
 const METRIC_CARD_CLASS =
-  'rounded-2xl border border-violet-100/80 bg-white/92 p-4 shadow-[0_16px_34px_-26px_rgba(76,29,149,0.4)]';
+  'rounded-2xl border border-ink-200 bg-white/92 p-4 shadow-[0_16px_34px_-26px_rgba(47,129,112,0.18)]';
 
-const SKELETON_BANNER_CLASS = 'h-20 rounded-[24px] border border-violet-100/80 bg-white/85';
-const SKELETON_METRIC_CARD_CLASS = 'h-28 rounded-2xl border border-violet-100/80 bg-white/85';
-const SKELETON_PANEL_CLASS = 'rounded-[26px] border border-violet-100/80 bg-white/85';
+const SKELETON_BANNER_CLASS = 'h-20 rounded-[24px] border border-ink-200 bg-white/85';
+const SKELETON_METRIC_CARD_CLASS = 'h-28 rounded-2xl border border-ink-200 bg-white/85';
+const SKELETON_PANEL_CLASS = 'rounded-[26px] border border-ink-200 bg-white/85';
 
 interface TrendStats {
   totalSpending: number;
@@ -123,7 +123,7 @@ export default function CategoryTrendsPage() {
     return (
       <AppLayout>
         <div className="animate-pulse space-y-5">
-          <div className="h-9 w-64 rounded-xl bg-slate-200" />
+          <div className="h-9 w-64 rounded-xl bg-ink-200" />
           <div className={SKELETON_BANNER_CLASS} />
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -161,27 +161,27 @@ export default function CategoryTrendsPage() {
       <header className="mb-5">
         <BackButton variant="link" href="/analytics" label={t('categoryTrends.backToAnalytics')} />
 
-        <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
+        <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-ink-900 sm:text-[2.1rem]">
           {t('categoryTrends.title')}
         </h1>
-        <p className="mt-1.5 text-[15px] text-slate-500">{t('categoryTrends.subtitle')}</p>
+        <p className="mt-1.5 text-[15px] text-ink-500">{t('categoryTrends.subtitle')}</p>
       </header>
 
-      <section className="mb-6 rounded-2xl border border-violet-100/80 bg-white/92 p-4 shadow-[0_16px_32px_-28px_rgba(76,29,149,0.45)]">
+      <section className="mb-6 rounded-2xl border border-ink-200 bg-white/92 p-4 shadow-[0_16px_32px_-28px_rgba(47,129,112,0.20)]">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex items-start gap-3">
-            <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg bg-violet-100 text-violet-700">
+            <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg bg-primary-100 text-primary-700">
               <SparklesIcon className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-slate-800">{t('categoryTrends.seeDescription')}</p>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm font-semibold text-ink-800">{t('categoryTrends.seeDescription')}</p>
+              <p className="text-sm text-ink-600">
                 {selectedCategoryNames.length > 0 ? selectedCategoryNames.join(', ') : t('categoryTrends.selectCategories')}
               </p>
             </div>
           </div>
 
-          <p className="text-xs font-medium uppercase tracking-[0.08em] text-slate-500">
+          <p className="text-xs font-medium uppercase tracking-[0.08em] text-ink-500">
             {t('categoryTrends.nOfMaxSelected', {
               count: selectedCategoryIds.length,
               max: Math.min(10, trendData?.categories.length ?? 10),
@@ -195,13 +195,13 @@ export default function CategoryTrendsPage() {
           <article className={METRIC_CARD_CLASS}>
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">{t('stats.totalSpending')}</p>
-                <p className="mt-1 font-[var(--font-dash-mono)] text-2xl font-semibold text-slate-900">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-500">{t('stats.totalSpending')}</p>
+                <p className="mt-1 font-[var(--font-dash-mono)] text-2xl font-semibold text-ink-900">
                   {formatCurrency(stats.totalSpending)}
                 </p>
-                <p className="mt-1 text-xs text-slate-500">{stats.categoryCount} {t('byCategory').toLowerCase()}</p>
+                <p className="mt-1 text-xs text-ink-500">{stats.categoryCount} {t('byCategory').toLowerCase()}</p>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
                 <BanknotesIcon className="h-5 w-5" />
               </div>
             </div>
@@ -210,11 +210,11 @@ export default function CategoryTrendsPage() {
           <article className={METRIC_CARD_CLASS}>
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">{t('stats.avgMonthly')}</p>
-                <p className="mt-1 font-[var(--font-dash-mono)] text-2xl font-semibold text-slate-900">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-500">{t('stats.avgMonthly')}</p>
+                <p className="mt-1 font-[var(--font-dash-mono)] text-2xl font-semibold text-ink-900">
                   {formatCurrency(stats.avgMonthlySpending)}
                 </p>
-                <p className="mt-1 text-xs text-slate-500">{stats.monthCount} {t('byMonth').toLowerCase()}</p>
+                <p className="mt-1 text-xs text-ink-500">{stats.monthCount} {t('byMonth').toLowerCase()}</p>
               </div>
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                 <CalendarIcon className="h-5 w-5" />
@@ -225,11 +225,11 @@ export default function CategoryTrendsPage() {
           <article className={METRIC_CARD_CLASS}>
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">{t('stats.highestMonth')}</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-500">{t('stats.highestMonth')}</p>
                 <p className="mt-1 font-[var(--font-dash-mono)] text-xl font-semibold text-rose-600">
                   {formatCurrency(stats.highestMonth.totalSpent)}
                 </p>
-                <p className="mt-1 text-xs text-slate-500">{stats.highestMonth.periodLabel}</p>
+                <p className="mt-1 text-xs text-ink-500">{stats.highestMonth.periodLabel}</p>
               </div>
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
                 <ChartBarIcon className="h-5 w-5" />
@@ -240,11 +240,11 @@ export default function CategoryTrendsPage() {
           <article className={METRIC_CARD_CLASS}>
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">{t('stats.lowestMonth')}</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-500">{t('stats.lowestMonth')}</p>
                 <p className="mt-1 font-[var(--font-dash-mono)] text-xl font-semibold text-emerald-600">
                   {formatCurrency(stats.lowestMonth.totalSpent)}
                 </p>
-                <p className="mt-1 text-xs text-slate-500">{stats.lowestMonth.periodLabel}</p>
+                <p className="mt-1 text-xs text-ink-500">{stats.lowestMonth.periodLabel}</p>
               </div>
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
                 <ChartBarIcon className="h-5 w-5" />
@@ -267,11 +267,11 @@ export default function CategoryTrendsPage() {
         <div className="space-y-6">
           <section className={PANEL_CLASS}>
             <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 className="flex items-center gap-2 font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900">
-                <ChartBarIcon className="h-5 w-5 text-violet-600" />
+              <h2 className="flex items-center gap-2 font-[var(--font-dash-sans)] text-lg font-semibold text-ink-900">
+                <ChartBarIcon className="h-5 w-5 text-primary-600" />
                 {t('categoryTrends.spendingOverTime')}
               </h2>
-              <span className="text-xs uppercase tracking-[0.08em] text-slate-500">{t('trends')}</span>
+              <span className="text-xs uppercase tracking-[0.08em] text-ink-500">{t('trends')}</span>
             </div>
 
             <CategoryTrendChart
@@ -281,7 +281,7 @@ export default function CategoryTrendsPage() {
           </section>
 
           <section className={PANEL_CLASS}>
-            <h2 className="mb-4 font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900">
+            <h2 className="mb-4 font-[var(--font-dash-sans)] text-lg font-semibold text-ink-900">
               {t('categoryTrends.categoryComparison')}
             </h2>
             <TrendSummaryTable

@@ -1,19 +1,19 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-primary-50: #f5f3ff;
-  --color-primary-100: #ede9fe;
-  --color-primary-200: #ddd6fe;
-  --color-primary-300: #c4b5fd;
-  --color-primary-400: #a78bfa;
-  --color-primary-500: #8b5cf6;
-  --color-primary-600: #6b46c1;
-  --color-primary-700: #553c9a;
-  --color-primary-800: #6b46c1;
-  --color-primary-900: #4c1d95;
-  --color-primary: #6b46c1;
-  --color-primary-light: #8b5cf6;
-  --color-primary-dark: #553c9a;
+  --color-primary-50: oklch(97% 0.015 168);
+  --color-primary-100: oklch(94% 0.03 168);
+  --color-primary-200: oklch(88% 0.06 168);
+  --color-primary-300: oklch(78% 0.09 168);
+  --color-primary-400: oklch(65% 0.11 168);
+  --color-primary-500: oklch(55% 0.12 168);
+  --color-primary-600: oklch(48% 0.10 168);
+  --color-primary-700: oklch(40% 0.09 168);
+  --color-primary-800: oklch(33% 0.08 168);
+  --color-primary-900: oklch(25% 0.07 168);
+  --color-primary: oklch(48% 0.10 168);
+  --color-primary-light: oklch(55% 0.12 168);
+  --color-primary-dark: oklch(40% 0.09 168);
 
   --color-success-50: #ecfdf5;
   --color-success-100: #d1fae5;
@@ -63,11 +63,36 @@
   --color-info-900: #1e3a8a;
   --color-info: #3b82f6;
 
-  --color-popover: #ffffff;
-  --color-popover-foreground: #1e293b;
+  --color-popover: oklch(99.5% 0.004 65);
+  --color-popover-foreground: oklch(20% 0.015 65);
 
+  /* ── Impeccable: Tinted neutrals (warm sand hue 65, subtle chroma) ── */
+  --color-ink-50: oklch(97.5% 0.008 65);
+  --color-ink-100: oklch(96% 0.012 65);
+  --color-ink-200: oklch(92% 0.015 65);
+  --color-ink-300: oklch(85% 0.012 65);
+  --color-ink-400: oklch(70% 0.01 65);
+  --color-ink-500: oklch(55% 0.01 65);
+  --color-ink-600: oklch(45% 0.012 65);
+  --color-ink-700: oklch(35% 0.012 65);
+  --color-ink-800: oklch(25% 0.015 65);
+  --color-ink-900: oklch(18% 0.015 65);
+  --color-ink-950: oklch(13% 0.015 65);
+
+  /* Semantic surface colors */
+  --color-surface: oklch(99.5% 0.004 65);
+  --color-surface-alt: oklch(97.5% 0.008 65);
+  --color-surface-brand: oklch(96% 0.018 168);
+
+  /* ── Impeccable: Tinted shadows ── */
+  --shadow-card: 0 1px 2px oklch(13% 0.015 65 / 4%), 0 6px 20px -6px oklch(13% 0.015 65 / 7%);
+  --shadow-card-raised: 0 1px 2px oklch(13% 0.015 65 / 4%), 0 12px 28px -8px oklch(13% 0.015 65 / 10%);
+
+  /* ── Fonts ── */
   --font-sans:
     var(--font-dash-sans), -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif;
+  --font-display:
+    var(--font-dash-display), Georgia, 'Times New Roman', serif;
 }
 
 /*
@@ -84,51 +109,72 @@
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: var(--color-gray-200, currentcolor);
+    border-color: var(--color-ink-200, currentcolor);
   }
 }
 
 @utility btn {
-  /* Button Styles */
-  @apply inline-flex items-center justify-center px-6 py-3 text-sm font-medium rounded-md 
-           shadow-xs transition-all duration-200 ease-in-out cursor-pointer
+  @apply inline-flex items-center justify-center px-6 py-3 text-sm font-medium rounded-lg
+           cursor-pointer
            focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2
            disabled:opacity-50 disabled:cursor-not-allowed;
+  transition: all 200ms cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 @utility btn-primary {
-  @apply btn bg-violet-600 text-white
-           shadow-[0_8px_20px_-8px_rgba(124,58,237,0.5)]
-           hover:bg-violet-700 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_-8px_rgba(124,58,237,0.65)]
-           focus-visible:ring-violet-500;
+  @apply btn bg-primary-600 text-white
+           hover:bg-primary-700
+           focus-visible:ring-primary-500;
+  box-shadow: 0 1px 2px oklch(30% 0.1 168 / 20%), 0 6px 16px -4px oklch(30% 0.15 168 / 30%);
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 1px 2px oklch(30% 0.1 168 / 20%), 0 10px 22px -4px oklch(30% 0.15 168 / 40%);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 1px 2px oklch(30% 0.1 168 / 20%);
+  }
 }
 
 @utility btn-secondary {
-  @apply btn border border-violet-200/60 bg-white/90 text-slate-700 backdrop-blur-sm
-           hover:bg-violet-50 hover:text-violet-700
-           focus-visible:ring-violet-500;
+  @apply btn bg-white text-ink-700
+           hover:bg-ink-50 hover:text-ink-900
+           focus-visible:ring-primary-500;
+  border: 1px solid oklch(90% 0.02 65);
 }
 
 @utility btn-danger {
-  @apply btn bg-danger text-white hover:bg-danger-600 
+  @apply btn bg-danger text-white hover:bg-danger-600
            focus-visible:ring-danger;
 }
 
 @utility input {
-  /* Input Styles */
-  @apply w-full px-4 py-3 text-sm border border-gray-300 rounded-md
-           bg-white placeholder-gray-400
-           focus:border-primary focus:ring-2 focus:ring-primary/20
-           disabled:bg-gray-50 disabled:cursor-not-allowed;
+  @apply w-full px-4 py-3 text-sm rounded-lg
+           bg-white placeholder-ink-400
+           focus:ring-2 focus:ring-primary/20
+           disabled:bg-ink-50 disabled:cursor-not-allowed;
+  border: 1px solid oklch(90% 0.015 65);
+  transition: border-color 150ms cubic-bezier(0.25, 1, 0.5, 1), box-shadow 150ms cubic-bezier(0.25, 1, 0.5, 1);
+
+  &:focus {
+    border-color: var(--color-primary);
+  }
 }
 
 @utility select {
-  /* Select Styles */
-  @apply w-full px-4 py-3 text-sm border border-gray-300 rounded-md
+  @apply w-full px-4 py-3 text-sm rounded-lg
            bg-white cursor-pointer
-           focus:border-primary focus:ring-2 focus:ring-primary/20
-           disabled:bg-gray-50 disabled:cursor-not-allowed;
-  
+           focus:ring-2 focus:ring-primary/20
+           disabled:bg-ink-50 disabled:cursor-not-allowed;
+  border: 1px solid oklch(90% 0.015 65);
+  transition: border-color 150ms cubic-bezier(0.25, 1, 0.5, 1);
+
+  &:focus {
+    border-color: var(--color-primary);
+  }
+
   appearance: none;
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
   background-position: right 0.5rem center;
@@ -138,54 +184,61 @@
 }
 
 @utility checkbox {
-  /* Checkbox Styles */
   @apply cursor-pointer;
 }
 
 @utility card {
-  /* Card Styles — glassmorphism */
-  @apply bg-white/85 border border-violet-100/70 rounded-[28px] p-6
-         shadow-[0_20px_50px_-28px_rgba(76,29,149,0.3)] backdrop-blur-xl;
+  @apply rounded-2xl border p-6;
+  background: oklch(99.5% 0.004 65);
+  border-color: oklch(92% 0.02 65);
+  box-shadow: var(--shadow-card);
 
-  /* High contrast mode support */
   @media (prefers-contrast: high) {
-    @apply border-2 border-gray-900 bg-white;
+    @apply border-2 border-ink-900 bg-white;
   }
 }
 
 @utility card-hover {
-  @apply card transition-all duration-200 hover:shadow-[0_24px_56px_-28px_rgba(76,29,149,0.4)] cursor-pointer;
+  @apply card cursor-pointer;
+  transition: box-shadow 200ms cubic-bezier(0.25, 1, 0.5, 1), transform 200ms cubic-bezier(0.25, 1, 0.5, 1);
+
+  &:hover {
+    box-shadow: var(--shadow-card-raised);
+    transform: translateY(-1px);
+  }
 }
 
 @utility form-card {
-  /* Form card — slightly different from card: tighter radius, stronger shadow, lighter blur */
-  @apply rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92;
+  @apply rounded-2xl border p-6;
+  background: oklch(99.5% 0.004 65);
+  border-color: oklch(92% 0.02 65);
+  box-shadow: 0 1px 3px oklch(13% 0.015 65 / 5%), 0 12px 32px -10px oklch(13% 0.015 65 / 10%);
 }
 
 @utility table {
-  /* Table Styles */
   @apply w-full border-collapse;
 
   & thead {
-    @apply bg-gray-50 border-b border-gray-200;
+    @apply bg-ink-50 border-b border-ink-200;
   }
 
   & th {
-    @apply px-4 py-3 text-left text-sm font-semibold text-gray-700;
+    @apply px-4 py-3 text-left text-sm font-semibold text-ink-700;
   }
 
   & td {
-    @apply px-4 py-3 text-sm border-b border-gray-100;
+    @apply px-4 py-3 text-sm border-b border-ink-100;
   }
 
   & tbody tr {
-    @apply hover:bg-gray-50 transition-colors duration-150;
+    @apply hover:bg-ink-50;
+    transition: background-color 150ms cubic-bezier(0.25, 1, 0.5, 1);
   }
 }
 
 @utility amount {
-  /* Amount Display */
   @apply text-2xl font-semibold;
+  font-variant-numeric: tabular-nums;
 }
 
 @utility amount-positive {
@@ -197,11 +250,10 @@
 }
 
 @utility amount-neutral {
-  @apply amount text-gray-500;
+  @apply amount text-ink-500;
 }
 
 @utility badge {
-  /* Badge Styles */
   @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
 }
 
@@ -222,61 +274,61 @@
 }
 
 @utility skeleton {
-  /* Loading States */
-  @apply animate-pulse bg-gray-200 rounded-sm;
+  @apply animate-pulse bg-ink-200 rounded-sm;
 }
 
 @utility modal-overlay {
-  /* Modal Overlay */
-  @apply fixed inset-0 bg-black/50 z-40;
+  @apply fixed inset-0 z-40;
+  background: oklch(13% 0.015 65 / 50%);
 }
 
 @utility modal-content {
-  @apply bg-white/95 rounded-[28px] p-8 shadow-2xl max-w-lg mx-auto backdrop-blur-xl border border-violet-100/50;
+  @apply rounded-2xl p-8 max-w-lg mx-auto border;
+  background: oklch(99.5% 0.004 65);
+  border-color: oklch(92% 0.02 65);
+  box-shadow: 0 24px 48px -12px oklch(13% 0.015 65 / 18%);
 }
 
 @utility modal-scroll {
-  /* Custom scrollbar for modals */
   scrollbar-width: thin;
-  scrollbar-color: #d1d5db #f3f4f6;
+  scrollbar-color: oklch(82% 0.01 65) oklch(96% 0.008 65);
 }
 
 @layer base {
   .modal-scroll::-webkit-scrollbar {
     width: 6px;
   }
-  
+
   .modal-scroll::-webkit-scrollbar-track {
-    background: #f3f4f6;
+    background: oklch(96% 0.008 65);
     border-radius: 3px;
   }
-  
+
   .modal-scroll::-webkit-scrollbar-thumb {
-    background: #d1d5db;
+    background: oklch(82% 0.01 65);
     border-radius: 3px;
   }
-  
+
   .modal-scroll::-webkit-scrollbar-thumb:hover {
-    background: #9ca3af;
+    background: oklch(70% 0.01 65);
   }
 }
 
 @utility nav-link {
-  /* Navigation link — sidebar style */
-  @apply px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-150;
+  @apply px-3 py-2.5 rounded-xl text-[13px] font-medium;
+  transition: all 150ms cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 @utility nav-link-active {
-  @apply bg-white/95 text-violet-900 shadow-lg shadow-violet-950/50;
+  @apply bg-white/95 text-primary-900 shadow-lg shadow-primary-900/50;
 }
 
 @utility form-group {
-  /* Form Group */
   @apply space-y-2;
 }
 
 @utility form-label {
-  @apply block text-sm font-medium text-gray-700;
+  @apply block text-sm font-medium text-ink-700;
 }
 
 @utility form-error {
@@ -284,66 +336,45 @@
 }
 
 @utility container-responsive {
-  /* Responsive Container */
   @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
 }
 
 @utility animate-count {
-  /* Custom animations */
-  animation: countUp 0.5s ease-out;
-
-  /* High contrast mode support */
-
-  /* Reduced motion support */
+  animation: countUp 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @utility animate-fade-in-up {
-  /* Animation utility classes */
-  animation: fadeInUp 0.6s ease-out;
-
-  /* High contrast mode support */
-
-  /* Reduced motion support */
+  animation: fadeInUp 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @utility animate-slide-in-right {
-  animation: slideInRight 0.5s ease-out;
-
-  /* High contrast mode support */
-
-  /* Reduced motion support */
+  animation: slideInRight 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @utility animate-bounce-in {
-  animation: bounceIn 0.8s ease-out;
-
-  /* High contrast mode support */
-
-  /* Reduced motion support */
+  animation: scaleIn 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @utility animate-dropdown {
-  animation: dropdownOpen 0.15s ease-out;
+  animation: dropdownOpen 150ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @utility animate-slide-up {
-  animation: modalSlideUp 0.3s ease-out;
+  animation: modalSlideUp 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@utility animate-card-entrance {
+  animation: cardEntrance 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--stagger, 0) * 80ms);
 }
 
 @utility touch-target {
-  /* Utility for touch targets */
   @apply min-h-[44px] min-w-[44px];
-
-  /* High contrast mode support */
-
-  /* Reduced motion support */
 }
 
 @utility mobile-form-safe {
-  /* Mobile form safe area utility - ensures forms don't get hidden behind bottom navigation */
   @apply pb-24 md:pb-8;
-  
-  /* Add safe area for devices with home indicators */
+
   @media (max-width: 767px) {
     padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0));
   }
@@ -351,29 +382,30 @@
 
 @layer base {
   html {
-    color: #1e293b;
+    color: oklch(18% 0.015 65);
     overflow-x: hidden;
   }
 
   body {
-    @apply bg-[#faf8ff] text-sm antialiased overflow-x-hidden;
+    @apply bg-surface-alt text-sm antialiased overflow-x-hidden;
     font-family: var(--font-dash-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-kerning: normal;
   }
 
   h1 {
-    @apply text-3xl font-bold text-gray-800;
+    @apply text-3xl font-bold text-ink-900;
   }
 
   h2 {
-    @apply text-2xl font-semibold text-gray-800;
+    @apply text-2xl font-semibold text-ink-900;
   }
 
   h3 {
-    @apply text-xl font-semibold text-gray-800;
+    @apply text-xl font-semibold text-ink-900;
   }
 
   h4 {
-    @apply text-lg font-semibold text-gray-800;
+    @apply text-lg font-semibold text-ink-900;
   }
 
   /* Focus styles for accessibility */
@@ -382,7 +414,7 @@
   }
 
   *:focus-visible {
-    @apply ring-2 ring-primary ring-offset-1;
+    @apply ring-2 ring-primary ring-offset-2;
   }
 }
 
@@ -411,7 +443,7 @@
   @keyframes fadeInUp {
     from {
       opacity: 0;
-      transform: translateY(30px);
+      transform: translateY(12px);
     }
     to {
       opacity: 1;
@@ -422,7 +454,7 @@
   @keyframes slideInRight {
     from {
       opacity: 0;
-      transform: translateX(30px);
+      transform: translateX(16px);
     }
     to {
       opacity: 1;
@@ -430,21 +462,26 @@
     }
   }
 
-  @keyframes bounceIn {
-    0% {
+  /* Smooth scale-in replaces bounceIn */
+  @keyframes scaleIn {
+    from {
       opacity: 0;
-      transform: scale(0.3);
+      transform: scale(0.96);
     }
-    50% {
-      opacity: 1;
-      transform: scale(1.05);
-    }
-    70% {
-      transform: scale(0.9);
-    }
-    100% {
+    to {
       opacity: 1;
       transform: scale(1);
+    }
+  }
+
+  @keyframes cardEntrance {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
 
@@ -459,7 +496,6 @@
     }
   }
 
-  /* Mobile-specific modal animation */
   @keyframes modalSlideUp {
     from {
       opacity: 0;
@@ -568,21 +604,18 @@
   /* Mobile Bottom Navigation Padding */
   @media (max-width: 767px) {
     main {
-      padding-bottom: 5rem; /* Space for bottom navigation (h-16 = 4rem + buffer) */
+      padding-bottom: 5rem;
     }
-    
-    /* Additional padding for form containers on mobile */
+
     .mobile-form-container {
-      padding-bottom: 6rem; /* Extra space for forms with action buttons */
+      padding-bottom: 6rem;
     }
-    
-    /* Safe area handling for devices with home indicators */
+
     main.pb-safe-area {
       padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0));
     }
   }
 
-  /* Safe area padding for mobile devices */
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 0);
   }

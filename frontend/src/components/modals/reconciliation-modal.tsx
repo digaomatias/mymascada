@@ -300,7 +300,7 @@ export function ReconciliationModal({
           <div className="space-y-6 pb-64">
             <div>
               <h3 className="text-lg font-semibold mb-4">{t('startBankReconciliation')}</h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-ink-600 mb-6">
                 {t('startBankReconciliationDesc')}
               </p>
             </div>
@@ -320,7 +320,7 @@ export function ReconciliationModal({
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-ink-700 mb-2">
                   {t('statementEndingBalance')}
                 </label>
                 <input
@@ -331,13 +331,13 @@ export function ReconciliationModal({
                     ...prev, 
                     statementEndBalance: parseFloat(e.target.value) || 0 
                   }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-3 py-2 border border-ink-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder={t('form.amountPlaceholder')}
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-ink-700 mb-2">
                   {t('notesOptional')}
                 </label>
                 <textarea
@@ -347,7 +347,7 @@ export function ReconciliationModal({
                     notes: e.target.value
                   }))}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-3 py-2 border border-ink-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder={t('notesPlaceholder')}
                 />
               </div>
@@ -374,20 +374,20 @@ export function ReconciliationModal({
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-semibold mb-4">{t('importBankTransactions')}</h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-ink-600 mb-6">
                 {t('importBankTransactionsDesc')}
               </p>
             </div>
 
             {/* Source Toggle - Show only if Akahu is available */}
             {akahuAvailability?.isAvailable && (
-              <div className="flex rounded-lg border border-gray-200 p-1 bg-gray-50">
+              <div className="flex rounded-lg border border-ink-200 p-1 bg-ink-50">
                 <button
                   onClick={() => setImportSource('akahu')}
                   className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                     importSource === 'akahu'
                       ? 'bg-white text-primary-700 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
+                      : 'text-ink-600 hover:text-ink-900'
                   }`}
                 >
                   <CloudArrowDownIcon className="w-4 h-4" />
@@ -398,7 +398,7 @@ export function ReconciliationModal({
                   className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                     importSource === 'file'
                       ? 'bg-white text-primary-700 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
+                      : 'text-ink-600 hover:text-ink-900'
                   }`}
                 >
                   <DocumentArrowUpIcon className="w-4 h-4" />
@@ -409,10 +409,10 @@ export function ReconciliationModal({
 
             {/* Show connection status if checking */}
             {checkingAkahu && (
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <div className="bg-ink-50 border border-ink-200 rounded-lg p-4">
                 <div className="flex items-center gap-3">
-                  <ArrowPathIcon className="w-5 h-5 text-gray-500 animate-spin" />
-                  <span className="text-gray-600">{t('checkingConnection')}</span>
+                  <ArrowPathIcon className="w-5 h-5 text-ink-500 animate-spin" />
+                  <span className="text-ink-600">{t('checkingConnection')}</span>
                 </div>
               </div>
             )}
@@ -444,22 +444,22 @@ export function ReconciliationModal({
             {/* File Upload (existing functionality) */}
             {importSource === 'file' && (
               <>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                  <DocumentArrowUpIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h4 className="text-lg font-medium text-gray-900 mb-2">{t('uploadBankStatement')}</h4>
-                  <p className="text-gray-600 mb-4">
+                <div className="border-2 border-dashed border-ink-300 rounded-lg p-8 text-center">
+                  <DocumentArrowUpIcon className="w-12 h-12 text-ink-400 mx-auto mb-4" />
+                  <h4 className="text-lg font-medium text-ink-900 mb-2">{t('uploadBankStatement')}</h4>
+                  <p className="text-ink-600 mb-4">
                     {t('dragAndDropFile')}
                   </p>
                   <Button variant="secondary" className="mb-4">
                     {t('chooseFile')}
                   </Button>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-ink-500">
                     {t('supportedFormats')}
                   </p>
                 </div>
 
                 {/* Demo: Manual transaction entry */}
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-ink-50 rounded-lg p-4">
                   <h4 className="font-medium mb-2">{t('addSampleTransaction')}</h4>
                   <Button onClick={addSampleTransaction} variant="secondary" size="sm">
                     {t('addSampleTransactionBtn')}
@@ -475,7 +475,7 @@ export function ReconciliationModal({
                         <div key={index} className="flex justify-between items-center p-3 bg-white rounded border">
                           <div>
                             <div className="font-medium">{transaction.description}</div>
-                            <div className="text-sm text-gray-500">{transaction.transactionDate}</div>
+                            <div className="text-sm text-ink-500">{transaction.transactionDate}</div>
                           </div>
                           <div className={`font-semibold ${transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                             {formatCurrency(transaction.amount)}
@@ -518,7 +518,7 @@ export function ReconciliationModal({
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-semibold mb-4">{t('matchTransactions')}</h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-ink-600 mb-6">
                 {t('matchTransactionsDesc')}
               </p>
             </div>
@@ -556,7 +556,7 @@ export function ReconciliationModal({
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-semibold mb-4">{t('reviewResults')}</h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-ink-600 mb-6">
                 {t('reviewResultsDesc')}
               </p>
             </div>
@@ -583,7 +583,7 @@ export function ReconciliationModal({
                         <CheckCircleIcon className="w-5 h-5 text-green-600" />
                         <div>
                           <div className="font-semibold">{matchingResults.exactMatches || 0}</div>
-                          <div className="text-sm text-gray-600">{t('exactMatches')}</div>
+                          <div className="text-sm text-ink-600">{t('exactMatches')}</div>
                         </div>
                       </div>
                     </CardContent>
@@ -595,7 +595,7 @@ export function ReconciliationModal({
                         <ExclamationTriangleIcon className="w-5 h-5 text-yellow-600" />
                         <div>
                           <div className="font-semibold">{matchingResults.fuzzyMatches || 0}</div>
-                          <div className="text-sm text-gray-600">{t('fuzzyMatches')}</div>
+                          <div className="text-sm text-ink-600">{t('fuzzyMatches')}</div>
                         </div>
                       </div>
                     </CardContent>
@@ -607,7 +607,7 @@ export function ReconciliationModal({
                         <CloudArrowDownIcon className="w-5 h-5 text-blue-600" />
                         <div>
                           <div className="font-semibold">{matchingResults.unmatchedBank || 0}</div>
-                          <div className="text-sm text-gray-600">{t('unmatchedBank')}</div>
+                          <div className="text-sm text-ink-600">{t('unmatchedBank')}</div>
                         </div>
                       </div>
                     </CardContent>
@@ -619,7 +619,7 @@ export function ReconciliationModal({
                         <XMarkIcon className="w-5 h-5 text-red-600" />
                         <div>
                           <div className="font-semibold">{matchingResults.unmatchedApp || 0}</div>
-                          <div className="text-sm text-gray-600">{t('unmatchedApp')}</div>
+                          <div className="text-sm text-ink-600">{t('unmatchedApp')}</div>
                         </div>
                       </div>
                     </CardContent>
@@ -694,7 +694,7 @@ export function ReconciliationModal({
             
             <div>
               <h3 className="text-lg font-semibold mb-2">{t('reconciliationComplete')}</h3>
-              <p className="text-gray-600">
+              <p className="text-ink-600">
                 {t('reconciliationCompleteDesc')}
               </p>
             </div>
@@ -728,18 +728,18 @@ export function ReconciliationModal({
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
               stepItem.completed || stepItem.key === step
                 ? 'bg-primary-600 text-white'
-                : 'bg-gray-200 text-gray-600'
+                : 'bg-ink-200 text-ink-600'
             }`}>
               {stepItem.completed ? <CheckCircleIcon className="w-5 h-5" /> : index + 1}
             </div>
             <span className={`ml-2 text-sm ${
-              stepItem.key === step ? 'text-primary-600 font-medium' : 'text-gray-500'
+              stepItem.key === step ? 'text-primary-600 font-medium' : 'text-ink-500'
             }`}>
               {stepItem.label}
             </span>
             {index < steps.length - 1 && (
               <div className={`w-12 h-px mx-4 ${
-                stepItem.completed ? 'bg-primary-600' : 'bg-gray-200'
+                stepItem.completed ? 'bg-primary-600' : 'bg-ink-200'
               }`} />
             )}
           </div>

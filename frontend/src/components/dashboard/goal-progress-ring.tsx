@@ -36,7 +36,7 @@ export function GoalProgressRing({
         fill="none"
         stroke="currentColor"
         strokeWidth={strokeWidth}
-        className="text-gray-200"
+        className="text-ink-200"
       />
 
       {/* Progress arc */}
@@ -81,7 +81,7 @@ export function GoalProgressRing({
         y={center}
         textAnchor="middle"
         dominantBaseline="central"
-        className="transform rotate-90 origin-center fill-gray-900 font-bold"
+        className="transform rotate-90 origin-center fill-ink-900 font-bold"
         style={{ fontSize: size * 0.22 }}
       >
         {Math.round(clampedPercentage)}%

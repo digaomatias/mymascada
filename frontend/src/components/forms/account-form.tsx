@@ -151,7 +151,7 @@ export default function AccountForm({
 
       {/* Account Name */}
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="name" className="block text-sm font-medium text-ink-700 mb-2">
           <BuildingOffice2Icon className="w-4 h-4 inline mr-1" />
           {t('name')} *
         </label>
@@ -170,7 +170,7 @@ export default function AccountForm({
 
       {/* Account Type */}
       <div>
-        <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="type" className="block text-sm font-medium text-ink-700 mb-2">
           {t('type')} *
         </label>
         <select
@@ -190,13 +190,13 @@ export default function AccountForm({
       {/* Current Balance - Only show for new accounts */}
       {!isEditing && (
         <div>
-          <label htmlFor="currentBalance" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="currentBalance" className="block text-sm font-medium text-ink-700 mb-2">
             <CurrencyDollarIcon className="w-4 h-4 inline mr-1" />
             {t('initialBalance')} *
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <span className="text-gray-500 text-sm">$</span>
+              <span className="text-ink-500 text-sm">$</span>
             </div>
             <Input
               id="currentBalance"
@@ -211,7 +211,7 @@ export default function AccountForm({
           {errors.currentBalance && (
             <p className="mt-1 text-sm text-red-600">{errors.currentBalance}</p>
           )}
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-ink-500">
             {t('initialBalanceHelp')}
           </p>
         </div>
@@ -237,7 +237,7 @@ export default function AccountForm({
 
       {/* Currency */}
       <div>
-        <label htmlFor="currency" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="currency" className="block text-sm font-medium text-ink-700 mb-2">
           {t('currency')} *
         </label>
         <select
@@ -274,7 +274,7 @@ export default function AccountForm({
         <>
           {/* Institution */}
           <div>
-            <label htmlFor="institution" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="institution" className="block text-sm font-medium text-ink-700 mb-2">
               {t('institution')}
             </label>
             <Input
@@ -288,7 +288,7 @@ export default function AccountForm({
 
           {/* Notes */}
           <div>
-            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="notes" className="block text-sm font-medium text-ink-700 mb-2">
               {t('notes')}
             </label>
             <textarea
@@ -297,7 +297,7 @@ export default function AccountForm({
               placeholder={t('notesPlaceholder')}
               value={formData.notes}
               onChange={(e) => handleInputChange('notes', e.target.value)}
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 resize-none cursor-text"
+              className="w-full rounded-md border-ink-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 resize-none cursor-text"
             />
           </div>
         </>

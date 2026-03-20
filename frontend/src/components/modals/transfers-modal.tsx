@@ -180,7 +180,7 @@ export function TransfersModal({ isOpen, onClose, onRefresh }: TransfersModalPro
     const isSelected = selectedGroups.has(group.id);
     
     return (
-      <Card key={group.id} className={`border shadow-sm ${isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
+      <Card key={group.id} className={`border shadow-sm ${isSelected ? 'border-blue-500 bg-blue-50' : 'border-ink-200'}`}>
         <CardContent className="p-4">
           {/* Group Header */}
           <div className="flex items-start justify-between mb-3">
@@ -192,12 +192,12 @@ export function TransfersModal({ isOpen, onClose, onRefresh }: TransfersModalPro
               />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-2">
-                  <ArrowsRightLeftIcon className="w-5 h-5 text-purple-500" />
-                  <h3 className="font-medium text-gray-900 truncate">
+                  <ArrowsRightLeftIcon className="w-5 h-5 text-primary-500" />
+                  <h3 className="font-medium text-ink-900 truncate">
                     {t('transfers.transferMatch')}
                   </h3>
                 </div>
-                <div className="flex items-center gap-4 text-sm text-gray-600">
+                <div className="flex items-center gap-4 text-sm text-ink-600">
                   <span className="flex items-center gap-1">
                     <span className="font-medium">{formatCurrency(group.amount)}</span>
                   </span>
@@ -246,7 +246,7 @@ export function TransfersModal({ isOpen, onClose, onRefresh }: TransfersModalPro
 
           {/* Expanded Group Content */}
           {isExpanded && (
-            <div className="space-y-3 pt-3 border-t border-gray-100">
+            <div className="space-y-3 pt-3 border-t border-ink-100">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Source Transaction */}
                 <div className="bg-red-50 rounded-lg p-3 border border-red-200">
@@ -255,11 +255,11 @@ export function TransfersModal({ isOpen, onClose, onRefresh }: TransfersModalPro
                     <span className="text-sm font-medium text-red-800">{t('transferFrom', { name: group.sourceTransaction.accountName ?? '' })}</span>
                   </div>
                   <div className="space-y-1 text-sm">
-                    <div className="font-medium text-gray-900">
+                    <div className="font-medium text-ink-900">
                       #{group.sourceTransaction.id} - {formatCurrency(Math.abs(group.sourceTransaction.amount))}
                     </div>
-                    <div className="text-gray-600">{group.sourceTransaction.description}</div>
-                    <div className="text-gray-500">{formatDate(group.sourceTransaction.transactionDate)}</div>
+                    <div className="text-ink-600">{group.sourceTransaction.description}</div>
+                    <div className="text-ink-500">{formatDate(group.sourceTransaction.transactionDate)}</div>
                   </div>
                 </div>
 
@@ -270,11 +270,11 @@ export function TransfersModal({ isOpen, onClose, onRefresh }: TransfersModalPro
                     <span className="text-sm font-medium text-green-800">{t('transferTo', { name: group.destinationTransaction.accountName ?? '' })}</span>
                   </div>
                   <div className="space-y-1 text-sm">
-                    <div className="font-medium text-gray-900">
+                    <div className="font-medium text-ink-900">
                       #{group.destinationTransaction.id} - {formatCurrency(group.destinationTransaction.amount)}
                     </div>
-                    <div className="text-gray-600">{group.destinationTransaction.description}</div>
-                    <div className="text-gray-500">{formatDate(group.destinationTransaction.transactionDate)}</div>
+                    <div className="text-ink-600">{group.destinationTransaction.description}</div>
+                    <div className="text-ink-500">{formatDate(group.destinationTransaction.transactionDate)}</div>
                   </div>
                 </div>
               </div>
@@ -314,18 +314,18 @@ export function TransfersModal({ isOpen, onClose, onRefresh }: TransfersModalPro
     >
       <div className="space-y-6">
         {/* Simple Detection */}
-        <Card className="bg-purple-50 border-purple-200">
+        <Card className="bg-primary-50 border-primary-200">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <AdjustmentsHorizontalIcon className="w-5 h-5 text-purple-600" />
-                <h3 className="font-medium text-purple-900">{t('transfers.detectionTitle')}</h3>
-                <span className="text-sm text-purple-700">{t('transfers.detectionSubtitle')}</span>
+                <AdjustmentsHorizontalIcon className="w-5 h-5 text-primary-600" />
+                <h3 className="font-medium text-primary-900">{t('transfers.detectionTitle')}</h3>
+                <span className="text-sm text-primary-700">{t('transfers.detectionSubtitle')}</span>
               </div>
               <Button
                 onClick={runDetection}
                 disabled={loading}
-                className="bg-purple-600 hover:bg-purple-700"
+                className="bg-primary-600 hover:bg-primary-700"
                 size="sm"
               >
                 <MagnifyingGlassIcon className="w-4 h-4 mr-2" />
@@ -339,8 +339,8 @@ export function TransfersModal({ isOpen, onClose, onRefresh }: TransfersModalPro
         <div className="space-y-4">
           {loading && (
             <div className="text-center py-8">
-              <div className="inline-flex items-center gap-2 text-purple-600">
-                <div className="w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin" />
+              <div className="inline-flex items-center gap-2 text-primary-600">
+                <div className="w-5 h-5 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
                 <span>{t('transfers.scanningPotential')}</span>
               </div>
             </div>
@@ -382,7 +382,7 @@ export function TransfersModal({ isOpen, onClose, onRefresh }: TransfersModalPro
               {transfers.transferGroups.length > 0 && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-medium text-gray-900">
+                    <h3 className="text-lg font-medium text-ink-900">
                       {t('transfers.potentialMatches')}
                     </h3>
                     <Button

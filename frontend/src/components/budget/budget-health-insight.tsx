@@ -26,16 +26,16 @@ export function BudgetHealthInsight({
 
   if (totalBudgeted === 0 && totalSpent === 0) {
     return (
-      <div className="rounded-2xl border border-slate-200/70 bg-slate-50/50 p-4">
+      <div className="rounded-2xl border border-ink-200/70 bg-ink-50/50 p-4">
         <div className="flex items-start gap-2.5">
-          <div className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+          <div className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-lg bg-ink-100 text-ink-500">
             <ArrowTrendingDownIcon className="h-4 w-4" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-500">
               {t('detail.paceLabel')}
             </p>
-            <p className="mt-1 text-sm font-medium text-slate-800">
+            <p className="mt-1 text-sm font-medium text-ink-800">
               {t('detail.noSpendingYet')}
             </p>
           </div>
@@ -71,10 +71,10 @@ export function BudgetHealthInsight({
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-500">
             {t('detail.paceLabel')}
           </p>
-          <p className="mt-1 text-sm font-medium text-slate-800">
+          <p className="mt-1 text-sm font-medium text-ink-800">
             {positive
               ? t('detail.paceAhead', {
                   amount: formatCurrency(absoluteVariance),
@@ -85,7 +85,7 @@ export function BudgetHealthInsight({
                   percent: Math.abs(pace.variancePct).toFixed(0),
                 })}
           </p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-ink-500">
             {t('detail.paceDetail', {
               expected: formatCurrency(pace.expectedSpent),
               actual: formatCurrency(pace.actualSpent),

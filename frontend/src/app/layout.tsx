@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Manrope, DM_Mono } from 'next/font/google';
+import { Plus_Jakarta_Sans, DM_Mono, Instrument_Serif } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/contexts/auth-context';
 import { AiSuggestionsProvider } from '@/contexts/ai-suggestions-context';
@@ -10,8 +10,13 @@ import { Toaster } from 'sonner';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 
-const manrope = Manrope({ subsets: ['latin'], variable: '--font-dash-sans' });
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  variable: '--font-dash-sans',
+  weight: ['400', '500', '600', '700', '800'],
+});
 const dmMono = DM_Mono({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-dash-mono' });
+const instrumentSerif = Instrument_Serif({ subsets: ['latin'], weight: '400', variable: '--font-dash-display' });
 
 export const metadata: Metadata = {
   title: 'MyMascada - Personal Finance Manager',
@@ -26,9 +31,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-  themeColor: '#6b46c1',
+  themeColor: '#2f8170',
 };
 
 // Force dynamic rendering since locale detection requires cookies at request time
@@ -44,7 +47,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale}>
-      <body className={`${manrope.className} ${manrope.variable} ${dmMono.variable}`}>
+      <body className={`${plusJakarta.className} ${plusJakarta.variable} ${dmMono.variable} ${instrumentSerif.variable}`}>
         <NextIntlClientProvider messages={messages}>
           <FeaturesProvider>
           <AuthProvider>
@@ -59,9 +62,9 @@ export default async function RootLayout({
                   toastOptions={{
                     duration: 4000,
                     style: {
-                      background: '#ffffff',
-                      color: '#1f2937',
-                      border: '1px solid #e5e7eb',
+                      background: 'oklch(99.5% 0.004 65)',
+                      color: 'oklch(18% 0.015 65)',
+                      border: '1px solid oklch(92% 0.02 65)',
                     },
                   }}
                 />

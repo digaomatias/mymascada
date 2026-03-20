@@ -200,15 +200,15 @@ export default function WalletDetailPage() {
     return (
       <AppLayout>
         <div className="space-y-6">
-          <Skeleton className="h-8 w-48 rounded-[26px] border border-violet-100/80 bg-white/80" />
-          <Skeleton className="h-12 w-80 rounded-[26px] border border-violet-100/80 bg-white/80" />
-          <Skeleton className="h-40 rounded-[26px] border border-violet-100/80 bg-white/80" />
+          <Skeleton className="h-8 w-48 rounded-[26px] border border-ink-200 bg-white/80" />
+          <Skeleton className="h-12 w-80 rounded-[26px] border border-ink-200 bg-white/80" />
+          <Skeleton className="h-40 rounded-[26px] border border-ink-200 bg-white/80" />
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            <Skeleton className="h-24 rounded-2xl border border-violet-100/80 bg-white/80" />
-            <Skeleton className="h-24 rounded-2xl border border-violet-100/80 bg-white/80" />
-            <Skeleton className="h-24 rounded-2xl border border-violet-100/80 bg-white/80" />
+            <Skeleton className="h-24 rounded-2xl border border-ink-200 bg-white/80" />
+            <Skeleton className="h-24 rounded-2xl border border-ink-200 bg-white/80" />
+            <Skeleton className="h-24 rounded-2xl border border-ink-200 bg-white/80" />
           </div>
-          <Skeleton className="h-48 rounded-[24px] border border-violet-100/80 bg-white/80" />
+          <Skeleton className="h-48 rounded-[24px] border border-ink-200 bg-white/80" />
         </div>
       </AppLayout>
     );
@@ -236,10 +236,10 @@ export default function WalletDetailPage() {
 
             {/* Title row */}
             <div className="flex items-center gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-violet-600" style={{ backgroundColor: `${walletColor}20` }}>
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-primary-600" style={{ backgroundColor: `${walletColor}20` }}>
                 <WalletIcon iconId={wallet.icon} className="h-6 w-6" />
               </span>
-              <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900">
+              <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-ink-900">
                 {wallet.name}
               </h1>
             </div>
@@ -247,7 +247,7 @@ export default function WalletDetailPage() {
             {/* Badges row */}
             <div className="flex flex-wrap items-center gap-2">
               {wallet.isArchived ? (
-                <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-medium text-slate-500">
+                <span className="inline-flex items-center rounded-full border border-ink-200 bg-ink-50 px-2.5 py-0.5 text-xs font-medium text-ink-500">
                   {t('archived')}
                 </span>
               ) : (
@@ -255,7 +255,7 @@ export default function WalletDetailPage() {
                   {t('active')}
                 </span>
               )}
-              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-medium text-slate-600">
+              <span className="inline-flex items-center rounded-full border border-ink-200 bg-ink-50 px-2.5 py-0.5 text-xs font-medium text-ink-600">
                 {wallet.currency}
               </span>
             </div>
@@ -279,19 +279,19 @@ export default function WalletDetailPage() {
         </div>
 
         {/* Balance Hero */}
-        <div className="rounded-[26px] border border-violet-100/60 bg-white/90 p-6 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
+        <div className="rounded-[26px] border border-ink-200 bg-white/90 p-6 shadow-lg shadow-primary-200/20 backdrop-blur-xs">
           <div className="space-y-4">
             <div className="flex items-end justify-between">
               <div>
-                <span className="text-sm text-slate-500">{t('balance')}</span>
+                <span className="text-sm text-ink-500">{t('balance')}</span>
               </div>
-              <span className="font-[var(--font-dash-sans)] text-4xl font-bold tracking-tight text-slate-900">
+              <span className="font-[var(--font-dash-sans)] text-4xl font-bold tracking-tight text-ink-900">
                 {formatCurrency(wallet.balance, wallet.currency)}
               </span>
             </div>
             {progressPercent !== null && (
               <>
-                <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+                <div className="h-3 overflow-hidden rounded-full bg-ink-100">
                   <div
                     className="h-full rounded-full transition-all duration-500"
                     style={{
@@ -300,7 +300,7 @@ export default function WalletDetailPage() {
                     }}
                   />
                 </div>
-                <div className="flex justify-between text-sm text-slate-500">
+                <div className="flex justify-between text-sm text-ink-500">
                   <span>
                     {progressPercent.toFixed(1)}% {t('progress').toLowerCase()}
                   </span>
@@ -316,38 +316,38 @@ export default function WalletDetailPage() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <article className="rounded-2xl border border-slate-100 bg-white/90 p-4 shadow-sm backdrop-blur-xs">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+          <article className="rounded-2xl border border-ink-100 bg-white/90 p-4 shadow-sm backdrop-blur-xs">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-400">
               {t('balance')}
             </p>
-            <p className="mt-1 text-xl font-bold text-slate-900">
+            <p className="mt-1 text-xl font-bold text-ink-900">
               {formatCurrency(wallet.balance, wallet.currency)}
             </p>
           </article>
           {wallet.targetAmount != null && wallet.targetAmount > 0 && (
-            <article className="rounded-2xl border border-slate-100 bg-white/90 p-4 shadow-sm backdrop-blur-xs">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+            <article className="rounded-2xl border border-ink-100 bg-white/90 p-4 shadow-sm backdrop-blur-xs">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-400">
                 {t('targetAmount')}
               </p>
-              <p className="mt-1 text-xl font-bold text-slate-900">
+              <p className="mt-1 text-xl font-bold text-ink-900">
                 {formatCurrency(wallet.targetAmount, wallet.currency)}
               </p>
             </article>
           )}
-          <article className="rounded-2xl border border-slate-100 bg-white/90 p-4 shadow-sm backdrop-blur-xs">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+          <article className="rounded-2xl border border-ink-100 bg-white/90 p-4 shadow-sm backdrop-blur-xs">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-400">
               {t('allocations')}
             </p>
-            <p className="mt-1 text-xl font-bold text-slate-900">
+            <p className="mt-1 text-xl font-bold text-ink-900">
               {wallet.allocations.length}
             </p>
           </article>
         </div>
 
         {/* Allocations Section */}
-        <div className="rounded-[24px] border border-slate-100 bg-white/90 p-6 shadow-sm backdrop-blur-xs">
+        <div className="rounded-[24px] border border-ink-100 bg-white/90 p-6 shadow-sm backdrop-blur-xs">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-slate-900">{t('allocations')}</h2>
+            <h2 className="text-lg font-semibold text-ink-900">{t('allocations')}</h2>
             <Button
               variant="outline"
               size="sm"
@@ -360,10 +360,10 @@ export default function WalletDetailPage() {
 
           {/* Allocate transaction form */}
           {showAllocateForm && (
-            <div className="mb-5 rounded-xl border border-violet-100 bg-violet-50/30 p-4">
+            <div className="mb-5 rounded-xl border border-ink-200 bg-primary-50/30 p-4">
               <div className="grid gap-3 sm:grid-cols-3">
                 <div>
-                  <Label htmlFor="allocTxId" className="text-xs font-medium text-slate-600">
+                  <Label htmlFor="allocTxId" className="text-xs font-medium text-ink-600">
                     {t('transactionId')}
                   </Label>
                   <Input
@@ -377,7 +377,7 @@ export default function WalletDetailPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="allocAmount" className="text-xs font-medium text-slate-600">
+                  <Label htmlFor="allocAmount" className="text-xs font-medium text-ink-600">
                     {t('amount')}
                   </Label>
                   <Input
@@ -391,7 +391,7 @@ export default function WalletDetailPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="allocNote" className="text-xs font-medium text-slate-600">
+                  <Label htmlFor="allocNote" className="text-xs font-medium text-ink-600">
                     {t('note')}
                   </Label>
                   <Input
@@ -431,21 +431,21 @@ export default function WalletDetailPage() {
 
           {wallet.allocations.length === 0 ? (
             <div className="py-8 text-center">
-              <p className="text-sm font-medium text-slate-500">{t('noAllocations')}</p>
-              <p className="mt-1 text-xs text-slate-400">{t('noAllocationsDescription')}</p>
+              <p className="text-sm font-medium text-ink-500">{t('noAllocations')}</p>
+              <p className="mt-1 text-xs text-ink-400">{t('noAllocationsDescription')}</p>
             </div>
           ) : (
             <div className="space-y-2">
               {wallet.allocations.map((allocation) => (
                 <div
                   key={allocation.id}
-                  className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3 transition-colors hover:bg-slate-50"
+                  className="flex items-center gap-3 rounded-xl border border-ink-100 bg-ink-50/50 px-4 py-3 transition-colors hover:bg-ink-50"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-slate-900">
+                    <p className="truncate text-sm font-medium text-ink-900">
                       {allocation.transactionDescription}
                     </p>
-                    <div className="mt-0.5 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                    <div className="mt-0.5 flex flex-wrap items-center gap-3 text-xs text-ink-500">
                       <span className="inline-flex items-center gap-1">
                         <CalendarDaysIcon className="h-3.5 w-3.5" />
                         {formatDate(allocation.transactionDate)}
@@ -455,7 +455,7 @@ export default function WalletDetailPage() {
                         {allocation.accountName}
                       </span>
                       {allocation.note && (
-                        <span className="italic text-slate-400">{allocation.note}</span>
+                        <span className="italic text-ink-400">{allocation.note}</span>
                       )}
                     </div>
                   </div>
@@ -510,7 +510,7 @@ export default function WalletDetailPage() {
           <div className="space-y-5">
             {/* Name */}
             <div>
-              <Label htmlFor="editWalletName" className="text-sm font-medium text-slate-700">
+              <Label htmlFor="editWalletName" className="text-sm font-medium text-ink-700">
                 {t('name')}
               </Label>
               <Input
@@ -524,7 +524,7 @@ export default function WalletDetailPage() {
 
             {/* Icon picker */}
             <div>
-              <Label className="text-sm font-medium text-slate-700">{t('icon')}</Label>
+              <Label className="text-sm font-medium text-ink-700">{t('icon')}</Label>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
                 {WALLET_ICONS.map((item) => (
                   <button
@@ -536,11 +536,11 @@ export default function WalletDetailPage() {
                     className={cn(
                       'flex h-10 w-10 items-center justify-center rounded-xl transition-all',
                       editFormData.icon === item.id
-                        ? 'bg-violet-100 ring-2 ring-violet-500'
-                        : 'bg-slate-50 hover:bg-slate-100',
+                        ? 'bg-primary-100 ring-2 ring-primary-500'
+                        : 'bg-ink-50 hover:bg-ink-100',
                     )}
                   >
-                    <item.icon className="h-5 w-5 text-gray-700" />
+                    <item.icon className="h-5 w-5 text-ink-700" />
                   </button>
                 ))}
               </div>
@@ -548,7 +548,7 @@ export default function WalletDetailPage() {
 
             {/* Color picker */}
             <div>
-              <Label className="text-sm font-medium text-slate-700">{t('color')}</Label>
+              <Label className="text-sm font-medium text-ink-700">{t('color')}</Label>
               <div className="mt-1.5 flex flex-wrap gap-2">
                 {WALLET_COLORS.map((color) => (
                   <button
@@ -560,7 +560,7 @@ export default function WalletDetailPage() {
                     className={cn(
                       'h-8 w-8 rounded-full transition-all',
                       editFormData.color === color
-                        ? 'ring-2 ring-offset-2 ring-violet-500 scale-110'
+                        ? 'ring-2 ring-offset-2 ring-primary-500 scale-110'
                         : 'hover:scale-105',
                     )}
                     style={{ backgroundColor: color }}
@@ -571,7 +571,7 @@ export default function WalletDetailPage() {
 
             {/* Currency */}
             <div>
-              <Label htmlFor="editWalletCurrency" className="text-sm font-medium text-slate-700">
+              <Label htmlFor="editWalletCurrency" className="text-sm font-medium text-ink-700">
                 {t('currency')}
               </Label>
               <Select
@@ -590,9 +590,9 @@ export default function WalletDetailPage() {
 
             {/* Target amount */}
             <div>
-              <Label htmlFor="editWalletTarget" className="text-sm font-medium text-slate-700">
+              <Label htmlFor="editWalletTarget" className="text-sm font-medium text-ink-700">
                 {t('targetAmount')}{' '}
-                <span className="text-slate-400">({t('optional')})</span>
+                <span className="text-ink-400">({t('optional')})</span>
               </Label>
               <Input
                 id="editWalletTarget"

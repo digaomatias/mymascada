@@ -121,12 +121,12 @@ export default function EditAccountPage() {
 
   if (isLoading || loadingAccount) {
     return (
-      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
+      <div className="min-h-screen bg-surface-alt flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
+          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-400 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
             <BuildingOffice2Icon className="w-8 h-8 text-white" />
           </div>
-          <div className="mt-6 text-slate-700 font-medium">
+          <div className="mt-6 text-ink-700 font-medium">
             {loadingAccount ? t('loadingAccount') : tCommon('loading')}
           </div>
         </div>
@@ -140,13 +140,13 @@ export default function EditAccountPage() {
 
   if (!account) {
     return (
-      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
-        <div className="mx-4 max-w-md w-full rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92 p-8 text-center">
+      <div className="min-h-screen bg-surface-alt flex items-center justify-center">
+        <div className="mx-4 max-w-md w-full rounded-[26px] border border-ink-200 shadow-[0_20px_46px_-30px_rgba(47,129,112,0.20)] backdrop-blur-xs bg-white/92 p-8 text-center">
           <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl shadow-2xl flex items-center justify-center mx-auto mb-6">
             <ExclamationTriangleIcon className="w-8 h-8 text-white" />
           </div>
-          <h2 className="text-2xl font-semibold text-slate-900 mb-2">{t('accountNotFound')}</h2>
-          <p className="text-slate-600 mb-6">{t('accountNotFoundDesc')}</p>
+          <h2 className="text-2xl font-semibold text-ink-900 mb-2">{t('accountNotFound')}</h2>
+          <p className="text-ink-600 mb-6">{t('accountNotFoundDesc')}</p>
           <Link href="/accounts">
             <Button>{t('backToAccounts')}</Button>
           </Link>
@@ -157,14 +157,14 @@ export default function EditAccountPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center">
-        <div className="mx-4 max-w-md w-full rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92 p-8 text-center">
+      <div className="min-h-screen bg-surface-alt flex items-center justify-center">
+        <div className="mx-4 max-w-md w-full rounded-[26px] border border-ink-200 shadow-[0_20px_46px_-30px_rgba(47,129,112,0.20)] backdrop-blur-xs bg-white/92 p-8 text-center">
           <div className="w-16 h-16 bg-gradient-to-br from-success-500 to-success-600 rounded-2xl shadow-2xl flex items-center justify-center mx-auto mb-6">
             <CheckIcon className="w-8 h-8 text-white" />
           </div>
-          <h2 className="text-2xl font-semibold text-slate-900 mb-2">{t('accountUpdated')}</h2>
-          <p className="text-slate-600 mb-6">{t('accountUpdatedDesc')}</p>
-          <div className="text-sm text-slate-500">{t('redirectingToAccounts')}</div>
+          <h2 className="text-2xl font-semibold text-ink-900 mb-2">{t('accountUpdated')}</h2>
+          <p className="text-ink-600 mb-6">{t('accountUpdatedDesc')}</p>
+          <div className="text-sm text-ink-500">{t('redirectingToAccounts')}</div>
         </div>
       </div>
     );
@@ -179,16 +179,16 @@ export default function EditAccountPage() {
 
       {/* Page Title */}
       <div className="mb-6">
-        <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
+        <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-ink-900 sm:text-[2.1rem]">
           {t('editAccount')}
         </h1>
-        <p className="mt-1.5 text-[15px] text-slate-500">
+        <p className="mt-1.5 text-[15px] text-ink-500">
           {t('updateAccountDesc')}
         </p>
       </div>
 
       {/* Account Form */}
-      <div className="rounded-[26px] border border-violet-100/70 shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] backdrop-blur-xs bg-white/92 p-6">
+      <div className="rounded-[26px] border border-ink-200 shadow-[0_20px_46px_-30px_rgba(47,129,112,0.20)] backdrop-blur-xs bg-white/92 p-6">
         {/* Data Integrity Warning */}
         {hasTransactions && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
@@ -229,7 +229,7 @@ export default function EditAccountPage() {
 
         {/* Balance Adjustment */}
         {account && (
-          <div className="mt-6 pt-6 border-t border-slate-200">
+          <div className="mt-6 pt-6 border-t border-ink-200">
             <BalanceAdjustment
               currentBalance={(account as Account & { calculatedBalance?: number }).calculatedBalance || account.currentBalance}
               currency={account.currency}
@@ -241,7 +241,7 @@ export default function EditAccountPage() {
       </div>
 
       {/* Danger Zone - Account Deletion */}
-      <div className="mt-6 rounded-[26px] border border-red-200/80 bg-white/92 backdrop-blur-xs shadow-[0_20px_46px_-30px_rgba(76,29,149,0.45)] overflow-hidden">
+      <div className="mt-6 rounded-[26px] border border-red-200/80 bg-white/92 backdrop-blur-xs shadow-[0_20px_46px_-30px_rgba(47,129,112,0.20)] overflow-hidden">
           <div className="bg-red-50 border-b border-red-200/80 px-6 py-4 flex items-center gap-2 text-red-800 font-semibold">
             <ExclamationTriangleIcon className="w-5 h-5" />
             {t('dangerZone')}
@@ -250,11 +250,11 @@ export default function EditAccountPage() {
           <div className="p-6">
             <div className="space-y-4">
               <div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-2">{t('deleteThisAccount')}</h3>
-                <p className="text-sm text-slate-600 mb-4">
+                <h3 className="text-lg font-semibold text-ink-900 mb-2">{t('deleteThisAccount')}</h3>
+                <p className="text-sm text-ink-600 mb-4">
                   {t('deleteAccountWarning')}
                 </p>
-                <ul className="list-disc list-inside text-sm text-slate-600 space-y-1 mb-4">
+                <ul className="list-disc list-inside text-sm text-ink-600 space-y-1 mb-4">
                   <li>{t('deleteAccountList.account', { name: account?.name })}</li>
                   <li>{t('deleteAccountList.transactions')}</li>
                   <li>{t('deleteAccountList.history')}</li>

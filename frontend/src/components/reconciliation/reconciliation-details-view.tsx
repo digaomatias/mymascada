@@ -747,9 +747,9 @@ export function ReconciliationDetailsView({
                     type="checkbox"
                     checked={isSelected}
                     onChange={(e) => handleItemSelection(item.id, e.target.checked)}
-                    className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500 focus:ring-2"
+                    className="w-4 h-4 text-primary-600 border-ink-300 rounded focus:ring-primary-500 focus:ring-2"
                   />
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-ink-700">
                     {t('fuzzyMatchId', { id: item.id })}
                   </span>
                 </>
@@ -868,12 +868,12 @@ export function ReconciliationDetailsView({
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <config.icon className={`w-4 h-4 ${config.color}`} />
-              <span className="font-medium text-gray-900">{item.displayDescription}</span>
+              <span className="font-medium text-ink-900">{item.displayDescription}</span>
               <span className={`text-xs px-2 py-1 rounded-full ${config.bgColor} ${config.color} font-medium`}>
                 {item.matchTypeLabel}
               </span>
               {item.matchConfidenceLabel && (
-                <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">
+                <span className="text-xs px-2 py-1 rounded-full bg-ink-100 text-ink-700">
                   {item.matchConfidenceLabel}
                 </span>
               )}
@@ -881,7 +881,7 @@ export function ReconciliationDetailsView({
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div>
-                <span className="text-gray-500">{tCommon('amount')}:</span>
+                <span className="text-ink-500">{tCommon('amount')}:</span>
                 <span className={`ml-2 font-medium ${
                   (item.systemTransaction?.amount || item.bankTransaction?.amount || 0) >= 0
                     ? 'text-green-600'
@@ -892,29 +892,29 @@ export function ReconciliationDetailsView({
               </div>
 
               <div>
-                <span className="text-gray-500">{tCommon('date')}:</span>
-                <span className="ml-2 text-gray-900">{item.displayDate}</span>
+                <span className="text-ink-500">{tCommon('date')}:</span>
+                <span className="ml-2 text-ink-900">{item.displayDate}</span>
               </div>
 
               {item.systemTransaction?.categoryName && (
                 <div>
-                  <span className="text-gray-500">{tCommon('category')}:</span>
-                  <span className="ml-2 text-gray-900">{item.systemTransaction.categoryName}</span>
+                  <span className="text-ink-500">{tCommon('category')}:</span>
+                  <span className="ml-2 text-ink-900">{item.systemTransaction.categoryName}</span>
                 </div>
               )}
 
               {item.bankTransaction?.bankCategory && (
                 <div>
-                  <span className="text-gray-500">{t('bankCategory')}:</span>
-                  <span className="ml-2 text-gray-900">{item.bankTransaction.bankCategory}</span>
+                  <span className="text-ink-500">{t('bankCategory')}:</span>
+                  <span className="ml-2 text-ink-900">{item.bankTransaction.bankCategory}</span>
                 </div>
               )}
             </div>
 
             {/* Additional details for exact matches */}
             {activeTab === 'exact' && item.matchConfidence && (
-              <div className="mt-3 p-2 bg-white/50 rounded border border-gray-200">
-                <div className="flex items-center gap-4 text-xs text-gray-600">
+              <div className="mt-3 p-2 bg-white/50 rounded border border-ink-200">
+                <div className="flex items-center gap-4 text-xs text-ink-600">
                   <span>{t('matchConfidencePercent', { percentage: (item.matchConfidence * 100).toFixed(1) })}</span>
                   {item.systemTransaction?.status && (
                     <span>{tCommon('status')}: {getStatusLabel(item.systemTransaction.status)}</span>
@@ -959,10 +959,10 @@ export function ReconciliationDetailsView({
       <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
         <CardContent className="p-6">
           <div className="animate-pulse space-y-4">
-            <div className="h-6 bg-gray-200 rounded w-1/4"></div>
+            <div className="h-6 bg-ink-200 rounded w-1/4"></div>
             <div className="space-y-3">
-              <div className="h-4 bg-gray-200 rounded"></div>
-              <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+              <div className="h-4 bg-ink-200 rounded"></div>
+              <div className="h-4 bg-ink-200 rounded w-5/6"></div>
             </div>
           </div>
         </CardContent>
@@ -980,7 +980,7 @@ export function ReconciliationDetailsView({
         <CardContent className="p-6">
           <div className="mb-6">
             <h3 className="text-lg font-semibold mb-4">{t('reconciliationReview')}</h3>
-            <p className="text-gray-600">
+            <p className="text-ink-600">
               {t('reviewMatchingResults')}
             </p>
           </div>
@@ -1014,23 +1014,23 @@ export function ReconciliationDetailsView({
         <CardContent className="p-4">
           <div className="flex flex-wrap gap-4 items-end">
             <div className="flex-1 min-w-64">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink-700 mb-1">
                 {t('searchTransactions')}
               </label>
               <div className="relative">
-                <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-ink-400" />
                 <input
                   type="text"
                   placeholder={t('searchByDescription')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full pl-10 px-3 py-2 border border-ink-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
             </div>
             
             <div className="w-32">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink-700 mb-1">
                 {t('minAmount')}
               </label>
               <input
@@ -1039,12 +1039,12 @@ export function ReconciliationDetailsView({
                 placeholder={t('form.amountPlaceholder')}
                 value={minAmount}
                 onChange={(e) => setMinAmount(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-3 py-2 border border-ink-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
             
             <div className="w-32">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-ink-700 mb-1">
                 {t('maxAmount')}
               </label>
               <input
@@ -1053,7 +1053,7 @@ export function ReconciliationDetailsView({
                 placeholder={t('form.amountPlaceholder')}
                 value={maxAmount}
                 onChange={(e) => setMaxAmount(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-3 py-2 border border-ink-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
 
@@ -1077,7 +1077,7 @@ export function ReconciliationDetailsView({
       <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
         <CardContent className="p-0">
           {/* Tab Headers */}
-          <div className="flex border-b border-gray-200">
+          <div className="flex border-b border-ink-200">
             {Object.entries(TAB_CONFIG).map(([key, config]) => {
               const count = getTabData(key as TabType).length;
               const isActive = activeTab === key;
@@ -1094,13 +1094,13 @@ export function ReconciliationDetailsView({
                   className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
                     isActive
                       ? `${config.color} border-current bg-white`
-                      : 'text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300'
+                      : 'text-ink-500 border-transparent hover:text-ink-700 hover:border-ink-300'
                   }`}
                 >
                   <config.icon className="w-4 h-4" />
                   <span className="font-medium">{config.label}</span>
                   <span className={`px-2 py-1 text-xs rounded-full ${
-                    isActive ? config.bgColor : 'bg-gray-100'
+                    isActive ? config.bgColor : 'bg-ink-100'
                   }`}>
                     {count}
                   </span>
@@ -1111,7 +1111,7 @@ export function ReconciliationDetailsView({
 
           {/* Bulk Actions Bar */}
           {(activeTab === 'fuzzy' || activeTab === 'unmatched-system' || activeTab === 'unmatched-bank') && (showBulkActions || tabData.length > 0) && (
-            <div className="bg-gray-50 border-b border-gray-200 p-4">
+            <div className="bg-ink-50 border-b border-ink-200 p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   {/* Select All Checkbox */}
@@ -1120,15 +1120,15 @@ export function ReconciliationDetailsView({
                       type="checkbox"
                       checked={selectedItems.size > 0 && selectedItems.size === tabData.length}
                       onChange={() => handleSelectAll(tabData)}
-                      className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500 focus:ring-2"
+                      className="w-4 h-4 text-primary-600 border-ink-300 rounded focus:ring-primary-500 focus:ring-2"
                     />
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-sm font-medium text-ink-700">
                       {t('selectAllCount', { count: tabData.length })}
                     </span>
                   </label>
                   
                   {selectedItems.size > 0 && (
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-ink-600">
                       {t('itemsSelected', { count: selectedItems.size })}
                     </span>
                   )}
@@ -1229,7 +1229,7 @@ export function ReconciliationDetailsView({
                         setSelectedItems(new Set());
                         setShowBulkActions(false);
                       }}
-                      className="text-gray-600"
+                      className="text-ink-600"
                     >
                       <XMarkIcon className="w-4 h-4" />
                     </Button>
@@ -1260,10 +1260,10 @@ export function ReconciliationDetailsView({
             {tabData.length === 0 ? (
               <div className="text-center py-12">
                 <tabConfig.icon className={`w-12 h-12 mx-auto mb-4 ${tabConfig.color}`} />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <h3 className="text-lg font-medium text-ink-900 mb-2">
                   {t('noItems', { type: tabConfig.label })}
                 </h3>
-                <p className="text-gray-500">
+                <p className="text-ink-500">
                   {searchTerm || minAmount || maxAmount
                     ? t('noTransactionsMatchFilters')
                     : t('noItemsToReview', { type: tabConfig.label.toLowerCase() })}
@@ -1272,7 +1272,7 @@ export function ReconciliationDetailsView({
             ) : (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-medium text-gray-900">
+                  <h4 className="font-medium text-ink-900">
                     {tabConfig.label} ({tabData.length})
                   </h4>
                   <div className="flex items-center gap-4">
@@ -1283,7 +1283,7 @@ export function ReconciliationDetailsView({
                         {t('draggingTransaction')}
                       </div>
                     )}
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <div className="flex items-center gap-2 text-sm text-ink-500">
                       <ArrowsUpDownIcon className="w-4 h-4" />
                       {t('sortedByDate')}
                     </div>

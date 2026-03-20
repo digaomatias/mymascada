@@ -197,10 +197,10 @@ export default function WalletsPage() {
       <header className="mb-5">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2.1rem]">
+            <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-ink-900 sm:text-[2.1rem]">
               {t('title')}
             </h1>
-            <p className="mt-1.5 text-[15px] text-slate-500">
+            <p className="mt-1.5 text-[15px] text-ink-500">
               {t('subtitle')}
             </p>
           </div>
@@ -216,7 +216,7 @@ export default function WalletsPage() {
             checked={showArchived}
             onCheckedChange={(checked) => setShowArchived(checked === true)}
           />
-          <Label htmlFor="showArchived" className="text-sm text-slate-600">
+          <Label htmlFor="showArchived" className="text-sm text-ink-600">
             {t('showArchived')}
           </Label>
         </div>
@@ -226,23 +226,23 @@ export default function WalletsPage() {
         {isLoading ? (
           <WalletsSkeleton />
         ) : hasLoadError ? (
-          <section className="rounded-[28px] border border-red-100/80 bg-white/92 p-10 text-center shadow-[0_20px_50px_-30px_rgba(76,29,149,0.45)]">
+          <section className="rounded-[28px] border border-red-100/80 bg-white/92 p-10 text-center shadow-[0_20px_50px_-30px_rgba(47,129,112,0.20)]">
             <p className="text-red-600">{t('loadError')}</p>
             <button
               onClick={loadWallets}
-              className="mt-4 text-sm font-semibold text-violet-600 hover:underline"
+              className="mt-4 text-sm font-semibold text-primary-600 hover:underline"
             >
               {tCommon('retry')}
             </button>
           </section>
         ) : wallets.length === 0 ? (
           /* Empty state */
-          <section className="rounded-[28px] border border-violet-100/80 bg-white/92 p-10 text-center shadow-[0_20px_50px_-30px_rgba(76,29,149,0.45)]">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-100 text-violet-600">
+          <section className="rounded-[28px] border border-ink-200 bg-white/92 p-10 text-center shadow-[0_20px_50px_-30px_rgba(47,129,112,0.20)]">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-100 text-primary-600">
               <CircleStackIcon className="h-7 w-7" />
             </div>
-            <h3 className="mt-4 text-xl font-semibold text-slate-900">{t('noWallets')}</h3>
-            <p className="mt-2 text-sm text-slate-500">
+            <h3 className="mt-4 text-xl font-semibold text-ink-900">{t('noWallets')}</h3>
+            <p className="mt-2 text-sm text-ink-500">
               {t('noWalletsDescription')}
             </p>
             <Button onClick={openCreateModal} className="mt-5">
@@ -253,15 +253,15 @@ export default function WalletsPage() {
         ) : (
           <>
             {/* Fix #2: Total allocated hero — per-currency totals */}
-            <section className="rounded-[26px] border border-violet-100/60 bg-white/90 p-6 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+            <section className="rounded-[26px] border border-ink-200 bg-white/90 p-6 shadow-lg shadow-primary-200/20 backdrop-blur-xs">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-400">
                 {t('totalAllocated')}
               </p>
               <div className="mt-1 flex flex-wrap items-baseline gap-x-4 gap-y-1">
                 {currencyTotals.map(([currency, total]) => (
                   <p
                     key={currency}
-                    className="font-[var(--font-dash-sans)] text-3xl font-bold tracking-tight text-slate-900"
+                    className="font-[var(--font-dash-sans)] text-3xl font-bold tracking-tight text-ink-900"
                   >
                     {formatCurrency(total, currency)}
                   </p>
@@ -289,7 +289,7 @@ export default function WalletsPage() {
                       }
                     }}
                     className={cn(
-                      'group relative cursor-pointer rounded-[26px] border border-violet-100/80 bg-white/90 p-5 shadow-[0_20px_44px_-32px_rgba(76,29,149,0.48)] transition-shadow hover:shadow-[0_24px_52px_-28px_rgba(76,29,149,0.55)]',
+                      'group relative cursor-pointer rounded-[26px] border border-ink-200 bg-white/90 p-5 shadow-[0_20px_44px_-32px_rgba(47,129,112,0.20)] transition-shadow hover:shadow-[0_24px_52px_-28px_rgba(47,129,112,0.25)]',
                       wallet.isArchived && 'opacity-60',
                     )}
                   >
@@ -301,21 +301,21 @@ export default function WalletsPage() {
 
                     {/* Top row: icon + name + actions */}
                     <div className="flex items-start gap-3 pl-2">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-50 text-violet-600">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600">
                         <WalletIcon iconId={wallet.icon} className="h-5 w-5" />
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="line-clamp-1 text-lg font-semibold tracking-[-0.02em] text-slate-900">
+                          <h3 className="line-clamp-1 text-lg font-semibold tracking-[-0.02em] text-ink-900">
                             {wallet.name}
                           </h3>
                           {wallet.isArchived && (
-                            <span className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
+                            <span className="shrink-0 rounded-full border border-ink-200 bg-ink-50 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-500">
                               {t('archived')}
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-ink-500">
                           {t('allocationCount', { count: wallet.allocationCount })}
                         </p>
                       </div>
@@ -327,14 +327,14 @@ export default function WalletsPage() {
                       >
                         <button
                           onClick={(e) => openEditModal(wallet, e)}
-                          className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-violet-50 hover:text-violet-600"
+                          className="rounded-lg p-1.5 text-ink-400 transition-colors hover:bg-primary-50 hover:text-primary-600"
                           title={t('editWallet')}
                         >
                           <PencilIcon className="h-4 w-4" />
                         </button>
                         <button
                           onClick={(e) => confirmDeleteWallet(wallet, e)}
-                          className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
+                          className="rounded-lg p-1.5 text-ink-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
                           title={t('deleteWallet')}
                         >
                           <TrashIcon className="h-4 w-4" />
@@ -344,11 +344,11 @@ export default function WalletsPage() {
 
                     {/* Balance */}
                     <div className="mt-3 flex items-baseline justify-between pl-2">
-                      <p className="font-[var(--font-dash-mono)] text-xl font-bold text-slate-900">
+                      <p className="font-[var(--font-dash-mono)] text-xl font-bold text-ink-900">
                         {formatCurrency(wallet.balance, wallet.currency)}
                       </p>
                       {wallet.targetAmount != null && wallet.targetAmount > 0 && (
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-ink-500">
                           {t('of')} {formatCurrency(wallet.targetAmount, wallet.currency)}
                         </p>
                       )}
@@ -356,7 +356,7 @@ export default function WalletsPage() {
 
                     {/* Progress bar (if target) */}
                     {wallet.targetAmount != null && wallet.targetAmount > 0 && (
-                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200 pl-2">
+                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-ink-200 pl-2">
                         <div
                           className="h-full rounded-full transition-all"
                           style={{
@@ -369,7 +369,7 @@ export default function WalletsPage() {
 
                     {/* Footer */}
                     <div className="mt-3 flex justify-end pl-2">
-                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-violet-600">
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary-600">
                         {t('viewAll')}
                         <ArrowRightIcon className="h-3.5 w-3.5" />
                       </span>
@@ -403,7 +403,7 @@ export default function WalletsPage() {
         <div className="space-y-5">
           {/* Name */}
           <div>
-            <Label htmlFor="walletName" className="text-sm font-medium text-slate-700">
+            <Label htmlFor="walletName" className="text-sm font-medium text-ink-700">
               {t('name')}
             </Label>
             <Input
@@ -417,7 +417,7 @@ export default function WalletsPage() {
 
           {/* Icon picker */}
           <div>
-            <Label className="text-sm font-medium text-slate-700">{t('icon')}</Label>
+            <Label className="text-sm font-medium text-ink-700">{t('icon')}</Label>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               {WALLET_ICONS.map((item) => (
                 <button
@@ -429,11 +429,11 @@ export default function WalletsPage() {
                   className={cn(
                     'flex h-10 w-10 items-center justify-center rounded-xl transition-all',
                     formData.icon === item.id
-                      ? 'bg-violet-100 ring-2 ring-violet-500'
-                      : 'bg-slate-50 hover:bg-slate-100',
+                      ? 'bg-primary-100 ring-2 ring-primary-500'
+                      : 'bg-ink-50 hover:bg-ink-100',
                   )}
                 >
-                  <item.icon className="h-5 w-5 text-gray-700" />
+                  <item.icon className="h-5 w-5 text-ink-700" />
                 </button>
               ))}
             </div>
@@ -441,7 +441,7 @@ export default function WalletsPage() {
 
           {/* Color picker */}
           <div>
-            <Label className="text-sm font-medium text-slate-700">{t('color')}</Label>
+            <Label className="text-sm font-medium text-ink-700">{t('color')}</Label>
             <div className="mt-1.5 flex flex-wrap gap-2">
               {WALLET_COLORS.map((color) => (
                 <button
@@ -453,7 +453,7 @@ export default function WalletsPage() {
                   className={cn(
                     'h-8 w-8 rounded-full transition-all',
                     formData.color === color
-                      ? 'ring-2 ring-offset-2 ring-violet-500 scale-110'
+                      ? 'ring-2 ring-offset-2 ring-primary-500 scale-110'
                       : 'hover:scale-105',
                   )}
                   style={{ backgroundColor: color }}
@@ -464,7 +464,7 @@ export default function WalletsPage() {
 
           {/* Currency */}
           <div>
-            <Label htmlFor="walletCurrency" className="text-sm font-medium text-slate-700">
+            <Label htmlFor="walletCurrency" className="text-sm font-medium text-ink-700">
               {t('currency')}
             </Label>
             <Select
@@ -483,9 +483,9 @@ export default function WalletsPage() {
 
           {/* Target amount */}
           <div>
-            <Label htmlFor="walletTarget" className="text-sm font-medium text-slate-700">
+            <Label htmlFor="walletTarget" className="text-sm font-medium text-ink-700">
               {t('targetAmount')}{' '}
-              <span className="text-slate-400">({t('optional')})</span>
+              <span className="text-ink-400">({t('optional')})</span>
             </Label>
             <Input
               id="walletTarget"

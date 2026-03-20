@@ -39,7 +39,7 @@ export function BudgetProgressBar({
 
   return (
     <div className={cn('w-full', className)}>
-      <div className={cn('w-full bg-gray-200 rounded-full overflow-hidden', heightClass)}>
+      <div className={cn('w-full bg-ink-200 rounded-full overflow-hidden', heightClass)}>
         <div
           className={cn(
             'h-full rounded-full transition-all duration-300',

@@ -350,17 +350,17 @@ export function CategoryPicker({
         };
       case 'LLM':
         return {
-          button: 'bg-purple-600 hover:bg-purple-700',
+          button: 'bg-primary-600 hover:bg-primary-700',
           text: 'AI analysis',
-          bgColor: 'bg-purple-50',
-          textColor: 'text-purple-700'
+          bgColor: 'bg-primary-50',
+          textColor: 'text-primary-700'
         };
       default:
         return {
-          button: 'bg-gray-600 hover:bg-gray-700',
+          button: 'bg-ink-600 hover:bg-ink-700',
           text: 'Suggestion',
-          bgColor: 'bg-gray-50',
-          textColor: 'text-gray-700'
+          bgColor: 'bg-ink-50',
+          textColor: 'text-ink-700'
         };
     }
   };
@@ -626,7 +626,7 @@ export function CategoryPicker({
                 // Prevent blur from firing
                 e.preventDefault();
               }}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white rounded-lg transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-primary-500 to-blue-500 hover:from-primary-600 hover:to-primary-600 text-white rounded-lg transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer"
             >
               <SparklesIcon className="w-5 h-5" />
               <span className="font-medium">{t('aiSuggestions.getButton')}</span>
@@ -636,16 +636,16 @@ export function CategoryPicker({
           {/* Show suggestions when available */}
           {(activeAiSuggestions.length > 0 || effectiveIsLoading) && (
             <div>
-              <div className="flex items-center gap-2 mb-3 text-sm font-medium text-purple-700">
+              <div className="flex items-center gap-2 mb-3 text-sm font-medium text-primary-700">
                 <SparklesIcon className={`w-4 h-4 ${effectiveIsLoading ? 'animate-pulse' : ''}`} />
                 {t('aiSuggestions.title')}
                 {effectiveIsLoading && (
-                  <span className="text-xs text-gray-500 font-normal animate-pulse">
+                  <span className="text-xs text-ink-500 font-normal animate-pulse">
                     {t('aiSuggestions.analyzing')}
                   </span>
                 )}
                 {!effectiveIsLoading && transaction && (
-                  <span className="text-xs text-gray-500 font-normal">
+                  <span className="text-xs text-ink-500 font-normal">
                     {t('aiSuggestions.forTransaction', { description: transaction.description.slice(0, 30) })}
                   </span>
                 )}
@@ -655,16 +655,16 @@ export function CategoryPicker({
           {effectiveIsLoading && (
             <div className="space-y-2">
               {[...Array(2)].map((_, i) => (
-                <div key={i} className="p-3 rounded-lg border-2 border-gray-200 bg-gray-50 animate-pulse">
+                <div key={i} className="p-3 rounded-lg border-2 border-ink-200 bg-ink-50 animate-pulse">
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-4 h-4 bg-gray-300 rounded"></div>
-                    <div className="h-4 bg-gray-300 rounded w-32"></div>
-                    <div className="h-4 bg-gray-300 rounded w-16"></div>
+                    <div className="w-4 h-4 bg-ink-300 rounded"></div>
+                    <div className="h-4 bg-ink-300 rounded w-32"></div>
+                    <div className="h-4 bg-ink-300 rounded w-16"></div>
                   </div>
-                  <div className="h-3 bg-gray-300 rounded w-full mb-2"></div>
+                  <div className="h-3 bg-ink-300 rounded w-full mb-2"></div>
                   <div className="flex gap-2">
-                    <div className="h-6 bg-gray-300 rounded w-16"></div>
-                    <div className="h-6 bg-gray-300 rounded w-12"></div>
+                    <div className="h-6 bg-ink-300 rounded w-16"></div>
+                    <div className="h-6 bg-ink-300 rounded w-12"></div>
                   </div>
                 </div>
               ))}
@@ -683,7 +683,7 @@ export function CategoryPicker({
                   className={`
                     relative p-3 rounded-lg border-2 transition-all duration-200
                     ${confidenceColor}
-                    ${index === 0 ? 'ring-2 ring-purple-200 shadow-md' : 'hover:shadow-sm'}
+                    ${index === 0 ? 'ring-2 ring-primary-200 shadow-md' : 'hover:shadow-sm'}
                   `}
                 >
                   <div className="flex items-start justify-between">
@@ -695,7 +695,7 @@ export function CategoryPicker({
                             suggestion.confidence >= 0.6 ? 'text-yellow-600' : 'text-orange-600'
                           }`
                         })}
-                        <span className="font-medium text-gray-900">
+                        <span className="font-medium text-ink-900">
                           {suggestion.categoryName}
                         </span>
                         {suggestion.method && (
@@ -714,7 +714,7 @@ export function CategoryPicker({
                         </span>
                       </div>
                       {suggestion.reasoning && (
-                        <p className="text-xs text-gray-600 mb-2 line-clamp-2">
+                        <p className="text-xs text-ink-600 mb-2 line-clamp-2">
                           {suggestion.reasoning}
                         </p>
                       )}
@@ -742,8 +742,8 @@ export function CategoryPicker({
                             handleRejectAiSuggestion(suggestion);
                           }}
                           className="
-                            flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-600 
-                            rounded-md text-xs font-medium hover:bg-gray-200 transition-colors cursor-pointer
+                            flex items-center gap-1 px-3 py-1 bg-ink-100 text-ink-600 
+                            rounded-md text-xs font-medium hover:bg-ink-200 transition-colors cursor-pointer
                           "
                         >
                           <XMarkIcon className="w-3 h-3" />
@@ -785,10 +785,10 @@ export function CategoryPicker({
                   className={`
                     w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-colors
                     ${index === selectedIndex ? 'bg-primary-50 ring-2 ring-primary-200' : 
-                      cat.id === Number(value) ? 'bg-primary-100 text-primary-700' : 'hover:bg-gray-50'}
+                      cat.id === Number(value) ? 'bg-primary-100 text-primary-700' : 'hover:bg-ink-50'}
                   `}
                 >
-                  <FolderIcon className="w-4 h-4 text-gray-400" />
+                  <FolderIcon className="w-4 h-4 text-ink-400" />
                   <span className="text-sm">{cat.name}</span>
                   {cat.id === Number(value) && (
                     <CheckIcon className="w-4 h-4 text-primary-600 ml-auto" />
@@ -797,7 +797,7 @@ export function CategoryPicker({
               ))}
             </div>
           ) : (
-            <p className="text-center text-gray-500 py-4 text-sm">
+            <p className="text-center text-ink-500 py-4 text-sm">
               {t('noCategoriesFoundFor', { searchTerm })}
             </p>
           )}
@@ -808,7 +808,7 @@ export function CategoryPicker({
       {/* Quick Picks - Only show when not searching and not disabled */}
       {!searchTerm && !disableQuickPicks && (
         <div>
-          <div className="flex items-center gap-2 mb-3 text-sm font-medium text-gray-700">
+          <div className="flex items-center gap-2 mb-3 text-sm font-medium text-ink-700">
             <SparklesIcon className="w-4 h-4" />
             {t('quickPicksTitle')}
           </div>
@@ -838,7 +838,7 @@ export function CategoryPicker({
       {/* Recent Categories - Only show when not searching */}
       {!searchTerm && recentCategoryObjects.length > 0 && (
         <div>
-          <div className="flex items-center gap-2 mb-3 text-sm font-medium text-gray-700">
+          <div className="flex items-center gap-2 mb-3 text-sm font-medium text-ink-700">
             <ClockIcon className="w-4 h-4" />
             {t('recentlyUsedTitle')}
           </div>
@@ -853,10 +853,10 @@ export function CategoryPicker({
                 }}
                 className={`
                   w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-colors
-                  ${cat.id === Number(value) ? 'bg-primary-100 text-primary-700' : 'hover:bg-gray-50'}
+                  ${cat.id === Number(value) ? 'bg-primary-100 text-primary-700' : 'hover:bg-ink-50'}
                 `}
               >
-                <FolderIcon className="w-4 h-4 text-gray-400" />
+                <FolderIcon className="w-4 h-4 text-ink-400" />
                 <span className="text-sm">{cat.name}</span>
                 {cat.id === Number(value) && (
                   <CheckIcon className="w-4 h-4 text-primary-600 ml-auto" />
@@ -877,14 +877,14 @@ export function CategoryPicker({
           {/* AI indicator when there are suggestions */}
           {!isOpen && topAiSuggestion && !selectedCategory && (
             <div className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10">
-              <div className="flex items-center gap-1 text-purple-600 animate-pulse">
+              <div className="flex items-center gap-1 text-primary-600 animate-pulse">
                 <SparklesIcon className="w-4 h-4" />
                 <span className="text-xs font-medium">{t('aiBadge')}</span>
               </div>
             </div>
           )}
           {isOpen && (
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-ink-400" />
           )}
           <Input
             type="text"
@@ -906,7 +906,7 @@ export function CategoryPicker({
               ${isOpen ? 'pl-10' : topAiSuggestion && !selectedCategory ? 'pl-16' : 'pl-4'}
               pr-10
               ${error ? 'border-red-300' : ''}
-              ${topAiSuggestion && !selectedCategory ? 'border-purple-300 bg-purple-50' : ''}
+              ${topAiSuggestion && !selectedCategory ? 'border-primary-300 bg-primary-50' : ''}
             `}
           />
           {/* AI quick apply button */}
@@ -920,15 +920,15 @@ export function CategoryPicker({
               }}
               className="
                 absolute right-8 top-1/2 transform -translate-y-1/2
-                px-2 py-1 bg-purple-600 text-white text-xs rounded
-                hover:bg-purple-700 transition-colors cursor-pointer
+                px-2 py-1 bg-primary-600 text-white text-xs rounded
+                hover:bg-primary-700 transition-colors cursor-pointer
               "
             >
               {tCommon('apply')}
             </button>
           )}
           <ChevronDownIcon
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 cursor-pointer"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-ink-400 cursor-pointer"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -945,7 +945,7 @@ export function CategoryPicker({
 
         {isOpen && !disabled && hasContent && createPortal(
           <div
-            className="z-[9999] bg-white rounded-lg shadow-lg border border-gray-200 p-4 max-h-[min(400px,50vh)] overflow-y-auto"
+            className="z-[9999] bg-white rounded-lg shadow-lg border border-ink-200 p-4 max-h-[min(400px,50vh)] overflow-y-auto"
             style={dropdownStyle}
             onMouseDown={(e) => e.preventDefault()}
           >
@@ -964,13 +964,13 @@ export function CategoryPicker({
         {/* AI indicator for mobile */}
         {topAiSuggestion && !selectedCategory ? (
           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10">
-            <div className="flex items-center gap-1 text-purple-600 animate-pulse">
+            <div className="flex items-center gap-1 text-primary-600 animate-pulse">
               <SparklesIcon className="w-4 h-4" />
               <span className="text-xs font-medium">{t('aiBadge')}</span>
             </div>
           </div>
         ) : (
-          <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-ink-400" />
         )}
         <Input
           ref={inputRef}
@@ -989,11 +989,11 @@ export function CategoryPicker({
             ${topAiSuggestion && !selectedCategory ? 'pl-16' : 'pl-10'} 
             pr-10 cursor-pointer 
             ${error ? 'border-red-300' : ''}
-            ${topAiSuggestion && !selectedCategory ? 'border-purple-300 bg-purple-50' : ''}
+            ${topAiSuggestion && !selectedCategory ? 'border-primary-300 bg-primary-50' : ''}
           `}
         />
         <ChevronDownIcon 
-          className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 cursor-pointer" 
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-ink-400 cursor-pointer" 
           onClick={handleMobileClick}
         />
       </div>
@@ -1010,7 +1010,7 @@ export function CategoryPicker({
         <div className="space-y-4">
           {/* Search Bar in Modal */}
           <div className="relative">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-ink-400" />
             <Input
               type="text"
               placeholder={t('searchCategories')}
@@ -1021,7 +1021,7 @@ export function CategoryPicker({
             />
           </div>
           {hasContent ? pickerContent : (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-ink-500">
               {t('noCategoriesAvailable')}
             </div>
           )}

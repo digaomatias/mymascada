@@ -46,25 +46,25 @@ export function StepComplete({ countdown, onGoNow }: StepCompleteProps) {
             className="animate-[onboarding-check-draw_520ms_ease-out_420ms_forwards]"
           />
         </svg>
-        <span className="absolute -right-1 top-1.5 h-3 w-3 rounded-full bg-violet-500 shadow-[0_0_0_8px_rgba(139,92,246,0.18)]" />
+        <span className="absolute -right-1 top-1.5 h-3 w-3 rounded-full bg-primary-500 shadow-[0_0_0_8px_rgba(47,129,112,0.12)]" />
       </div>
 
       <div className="space-y-2">
-        <h2 className="font-[var(--font-onboarding-sans)] text-4xl font-semibold tracking-[-0.03em] text-slate-900">
+        <h2 className="font-[var(--font-onboarding-sans)] text-4xl font-semibold tracking-[-0.03em] text-ink-900">
           {t('complete.title')}
         </h2>
-        <p className="max-w-lg text-sm leading-relaxed text-slate-600 sm:text-base">
+        <p className="max-w-lg text-sm leading-relaxed text-ink-600 sm:text-base">
           {t('complete.subtitle')}
         </p>
       </div>
 
-      <div className="w-full max-w-[320px] rounded-2xl border border-violet-100 bg-violet-50/80 p-3">
-        <p className="text-sm font-medium text-violet-700">
+      <div className="w-full max-w-[320px] rounded-2xl border border-ink-200 bg-primary-50/80 p-3">
+        <p className="text-sm font-medium text-primary-700">
           {t('complete.countdown', { seconds: countdown })}
         </p>
-        <div className="mt-2 h-2 rounded-full bg-violet-100">
+        <div className="mt-2 h-2 rounded-full bg-primary-100">
           <div
-            className="h-2 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-all duration-700"
+            className="h-2 rounded-full bg-gradient-to-r from-primary-500 to-primary-400 transition-all duration-700"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
@@ -72,7 +72,7 @@ export function StepComplete({ countdown, onGoNow }: StepCompleteProps) {
 
       <Button
         onClick={onGoNow}
-        className="rounded-xl bg-violet-600 px-6 text-white shadow-[0_12px_25px_-15px_rgba(124,58,237,1)] hover:bg-violet-700"
+        className="rounded-xl bg-primary-600 px-6 text-white shadow-[0_12px_25px_-15px_rgba(47,129,112,0.45)] hover:bg-primary-700"
       >
         {t('complete.goNow')}
         <ArrowRightIcon className="ml-2 h-4 w-4" />

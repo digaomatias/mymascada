@@ -44,8 +44,8 @@ export function AkahuBalanceComparison({
           </h4>
         </div>
         <div className="group relative">
-          <InformationCircleIcon className="w-4 h-4 text-gray-400 cursor-help" />
-          <div className="absolute right-0 top-6 z-10 hidden group-hover:block w-64 p-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg">
+          <InformationCircleIcon className="w-4 h-4 text-ink-400 cursor-help" />
+          <div className="absolute right-0 top-6 z-10 hidden group-hover:block w-64 p-2 bg-ink-900 text-white text-xs rounded-lg shadow-lg">
             {isCurrentBalance
               ? t('akahuBalanceComparison.tooltip.currentBalance')
               : t('akahuBalanceComparison.tooltip.statementBalance')
@@ -56,22 +56,22 @@ export function AkahuBalanceComparison({
 
       <div className="mt-4 space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-600">{t('akahuBalanceComparison.bankBalance')}</span>
-          <span className="font-medium text-gray-900">
+          <span className="text-sm text-ink-600">{t('akahuBalanceComparison.bankBalance')}</span>
+          <span className="font-medium text-ink-900">
             {formatCurrency(akahuBalance)}
           </span>
         </div>
 
         <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-600">{t('akahuBalanceComparison.systemBalance')}</span>
-          <span className="font-medium text-gray-900">
+          <span className="text-sm text-ink-600">{t('akahuBalanceComparison.systemBalance')}</span>
+          <span className="font-medium text-ink-900">
             {formatCurrency(myMascadaBalance)}
           </span>
         </div>
 
-        <div className="border-t border-gray-200 pt-3">
+        <div className="border-t border-ink-200 pt-3">
           <div className="flex justify-between items-center">
-            <span className="text-sm font-medium text-gray-700">{t('akahuBalanceComparison.difference')}</span>
+            <span className="text-sm font-medium text-ink-700">{t('akahuBalanceComparison.difference')}</span>
             <span className={`font-semibold ${
               isBalanced
                 ? 'text-green-600'
@@ -100,13 +100,13 @@ export function AkahuBalanceComparison({
       )}
 
       {isCurrentBalance && (
-        <p className="mt-2 text-xs text-gray-500 italic">
+        <p className="mt-2 text-xs text-ink-500 italic">
           {t('akahuBalanceComparison.currentBalanceNote')}
         </p>
       )}
 
       {pendingTransactionsTotal != null && pendingTransactionsTotal !== 0 && (
-        <p className="mt-1 text-xs text-gray-500 italic">
+        <p className="mt-1 text-xs text-ink-500 italic">
           {t('akahuBalanceComparison.pendingAdjustment', {
             amount: formatCurrency(Math.abs(pendingTransactionsTotal)),
             count: pendingTransactionsCount ?? 0

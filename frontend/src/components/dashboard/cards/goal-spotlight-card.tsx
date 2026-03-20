@@ -23,12 +23,12 @@ function GoalRing({ value, label, size = 148 }: { value: number; label: string; 
       <svg viewBox={`0 0 ${size} ${size}`} className="h-full w-full" style={{ transform: 'rotate(-90deg)' }}>
         <defs>
           <linearGradient id="goal-ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#7c3aed" />
-            <stop offset="50%" stopColor="#a78bfa" />
-            <stop offset="100%" stopColor="#d946ef" />
+            <stop offset="0%" stopColor="#c08a30" />
+            <stop offset="50%" stopColor="#d4a94a" />
+            <stop offset="100%" stopColor="#e8c96a" />
           </linearGradient>
         </defs>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#f3f0ff" strokeWidth="12" />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#f5f0e0" strokeWidth="12" />
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -43,10 +43,10 @@ function GoalRing({ value, label, size = 148 }: { value: number; label: string; 
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-[var(--font-dash-mono)] text-2xl font-semibold text-slate-900">
+        <span className="font-[var(--font-dash-mono)] text-2xl font-semibold text-ink-900">
           {Math.round(value)}%
         </span>
-        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-violet-500">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-primary-500">
           {label}
         </span>
       </div>
@@ -84,16 +84,16 @@ export function GoalSpotlightCard() {
     <DashboardCard cardId="goal-spotlight" loading={loading} error={error}>
       {!primary ? (
         <div className="flex flex-col items-center justify-center py-6 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-400 to-fuchsia-400 shadow-lg mb-4">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 shadow-lg mb-4">
             <FlagIcon className="h-7 w-7 text-white" />
           </div>
-          <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900 mb-2">
+          <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold text-ink-900 mb-2">
             {t('noGoals')}
           </h3>
-          <p className="text-sm text-slate-500 mb-4">{t('noGoalsDesc')}</p>
+          <p className="text-sm text-ink-500 mb-4">{t('noGoalsDesc')}</p>
           <Link
             href="/goals/new"
-            className="inline-flex items-center gap-1 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-700"
+            className="inline-flex items-center gap-1 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700"
           >
             <PlusIcon className="h-4 w-4" />
             {t('createGoal')}
@@ -101,22 +101,22 @@ export function GoalSpotlightCard() {
         </div>
       ) : (
         <div className="relative flex flex-1 flex-col">
-          <div className="pointer-events-none absolute -bottom-10 -right-10 h-32 w-32 rounded-full bg-fuchsia-100/40 blur-2xl" aria-hidden />
+          <div className="pointer-events-none absolute -bottom-10 -right-10 h-32 w-32 rounded-full bg-primary-100/40 blur-2xl" aria-hidden />
 
           <div className="relative flex flex-1 flex-col">
-            <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-violet-200/60 bg-violet-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-violet-600">
+            <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-primary-200/60 bg-primary-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-primary-600">
               <ShieldCheckIcon className="h-3 w-3" />
               {t('safetyNet')}
             </div>
-            <h3 className="mt-2.5 font-[var(--font-dash-sans)] text-xl font-semibold tracking-[-0.02em] text-slate-900">
+            <h3 className="mt-2.5 font-[var(--font-dash-sans)] text-xl font-semibold tracking-[-0.02em] text-ink-900">
               {primary.name}
             </h3>
-            <p className="mt-1 text-sm text-slate-500">
-              <span className="font-[var(--font-dash-mono)] font-semibold text-slate-700">
+            <p className="mt-1 text-sm text-ink-500">
+              <span className="font-[var(--font-dash-mono)] font-semibold text-ink-700">
                 {formatCurrency(primary.currentAmount)}
               </span>
               {' / '}
-              <span className="font-[var(--font-dash-mono)] font-semibold text-slate-700">
+              <span className="font-[var(--font-dash-mono)] font-semibold text-ink-700">
                 {formatCurrency(primary.targetAmount)}
               </span>
             </p>
@@ -126,16 +126,16 @@ export function GoalSpotlightCard() {
             </div>
 
             {/* Progress context */}
-            <div className="flex items-center justify-between rounded-xl border border-violet-100/60 bg-violet-50/30 px-3 py-2.5">
-              <p className="text-xs text-slate-600">
-                <strong className="text-slate-800">
+            <div className="flex items-center justify-between rounded-xl border border-primary-100/60 bg-primary-50/30 px-3 py-2.5">
+              <p className="text-xs text-ink-600">
+                <strong className="text-ink-800">
                   {primary.progressPercentage.toFixed(0)}%
                 </strong>{' '}
                 {t('funded')}
               </p>
               <Link
                 href={`/goals/${primary.id}`}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-violet-600 hover:text-violet-800"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-primary-600 hover:text-primary-800"
               >
                 {t('details')}
               </Link>
@@ -151,8 +151,8 @@ export function GoalSpotlightCard() {
               <Link
                 href={`/goals/${primary.id}`}
                 className={cn(
-                  'inline-flex items-center gap-1 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-700',
-                  !primary.deadline || !primary.daysRemaining ? 'ml-auto' : '',
+                  'inline-flex items-center gap-1 rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-700',
+                  !(primary.deadline && primary.daysRemaining != null && primary.daysRemaining > 0) ? 'ml-auto' : '',
                 )}
               >
                 {t('viewGoal')} <ArrowRightIcon className="h-3 w-3" />

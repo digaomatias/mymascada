@@ -183,31 +183,31 @@ export function InlineTransferCreator({ sourceTransaction, onCancel, onSuccess }
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-lg shadow-sm mt-2 p-6 space-y-6 animate-in slide-in-from-top-2 duration-200">
+    <div className="bg-white border border-ink-200 rounded-lg shadow-sm mt-2 p-6 space-y-6 animate-in slide-in-from-top-2 duration-200">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <ArrowsRightLeftIcon className="w-5 h-5 text-slate-600" />
-          <h3 className="font-medium text-slate-900">{t('createTransfer')}</h3>
+          <ArrowsRightLeftIcon className="w-5 h-5 text-ink-600" />
+          <h3 className="font-medium text-ink-900">{t('createTransfer')}</h3>
         </div>
         <Button
           variant="ghost"
           size="sm"
           onClick={onCancel}
-          className="text-slate-500 hover:text-slate-700 -mr-2"
+          className="text-ink-500 hover:text-ink-700 -mr-2"
         >
           <XMarkIcon className="w-4 h-4" />
         </Button>
       </div>
 
       {/* Source Transaction */}
-      <div className="bg-slate-50 rounded-lg p-4 border-l-4 border-red-500">
+      <div className="bg-ink-50 rounded-lg p-4 border-l-4 border-red-500">
         <div className="flex items-center gap-3 mb-2">
           <div className="w-2 h-2 rounded-full bg-red-500"></div>
-          <span className="text-sm font-medium text-slate-700">{t('transferFrom', { name: sourceTransaction.accountName })}</span>
+          <span className="text-sm font-medium text-ink-700">{t('transferFrom', { name: sourceTransaction.accountName })}</span>
         </div>
-        <div className="text-sm text-slate-600">
-          <div className="font-medium text-slate-900 mb-1">{sourceTransaction.description}</div>
+        <div className="text-sm text-ink-600">
+          <div className="font-medium text-ink-900 mb-1">{sourceTransaction.description}</div>
           <div className="flex items-center gap-4">
             <span className="font-medium">{formatCurrency(Math.abs(sourceTransaction.amount))}</span>
             <span>{formatDate(sourceTransaction.transactionDate)}</span>
@@ -216,13 +216,13 @@ export function InlineTransferCreator({ sourceTransaction, onCancel, onSuccess }
       </div>
 
       {/* Mode Selection */}
-      <div className="flex border border-slate-200 rounded-lg p-1 bg-slate-50">
+      <div className="flex border border-ink-200 rounded-lg p-1 bg-ink-50">
         <button
           onClick={() => setMode('link')}
           className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-150 ${
             mode === 'link'
-              ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
-              : 'text-slate-600 hover:text-slate-900'
+              ? 'bg-white text-ink-900 shadow-sm border border-ink-200'
+              : 'text-ink-600 hover:text-ink-900'
           }`}
         >
           <ArrowsRightLeftIcon className="w-4 h-4" />
@@ -232,8 +232,8 @@ export function InlineTransferCreator({ sourceTransaction, onCancel, onSuccess }
           onClick={() => setMode('create')}
           className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-150 ${
             mode === 'create'
-              ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
-              : 'text-slate-600 hover:text-slate-900'
+              ? 'bg-white text-ink-900 shadow-sm border border-ink-200'
+              : 'text-ink-600 hover:text-ink-900'
           }`}
         >
           <PlusIcon className="w-4 h-4" />
@@ -247,7 +247,7 @@ export function InlineTransferCreator({ sourceTransaction, onCancel, onSuccess }
           {/* Search Box */}
           <div className="space-y-3">
             <div className="relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-ink-400" />
               <Input
                 placeholder={showAllTransactions ? t('searchMatchingTransaction') : t('typeToSearchTransactions')}
                 value={searchTerm}
@@ -257,8 +257,8 @@ export function InlineTransferCreator({ sourceTransaction, onCancel, onSuccess }
             </div>
             
             {!showAllTransactions && searchTerm.length === 0 && (
-              <div className="flex items-center justify-between text-sm bg-slate-50 rounded-lg p-3">
-                <span className="text-slate-600">
+              <div className="flex items-center justify-between text-sm bg-ink-50 rounded-lg p-3">
+                <span className="text-ink-600">
                   {t('matchingExactLabel', { date: formatDate(sourceTransaction.transactionDate) })}
                 </span>
                 <Button
@@ -273,8 +273,8 @@ export function InlineTransferCreator({ sourceTransaction, onCancel, onSuccess }
             )}
             
             {showAllTransactions && searchTerm.length === 0 && (
-              <div className="flex items-center justify-between text-sm bg-slate-50 rounded-lg p-3">
-                <span className="text-slate-600">
+              <div className="flex items-center justify-between text-sm bg-ink-50 rounded-lg p-3">
+                <span className="text-ink-600">
                   {t('matchingAllLabel')}
                 </span>
                 <Button
@@ -292,15 +292,15 @@ export function InlineTransferCreator({ sourceTransaction, onCancel, onSuccess }
           {/* Suggested Transactions */}
           <div className="space-y-2 max-h-60 overflow-y-auto">
             {searching && (
-              <div className="text-center text-sm text-slate-500 py-6">
+              <div className="text-center text-sm text-ink-500 py-6">
                 <div className="inline-flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-slate-300 border-t-blue-600 rounded-full animate-spin"></div>
+                  <div className="w-4 h-4 border-2 border-ink-300 border-t-blue-600 rounded-full animate-spin"></div>
                   {t('searchingMatches')}
                 </div>
               </div>
             )}
             {!searching && suggestedTransactions.length === 0 && (
-              <div className="text-center text-sm text-slate-500 py-6 bg-slate-50 rounded-lg">
+              <div className="text-center text-sm text-ink-500 py-6 bg-ink-50 rounded-lg">
                 {t('noMatchingTransactions')}
               </div>
             )}
@@ -310,7 +310,7 @@ export function InlineTransferCreator({ sourceTransaction, onCancel, onSuccess }
                 className={`p-4 border rounded-lg cursor-pointer transition-all duration-150 ${
                   selectedDestinationTransaction?.id === transaction.id
                     ? 'border-blue-500 bg-blue-50 shadow-sm border-l-4'
-                    : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                    : 'border-ink-200 hover:border-ink-300 hover:bg-ink-50'
                 }`}
                 onClick={() => setSelectedDestinationTransaction(transaction)}
               >
@@ -318,10 +318,10 @@ export function InlineTransferCreator({ sourceTransaction, onCancel, onSuccess }
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                      <span className="text-sm font-medium text-slate-900">{transaction.accountName}</span>
+                      <span className="text-sm font-medium text-ink-900">{transaction.accountName}</span>
                     </div>
-                    <div className="text-sm text-slate-700 font-medium mb-1 truncate">{transaction.description}</div>
-                    <div className="flex items-center gap-4 text-xs text-slate-500">
+                    <div className="text-sm text-ink-700 font-medium mb-1 truncate">{transaction.description}</div>
+                    <div className="flex items-center gap-4 text-xs text-ink-500">
                       <span className="font-medium">{formatCurrency(transaction.amount)}</span>
                       <span>{formatDate(transaction.transactionDate)}</span>
                     </div>
@@ -337,7 +337,7 @@ export function InlineTransferCreator({ sourceTransaction, onCancel, onSuccess }
                         e.stopPropagation();
                         window.open(`/transactions/${transaction.id}`, '_blank');
                       }}
-                      className="text-slate-500 hover:text-slate-700"
+                      className="text-ink-500 hover:text-ink-700"
                     >
                       <EyeIcon className="w-4 h-4" />
                     </Button>
@@ -362,12 +362,12 @@ export function InlineTransferCreator({ sourceTransaction, onCancel, onSuccess }
       {mode === 'create' && (
         <div className="space-y-3">
           <div className="space-y-2">
-            <Label htmlFor="destinationAccount" className="text-sm font-medium text-slate-700">
+            <Label htmlFor="destinationAccount" className="text-sm font-medium text-ink-700">
               {t('destinationAccount')}
             </Label>
             <select
               id="destinationAccount"
-              className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-slate-900"
+              className="w-full p-3 border border-ink-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-ink-900"
               value={selectedDestinationAccount?.id || ''}
               onChange={(e) => {
                 const accountId = parseInt(e.target.value);
@@ -388,10 +388,10 @@ export function InlineTransferCreator({ sourceTransaction, onCancel, onSuccess }
             <div className="bg-green-50 rounded-lg p-4 border-l-4 border-green-500">
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                <span className="text-sm font-medium text-slate-700">{t('transferTo', { name: selectedDestinationAccount.name })}</span>
+                <span className="text-sm font-medium text-ink-700">{t('transferTo', { name: selectedDestinationAccount.name })}</span>
               </div>
-              <div className="text-sm text-slate-600">
-                <div className="font-medium text-slate-900 mb-1">{t('newTransferTransactionHint')}</div>
+              <div className="text-sm text-ink-600">
+                <div className="font-medium text-ink-900 mb-1">{t('newTransferTransactionHint')}</div>
                 <div className="flex items-center gap-4">
                   <span className="font-medium">{formatCurrency(Math.abs(sourceTransaction.amount))}</span>
                   <span>{formatDate(sourceTransaction.transactionDate)}</span>

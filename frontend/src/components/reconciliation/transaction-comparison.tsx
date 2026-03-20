@@ -120,7 +120,7 @@ export function TransactionComparison({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <ArrowsRightLeftIcon className="w-5 h-5 text-gray-500" />
+            <ArrowsRightLeftIcon className="w-5 h-5 text-ink-500" />
             <CardTitle className="text-lg">{t('transactionComparison.title')}</CardTitle>
             <div className={`flex items-center gap-1 px-2 py-1 rounded-full border text-xs font-medium ${getConfidenceColor(matchConfidence)}`}>
               {getConfidenceIcon(matchConfidence)}
@@ -145,12 +145,12 @@ export function TransactionComparison({
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-              <h4 className="font-medium text-gray-900">{t('transactionComparison.bankStatement')}</h4>
+              <h4 className="font-medium text-ink-900">{t('transactionComparison.bankStatement')}</h4>
             </div>
             
             <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
               <div>
-                <span className="text-sm text-gray-600">{t('transactionComparison.fields.description')}</span>
+                <span className="text-sm text-ink-600">{t('transactionComparison.fields.description')}</span>
                 <div className="font-medium mt-1">
                   {expanded ? 
                     <div className="space-x-1">{highlightDifferences(bankTransaction.description, systemTransaction.description, true)}</div>
@@ -161,7 +161,7 @@ export function TransactionComparison({
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <span className="text-sm text-gray-600">{t('transactionComparison.fields.amount')}</span>
+                  <span className="text-sm text-ink-600">{t('transactionComparison.fields.amount')}</span>
                   <div className={`font-medium ${
                     amountDiff === 0 ? 'text-green-600' : 'text-red-600'
                   }`}>
@@ -175,7 +175,7 @@ export function TransactionComparison({
                 </div>
                 
                 <div>
-                  <span className="text-sm text-gray-600">{t('transactionComparison.fields.date')}</span>
+                  <span className="text-sm text-ink-600">{t('transactionComparison.fields.date')}</span>
                   <div className={`font-medium ${
                     dateDiffDays === 0 ? 'text-green-600' : 'text-orange-600'
                   }`}>
@@ -191,7 +191,7 @@ export function TransactionComparison({
               
               {bankTransaction.bankCategory && (
                 <div>
-                  <span className="text-sm text-gray-600">{t('transactionComparison.fields.bankCategory')}</span>
+                  <span className="text-sm text-ink-600">{t('transactionComparison.fields.bankCategory')}</span>
                   <div className="font-medium">{bankTransaction.bankCategory}</div>
                 </div>
               )}
@@ -201,13 +201,13 @@ export function TransactionComparison({
           {/* System Transaction */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-              <h4 className="font-medium text-gray-900">{t('transactionComparison.system')}</h4>
+              <div className="w-3 h-3 bg-primary-500 rounded-full"></div>
+              <h4 className="font-medium text-ink-900">{t('transactionComparison.system')}</h4>
             </div>
             
-            <div className="space-y-3 p-4 bg-purple-50 rounded-lg border border-purple-200">
+            <div className="space-y-3 p-4 bg-primary-50 rounded-lg border border-primary-200">
               <div>
-                <span className="text-sm text-gray-600">{t('transactionComparison.fields.description')}</span>
+                <span className="text-sm text-ink-600">{t('transactionComparison.fields.description')}</span>
                 <div className="font-medium mt-1">
                   {expanded ? 
                     <div className="space-x-1">{highlightDifferences(systemTransaction.description, bankTransaction.description, false)}</div>
@@ -218,7 +218,7 @@ export function TransactionComparison({
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <span className="text-sm text-gray-600">{t('transactionComparison.fields.amount')}</span>
+                  <span className="text-sm text-ink-600">{t('transactionComparison.fields.amount')}</span>
                   <div className={`font-medium ${
                     amountDiff === 0 ? 'text-green-600' : 'text-red-600'
                   }`}>
@@ -227,7 +227,7 @@ export function TransactionComparison({
                 </div>
                 
                 <div>
-                  <span className="text-sm text-gray-600">{t('transactionComparison.fields.date')}</span>
+                  <span className="text-sm text-ink-600">{t('transactionComparison.fields.date')}</span>
                   <div className={`font-medium ${
                     dateDiffDays === 0 ? 'text-green-600' : 'text-orange-600'
                   }`}>
@@ -239,13 +239,13 @@ export function TransactionComparison({
               <div className="grid grid-cols-2 gap-4">
                 {systemTransaction.categoryName && (
                   <div>
-                    <span className="text-sm text-gray-600">{t('transactionComparison.fields.category')}</span>
+                    <span className="text-sm text-ink-600">{t('transactionComparison.fields.category')}</span>
                     <div className="font-medium">{systemTransaction.categoryName}</div>
                   </div>
                 )}
                 
                 <div>
-                  <span className="text-sm text-gray-600">{t('transactionComparison.fields.status')}</span>
+                  <span className="text-sm text-ink-600">{t('transactionComparison.fields.status')}</span>
                   <div className="font-medium">
                     {getStatusLabel(systemTransaction.status)}
                   </div>
@@ -257,12 +257,12 @@ export function TransactionComparison({
 
         {/* Detailed Analysis (when expanded) */}
         {expanded && (
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg border">
-            <h5 className="font-medium text-gray-900 mb-3">{t('transactionComparison.matchAnalysis')}</h5>
+          <div className="mt-6 p-4 bg-ink-50 rounded-lg border">
+            <h5 className="font-medium text-ink-900 mb-3">{t('transactionComparison.matchAnalysis')}</h5>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${amountDiff === 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                <span className="text-gray-600">{t('transactionComparison.analysis.amountMatch')}</span>
+                <span className="text-ink-600">{t('transactionComparison.analysis.amountMatch')}</span>
                 <span className={amountDiff === 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
                   {amountDiff === 0
                     ? t('transactionComparison.analysis.exact')
@@ -272,7 +272,7 @@ export function TransactionComparison({
               
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${dateDiffDays === 0 ? 'bg-green-500' : dateDiffDays <= 2 ? 'bg-yellow-500' : 'bg-red-500'}`}></div>
-                <span className="text-gray-600">{t('transactionComparison.analysis.dateMatch')}</span>
+                <span className="text-ink-600">{t('transactionComparison.analysis.dateMatch')}</span>
                 <span className={`font-medium ${
                   dateDiffDays === 0 ? 'text-green-600' : dateDiffDays <= 2 ? 'text-yellow-600' : 'text-red-600'
                 }`}>
@@ -284,7 +284,7 @@ export function TransactionComparison({
               
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${descriptionSimilar ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                <span className="text-gray-600">{t('transactionComparison.analysis.description')}</span>
+                <span className="text-ink-600">{t('transactionComparison.analysis.description')}</span>
                 <span className={`font-medium ${descriptionSimilar ? 'text-green-600' : 'text-red-600'}`}>
                   {descriptionSimilar
                     ? t('transactionComparison.analysis.similar')

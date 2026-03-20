@@ -54,8 +54,8 @@ function CashflowChart({ data }: { data: MonthData[] }) {
           <stop offset="100%" stopColor="#10b981" stopOpacity="0.01" />
         </linearGradient>
         <linearGradient id="cf-exp-fill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.10" />
-          <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.01" />
+          <stop offset="0%" stopColor="#c0614a" stopOpacity="0.10" />
+          <stop offset="100%" stopColor="#c0614a" stopOpacity="0.01" />
         </linearGradient>
       </defs>
       {/* Grid lines */}
@@ -64,7 +64,7 @@ function CashflowChart({ data }: { data: MonthData[] }) {
         const val = min + range * f;
         return (
           <g key={f}>
-            <line x1={padX} y1={y} x2={padX + plotW} y2={y} stroke="#e8e4f0" strokeWidth="0.8" strokeDasharray="4 4" />
+            <line x1={padX} y1={y} x2={padX + plotW} y2={y} stroke="#e5e2db" strokeWidth="0.8" strokeDasharray="4 4" />
             <text x={padX - 8} y={y + 4} textAnchor="end" fontSize="10" fill="#8b8b9e" fontFamily="var(--font-dash-mono), monospace">
               {(val / 1000).toFixed(0)}k
             </text>
@@ -91,8 +91,8 @@ function CashflowChart({ data }: { data: MonthData[] }) {
       {expPts.length > 1 && (
         <>
           <polygon points={area(expPts)} fill="url(#cf-exp-fill)" />
-          <polyline points={polyline(expPts)} fill="none" stroke="#8b5cf6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.7" />
-          <circle cx={expPts[expPts.length - 1][0]} cy={expPts[expPts.length - 1][1]} r="5" fill="#fff" stroke="#8b5cf6" strokeWidth="2.5" />
+          <polyline points={polyline(expPts)} fill="none" stroke="#c0614a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.7" />
+          <circle cx={expPts[expPts.length - 1][0]} cy={expPts[expPts.length - 1][1]} r="5" fill="#fff" stroke="#c0614a" strokeWidth="2.5" />
         </>
       )}
     </svg>
@@ -135,19 +135,19 @@ export function CashflowChartCard() {
     <DashboardCard cardId="cashflow-chart" loading={loading} error={error}>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold tracking-[-0.02em] text-slate-900">
+          <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold tracking-[-0.02em] text-ink-900">
             {t('title')}
           </h3>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-ink-500">
             {t('subtitle')}
           </p>
         </div>
-        <div className="flex items-center gap-5 text-xs font-medium text-slate-500">
+        <div className="flex items-center gap-5 text-xs font-medium text-ink-500">
           <span className="flex items-center gap-2">
             <span className="inline-block h-[3px] w-4 rounded-full bg-emerald-500" /> {t('income')}
           </span>
           <span className="flex items-center gap-2">
-            <span className="inline-block h-[3px] w-4 rounded-full bg-violet-400" /> {t('expenses')}
+            <span className="inline-block h-[3px] w-4 rounded-full bg-[#c0614a]" /> {t('expenses')}
           </span>
         </div>
       </div>
@@ -155,7 +155,7 @@ export function CashflowChartCard() {
         {chartData.length > 0 ? (
           <CashflowChart data={chartData} />
         ) : (
-          <div className="flex h-48 items-center justify-center text-sm text-slate-400">
+          <div className="flex h-48 items-center justify-center text-sm text-ink-400">
             {t('noData')}
           </div>
         )}

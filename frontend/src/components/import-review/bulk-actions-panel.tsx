@@ -118,8 +118,8 @@ export function BulkActionsPanel({ items, onBulkAction }: BulkActionsPanelProps)
           />
           
           {/* Dropdown Menu */}
-          <div className="absolute right-0 top-full mt-1 z-50 w-64 bg-white border border-gray-200 rounded-lg shadow-lg py-1">
-            <div className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100">
+          <div className="absolute right-0 top-full mt-1 z-50 w-64 bg-white border border-ink-200 rounded-lg shadow-lg py-1">
+            <div className="px-3 py-2 text-xs font-medium text-ink-500 border-b border-ink-100">
               {tImport('review.bulk.summary', { pending: getActionCount(), total: items.length })}
             </div>
 
@@ -173,7 +173,7 @@ export function BulkActionsPanel({ items, onBulkAction }: BulkActionsPanelProps)
             {availableActions.autoResolveAll && (
               <button
                 onClick={handleAutoResolve}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-purple-50 flex items-center gap-2 text-purple-700"
+                className="w-full px-3 py-2 text-left text-sm hover:bg-primary-50 flex items-center gap-2 text-primary-700"
               >
                 <EllipsisHorizontalIcon className="w-4 h-4" />
                 <span>{tImport('review.bulk.autoResolveAll', {
@@ -182,7 +182,7 @@ export function BulkActionsPanel({ items, onBulkAction }: BulkActionsPanelProps)
               </button>
             )}
 
-            <div className="border-t border-gray-100 mt-1 pt-1">
+            <div className="border-t border-ink-100 mt-1 pt-1">
               {/* Clear All Decisions - reset to pending */}
               {items.some(item => item.reviewDecision !== ConflictResolution.Pending) && (
                 <button
@@ -204,7 +204,7 @@ export function BulkActionsPanel({ items, onBulkAction }: BulkActionsPanelProps)
               {availableActions.skipAll && getActionCount() > 0 && (
                 <button
                   onClick={() => handleBulkAction(ConflictResolution.Skip)}
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-gray-700"
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-ink-50 flex items-center gap-2 text-ink-700"
                 >
                   <XMarkIcon className="w-4 h-4" />
                   <span>{tImport('review.bulk.skipAllPending', { count: getActionCount() })}</span>

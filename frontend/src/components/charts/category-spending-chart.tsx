@@ -35,16 +35,16 @@ interface CategorySpendingChartProps {
 
 // Default color palette for categories without colors
 const DEFAULT_COLORS = [
-  '#8B5CF6', // purple
-  '#EC4899', // pink
+  '#2f8170', // teal
+  '#c0614a', // coral
   '#10B981', // green
-  '#F59E0B', // yellow
-  '#3B82F6', // blue
+  '#F59E0B', // amber
+  '#5b7fb5', // slate blue
   '#EF4444', // red
-  '#6366F1', // indigo
-  '#14B8A6', // teal
+  '#c08a30', // gold
+  '#b85670', // warm rose
   '#F97316', // orange
-  '#84CC16', // lime
+  '#6a9b5e', // sage
 ];
 
 export function CategorySpendingChart({ data, title }: CategorySpendingChartProps) {
@@ -65,15 +65,15 @@ export function CategorySpendingChart({ data, title }: CategorySpendingChartProp
     if (active && payload && payload[0]) {
       const data = payload[0].payload;
       return (
-        <div className="rounded-xl border border-violet-100/60 bg-white p-3 shadow-lg shadow-violet-200/20">
-          <p className="font-[var(--font-dash-sans)] font-semibold text-slate-900">{data.displayName}</p>
-          <p className="font-[var(--font-dash-mono)] text-sm text-slate-600">
+        <div className="rounded-xl border border-ink-200 bg-white p-3 shadow-lg shadow-primary-200/20">
+          <p className="font-[var(--font-dash-sans)] font-semibold text-ink-900">{data.displayName}</p>
+          <p className="font-[var(--font-dash-mono)] text-sm text-ink-600">
             Amount: {formatCurrency(data.value)}
           </p>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-ink-600">
             Percentage: {data.percentage.toFixed(1)}%
           </p>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-ink-600">
             Transactions: {data.transactionCount}
           </p>
         </div>
@@ -93,7 +93,7 @@ export function CategorySpendingChart({ data, title }: CategorySpendingChartProp
   if (!data || data.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-slate-500">{t('noSpendingData')}</p>
+        <p className="text-ink-500">{t('noSpendingData')}</p>
       </div>
     );
   }
@@ -101,7 +101,7 @@ export function CategorySpendingChart({ data, title }: CategorySpendingChartProp
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold text-slate-900">{displayTitle}</h3>
+        <h3 className="font-[var(--font-dash-sans)] text-lg font-semibold text-ink-900">{displayTitle}</h3>
         <div className="flex gap-2">
           <Button
             variant={chartType === 'pie' ? 'primary' : 'secondary'}
@@ -135,7 +135,7 @@ export function CategorySpendingChart({ data, title }: CategorySpendingChartProp
                 labelLine={false}
                 label={renderCustomLabel}
                 outerRadius={100}
-                fill="#8884d8"
+                fill="#2f8170"
                 dataKey="value"
                 nameKey="displayName"
               >
@@ -181,15 +181,15 @@ export function CategorySpendingChart({ data, title }: CategorySpendingChartProp
 
       {/* Summary Stats */}
       <div className="grid grid-cols-2 gap-4 text-sm">
-        <div className="bg-slate-50/80 rounded-xl p-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{t('totalSpending')}</p>
-          <p className="mt-0.5 font-[var(--font-dash-mono)] text-lg font-bold text-slate-900">
+        <div className="bg-ink-50/80 rounded-xl p-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">{t('totalSpending')}</p>
+          <p className="mt-0.5 font-[var(--font-dash-mono)] text-lg font-bold text-ink-900">
             {formatCurrency(chartData.reduce((sum, item) => sum + item.value, 0))}
           </p>
         </div>
-        <div className="bg-slate-50/80 rounded-xl p-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{t('categories')}</p>
-          <p className="mt-0.5 font-[var(--font-dash-mono)] text-lg font-bold text-slate-900">{data.length}</p>
+        <div className="bg-ink-50/80 rounded-xl p-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">{t('categories')}</p>
+          <p className="mt-0.5 font-[var(--font-dash-mono)] text-lg font-bold text-ink-900">{data.length}</p>
         </div>
       </div>
     </div>

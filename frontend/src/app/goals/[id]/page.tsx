@@ -137,16 +137,16 @@ export default function GoalDetailPage() {
     return (
       <AppLayout>
         <div className="space-y-6">
-          <Skeleton className="h-8 w-48 rounded-[26px] border border-violet-100/80 bg-white/80" />
-          <Skeleton className="h-12 w-80 rounded-[26px] border border-violet-100/80 bg-white/80" />
-          <Skeleton className="h-40 rounded-[26px] border border-violet-100/80 bg-white/80" />
+          <Skeleton className="h-8 w-48 rounded-[26px] border border-ink-200 bg-white/80" />
+          <Skeleton className="h-12 w-80 rounded-[26px] border border-ink-200 bg-white/80" />
+          <Skeleton className="h-40 rounded-[26px] border border-ink-200 bg-white/80" />
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <Skeleton className="h-24 rounded-2xl border border-violet-100/80 bg-white/80" />
-            <Skeleton className="h-24 rounded-2xl border border-violet-100/80 bg-white/80" />
-            <Skeleton className="h-24 rounded-2xl border border-violet-100/80 bg-white/80" />
-            <Skeleton className="h-24 rounded-2xl border border-violet-100/80 bg-white/80" />
+            <Skeleton className="h-24 rounded-2xl border border-ink-200 bg-white/80" />
+            <Skeleton className="h-24 rounded-2xl border border-ink-200 bg-white/80" />
+            <Skeleton className="h-24 rounded-2xl border border-ink-200 bg-white/80" />
+            <Skeleton className="h-24 rounded-2xl border border-ink-200 bg-white/80" />
           </div>
-          <Skeleton className="h-48 rounded-[24px] border border-violet-100/80 bg-white/80" />
+          <Skeleton className="h-48 rounded-[24px] border border-ink-200 bg-white/80" />
         </div>
       </AppLayout>
     );
@@ -183,7 +183,7 @@ export default function GoalDetailPage() {
               >
                 <Icon className={cn('h-6 w-6', config.accentColor.text)} />
               </div>
-              <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-slate-900">
+              <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-ink-900">
                 {goal.name}
               </h1>
             </div>
@@ -200,21 +200,23 @@ export default function GoalDetailPage() {
               >
                 {t(`trackingState.${tracking}`)}
               </span>
-              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-medium text-slate-600">
+              <span className="inline-flex items-center rounded-full border border-ink-200 bg-ink-50 px-2.5 py-0.5 text-xs font-medium text-ink-600">
                 {t(`goalTypes.${goal.goalType}`)}
               </span>
               {stage && (
-                <span className="inline-flex items-center rounded-full border border-violet-200 bg-violet-50 px-2.5 py-0.5 text-xs font-medium text-violet-700">
+                <span className="inline-flex items-center rounded-full border border-ink-200 bg-primary-50 px-2.5 py-0.5 text-xs font-medium text-primary-700">
                   {t(`stages.${stage.key}`)}
                 </span>
               )}
               <button
                 onClick={handleTogglePin}
-                className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-violet-50 hover:text-violet-600"
+                aria-pressed={goal.isPinned}
+                aria-label={goal.isPinned ? t('unpinGoal') : t('pinGoal')}
+                className="rounded-lg p-1.5 text-ink-400 transition-colors hover:bg-primary-50 hover:text-primary-600"
                 title={goal.isPinned ? t('unpinGoal') : t('pinGoal')}
               >
                 {goal.isPinned ? (
-                  <MapPinSolidIcon className="h-4.5 w-4.5 text-violet-600" />
+                  <MapPinSolidIcon className="h-4.5 w-4.5 text-primary-600" />
                 ) : (
                   <MapPinOutlineIcon className="h-4.5 w-4.5" />
                 )}
@@ -222,7 +224,7 @@ export default function GoalDetailPage() {
             </div>
 
             {goal.description && (
-              <p className="text-[15px] text-slate-500">{goal.description}</p>
+              <p className="text-[15px] text-ink-500">{goal.description}</p>
             )}
           </div>
 
@@ -256,7 +258,7 @@ export default function GoalDetailPage() {
         </div>
 
         {/* Progress Hero Section */}
-        <div className="rounded-[26px] border border-violet-100/60 bg-white/90 p-6 shadow-lg shadow-violet-200/20 backdrop-blur-xs">
+        <div className="rounded-[26px] border border-ink-200 bg-white/90 p-6 shadow-lg shadow-primary-200/20 backdrop-blur-xs">
           <div className="space-y-4">
             <div className="flex items-end justify-between">
               <div>
@@ -266,23 +268,23 @@ export default function GoalDetailPage() {
                       {hero.label}
                     </span>
                     {hero.subtext && (
-                      <span className="ml-2 text-xs text-slate-400">{hero.subtext}</span>
+                      <span className="ml-2 text-xs text-ink-400">{hero.subtext}</span>
                     )}
                   </div>
                 )}
-                <span className="text-sm text-slate-500">{t('detail.progress')}</span>
+                <span className="text-sm text-ink-500">{t('detail.progress')}</span>
               </div>
-              <span className="font-[var(--font-dash-sans)] text-4xl font-bold tracking-tight text-slate-900">
+              <span className="font-[var(--font-dash-sans)] text-4xl font-bold tracking-tight text-ink-900">
                 {goal.progressPercentage.toFixed(1)}%
               </span>
             </div>
-            <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+            <div className="h-3 overflow-hidden rounded-full bg-ink-100">
               <div
                 className={cn('h-full rounded-full transition-all duration-500', config.accentColor.bar)}
                 style={{ width: `${Math.min(goal.progressPercentage, 100)}%` }}
               />
             </div>
-            <div className="flex justify-between text-sm text-slate-500">
+            <div className="flex justify-between text-sm text-ink-500">
               <span>
                 {formatCurrency(goal.currentAmount)} / {formatCurrency(goal.targetAmount)}
               </span>
@@ -295,40 +297,40 @@ export default function GoalDetailPage() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <article className="rounded-2xl border border-slate-100 bg-white/90 p-4 shadow-sm backdrop-blur-xs">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+          <article className="rounded-2xl border border-ink-100 bg-white/90 p-4 shadow-sm backdrop-blur-xs">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-400">
               {t('detail.currentAmount')}
             </p>
-            <p className="mt-1 text-xl font-bold text-slate-900">
+            <p className="mt-1 text-xl font-bold text-ink-900">
               {formatCurrency(goal.currentAmount)}
             </p>
           </article>
-          <article className="rounded-2xl border border-slate-100 bg-white/90 p-4 shadow-sm backdrop-blur-xs">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+          <article className="rounded-2xl border border-ink-100 bg-white/90 p-4 shadow-sm backdrop-blur-xs">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-400">
               {t('detail.targetAmount')}
             </p>
-            <p className="mt-1 text-xl font-bold text-slate-900">
+            <p className="mt-1 text-xl font-bold text-ink-900">
               {formatCurrency(goal.targetAmount)}
             </p>
           </article>
-          <article className="rounded-2xl border border-slate-100 bg-white/90 p-4 shadow-sm backdrop-blur-xs">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+          <article className="rounded-2xl border border-ink-100 bg-white/90 p-4 shadow-sm backdrop-blur-xs">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-400">
               {t('detail.remaining')}
             </p>
-            <p className={cn('mt-1 text-xl font-bold', goal.remainingAmount <= 0 ? 'text-emerald-600' : 'text-slate-900')}>
+            <p className={cn('mt-1 text-xl font-bold', goal.remainingAmount <= 0 ? 'text-emerald-600' : 'text-ink-900')}>
               {formatCurrency(goal.remainingAmount)}
             </p>
           </article>
-          <article className="rounded-2xl border border-slate-100 bg-white/90 p-4 shadow-sm backdrop-blur-xs">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+          <article className="rounded-2xl border border-ink-100 bg-white/90 p-4 shadow-sm backdrop-blur-xs">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-400">
               {t('detail.deadline')}
             </p>
             {goal.deadline ? (
               <>
-                <p className="mt-1 text-xl font-bold text-slate-900">
+                <p className="mt-1 text-xl font-bold text-ink-900">
                   {formatDate(goal.deadline)}
                 </p>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-ink-400 mt-0.5">
                   {goal.daysRemaining !== undefined && goal.daysRemaining > 0
                     ? goal.daysRemaining === 1
                       ? t('detail.daysRemainingOne')
@@ -339,7 +341,7 @@ export default function GoalDetailPage() {
                 </p>
               </>
             ) : (
-              <p className="mt-1 text-base text-slate-400">{t('detail.noDeadline')}</p>
+              <p className="mt-1 text-base text-ink-400">{t('detail.noDeadline')}</p>
             )}
           </article>
         </div>
@@ -350,58 +352,58 @@ export default function GoalDetailPage() {
         )}
 
         {/* Details Section */}
-        <div className="rounded-[24px] border border-slate-100 bg-white/90 p-6 shadow-sm backdrop-blur-xs">
+        <div className="rounded-[24px] border border-ink-100 bg-white/90 p-6 shadow-sm backdrop-blur-xs">
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-400">
                 {t('detail.goalType')}
               </p>
               <div className="mt-1 flex items-center gap-2">
                 <Icon className={cn('h-4 w-4', config.accentColor.text)} />
-                <span className="text-sm font-medium text-slate-700">
+                <span className="text-sm font-medium text-ink-700">
                   {t(`goalTypes.${goal.goalType}`)}
                 </span>
               </div>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-400">
                 {t('detail.status')}
               </p>
-              <p className="mt-1 text-sm font-medium text-slate-700">
+              <p className="mt-1 text-sm font-medium text-ink-700">
                 {t(`statuses.${goal.status}`)}
               </p>
             </div>
             {goal.linkedAccountName && (
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-400">
                   {t('detail.linkedAccount')}
                 </p>
                 <div className="mt-1 flex items-center gap-2">
-                  <LinkIcon className="h-4 w-4 text-slate-400" />
-                  <span className="text-sm font-medium text-slate-700">
+                  <LinkIcon className="h-4 w-4 text-ink-400" />
+                  <span className="text-sm font-medium text-ink-700">
                     {goal.linkedAccountName}
                   </span>
                 </div>
               </div>
             )}
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-400">
                 {t('detail.createdAt')}
               </p>
               <div className="mt-1 flex items-center gap-2">
-                <CalendarDaysIcon className="h-4 w-4 text-slate-400" />
-                <span className="text-sm font-medium text-slate-700">
+                <CalendarDaysIcon className="h-4 w-4 text-ink-400" />
+                <span className="text-sm font-medium text-ink-700">
                   {formatDate(goal.createdAt)}
                 </span>
               </div>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-400">
                 {t('detail.updatedAt')}
               </p>
               <div className="mt-1 flex items-center gap-2">
-                <CalendarDaysIcon className="h-4 w-4 text-slate-400" />
-                <span className="text-sm font-medium text-slate-700">
+                <CalendarDaysIcon className="h-4 w-4 text-ink-400" />
+                <span className="text-sm font-medium text-ink-700">
                   {formatDate(goal.updatedAt)}
                 </span>
               </div>
