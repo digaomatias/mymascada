@@ -1,4 +1,5 @@
 import { chromium, FullConfig } from '@playwright/test';
+import { API_BASE_URL } from './helpers/config';
 
 /**
  * Global setup for MyMascada E2E tests
@@ -6,9 +7,9 @@ import { chromium, FullConfig } from '@playwright/test';
  */
 async function globalSetup(config: FullConfig) {
   console.log('🚀 Starting MyMascada E2E Test Global Setup');
-  
+
   const { baseURL } = config.projects[0].use;
-  
+
   // Launch browser for setup
   const browser = await chromium.launch();
   const page = await browser.newPage();
@@ -16,13 +17,12 @@ async function globalSetup(config: FullConfig) {
   try {
     // Wait for both frontend and backend to be ready
     console.log('⏳ Waiting for frontend to be ready...');
-    await page.goto(baseURL || 'http://localhost:3000', { 
+    await page.goto(baseURL || 'http://localhost:3000', {
       waitUntil: 'networkidle',
-      timeout: 60000 
+      timeout: 60000
     });
-    
+
     console.log('⏳ Waiting for backend API to be ready...');
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://localhost:5126';
 
     // Test backend health endpoint
     let apiReady = false;
@@ -31,8 +31,9 @@ async function globalSetup(config: FullConfig) {
 
     while (!apiReady && attempts < maxAttempts) {
       try {
-        await page.request.get(`${apiBaseUrl}/api/v1/auth/health`, {
+        await page.request.get(`${API_BASE_URL}/auth/health`, {
           ignoreHTTPSErrors: true,
+          failOnStatusCode: true,
           timeout: 5000
         });
         apiReady = true;
@@ -43,7 +44,7 @@ async function globalSetup(config: FullConfig) {
         await page.waitForTimeout(2000);
       }
     }
-    
+
     if (!apiReady) {
       throw new Error('❌ Backend API failed to become ready within timeout period');
     }
@@ -52,18 +53,18 @@ async function globalSetup(config: FullConfig) {
     console.log('👤 Ensuring test user exists...');
     try {
       // Try to login first to see if user exists
-      const loginResponse = await page.request.post(`${apiBaseUrl}/api/v1/auth/login`, {
+      const loginResponse = await page.request.post(`${API_BASE_URL}/auth/login`, {
         data: {
           email: 'automation@example.com',
           password: 'SecureLogin123!'
         },
         ignoreHTTPSErrors: true
       });
-      
+
       if (!loginResponse.ok()) {
         // User doesn't exist, create it
         console.log('👤 Creating test user...');
-        const registerResponse = await page.request.post(`${apiBaseUrl}/api/v1/auth/register`, {
+        const registerResponse = await page.request.post(`${API_BASE_URL}/auth/register`, {
           data: {
             email: 'automation@example.com',
             username: 'automation',
@@ -74,7 +75,7 @@ async function globalSetup(config: FullConfig) {
           },
           ignoreHTTPSErrors: true
         });
-        
+
         if (!registerResponse.ok()) {
           const errorText = await registerResponse.text();
           console.log('⚠️ User registration failed, but may already exist:', errorText);
@@ -93,18 +94,18 @@ async function globalSetup(config: FullConfig) {
       console.log('🧹 Cleaning up existing test data...');
       try {
         // Login to get auth token
-        const loginResponse = await page.request.post(`${apiBaseUrl}/api/v1/auth/login`, {
+        const loginResponse = await page.request.post(`${API_BASE_URL}/auth/login`, {
           data: {
             email: 'automation@example.com',
             password: 'SecureLogin123!'
           },
           ignoreHTTPSErrors: true
         });
-        
+
         if (loginResponse.ok()) {
           const loginData = await loginResponse.json();
           const token = loginData.token;
-          
+
           // Delete test rules (if any exist)
           // Note: This would require implementing a cleanup endpoint
           // For now, we'll just log that cleanup would happen here

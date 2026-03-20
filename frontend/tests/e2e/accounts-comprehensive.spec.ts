@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { TestUtils } from '../test-utils';
+import { API_BASE_URL } from './helpers/config';
 
 test.describe('Comprehensive Account Management Tests', () => {
   let utils: TestUtils;
@@ -12,11 +13,11 @@ test.describe('Comprehensive Account Management Tests', () => {
     test('should create checking account with valid data', async ({ page }) => {
       // Register and authenticate user
       const user = await utils.registerAndLogin();
-      
+
       // Create checking account
-      const accountResponse = await page.evaluate(async () => {
+      const accountResponse = await page.evaluate(async (apiBaseUrl) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/v1/accounts', {
+        const response = await fetch(`${apiBaseUrl}/accounts`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -35,7 +36,7 @@ test.describe('Comprehensive Account Management Tests', () => {
           status: response.status,
           data: response.ok ? await response.json() : await response.text(),
         };
-      });
+      }, API_BASE_URL);
 
       expect(accountResponse.status).toBe(201);
       expect(accountResponse.data.name).toBe('Main Checking Account');
@@ -45,18 +46,18 @@ test.describe('Comprehensive Account Management Tests', () => {
       expect(accountResponse.data.currency).toBe('USD');
       expect(accountResponse.data.institution).toBe('Test Bank');
       expect(accountResponse.data.notes).toBe('Primary checking account for daily expenses');
-      
+
       console.log('✅ Checking account created successfully');
     });
 
     test('should create savings account with different parameters', async ({ page }) => {
       // Register and authenticate user
       const user = await utils.registerAndLogin();
-      
+
       // Create savings account
-      const accountResponse = await page.evaluate(async () => {
+      const accountResponse = await page.evaluate(async (apiBaseUrl) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/v1/accounts', {
+        const response = await fetch(`${apiBaseUrl}/accounts`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -75,25 +76,25 @@ test.describe('Comprehensive Account Management Tests', () => {
           status: response.status,
           data: response.ok ? await response.json() : await response.text(),
         };
-      });
+      }, API_BASE_URL);
 
       expect(accountResponse.status).toBe(201);
       expect(accountResponse.data.name).toBe('Emergency Savings');
       expect(accountResponse.data.type).toBe(1);
       expect(accountResponse.data.currentBalance).toBe(0);
       expect(accountResponse.data.institution).toBe('Credit Union');
-      
+
       console.log('✅ Savings account created successfully');
     });
 
     test('should create credit card account with negative balance', async ({ page }) => {
       // Register and authenticate user
       const user = await utils.registerAndLogin();
-      
+
       // Create credit card account
-      const accountResponse = await page.evaluate(async () => {
+      const accountResponse = await page.evaluate(async (apiBaseUrl) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/v1/accounts', {
+        const response = await fetch(`${apiBaseUrl}/accounts`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -112,25 +113,25 @@ test.describe('Comprehensive Account Management Tests', () => {
           status: response.status,
           data: response.ok ? await response.json() : await response.text(),
         };
-      });
+      }, API_BASE_URL);
 
       expect(accountResponse.status).toBe(201);
       expect(accountResponse.data.name).toBe('Cashback Credit Card');
       expect(accountResponse.data.type).toBe(2);
       expect(accountResponse.data.currentBalance).toBe(0);
       expect(accountResponse.data.institution).toBe('Bank Credit Services');
-      
+
       console.log('✅ Credit card account created successfully');
     });
 
     test('should create investment account', async ({ page }) => {
       // Register and authenticate user
       const user = await utils.registerAndLogin();
-      
+
       // Create investment account
-      const accountResponse = await page.evaluate(async () => {
+      const accountResponse = await page.evaluate(async (apiBaseUrl) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/v1/accounts', {
+        const response = await fetch(`${apiBaseUrl}/accounts`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -149,25 +150,25 @@ test.describe('Comprehensive Account Management Tests', () => {
           status: response.status,
           data: response.ok ? await response.json() : await response.text(),
         };
-      });
+      }, API_BASE_URL);
 
       expect(accountResponse.status).toBe(201);
       expect(accountResponse.data.name).toBe('401k Retirement Account');
       expect(accountResponse.data.type).toBe(3);
       expect(accountResponse.data.currentBalance).toBe(0);
       expect(accountResponse.data.institution).toBe('Investment Firm');
-      
+
       console.log('✅ Investment account created successfully');
     });
 
     test('should create loan account with negative balance', async ({ page }) => {
       // Register and authenticate user
       const user = await utils.registerAndLogin();
-      
+
       // Create loan account
-      const accountResponse = await page.evaluate(async () => {
+      const accountResponse = await page.evaluate(async (apiBaseUrl) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/v1/accounts', {
+        const response = await fetch(`${apiBaseUrl}/accounts`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -186,25 +187,25 @@ test.describe('Comprehensive Account Management Tests', () => {
           status: response.status,
           data: response.ok ? await response.json() : await response.text(),
         };
-      });
+      }, API_BASE_URL);
 
       expect(accountResponse.status).toBe(201);
       expect(accountResponse.data.name).toBe('Student Loan');
       expect(accountResponse.data.type).toBe(4);
       expect(accountResponse.data.currentBalance).toBe(0);
       expect(accountResponse.data.institution).toBe('Education Lending Corp');
-      
+
       console.log('✅ Loan account created successfully');
     });
 
     test('should create cash account', async ({ page }) => {
       // Register and authenticate user
       const user = await utils.registerAndLogin();
-      
+
       // Create cash account
-      const accountResponse = await page.evaluate(async () => {
+      const accountResponse = await page.evaluate(async (apiBaseUrl) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/v1/accounts', {
+        const response = await fetch(`${apiBaseUrl}/accounts`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -222,13 +223,13 @@ test.describe('Comprehensive Account Management Tests', () => {
           status: response.status,
           data: response.ok ? await response.json() : await response.text(),
         };
-      });
+      }, API_BASE_URL);
 
       expect(accountResponse.status).toBe(201);
       expect(accountResponse.data.name).toBe('Cash Wallet');
       expect(accountResponse.data.type).toBe(5);
       expect(accountResponse.data.currentBalance).toBe(0);
-      
+
       console.log('✅ Cash account created successfully');
     });
   });
@@ -237,11 +238,11 @@ test.describe('Comprehensive Account Management Tests', () => {
     test('should reject account creation with missing required fields', async ({ page }) => {
       // Register and authenticate user
       const user = await utils.registerAndLogin();
-      
+
       // Try to create account without name
-      const accountResponse = await page.evaluate(async () => {
+      const accountResponse = await page.evaluate(async (apiBaseUrl) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/v1/accounts', {
+        const response = await fetch(`${apiBaseUrl}/accounts`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -257,7 +258,7 @@ test.describe('Comprehensive Account Management Tests', () => {
           status: response.status,
           data: response.ok ? await response.json() : await response.text(),
         };
-      });
+      }, API_BASE_URL);
 
       // Should reject incomplete account
       expect(accountResponse.status).toBeGreaterThanOrEqual(400);
@@ -267,11 +268,11 @@ test.describe('Comprehensive Account Management Tests', () => {
     test('should handle very large balance amounts', async ({ page }) => {
       // Register and authenticate user
       const user = await utils.registerAndLogin();
-      
+
       // Create account (API ignores initial balance, so test account creation)
-      const accountResponse = await page.evaluate(async () => {
+      const accountResponse = await page.evaluate(async (apiBaseUrl) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/v1/accounts', {
+        const response = await fetch(`${apiBaseUrl}/accounts`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -288,7 +289,7 @@ test.describe('Comprehensive Account Management Tests', () => {
           status: response.status,
           data: response.ok ? await response.json() : await response.text(),
         };
-      });
+      }, API_BASE_URL);
 
       expect(accountResponse.status).toBe(201);
       expect(accountResponse.data.name).toBe('Large Balance Account');
@@ -299,7 +300,7 @@ test.describe('Comprehensive Account Management Tests', () => {
     test('should prevent XSS in account names and notes', async ({ page }) => {
       // Register and authenticate user
       const user = await utils.registerAndLogin();
-      
+
       // Track any alert dialogs that might fire from XSS
       const dialogs: string[] = [];
       page.on('dialog', dialog => {
@@ -309,9 +310,9 @@ test.describe('Comprehensive Account Management Tests', () => {
 
       // Try to create account with XSS payload
       const xssPayload = '<script>alert("xss")</script>Evil Account';
-      const accountResponse = await page.evaluate(async (xssName) => {
+      const accountResponse = await page.evaluate(async ({ apiBaseUrl, xssName }) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/v1/accounts', {
+        const response = await fetch(`${apiBaseUrl}/accounts`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -328,7 +329,7 @@ test.describe('Comprehensive Account Management Tests', () => {
           status: response.status,
           data: response.ok ? await response.json() : await response.text(),
         };
-      }, xssPayload);
+      }, { apiBaseUrl: API_BASE_URL, xssName: xssPayload });
 
       console.log('Account creation response:', accountResponse);
 
@@ -337,7 +338,7 @@ test.describe('Comprehensive Account Management Tests', () => {
         // Verify the account was created but XSS payload should be sanitized
         const accountName = accountResponse.data.name;
         console.log('Account name from API:', accountName);
-        
+
         // SECURITY TEST: Account name should be sanitized (no script tags)
         // Note: This currently FAILS - indicating a real XSS vulnerability in the backend!
         try {
@@ -347,22 +348,22 @@ test.describe('Comprehensive Account Management Tests', () => {
         } catch (error) {
           console.log('⚠️ SECURITY VULNERABILITY DETECTED: XSS payload was NOT sanitized!');
           console.log('Account name contains dangerous script:', accountName);
-          
+
           // For now, we'll document this as a known security issue
           // In a real application, this would be a critical bug to fix
           console.log('This test documents a real security vulnerability that needs to be addressed');
         }
-        
+
         // Even if API doesn't sanitize, frontend rendering should prevent XSS execution
         // Test that no alerts fired during account creation or processing
         await page.waitForTimeout(1000);
         expect(dialogs).toHaveLength(0);
-        
+
       } else {
         // If account creation failed, XSS was likely rejected - that's good
         console.log('Account creation with XSS payload was rejected:', accountResponse);
       }
-      
+
       console.log('✅ XSS in account data handled safely');
     });
   });
@@ -371,11 +372,11 @@ test.describe('Comprehensive Account Management Tests', () => {
     test('should update account details', async ({ page }) => {
       // Register and authenticate user
       const user = await utils.registerAndLogin();
-      
+
       // Create initial account
-      const accountResponse = await page.evaluate(async () => {
+      const accountResponse = await page.evaluate(async (apiBaseUrl) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/v1/accounts', {
+        const response = await fetch(`${apiBaseUrl}/accounts`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -389,12 +390,12 @@ test.describe('Comprehensive Account Management Tests', () => {
           }),
         });
         return response.json();
-      });
+      }, API_BASE_URL);
 
       // Update account details
-      const updateResponse = await page.evaluate(async (accountId) => {
+      const updateResponse = await page.evaluate(async ({ apiBaseUrl, accountId }) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch(`https://localhost:5126/api/v1/accounts/${accountId}`, {
+        const response = await fetch(`${apiBaseUrl}/accounts/${accountId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -413,24 +414,24 @@ test.describe('Comprehensive Account Management Tests', () => {
           status: response.status,
           data: response.ok ? await response.json() : await response.text(),
         };
-      }, accountResponse.id);
+      }, { apiBaseUrl: API_BASE_URL, accountId: accountResponse.id });
 
       expect(updateResponse.status).toBe(200);
       expect(updateResponse.data.name).toBe('Updated Account Name');
       expect(updateResponse.data.institution).toBe('New Bank');
       // Balance not updated via API
-      
+
       console.log('✅ Account updated successfully');
     });
 
     test('should retrieve account details', async ({ page }) => {
       // Register and authenticate user
       const user = await utils.registerAndLogin();
-      
+
       // Create account
-      const accountResponse = await page.evaluate(async () => {
+      const accountResponse = await page.evaluate(async (apiBaseUrl) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/v1/accounts', {
+        const response = await fetch(`${apiBaseUrl}/accounts`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -444,12 +445,12 @@ test.describe('Comprehensive Account Management Tests', () => {
           }),
         });
         return response.json();
-      });
+      }, API_BASE_URL);
 
       // Retrieve account details
-      const getResponse = await page.evaluate(async (accountId) => {
+      const getResponse = await page.evaluate(async ({ apiBaseUrl, accountId }) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch(`https://localhost:5126/api/v1/accounts/${accountId}`, {
+        const response = await fetch(`${apiBaseUrl}/accounts/${accountId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -458,28 +459,28 @@ test.describe('Comprehensive Account Management Tests', () => {
           status: response.status,
           data: response.ok ? await response.json() : await response.text(),
         };
-      }, accountResponse.id);
+      }, { apiBaseUrl: API_BASE_URL, accountId: accountResponse.id });
 
       expect(getResponse.status).toBe(200);
       expect(getResponse.data.id).toBe(accountResponse.id);
       expect(getResponse.data.name).toBe('Test Retrieval Account');
       expect(getResponse.data.currentBalance).toBe(0); // API sets to 0
-      
+
       console.log('✅ Account retrieved successfully');
     });
 
     test('should list all user accounts', async ({ page }) => {
       // Register and authenticate user
       const user = await utils.registerAndLogin();
-      
+
       // Create multiple accounts
       const accountNames = ['Account 1', 'Account 2', 'Account 3'];
       const createdAccounts = [];
 
       for (const name of accountNames) {
-        const accountResponse = await page.evaluate(async (accountName) => {
+        const accountResponse = await page.evaluate(async ({ apiBaseUrl, accountName }) => {
           const token = localStorage.getItem('auth_token');
-          const response = await fetch('https://localhost:5126/api/v1/accounts', {
+          const response = await fetch(`${apiBaseUrl}/accounts`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -492,15 +493,15 @@ test.describe('Comprehensive Account Management Tests', () => {
             }),
           });
           return response.json();
-        }, name);
-        
+        }, { apiBaseUrl: API_BASE_URL, accountName: name });
+
         createdAccounts.push(accountResponse);
       }
 
       // List all accounts
-      const listResponse = await page.evaluate(async () => {
+      const listResponse = await page.evaluate(async (apiBaseUrl) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/v1/accounts', {
+        const response = await fetch(`${apiBaseUrl}/accounts`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -509,18 +510,18 @@ test.describe('Comprehensive Account Management Tests', () => {
           status: response.status,
           data: response.ok ? await response.json() : await response.text(),
         };
-      });
+      }, API_BASE_URL);
 
       expect(listResponse.status).toBe(200);
       expect(Array.isArray(listResponse.data)).toBe(true);
       expect(listResponse.data.length).toBeGreaterThanOrEqual(3);
-      
+
       // Verify created accounts are in the list
       const accountNamesInResponse = listResponse.data.map((acc: any) => acc.name);
       for (const name of accountNames) {
         expect(accountNamesInResponse).toContain(name);
       }
-      
+
       console.log('✅ Account list retrieved successfully');
     });
   });
@@ -529,29 +530,29 @@ test.describe('Comprehensive Account Management Tests', () => {
     test('should display accounts page for authenticated user', async ({ page }) => {
       // Register and authenticate user
       const user = await utils.registerAndLogin();
-      
+
       // Navigate to accounts page
       await utils.navigateTo('/accounts');
-      
+
       // Should display accounts page
       await expect(page).toHaveURL('/accounts');
-      
+
       // Should see accounts page content
       // Note: Checking for flexible content that should exist
       const pageContent = await page.textContent('body');
       expect(pageContent).toBeTruthy();
-      
+
       console.log('✅ Accounts page accessible to authenticated user');
     });
 
     test('should show account creation workflow', async ({ page }) => {
       // Register and authenticate user
       const user = await utils.registerAndLogin();
-      
+
       // Create an account via API so we have something to display
-      await page.evaluate(async () => {
+      await page.evaluate(async (apiBaseUrl) => {
         const token = localStorage.getItem('auth_token');
-        await fetch('https://localhost:5126/api/v1/accounts', {
+        await fetch(`${apiBaseUrl}/accounts`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -563,14 +564,14 @@ test.describe('Comprehensive Account Management Tests', () => {
             currentBalance: 1000.00,
           }),
         });
-      });
+      }, API_BASE_URL);
 
       // Navigate to accounts page
       await utils.navigateTo('/accounts');
-      
+
       // Should see account data displayed
       await expect(page.getByText(/display test account/i)).toBeVisible();
-      
+
       console.log('✅ Account data displayed on accounts page');
     });
   });
@@ -579,7 +580,7 @@ test.describe('Comprehensive Account Management Tests', () => {
     test('should create accounts with different currencies', async ({ page }) => {
       // Register and authenticate user
       const user = await utils.registerAndLogin();
-      
+
       const currencies = [
         { code: 'USD', amount: 1000.00 },
         { code: 'EUR', amount: 850.00 },
@@ -588,9 +589,9 @@ test.describe('Comprehensive Account Management Tests', () => {
       ];
 
       for (const currency of currencies) {
-        const accountResponse = await page.evaluate(async (data) => {
+        const accountResponse = await page.evaluate(async ({ apiBaseUrl, data }) => {
           const token = localStorage.getItem('auth_token');
-          const response = await fetch('https://localhost:5126/api/v1/accounts', {
+          const response = await fetch(`${apiBaseUrl}/accounts`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -607,12 +608,12 @@ test.describe('Comprehensive Account Management Tests', () => {
             status: response.status,
             data: response.ok ? await response.json() : await response.text(),
           };
-        }, currency);
+        }, { apiBaseUrl: API_BASE_URL, data: currency });
 
         expect(accountResponse.status).toBe(201);
         expect(accountResponse.data.currency).toBe(currency.code);
         expect(accountResponse.data.currentBalance).toBe(0); // API sets to 0
-        
+
         console.log(`✅ ${currency.code} account created successfully`);
       }
     });
@@ -624,10 +625,10 @@ test.describe('Comprehensive Account Management Tests', () => {
       const page1 = await browser.newPage();
       const utils1 = new TestUtils(page1);
       const user1 = await utils1.registerAndLogin();
-      
-      const account1Response = await page1.evaluate(async () => {
+
+      const account1Response = await page1.evaluate(async (apiBaseUrl) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch('https://localhost:5126/api/v1/accounts', {
+        const response = await fetch(`${apiBaseUrl}/accounts`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -640,7 +641,7 @@ test.describe('Comprehensive Account Management Tests', () => {
           }),
         });
         return response.json();
-      });
+      }, API_BASE_URL);
 
       // Create second user
       const page2 = await browser.newPage();
@@ -648,9 +649,9 @@ test.describe('Comprehensive Account Management Tests', () => {
       const user2 = await utils2.registerAndLogin();
 
       // Try to access first user's account from second user
-      const unauthorizedAccessResponse = await page2.evaluate(async (accountId) => {
+      const unauthorizedAccessResponse = await page2.evaluate(async ({ apiBaseUrl, accountId }) => {
         const token = localStorage.getItem('auth_token');
-        const response = await fetch(`https://localhost:5126/api/v1/accounts/${accountId}`, {
+        const response = await fetch(`${apiBaseUrl}/accounts/${accountId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -659,12 +660,12 @@ test.describe('Comprehensive Account Management Tests', () => {
           status: response.status,
           data: response.ok ? await response.json() : await response.text(),
         };
-      }, account1Response.id);
+      }, { apiBaseUrl: API_BASE_URL, accountId: account1Response.id });
 
       // Should be denied access
       expect(unauthorizedAccessResponse.status).toBeGreaterThanOrEqual(400);
       console.log('✅ Unauthorized account access prevented');
-      
+
       await page1.close();
       await page2.close();
     });
