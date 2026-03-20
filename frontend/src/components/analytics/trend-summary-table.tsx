@@ -157,7 +157,7 @@ export function TrendSummaryTable({ categories, selectedCategoryIds }: TrendSumm
                 <div className="flex items-center gap-2">
                   <div
                     className="w-3 h-3 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: cat.categoryColor || '#8B5CF6' }}
+                    style={{ backgroundColor: cat.categoryColor || '#2f8170' }}
                   />
                   <span className="text-sm font-medium text-ink-900">
                     {cat.categoryName}

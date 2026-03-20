@@ -33,8 +33,8 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
           >
             <defs>
               <linearGradient id="welcome-link-path" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#c4b5fd" />
-                <stop offset="100%" stopColor="#7c3aed" />
+                <stop offset="0%" stopColor="#5eead4" />
+                <stop offset="100%" stopColor="#0d9488" />
               </linearGradient>
             </defs>
             {/* Journey path — drawn behind the icons */}
@@ -48,41 +48,41 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
 
             {/* 1) Dollar coin — at start of path */}
             <g transform="translate(80,140)">
-              <circle r="30" fill="#ffffff" stroke="#ede9fe" strokeWidth="2.5" />
-              <circle r="14" fill="#ede9fe" stroke="#7c3aed" strokeWidth="2" />
-              <text x="0" y="5" textAnchor="middle" fontSize="16" fontWeight="700" fill="#7c3aed" fontFamily="system-ui">$</text>
+              <circle r="30" fill="#ffffff" stroke="#ccfbf1" strokeWidth="2.5" />
+              <circle r="14" fill="#ccfbf1" stroke="#0d9488" strokeWidth="2" />
+              <text x="0" y="5" textAnchor="middle" fontSize="16" fontWeight="700" fill="#0d9488" fontFamily="system-ui">$</text>
             </g>
 
             {/* 2) Receipt — peak 1 */}
             <g transform="translate(250,62)">
-              <circle r="30" fill="#ffffff" stroke="#ede9fe" strokeWidth="2.5" />
-              <path d="M-11-14h22v28l-3.5-2.5-3.5 2.5-3.5-2.5-3.5 2.5-3.5-2.5-3.5 2.5V-14z" fill="#ede9fe" stroke="#7c3aed" strokeWidth="2" strokeLinejoin="round" />
-              <path d="M-6-5h12M-6 1h12" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" />
+              <circle r="30" fill="#ffffff" stroke="#ccfbf1" strokeWidth="2.5" />
+              <path d="M-11-14h22v28l-3.5-2.5-3.5 2.5-3.5-2.5-3.5 2.5-3.5-2.5-3.5 2.5V-14z" fill="#ccfbf1" stroke="#0d9488" strokeWidth="2" strokeLinejoin="round" />
+              <path d="M-6-5h12M-6 1h12" stroke="#0d9488" strokeWidth="2" strokeLinecap="round" />
             </g>
 
             {/* 3) Shield — valley */}
             <g transform="translate(420,146)">
-              <circle r="30" fill="#ffffff" stroke="#ede9fe" strokeWidth="2.5" />
-              <path d="M0-14l14 5v10c0 8-5.5 15-14 19-8.5-4-14-11-14-19V-9z" fill="#ede9fe" stroke="#7c3aed" strokeWidth="2" strokeLinejoin="round" />
-              <path d="M-5 2l4 4 9-9" stroke="#7c3aed" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+              <circle r="30" fill="#ffffff" stroke="#ccfbf1" strokeWidth="2.5" />
+              <path d="M0-14l14 5v10c0 8-5.5 15-14 19-8.5-4-14-11-14-19V-9z" fill="#ccfbf1" stroke="#0d9488" strokeWidth="2" strokeLinejoin="round" />
+              <path d="M-5 2l4 4 9-9" stroke="#0d9488" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
             </g>
 
             {/* 4) Bar chart / growth — rising */}
             <g transform="translate(586,86)">
-              <circle r="30" fill="#ffffff" stroke="#ede9fe" strokeWidth="2.5" />
-              <rect x="-13" y="2" width="7" height="12" rx="1.5" fill="#ede9fe" stroke="#7c3aed" strokeWidth="2" />
-              <rect x="-3" y="-4" width="7" height="18" rx="1.5" fill="#ede9fe" stroke="#7c3aed" strokeWidth="2" />
-              <rect x="7" y="-10" width="7" height="24" rx="1.5" fill="#ede9fe" stroke="#7c3aed" strokeWidth="2" />
-              <path d="M-12-3 L-6-10 L0-7 L6-13 L12-18" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-              <circle cx="12" cy="-18" r="2.5" fill="#7c3aed" />
+              <circle r="30" fill="#ffffff" stroke="#ccfbf1" strokeWidth="2.5" />
+              <rect x="-13" y="2" width="7" height="12" rx="1.5" fill="#ccfbf1" stroke="#0d9488" strokeWidth="2" />
+              <rect x="-3" y="-4" width="7" height="18" rx="1.5" fill="#ccfbf1" stroke="#0d9488" strokeWidth="2" />
+              <rect x="7" y="-10" width="7" height="24" rx="1.5" fill="#ccfbf1" stroke="#0d9488" strokeWidth="2" />
+              <path d="M-12-3 L-6-10 L0-7 L6-13 L12-18" stroke="#0d9488" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+              <circle cx="12" cy="-18" r="2.5" fill="#0d9488" />
             </g>
 
             {/* 5) Goal flag — end */}
             <g transform="translate(710,46)">
-              <circle r="30" fill="#ffffff" stroke="#ede9fe" strokeWidth="2.5" />
-              <path d="M-5-12v26" stroke="#7c3aed" strokeWidth="2.5" strokeLinecap="round" />
-              <path d="M-5-12h18l-4.5 6 4.5 6H-5z" fill="#ede9fe" stroke="#7c3aed" strokeWidth="2" strokeLinejoin="round" />
-              <path d="M-10 14h14" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" />
+              <circle r="30" fill="#ffffff" stroke="#ccfbf1" strokeWidth="2.5" />
+              <path d="M-5-12v26" stroke="#0d9488" strokeWidth="2.5" strokeLinecap="round" />
+              <path d="M-5-12h18l-4.5 6 4.5 6H-5z" fill="#ccfbf1" stroke="#0d9488" strokeWidth="2" strokeLinejoin="round" />
+              <path d="M-10 14h14" stroke="#0d9488" strokeWidth="2" strokeLinecap="round" />
             </g>
           </svg>
         </div>

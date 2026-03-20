@@ -1513,6 +1513,7 @@
       "parentCategory": "Parent Category",
       "noParent": "No parent (top-level)",
       "color": "Color",
+      "selectColor": "Select color {color}",
       "updating": "Updating...",
       "updateCategory": "Update Category",
       "cannotEditSystem": "Cannot Edit System Category",

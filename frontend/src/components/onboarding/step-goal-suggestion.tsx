@@ -225,31 +225,31 @@ export function StepGoalSuggestion({
           aria-label="Financial goal illustration"
         >
           {/* Ground line */}
-          <path d="M20 170h240" stroke="#c4b5fd" strokeWidth="2" strokeLinecap="round" />
+          <path d="M20 170h240" stroke="#5eead4" strokeWidth="2" strokeLinecap="round" />
 
           {/* Rising steps / staircase — centered in viewBox */}
           <g transform="translate(69,170)">
             {/* Step 1 */}
-            <rect x="0" y="-28" width="40" height="28" rx="4" fill="#ede9fe" stroke="#8b5cf6" strokeWidth="2" />
-            <text x="20" y="-10" textAnchor="middle" fontSize="11" fontWeight="700" fill="#7c3aed" fontFamily="system-ui">1</text>
+            <rect x="0" y="-28" width="40" height="28" rx="4" fill="#ccfbf1" stroke="#14b8a6" strokeWidth="2" />
+            <text x="20" y="-10" textAnchor="middle" fontSize="11" fontWeight="700" fill="#0d9488" fontFamily="system-ui">1</text>
 
             {/* Step 2 */}
-            <rect x="48" y="-56" width="40" height="56" rx="4" fill="#ddd6fe" stroke="#8b5cf6" strokeWidth="2" />
-            <text x="68" y="-32" textAnchor="middle" fontSize="11" fontWeight="700" fill="#7c3aed" fontFamily="system-ui">2</text>
+            <rect x="48" y="-56" width="40" height="56" rx="4" fill="#99f6e4" stroke="#14b8a6" strokeWidth="2" />
+            <text x="68" y="-32" textAnchor="middle" fontSize="11" fontWeight="700" fill="#0d9488" fontFamily="system-ui">2</text>
 
             {/* Step 3 */}
-            <rect x="96" y="-84" width="40" height="84" rx="4" fill="#c4b5fd" stroke="#7c3aed" strokeWidth="2" />
-            <text x="116" y="-56" textAnchor="middle" fontSize="11" fontWeight="700" fill="#6d28d9" fontFamily="system-ui">3</text>
+            <rect x="96" y="-84" width="40" height="84" rx="4" fill="#5eead4" stroke="#0d9488" strokeWidth="2" />
+            <text x="116" y="-56" textAnchor="middle" fontSize="11" fontWeight="700" fill="#0f766e" fontFamily="system-ui">3</text>
           </g>
 
           {/* Flag on top of step 3 */}
           <g transform="translate(185,62)">
             {/* Flagpole */}
-            <path d="M0 24 v-48" stroke="#7c3aed" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M0 24 v-48" stroke="#0d9488" strokeWidth="2.5" strokeLinecap="round" />
             {/* Flag */}
-            <path d="M0-24 l26 10 l-26 10 z" fill="#8b5cf6" stroke="#7c3aed" strokeWidth="1.5" strokeLinejoin="round" />
+            <path d="M0-24 l26 10 l-26 10 z" fill="#14b8a6" stroke="#0d9488" strokeWidth="1.5" strokeLinejoin="round" />
             {/* Star on flag */}
-            <circle cx="12" cy="-14" r="3" fill="#ede9fe" />
+            <circle cx="12" cy="-14" r="3" fill="#ccfbf1" />
           </g>
         </svg>
 

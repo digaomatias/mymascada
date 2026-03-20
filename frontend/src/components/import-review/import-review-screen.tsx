@@ -93,14 +93,6 @@ export function ImportReviewScreen({
       progressPercent: total > 0 ? Math.round((reviewed / total) * 100) : 0
     };
 
-    // Debug logging to help identify the issue
-    console.log('🔢 Progress Stats:', stats);
-    console.log('📋 Review Items Summary:', reviewItems.map(item => ({
-      id: item.id.substring(0, 8),
-      decision: item.reviewDecision,
-      conflicts: item.conflicts.length
-    })));
-
     return stats;
   }, [reviewItems]);
 
@@ -209,38 +201,14 @@ export function ImportReviewScreen({
         decisions
       };
 
-      // Debug: Log decision candidates to see their transaction types
-      console.log('🔍 Decision Candidates Debug:');
-      decisions.forEach((decision, index) => {
-        if (decision.candidate) {
-          console.log(`Decision ${index}: amount=${decision.candidate.amount}, type=${decision.candidate.type}, decision=${decision.decision}`);
-        }
-      });
-
-      // Debug: Log analysis result structure
-      console.log('🔍 Analysis Result Debug:', {
-        hasAnalysisId: !!analysisResult.analysisId,
-        hasAnalysisTimestamp: !!analysisResult.analysisTimestamp,
-        analysisId: analysisResult.analysisId,
-        analysisTimestamp: analysisResult.analysisTimestamp,
-        allKeys: Object.keys(analysisResult)
-      });
-
       // Validate request structure
       if (!request.analysisId) {
-        console.error('❌ Missing analysis ID in request:', request);
         toast.error(tToasts('importReviewMissingAnalysisId'));
         return;
       }
 
-      console.log('Executing import with request:', request);
-
       // Use the correct API endpoint
       const result = await apiClient.executeImportReview(request);
-
-      // Debug: Log the actual response structure
-      console.log('🔍 Raw API Response:', result);
-      console.log('🔍 Response keys:', Object.keys(result));
 
       // Validate response
       if (!result) {
@@ -260,24 +228,12 @@ export function ImportReviewScreen({
       const mergedCount = resultAny.statistics?.mergedCount || resultAny.mergedTransactionsCount || resultAny.Statistics?.MergedCount || 0;
       const errorCount = resultAny.statistics?.errorCount || resultAny.errors?.length || resultAny.Statistics?.ErrorCount || 0;
 
-      // Debug: Log the parsed values
-      console.log('📊 Parsed Response Values:', {
-        success,
-        importedCount,
-        skippedCount,
-        mergedCount,
-        errorCount,
-        rawErrors: resultAny.errors,
-        rawStatistics: resultAny.statistics
-      });
-
       // Determine success based on multiple criteria
       const hasImportedTransactions = importedCount > 0 || mergedCount > 0;
       const hasPositiveResult = hasImportedTransactions || skippedCount > 0;
       const actualSuccess = success || hasPositiveResult;
 
       if (actualSuccess && errorCount === 0) {
-        console.log('✅ Import completed successfully without errors');
         const totalProcessed = importedCount + mergedCount;
         const message = totalProcessed > 0 
           ? tToasts('importReviewCompleted', {
@@ -305,7 +261,6 @@ export function ImportReviewScreen({
         };
         onImportComplete(normalizedResult);
       } else if (actualSuccess && errorCount > 0) {
-        console.log(`⚠️  Import completed with warnings: ${errorCount} errors, ${importedCount} imported, ${mergedCount} merged`);
         const totalProcessed = importedCount + mergedCount;
         toast.warning(tToasts('importReviewCompletedWithErrors', {
           errors: errorCount,
@@ -329,7 +284,6 @@ export function ImportReviewScreen({
         };
         onImportComplete(normalizedResult);
       } else {
-        console.log('❌ Import failed:', resultAny.message);
         throw new Error(resultAny.message || tToasts('importReviewFailedNoTransactions'));
       }
 
@@ -353,21 +307,6 @@ export function ImportReviewScreen({
         toast.error(tToasts('importReviewUnexpectedError'));
       }
 
-      // Log detailed error information for debugging
-      console.error('Detailed import error info:', {
-        error,
-        analysisResult,
-        reviewItems: reviewItems.map(item => ({
-          id: item.id,
-          decision: item.reviewDecision,
-          conflicts: item.conflicts.length
-        })),
-        requestWouldBe: {
-          analysisId: analysisResult?.analysisId,
-          accountId: analysisResult?.accountId,
-          decisionsCount: reviewItems.filter(item => item.reviewDecision !== ConflictResolution.Pending).length
-        }
-      });
     } finally {
       setIsImporting(false);
     }

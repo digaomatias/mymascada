@@ -169,7 +169,7 @@ export function CategorySelector({
                   </span>
                   <div
                     className="h-3 w-3 shrink-0 rounded-full"
-                    style={{ backgroundColor: category.categoryColor || '#8B5CF6' }}
+                    style={{ backgroundColor: category.categoryColor || '#2f8170' }}
                   />
                   <span className="truncate text-sm font-medium text-ink-800">
                     {category.categoryName}

@@ -31,9 +31,6 @@ interface ImportSummaryStatsProps {
 
 export function ImportSummaryStats({ summary, progress }: ImportSummaryStatsProps) {
   const tImport = useTranslations('import');
-  // Debug logging as suggested by AIs
-  console.log('ImportSummaryStats: summary', summary);
-  console.log('ImportSummaryStats: progress', progress);
 
   // Defensive programming - provide default values if summary is undefined
   const safeSummary = summary || {

@@ -336,6 +336,8 @@ export default function EditCategoryPage() {
                         key={color}
                         type="button"
                         onClick={() => handleInputChange('color', color)}
+                        aria-label={t('edit.selectColor', { color })}
+                        aria-pressed={formData.color === color}
                         className={`w-8 h-8 rounded-lg border-2 transition-all ${
                           formData.color === color
                             ? 'border-ink-900 scale-110'

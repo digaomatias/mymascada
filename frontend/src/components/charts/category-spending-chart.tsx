@@ -135,7 +135,7 @@ export function CategorySpendingChart({ data, title }: CategorySpendingChartProp
                 labelLine={false}
                 label={renderCustomLabel}
                 outerRadius={100}
-                fill="#8884d8"
+                fill="#2f8170"
                 dataKey="value"
                 nameKey="displayName"
               >

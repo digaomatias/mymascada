@@ -1513,6 +1513,7 @@
       "parentCategory": "Categoria Pai",
       "noParent": "Sem pai (nível superior)",
       "color": "Cor",
+      "selectColor": "Selecionar cor {color}",
       "updating": "Atualizando...",
       "updateCategory": "Atualizar Categoria",
       "cannotEditSystem": "Não é Possível Editar Categoria do Sistema",
