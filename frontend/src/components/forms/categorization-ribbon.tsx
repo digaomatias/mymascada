@@ -405,7 +405,7 @@ export function CategorizationRibbon({
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                 {/* AI Assistant Button */}
                 <Button
                   onClick={() => setShowAiSection(true)}
@@ -631,12 +631,12 @@ export function CategorizationRibbon({
                 )}
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Button
                   variant="secondary"
                   size="sm"
                   onClick={() => setShowRulePreview(false)}
-                  className="flex-1 sm:flex-none"
+                  className="w-full sm:w-auto"
                 >
                   {tCommon('cancel')}
                 </Button>
@@ -644,7 +644,7 @@ export function CategorizationRibbon({
                   onClick={handleApplySelectedRules}
                   disabled={isApplyingRules || !rulePreview.ruleMatches?.some(m => m.isSelected)}
                   size="sm"
-                  className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-primary-600 flex-1 sm:flex-none"
+                  className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-primary-600 w-full sm:w-auto"
                 >
                   {isApplyingRules ? (
                     <>
