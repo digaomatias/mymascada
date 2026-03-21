@@ -113,9 +113,9 @@ public class CsvImportServiceTests
 
         // Assert
         mapping.Should().NotBeNull();
-        mapping.DateColumn.Should().BeGreaterOrEqualTo(0);
-        mapping.DescriptionColumn.Should().BeGreaterOrEqualTo(0);
-        mapping.AmountColumn.Should().BeGreaterOrEqualTo(0);
+        mapping.DateColumn.Should().BeGreaterThanOrEqualTo(0);
+        mapping.DescriptionColumn.Should().BeGreaterThanOrEqualTo(0);
+        mapping.AmountColumn.Should().BeGreaterThanOrEqualTo(0);
         mapping.DateFormat.Should().NotBeNullOrEmpty();
     }
 

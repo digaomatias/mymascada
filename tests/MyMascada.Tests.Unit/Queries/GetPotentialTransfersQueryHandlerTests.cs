@@ -1,7 +1,5 @@
-using AutoMapper;
 using FluentAssertions;
 using MyMascada.Application.Common.Interfaces;
-using MyMascada.Application.Features.Transactions.DTOs;
 using MyMascada.Application.Features.Transactions.Queries;
 using MyMascada.Domain.Entities;
 using NSubstitute;
@@ -13,15 +11,13 @@ public class GetPotentialTransfersQueryHandlerTests
 {
     private readonly ITransactionRepository _transactionRepository;
     private readonly IAccountRepository _accountRepository;
-    private readonly IMapper _mapper;
     private readonly GetPotentialTransfersQueryHandler _handler;
 
     public GetPotentialTransfersQueryHandlerTests()
     {
         _transactionRepository = Substitute.For<ITransactionRepository>();
         _accountRepository = Substitute.For<IAccountRepository>();
-        _mapper = Substitute.For<IMapper>();
-        _handler = new GetPotentialTransfersQueryHandler(_transactionRepository, _accountRepository, _mapper);
+        _handler = new GetPotentialTransfersQueryHandler(_transactionRepository, _accountRepository);
     }
 
     [Fact]
@@ -37,7 +33,7 @@ public class GetPotentialTransfersQueryHandlerTests
             TransactionDate = DateTime.Today,
             Description = "Transfer to savings"
         };
-        
+
         var incomingTransaction = new Transaction
         {
             Id = 2,
@@ -48,32 +44,9 @@ public class GetPotentialTransfersQueryHandlerTests
         };
 
         var transactions = new List<Transaction> { outgoingTransaction, incomingTransaction };
-        
-        var outgoingDto = new TransactionDto
-        {
-            Id = 1,
-            AccountId = 1,
-            Amount = -500.00m,
-            TransactionDate = DateTime.Today,
-            Description = "Transfer to savings",
-            AccountName = "Checking Account"
-        };
-        
-        var incomingDto = new TransactionDto
-        {
-            Id = 2,
-            AccountId = 2,
-            Amount = 500.00m,
-            TransactionDate = DateTime.Today,
-            Description = "Transfer from checking",
-            AccountName = "Savings Account"
-        };
 
         _transactionRepository.GetUserTransactionsAsync(userId, false, false, false, Arg.Any<DateTime?>())
             .Returns(transactions);
-        
-        _mapper.Map<TransactionDto>(outgoingTransaction).Returns(outgoingDto);
-        _mapper.Map<TransactionDto>(incomingTransaction).Returns(incomingDto);
 
         var query = new GetPotentialTransfersQuery
         {
@@ -88,7 +61,7 @@ public class GetPotentialTransfersQueryHandlerTests
         // Assert
         result.TransferGroups.Should().HaveCount(1);
         var transferGroup = result.TransferGroups.First();
-        
+
         // CRITICAL: Verify transfer direction is based on money flow, not iteration order
         transferGroup.SourceTransaction.Amount.Should().Be(-500.00m, "source should be the outgoing (negative) transaction");
         transferGroup.DestinationTransaction.Amount.Should().Be(500.00m, "destination should be the incoming (positive) transaction");
@@ -109,11 +82,11 @@ public class GetPotentialTransfersQueryHandlerTests
             TransactionDate = DateTime.Today,
             Description = "Transfer out"
         };
-        
+
         var incomingTransaction = new Transaction
         {
             Id = 20,
-            AccountId = 2,  
+            AccountId = 2,
             Amount = 1000.00m, // Incoming
             TransactionDate = DateTime.Today,
             Description = "Transfer in"
@@ -121,32 +94,9 @@ public class GetPotentialTransfersQueryHandlerTests
 
         // Important: Put incoming transaction first in the list to test iteration order independence
         var transactions = new List<Transaction> { incomingTransaction, outgoingTransaction };
-        
-        var outgoingDto = new TransactionDto
-        {
-            Id = 10,
-            AccountId = 1,
-            Amount = -1000.00m,
-            TransactionDate = DateTime.Today,
-            Description = "Transfer out",
-            AccountName = "Account A"
-        };
-        
-        var incomingDto = new TransactionDto
-        {
-            Id = 20,
-            AccountId = 2,
-            Amount = 1000.00m,
-            TransactionDate = DateTime.Today,
-            Description = "Transfer in",
-            AccountName = "Account B"
-        };
 
         _transactionRepository.GetUserTransactionsAsync(userId, false, true, false, Arg.Any<DateTime?>())
             .Returns(transactions);
-
-        _mapper.Map<TransactionDto>(outgoingTransaction).Returns(outgoingDto);
-        _mapper.Map<TransactionDto>(incomingTransaction).Returns(incomingDto);
 
         var query = new GetPotentialTransfersQuery { UserId = userId };
 
@@ -177,7 +127,7 @@ public class GetPotentialTransfersQueryHandlerTests
             TransactionDate = DateTime.Today,
             Description = "Purchase"
         };
-        
+
         var transaction2 = new Transaction
         {
             Id = 2,
@@ -188,30 +138,9 @@ public class GetPotentialTransfersQueryHandlerTests
         };
 
         var transactions = new List<Transaction> { transaction1, transaction2 };
-        
-        var dto1 = new TransactionDto
-        {
-            Id = 1,
-            AccountId = 1,
-            Amount = -500.00m,
-            TransactionDate = DateTime.Today,
-            Description = "Purchase"
-        };
-        
-        var dto2 = new TransactionDto
-        {
-            Id = 2,
-            AccountId = 2,
-            Amount = -500.00m,
-            TransactionDate = DateTime.Today,
-            Description = "Another purchase"
-        };
 
         _transactionRepository.GetUserTransactionsAsync(userId, false, true, false, Arg.Any<DateTime?>())
             .Returns(transactions);
-
-        _mapper.Map<TransactionDto>(transaction1).Returns(dto1);
-        _mapper.Map<TransactionDto>(transaction2).Returns(dto2);
 
         var query = new GetPotentialTransfersQuery { UserId = userId };
 
@@ -235,7 +164,7 @@ public class GetPotentialTransfersQueryHandlerTests
             TransactionDate = DateTime.Today,
             Description = "Deposit"
         };
-        
+
         var transaction2 = new Transaction
         {
             Id = 2,
@@ -246,30 +175,9 @@ public class GetPotentialTransfersQueryHandlerTests
         };
 
         var transactions = new List<Transaction> { transaction1, transaction2 };
-        
-        var dto1 = new TransactionDto
-        {
-            Id = 1,
-            AccountId = 1,
-            Amount = 500.00m,
-            TransactionDate = DateTime.Today,
-            Description = "Deposit"
-        };
-        
-        var dto2 = new TransactionDto
-        {
-            Id = 2,
-            AccountId = 2,
-            Amount = 500.00m,
-            TransactionDate = DateTime.Today,
-            Description = "Another deposit"
-        };
 
         _transactionRepository.GetUserTransactionsAsync(userId, false, true, false, Arg.Any<DateTime?>())
             .Returns(transactions);
-
-        _mapper.Map<TransactionDto>(transaction1).Returns(dto1);
-        _mapper.Map<TransactionDto>(transaction2).Returns(dto2);
 
         var query = new GetPotentialTransfersQuery { UserId = userId };
 
@@ -290,28 +198,14 @@ public class GetPotentialTransfersQueryHandlerTests
             // Transfer 1: -$200 out of Account 1, +$200 into Account 2
             new() { Id = 1, AccountId = 1, Amount = -200.00m, TransactionDate = DateTime.Today, Description = "Transfer 1 out" },
             new() { Id = 2, AccountId = 2, Amount = 200.00m, TransactionDate = DateTime.Today, Description = "Transfer 1 in" },
-            
+
             // Transfer 2: +$300 into Account 3, -$300 out of Account 4 (different order)
             new() { Id = 3, AccountId = 3, Amount = 300.00m, TransactionDate = DateTime.Today.AddDays(-1), Description = "Transfer 2 in" },
             new() { Id = 4, AccountId = 4, Amount = -300.00m, TransactionDate = DateTime.Today.AddDays(-1), Description = "Transfer 2 out" },
         };
 
-        var dtos = transactions.Select(t => new TransactionDto
-        {
-            Id = t.Id,
-            AccountId = t.AccountId,
-            Amount = t.Amount,
-            TransactionDate = t.TransactionDate,
-            Description = t.Description
-        }).ToList();
-
         _transactionRepository.GetUserTransactionsAsync(userId, false, true, false, Arg.Any<DateTime?>())
             .Returns(transactions);
-
-        foreach (var (transaction, dto) in transactions.Zip(dtos))
-        {
-            _mapper.Map<TransactionDto>(transaction).Returns(dto);
-        }
 
         var query = new GetPotentialTransfersQuery { UserId = userId };
 
@@ -320,7 +214,7 @@ public class GetPotentialTransfersQueryHandlerTests
 
         // Assert
         result.TransferGroups.Should().HaveCount(2, "should detect both transfer pairs");
-        
+
         foreach (var group in result.TransferGroups)
         {
             group.SourceTransaction.Amount.Should().BeNegative("source should always be the outgoing transaction");
@@ -328,7 +222,7 @@ public class GetPotentialTransfersQueryHandlerTests
         }
 
         // Verify specific transfers
-        var transfer1 = result.TransferGroups.FirstOrDefault(g => 
+        var transfer1 = result.TransferGroups.FirstOrDefault(g =>
             g.SourceTransaction.Id == 1 && g.DestinationTransaction.Id == 2);
         transfer1.Should().NotBeNull("should correctly match transfer 1");
 
@@ -363,31 +257,8 @@ public class GetPotentialTransfersQueryHandlerTests
 
         var transactions = new List<Transaction> { transaction1, transaction2 };
 
-        var dto1 = new TransactionDto
-        {
-            Id = 969,
-            AccountId = 1,
-            Amount = -4.99m,
-            TransactionDate = new DateTime(2025, 8, 30),
-            Description = "APPLE.COM/BILL SYDNEY",
-            AccountName = "AMEX"
-        };
-
-        var dto2 = new TransactionDto
-        {
-            Id = 991,
-            AccountId = 2,
-            Amount = 5.29m,
-            TransactionDate = new DateTime(2025, 8, 29),
-            Description = "Deposit",
-            AccountName = "ANZ Savings"
-        };
-
         _transactionRepository.GetUserTransactionsAsync(userId, false, true, false, Arg.Any<DateTime?>())
             .Returns(transactions);
-
-        _mapper.Map<TransactionDto>(transaction1).Returns(dto1);
-        _mapper.Map<TransactionDto>(transaction2).Returns(dto2);
 
         var query = new GetPotentialTransfersQuery { UserId = userId };
 
@@ -424,29 +295,8 @@ public class GetPotentialTransfersQueryHandlerTests
 
         var transactions = new List<Transaction> { transaction1, transaction2 };
 
-        var dto1 = new TransactionDto
-        {
-            Id = 1,
-            AccountId = 1,
-            Amount = -100.00m,
-            TransactionDate = DateTime.Today,
-            Description = "Transfer"
-        };
-
-        var dto2 = new TransactionDto
-        {
-            Id = 2,
-            AccountId = 2,
-            Amount = 100.00m,
-            TransactionDate = DateTime.Today,
-            Description = "Transfer"
-        };
-
         _transactionRepository.GetUserTransactionsAsync(userId, false, true, false, Arg.Any<DateTime?>())
             .Returns(transactions);
-
-        _mapper.Map<TransactionDto>(transaction1).Returns(dto1);
-        _mapper.Map<TransactionDto>(transaction2).Returns(dto2);
 
         var query = new GetPotentialTransfersQuery { UserId = userId };
 
@@ -482,29 +332,8 @@ public class GetPotentialTransfersQueryHandlerTests
 
         var transactions = new List<Transaction> { transaction1, transaction2 };
 
-        var dto1 = new TransactionDto
-        {
-            Id = 1,
-            AccountId = 1,
-            Amount = -100.00m,
-            TransactionDate = DateTime.Today,
-            Description = "Transfer"
-        };
-
-        var dto2 = new TransactionDto
-        {
-            Id = 2,
-            AccountId = 2,
-            Amount = 100.01m,
-            TransactionDate = DateTime.Today,
-            Description = "Transfer"
-        };
-
         _transactionRepository.GetUserTransactionsAsync(userId, false, true, false, Arg.Any<DateTime?>())
             .Returns(transactions);
-
-        _mapper.Map<TransactionDto>(transaction1).Returns(dto1);
-        _mapper.Map<TransactionDto>(transaction2).Returns(dto2);
 
         var query = new GetPotentialTransfersQuery { UserId = userId };
 

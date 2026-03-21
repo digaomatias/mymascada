@@ -1,7 +1,7 @@
 using MediatR;
-using AutoMapper;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Transactions.DTOs;
+using MyMascada.Application.Features.Transactions.Mappings;
 using MyMascada.Domain.Enums;
 
 namespace MyMascada.Application.Features.Transactions.Queries;
@@ -15,16 +15,13 @@ public class GetPotentialTransfersQueryHandler : IRequestHandler<GetPotentialTra
 
     private readonly ITransactionRepository _transactionRepository;
     private readonly IAccountRepository _accountRepository;
-    private readonly IMapper _mapper;
 
     public GetPotentialTransfersQueryHandler(
         ITransactionRepository transactionRepository,
-        IAccountRepository accountRepository,
-        IMapper mapper)
+        IAccountRepository accountRepository)
     {
         _transactionRepository = transactionRepository;
         _accountRepository = accountRepository;
-        _mapper = mapper;
     }
 
     public async Task<PotentialTransfersResponse> Handle(GetPotentialTransfersQuery request, CancellationToken cancellationToken)
@@ -38,7 +35,7 @@ public class GetPotentialTransfersQueryHandler : IRequestHandler<GetPotentialTra
             includeTransfers: request.IncludeExistingTransfers,
             sinceDate: cutoffDate);
 
-        var transactionDtos = transactions.Select(t => _mapper.Map<TransactionDto>(t)).ToList();
+        var transactionDtos = transactions.Select(TransactionMapper.ToDto).ToList();
         var response = new PotentialTransfersResponse();
 
         // Find potential transfer pairs using simple binary matching

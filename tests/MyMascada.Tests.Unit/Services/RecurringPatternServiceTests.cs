@@ -140,7 +140,7 @@ public class RecurringPatternServiceTests
         var result = await _service.GetUpcomingBillsAsync(_userId, 7);
 
         // Assert
-        result.Bills.Should().HaveCountGreaterOrEqualTo(2);
+        result.Bills.Should().HaveCountGreaterThanOrEqualTo(2);
         // Bills should be sorted by DaysUntilDue (ascending)
         result.Bills.Should().BeInAscendingOrder(b => b.DaysUntilDue);
     }

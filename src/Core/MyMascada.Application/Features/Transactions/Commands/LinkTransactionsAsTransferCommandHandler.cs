@@ -1,5 +1,4 @@
 using MediatR;
-using AutoMapper;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Transactions.DTOs;
 using MyMascada.Domain.Entities;
@@ -15,18 +14,15 @@ public class LinkTransactionsAsTransferCommandHandler : IRequestHandler<LinkTran
     private readonly ITransactionRepository _transactionRepository;
     private readonly ITransferRepository _transferRepository;
     private readonly IAccountAccessService _accountAccessService;
-    private readonly IMapper _mapper;
 
     public LinkTransactionsAsTransferCommandHandler(
         ITransactionRepository transactionRepository,
         ITransferRepository transferRepository,
-        IAccountAccessService accountAccessService,
-        IMapper mapper)
+        IAccountAccessService accountAccessService)
     {
         _transactionRepository = transactionRepository;
         _transferRepository = transferRepository;
         _accountAccessService = accountAccessService;
-        _mapper = mapper;
     }
 
     public async Task<ConfirmTransfersResponse> Handle(LinkTransactionsAsTransferCommand request, CancellationToken cancellationToken)

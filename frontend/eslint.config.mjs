@@ -42,6 +42,7 @@ const eslintConfig = [
       "react-hooks/set-state-in-effect": "warn",
       "react-hooks/static-components": "warn",
       "react-hooks/preserve-manual-memoization": "warn",
+      "react/display-name": "off",
     },
   },
 ];

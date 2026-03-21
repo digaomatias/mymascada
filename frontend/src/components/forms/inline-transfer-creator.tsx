@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
@@ -365,23 +366,22 @@ export function InlineTransferCreator({ sourceTransaction, onCancel, onSuccess }
             <Label htmlFor="destinationAccount" className="text-sm font-medium text-ink-700">
               {t('destinationAccount')}
             </Label>
-            <select
+            <Select
               id="destinationAccount"
-              className="w-full p-3 border border-ink-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-ink-900"
-              value={selectedDestinationAccount?.id || ''}
+              placeholder={t('selectDestinationAccount')}
+              value={selectedDestinationAccount?.id?.toString() || ''}
               onChange={(e) => {
                 const accountId = parseInt(e.target.value);
                 const account = accounts.find(a => a.id === accountId);
                 setSelectedDestinationAccount(account || null);
               }}
             >
-              <option value="">{t('selectDestinationAccount')}</option>
               {accounts.map(account => (
                 <option key={account.id} value={account.id}>
                   {account.name}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
           {selectedDestinationAccount && (

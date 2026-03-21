@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { TestUtils } from '../test-utils';
+import { API_BASE_URL } from './helpers/config';
 import path from 'path';
 
 test.describe('Import Review System - Comprehensive E2E Tests', () => {
@@ -17,7 +18,7 @@ test.describe('Import Review System - Comprehensive E2E Tests', () => {
   test.describe('CSV Upload and Analysis', () => {
     test('should upload CSV file and trigger import analysis', async ({ page }) => {
       const user = await utils.registerAndLogin();
-      
+
       // Navigate to import page
       await utils.navigateTo('/import');
       await expect(page).toHaveURL('/import');
@@ -35,7 +36,7 @@ test.describe('Import Review System - Comprehensive E2E Tests', () => {
 
       // Wait for CSV preview to load
       await expect(page.getByText(/csv preview/i)).toBeVisible({ timeout: 10000 });
-      
+
       // Should display preview table
       await expect(page.getByRole('table')).toBeVisible();
       await expect(page.getByText('Coffee Shop Purchase')).toBeVisible();
@@ -52,7 +53,7 @@ test.describe('Import Review System - Comprehensive E2E Tests', () => {
 01/02/2024,"Paycheck",,2500.00,PAY002`;
 
       await utils.uploadCsvContent(csvContent);
-      
+
       // Wait for column mapping interface
       await expect(page.getByText(/map columns/i)).toBeVisible({ timeout: 10000 });
 
@@ -60,7 +61,7 @@ test.describe('Import Review System - Comprehensive E2E Tests', () => {
       await page.selectOption('[data-testid="date-mapping"]', 'Transaction Date');
       await page.selectOption('[data-testid="description-mapping"]', 'Description');
       await page.selectOption('[data-testid="amount-mapping"]', 'Debit');
-      
+
       // Proceed to next step
       await page.getByRole('button', { name: /continue|next/i }).click();
 
@@ -71,11 +72,11 @@ test.describe('Import Review System - Comprehensive E2E Tests', () => {
       const user = await utils.registerAndLogin();
 
       // First create some existing transactions via API to create potential conflicts
-      await page.evaluate(async () => {
+      await page.evaluate(async (apiBaseUrl) => {
         const token = localStorage.getItem('auth_token');
-        
+
         // Create test account
-        const accountResponse = await fetch('https://localhost:5126/api/v1/accounts', {
+        const accountResponse = await fetch(`${apiBaseUrl}/accounts`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -88,9 +89,9 @@ test.describe('Import Review System - Comprehensive E2E Tests', () => {
           }),
         });
         const account = await accountResponse.json();
-        
+
         // Create existing transaction that will conflict
-        await fetch('https://localhost:5126/api/v1/transactions', {
+        await fetch(`${apiBaseUrl}/transactions`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -107,10 +108,10 @@ test.describe('Import Review System - Comprehensive E2E Tests', () => {
         });
 
         window.testAccountId = account.id;
-      });
+      }, API_BASE_URL);
 
       await utils.navigateTo('/import');
-      
+
       // Upload CSV with potential duplicates
       const csvContent = `Date,Description,Amount
 2024-01-01,"Coffee Shop Purchase",-25.50
@@ -131,7 +132,7 @@ test.describe('Import Review System - Comprehensive E2E Tests', () => {
   test.describe('Import Review Interface', () => {
     test('should display conflict sections correctly', async ({ page }) => {
       const user = await utils.registerAndLogin();
-      
+
       // Setup test data and navigate to import review
       await setupImportReviewTest(page);
 
@@ -173,12 +174,12 @@ test.describe('Import Review System - Comprehensive E2E Tests', () => {
       await setupImportReviewTest(page);
 
       const conflictCard = page.locator('[data-testid="conflict-card"]').first();
-      
+
       // Should have expand button for conflicts
       const expandButton = conflictCard.getByRole('button', { name: /expand|show details/i });
       if (await expandButton.isVisible()) {
         await expandButton.click();
-        
+
         // Should show conflict details
         await expect(conflictCard.getByText(/conflicting transaction/i)).toBeVisible();
         await expect(conflictCard.getByText(/confidence/i)).toBeVisible();
@@ -199,7 +200,7 @@ test.describe('Import Review System - Comprehensive E2E Tests', () => {
 
       // Should show bulk action menu
       await expect(page.getByText(/import all clean/i)).toBeVisible();
-      
+
       // Perform bulk import
       await page.getByText(/import all clean/i).click();
 
@@ -235,7 +236,7 @@ test.describe('Import Review System - Comprehensive E2E Tests', () => {
       // Auto resolve all
       if (await page.getByText(/auto resolve all/i).isVisible()) {
         await page.getByText(/auto resolve all/i).click();
-        
+
         // Should resolve multiple items automatically
         await expect(page.getByText(/100% reviewed|0 items remaining/i)).toBeVisible({ timeout: 10000 });
       }
@@ -275,7 +276,7 @@ test.describe('Import Review System - Comprehensive E2E Tests', () => {
       // Execute button should be disabled with pending items
       const executeButton = page.getByRole('button', { name: /execute import/i });
       await expect(executeButton).toBeDisabled();
-      
+
       // Should show warning message
       await expect(page.getByText(/review all conflicts before importing/i)).toBeVisible();
 
@@ -322,7 +323,7 @@ test.describe('Import Review System - Comprehensive E2E Tests', () => {
       if (await page.getByText(/ai csv|smart import/i).isVisible()) {
         await page.getByText(/ai csv|smart import/i).click();
         await expect(page).toHaveURL('/import/ai-csv');
-        
+
         // Should show AI import interface
         await expect(page.getByText(/ai-powered|smart analysis/i)).toBeVisible();
         console.log('✅ AI CSV import accessible');
@@ -333,10 +334,10 @@ test.describe('Import Review System - Comprehensive E2E Tests', () => {
 
     test('should perform AI-enhanced conflict detection', async ({ page }) => {
       const user = await utils.registerAndLogin();
-      
+
       try {
         await utils.navigateTo('/import/ai-csv');
-        
+
         const csvContent = `Date,Description,Amount
 2024-01-01,"COFFEE SHOP NYC",-4.50
 2024-01-02,"Coffee Shop New York",-4.50
@@ -346,7 +347,7 @@ test.describe('Import Review System - Comprehensive E2E Tests', () => {
 
         // AI should detect potential duplicates with similar descriptions
         await expect(page.getByText(/ai analysis|smart detection/i)).toBeVisible({ timeout: 15000 });
-        
+
         console.log('✅ AI-enhanced conflict detection working');
       } catch (error) {
         console.log('ℹ️  AI CSV import not fully implemented yet');
@@ -448,10 +449,10 @@ And missing structure`;
 
     test('should be responsive on mobile devices', async ({ page }) => {
       const user = await utils.registerAndLogin();
-      
+
       // Set mobile viewport
       await page.setViewportSize({ width: 375, height: 667 });
-      
+
       await setupImportReviewTest(page);
 
       // Should adapt to mobile layout
@@ -464,10 +465,10 @@ And missing structure`;
   // Helper function to setup import review test scenario
   async function setupImportReviewTest(page: any) {
     // Create account and existing transactions for conflict testing
-    await page.evaluate(async () => {
+    await page.evaluate(async (apiBaseUrl: string) => {
       const token = localStorage.getItem('auth_token');
-      
-      const accountResponse = await fetch('https://localhost:5126/api/v1/accounts', {
+
+      const accountResponse = await fetch(`${apiBaseUrl}/accounts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -480,9 +481,9 @@ And missing structure`;
         }),
       });
       const account = await accountResponse.json();
-      
+
       // Create existing transaction for conflict
-      await fetch('https://localhost:5126/api/v1/transactions', {
+      await fetch(`${apiBaseUrl}/transactions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -499,10 +500,10 @@ And missing structure`;
       });
 
       window.testAccountId = account.id;
-    });
+    }, API_BASE_URL);
 
     await utils.navigateTo('/import');
-    
+
     // Upload CSV with mixed scenarios
     const csvContent = `Date,Description,Amount,Reference
 2024-01-01,"Coffee Shop Purchase",-25.50,REF001
@@ -526,35 +527,35 @@ test.describe('Import Review System - Performance Tests', () => {
 
   test('should handle concurrent imports efficiently', async ({ page }) => {
     const user = await utils.registerAndLogin();
-    
+
     // Test multiple concurrent CSV analysis requests
     const promises = [];
     for (let i = 0; i < 3; i++) {
-      promises.push(page.evaluate(async (index) => {
+      promises.push(page.evaluate(async ({ apiBaseUrl, index }) => {
         const csvContent = `Date,Description,Amount\n2024-01-0${index + 1},"Transaction ${index}",-${index * 10}.00`;
         const blob = new Blob([csvContent], { type: 'text/csv' });
-        
+
         const formData = new FormData();
         formData.append('file', blob, `test${index}.csv`);
-        
+
         const token = localStorage.getItem('auth_token');
         const start = performance.now();
-        
-        const response = await fetch('https://localhost:5126/api/v1/ImportReview/analyze', {
+
+        const response = await fetch(`${apiBaseUrl}/ImportReview/analyze`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
           },
           body: formData
         });
-        
+
         const end = performance.now();
         return { status: response.status, duration: end - start };
-      }, i));
+      }, { apiBaseUrl: API_BASE_URL, index: i }));
     }
 
     const results = await Promise.all(promises);
-    
+
     // All requests should succeed
     results.forEach(result => {
       expect(result.status).toBe(200);
@@ -566,7 +567,7 @@ test.describe('Import Review System - Performance Tests', () => {
 
   test('should maintain performance with large datasets', async ({ page }) => {
     const user = await utils.registerAndLogin();
-    
+
     // Test with large dataset
     const start = Date.now();
     let largeCsv = 'Date,Description,Amount\n';
@@ -579,7 +580,7 @@ test.describe('Import Review System - Performance Tests', () => {
 
     // Should complete analysis within reasonable time
     await expect(page.getByText(/review import|analysis complete/i)).toBeVisible({ timeout: 60000 });
-    
+
     const duration = Date.now() - start;
     expect(duration).toBeLessThan(60000); // Should complete within 1 minute
 

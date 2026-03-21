@@ -1,5 +1,4 @@
 using MediatR;
-using AutoMapper;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Transactions.DTOs;
 using MyMascada.Domain.Entities;
@@ -16,20 +15,17 @@ public class CreateMissingTransferCommandHandler : IRequestHandler<CreateMissing
     private readonly IAccountRepository _accountRepository;
     private readonly ITransferRepository _transferRepository;
     private readonly IAccountAccessService _accountAccessService;
-    private readonly IMapper _mapper;
 
     public CreateMissingTransferCommandHandler(
         ITransactionRepository transactionRepository,
         IAccountRepository accountRepository,
         ITransferRepository transferRepository,
-        IAccountAccessService accountAccessService,
-        IMapper mapper)
+        IAccountAccessService accountAccessService)
     {
         _transactionRepository = transactionRepository;
         _accountRepository = accountRepository;
         _transferRepository = transferRepository;
         _accountAccessService = accountAccessService;
-        _mapper = mapper;
     }
 
     public async Task<ConfirmTransfersResponse> Handle(CreateMissingTransferCommand request, CancellationToken cancellationToken)
