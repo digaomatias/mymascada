@@ -26,12 +26,16 @@ public static partial class TransactionMapper
     public static TransactionDetailDto ToDetailDto(Transaction transaction)
     {
         var dto = TransactionToDetailDtoGenerated(transaction);
-        dto.TransactionType = transaction.Amount >= 0 ? "Income" : "Expense";
+        dto.TransactionType = transaction.GetEffectiveType().ToString();
         dto.Status = transaction.Status.ToString();
         dto.Source = transaction.Source.ToString();
         dto.Tags = string.IsNullOrEmpty(transaction.Tags)
             ? new List<string>()
-            : transaction.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
+            : transaction.Tags
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(t => t.Trim())
+                .Where(t => t.Length > 0)
+                .ToList();
         dto.AccountName = transaction.Account?.Name ?? string.Empty;
         dto.AccountType = transaction.Account?.Type.ToString() ?? string.Empty;
         dto.Currency = transaction.Account?.Currency ?? string.Empty;
