@@ -1,7 +1,7 @@
-using AutoMapper;
 using MediatR;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Transactions.DTOs;
+using MyMascada.Application.Features.Transactions.Mappings;
 
 namespace MyMascada.Application.Features.Transactions.Queries;
 
@@ -19,16 +19,13 @@ public class GetDuplicateTransactionsQueryHandler : IRequestHandler<GetDuplicate
 {
     private readonly ITransactionRepository _transactionRepository;
     private readonly IDuplicateExclusionRepository _duplicateExclusionRepository;
-    private readonly IMapper _mapper;
 
     public GetDuplicateTransactionsQueryHandler(
         ITransactionRepository transactionRepository,
-        IDuplicateExclusionRepository duplicateExclusionRepository,
-        IMapper mapper)
+        IDuplicateExclusionRepository duplicateExclusionRepository)
     {
         _transactionRepository = transactionRepository;
         _duplicateExclusionRepository = duplicateExclusionRepository;
-        _mapper = mapper;
     }
 
     public async Task<DuplicateTransactionsResponse> Handle(GetDuplicateTransactionsQuery request, CancellationToken cancellationToken)
@@ -65,8 +62,8 @@ public class GetDuplicateTransactionsQueryHandler : IRequestHandler<GetDuplicate
                     var group = new DuplicateGroupDto
                     {
                         Id = Guid.NewGuid(),
-                        Transactions = new List<TransactionDto> { _mapper.Map<TransactionDto>(transaction) }
-                            .Concat(potentialDuplicates.Select(d => _mapper.Map<TransactionDto>(d.Transaction)))
+                        Transactions = new List<TransactionDto> { TransactionMapper.ToDto(transaction) }
+                            .Concat(potentialDuplicates.Select(d => TransactionMapper.ToDto(d.Transaction)))
                             .ToList(),
                         HighestConfidence = potentialDuplicates.Max(d => d.Confidence),
                         TotalAmount = Math.Abs(transaction.Amount),

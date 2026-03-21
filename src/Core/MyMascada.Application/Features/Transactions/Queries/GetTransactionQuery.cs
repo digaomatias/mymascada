@@ -1,7 +1,7 @@
-using AutoMapper;
 using MediatR;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Transactions.DTOs;
+using MyMascada.Application.Features.Transactions.Mappings;
 
 namespace MyMascada.Application.Features.Transactions.Queries;
 
@@ -14,12 +14,10 @@ public class GetTransactionQuery : IRequest<TransactionDto?>
 public class GetTransactionQueryHandler : IRequestHandler<GetTransactionQuery, TransactionDto?>
 {
     private readonly ITransactionRepository _transactionRepository;
-    private readonly IMapper _mapper;
 
-    public GetTransactionQueryHandler(ITransactionRepository transactionRepository, IMapper mapper)
+    public GetTransactionQueryHandler(ITransactionRepository transactionRepository)
     {
         _transactionRepository = transactionRepository;
-        _mapper = mapper;
     }
 
     public async Task<TransactionDto?> Handle(GetTransactionQuery request, CancellationToken cancellationToken)
@@ -30,6 +28,6 @@ public class GetTransactionQueryHandler : IRequestHandler<GetTransactionQuery, T
             return null;
         }
 
-        return _mapper.Map<TransactionDto>(transaction);
+        return TransactionMapper.ToDto(transaction);
     }
 }

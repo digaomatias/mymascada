@@ -1,15 +1,12 @@
 using System.Security.Claims;
-using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Accounts.DTOs;
-using MyMascada.Application.Features.Accounts.Mappings;
 using MyMascada.Application.Features.Accounts.Queries;
 using MyMascada.Domain.Entities;
 using MyMascada.Domain.Enums;
-using Microsoft.Extensions.Logging.Abstractions;
 using MyMascada.WebAPI.Controllers;
 
 namespace MyMascada.Tests.Unit.Controllers;
@@ -18,7 +15,6 @@ public class AccountsControllerTests
 {
     private readonly IAccountRepository _accountRepository;
     private readonly ITransactionRepository _transactionRepository;
-    private readonly IMapper _mapper;
     private readonly IMediator _mediator;
     private readonly ICurrentUserService _currentUserService;
     private readonly IAccountAccessService _accountAccess;
@@ -37,14 +33,7 @@ public class AccountsControllerTests
         _accountAccess.IsOwnerAsync(Arg.Any<Guid>(), Arg.Any<int>()).Returns(true);
         _accountShareRepository = Substitute.For<IAccountShareRepository>();
 
-        // Set up real AutoMapper with the account mapping profile
-        var configuration = new MapperConfiguration(cfg =>
-        {
-            cfg.AddProfile<AccountMappingProfile>();
-        }, NullLoggerFactory.Instance);
-        _mapper = configuration.CreateMapper();
-
-        _controller = new AccountsController(_accountRepository, _transactionRepository, _mapper, _mediator, _currentUserService, _accountAccess, _accountShareRepository);
+        _controller = new AccountsController(_accountRepository, _transactionRepository, _mediator, _currentUserService, _accountAccess, _accountShareRepository);
 
         SetupUserClaims();
     }
@@ -598,7 +587,7 @@ public class AccountsControllerTests
         var currentUserService = Substitute.For<ICurrentUserService>();
         currentUserService.GetUserId().Returns(_ => throw new UnauthorizedAccessException("Invalid user ID in token"));
 
-        var controller = new AccountsController(_accountRepository, _transactionRepository, _mapper, _mediator, currentUserService, _accountAccess, _accountShareRepository);
+        var controller = new AccountsController(_accountRepository, _transactionRepository, _mediator, currentUserService, _accountAccess, _accountShareRepository);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
@@ -616,7 +605,7 @@ public class AccountsControllerTests
         var currentUserService = Substitute.For<ICurrentUserService>();
         currentUserService.GetUserId().Returns(_ => throw new UnauthorizedAccessException("Invalid user ID in token"));
 
-        var controller = new AccountsController(_accountRepository, _transactionRepository, _mapper, _mediator, currentUserService, _accountAccess, _accountShareRepository);
+        var controller = new AccountsController(_accountRepository, _transactionRepository, _mediator, currentUserService, _accountAccess, _accountShareRepository);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>

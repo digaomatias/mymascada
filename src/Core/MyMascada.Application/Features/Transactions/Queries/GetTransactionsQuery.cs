@@ -1,7 +1,7 @@
-using AutoMapper;
 using MediatR;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Transactions.DTOs;
+using MyMascada.Application.Features.Transactions.Mappings;
 using MyMascada.Domain.Enums;
 
 namespace MyMascada.Application.Features.Transactions.Queries;
@@ -34,12 +34,10 @@ public class GetTransactionsQuery : IRequest<TransactionListResponse>
 public class GetTransactionsQueryHandler : IRequestHandler<GetTransactionsQuery, TransactionListResponse>
 {
     private readonly ITransactionRepository _transactionRepository;
-    private readonly IMapper _mapper;
 
-    public GetTransactionsQueryHandler(ITransactionRepository transactionRepository, IMapper mapper)
+    public GetTransactionsQueryHandler(ITransactionRepository transactionRepository)
     {
         _transactionRepository = transactionRepository;
-        _mapper = mapper;
     }
 
     public async Task<TransactionListResponse> Handle(GetTransactionsQuery request, CancellationToken cancellationToken)
@@ -48,7 +46,7 @@ public class GetTransactionsQueryHandler : IRequestHandler<GetTransactionsQuery,
         var (transactions, totalCount) = await _transactionRepository.GetFilteredAsync(request);
         var summary = await _transactionRepository.GetSummaryAsync(request);
 
-        var transactionDtos = _mapper.Map<List<TransactionDto>>(transactions);
+        var transactionDtos = transactions.Select(TransactionMapper.ToDto).ToList();
 
         return new TransactionListResponse
         {
