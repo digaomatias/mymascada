@@ -698,6 +698,8 @@ public class AuthController : ControllerBase
                 {
                     Token = authResult.Token,
                     ExpiresAt = authResult.ExpiresAt,
+                    RefreshToken = authResult.RefreshToken,
+                    RefreshTokenExpiresAt = authResult.RefreshTokenExpiresAt,
                     CreatedAt = DateTime.UtcNow
                 });
                 var authCode = _dataProtector.Protect(codePayload);
@@ -734,6 +736,22 @@ public class AuthController : ControllerBase
             var expiresAt = expiresAtElement.ValueKind != JsonValueKind.Null
                 ? expiresAtElement.GetDateTime()
                 : DateTime.SpecifyKind(DateTime.UtcNow.AddDays(7), DateTimeKind.Utc);
+
+            // Set refresh token cookie if available in the payload
+            if (payload.TryGetProperty("RefreshToken", out var rtElement)
+                && rtElement.ValueKind == JsonValueKind.String)
+            {
+                var refreshToken = rtElement.GetString();
+                if (!string.IsNullOrEmpty(refreshToken))
+                {
+                    var refreshTokenExpiresAt =
+                        payload.TryGetProperty("RefreshTokenExpiresAt", out var rtExpiresElement)
+                            && rtExpiresElement.ValueKind != JsonValueKind.Null
+                            ? rtExpiresElement.GetDateTime()
+                            : DateTime.UtcNow.AddDays(30);
+                    SetRefreshTokenCookie(refreshToken, refreshTokenExpiresAt);
+                }
+            }
 
             return Ok(new { Token = token, ExpiresAt = expiresAt });
         }
