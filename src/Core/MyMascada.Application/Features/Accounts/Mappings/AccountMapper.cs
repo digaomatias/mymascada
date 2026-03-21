@@ -16,6 +16,16 @@ public static partial class AccountMapper
         return dto;
     }
 
+    [MapperIgnoreSource(nameof(Account.UserId))]
+    [MapperIgnoreSource(nameof(Account.Transactions))]
+    [MapperIgnoreSource(nameof(Account.BankConnection))]
+    [MapperIgnoreSource(nameof(Account.Shares))]
+    [MapperIgnoreSource(nameof(Account.IsDeleted))]
+    [MapperIgnoreSource(nameof(Account.DeletedAt))]
+    [MapperIgnoreSource(nameof(Account.CreatedBy))]
+    [MapperIgnoreSource(nameof(Account.UpdatedBy))]
+    [MapperIgnoreSource(nameof(Account.LastReconciledDate))]
+    [MapperIgnoreSource(nameof(Account.LastReconciledBalance))]
     [MapperIgnoreTarget(nameof(AccountDto.TypeDisplayName))]
     [MapperIgnoreTarget(nameof(AccountDto.IsOwner))]
     [MapperIgnoreTarget(nameof(AccountDto.IsSharedWithMe))]
