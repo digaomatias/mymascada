@@ -199,7 +199,7 @@ export function DraggableTransactionCard({
   };
 
   const cardClasses = `
-    relative p-4 border rounded-lg transition-all duration-200
+    relative p-3 sm:p-4 border rounded-lg transition-all duration-200
     ${bgColor} ${borderColor}
     ${isDragging ? 'opacity-60 scale-95 rotate-1 shadow-2xl z-50 cursor-grabbing' : onDragStart ? 'cursor-grab hover:shadow-lg' : 'cursor-pointer'}
     ${isDragOver && canReceiveDrop ? 'ring-2 ring-primary-500 ring-opacity-75 scale-105 bg-primary-50 border-primary-300' : ''}
@@ -268,10 +268,10 @@ export function DraggableTransactionCard({
           </div>
         )}
 
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="font-medium text-ink-900">{transaction.description}</span>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start sm:items-center gap-2 mb-2 flex-wrap">
+              <span className="font-medium text-ink-900 break-words">{transaction.description}</span>
               {showPreviewButton && !previewedDescription && !isPreviewing && onPreview && (
                 <button
                   onClick={(e) => {
@@ -305,19 +305,19 @@ export function DraggableTransactionCard({
               </div>
             )}
             
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
               <div>
                 <span className="text-ink-500">{tCommon('amount')}:</span>
-                <span className={`ml-2 font-medium ${
+                <span className={`ml-1 sm:ml-2 font-medium ${
                   transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'
                 }`}>
                   {formatCurrency(transaction.amount)}
                 </span>
               </div>
-              
+
               <div>
                 <span className="text-ink-500">{tCommon('date')}:</span>
-                <span className="ml-2 text-ink-900">
+                <span className="ml-1 sm:ml-2 text-ink-900">
                   {new Date(transaction.transactionDate).toLocaleDateString()}
                 </span>
               </div>
@@ -325,7 +325,7 @@ export function DraggableTransactionCard({
           </div>
           
           {/* Action buttons */}
-          <div className="flex flex-col gap-2 ml-4">
+          <div className="flex flex-row sm:flex-col gap-2 mt-3 sm:mt-0 sm:ml-4 pt-3 sm:pt-0 border-t sm:border-t-0 border-ink-200">
             {showMatchButton && onMatch && (
               <Button
                 variant="secondary"
