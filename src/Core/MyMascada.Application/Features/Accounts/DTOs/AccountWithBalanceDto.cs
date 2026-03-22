@@ -7,6 +7,7 @@ public class AccountWithBalanceDto : ISharingMetadata
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public int Type { get; set; }
+    public string TypeDisplayName { get; set; } = string.Empty;
     public string? Institution { get; set; }
     public decimal CurrentBalance { get; set; } // Static balance from account
     public decimal CalculatedBalance { get; set; } // Real-time calculated balance from transactions

@@ -64,13 +64,21 @@ public static partial class AccountMapper
     [MapperIgnoreTarget(nameof(Account.LastReconciledBalance))]
     public static partial void ApplyTo(UpdateAccountDto dto, Account account);
 
-    // Account -> AccountWithBalanceDto
+    // Account -> AccountWithBalanceDto (with custom TypeDisplayName)
+    public static AccountWithBalanceDto ToWithBalanceDto(Account account)
+    {
+        var dto = AccountToWithBalanceDtoGenerated(account);
+        dto.TypeDisplayName = GetAccountTypeDisplayName(account.Type);
+        return dto;
+    }
+
+    [MapperIgnoreTarget(nameof(AccountWithBalanceDto.TypeDisplayName))]
     [MapperIgnoreTarget(nameof(AccountWithBalanceDto.CalculatedBalance))]
     [MapperIgnoreTarget(nameof(AccountWithBalanceDto.IsOwner))]
     [MapperIgnoreTarget(nameof(AccountWithBalanceDto.IsSharedWithMe))]
     [MapperIgnoreTarget(nameof(AccountWithBalanceDto.ShareRole))]
     [MapperIgnoreTarget(nameof(AccountWithBalanceDto.SharedByUserName))]
-    public static partial AccountWithBalanceDto ToWithBalanceDto(Account account);
+    private static partial AccountWithBalanceDto AccountToWithBalanceDtoGenerated(Account account);
 
     // Account -> AccountDetailsDto (with custom TypeDisplayName)
     public static AccountDetailsDto ToDetailsDto(Account account)
