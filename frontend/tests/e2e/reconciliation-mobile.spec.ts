@@ -302,13 +302,12 @@ test.describe('Reconciliation Mobile Responsive', () => {
     page = await browser.newPage({ viewport: MOBILE_VIEWPORT });
 
     // Set up auth token and dismiss cookie consent via init script (runs before page loads)
-    const jwt = MOCK_JWT;
     await page.addInitScript((token) => {
       localStorage.setItem('auth_token', token);
       localStorage.setItem('refresh_token', 'mock-refresh-token');
       // Pre-dismiss cookie consent so it doesn't block interactions
       localStorage.setItem('cookie_consent_accepted', 'true');
-    }, jwt);
+    }, MOCK_JWT);
 
     // Set up all API mocks BEFORE navigating
     await setupApiMocks(page);
