@@ -1077,7 +1077,7 @@ export function ReconciliationDetailsView({
       <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
         <CardContent className="p-0">
           {/* Tab Headers */}
-          <div className="flex overflow-x-auto border-b border-ink-200" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+          <div className="flex overflow-x-auto border-b border-ink-200 hide-scrollbar">
             {Object.entries(TAB_CONFIG).map(([key, config]) => {
               const count = getTabData(key as TabType).length;
               const isActive = activeTab === key;
