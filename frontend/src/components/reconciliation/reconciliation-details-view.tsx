@@ -863,10 +863,10 @@ export function ReconciliationDetailsView({
     
     // For other transaction types, use the standard card display (exact matches, etc.)
     return (
-      <div key={item.id} className={`p-4 border rounded-lg ${config.bgColor} ${config.borderColor} mb-3`}>
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
+      <div key={item.id} className={`p-3 sm:p-4 border rounded-lg ${config.bgColor} ${config.borderColor} mb-3`}>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start sm:items-center gap-2 mb-2 flex-wrap">
               <config.icon className={`w-4 h-4 ${config.color}`} />
               <span className="font-medium text-ink-900">{item.displayDescription}</span>
               <span className={`text-xs px-2 py-1 rounded-full ${config.bgColor} ${config.color} font-medium`}>
@@ -926,7 +926,7 @@ export function ReconciliationDetailsView({
           
           {/* Unlink button for exact matches */}
           {activeTab === 'exact' && item.systemTransaction && item.bankTransaction && (
-            <div className="flex flex-col gap-2 ml-4">
+            <div className="flex flex-col gap-2 mt-2 sm:mt-0 sm:ml-4">
               <Button
                 variant="ghost"
                 size="sm"
@@ -1012,8 +1012,8 @@ export function ReconciliationDetailsView({
       {/* Filters */}
       <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
         <CardContent className="p-4">
-          <div className="flex flex-wrap gap-4 items-end">
-            <div className="flex-1 min-w-64">
+          <div className="flex flex-wrap gap-3 sm:gap-4 items-end">
+            <div className="flex-1 min-w-0 w-full sm:min-w-64 sm:w-auto">
               <label className="block text-sm font-medium text-ink-700 mb-1">
                 {t('searchTransactions')}
               </label>
@@ -1029,7 +1029,7 @@ export function ReconciliationDetailsView({
               </div>
             </div>
             
-            <div className="w-32">
+            <div className="w-[calc(50%-0.375rem)] sm:w-32">
               <label className="block text-sm font-medium text-ink-700 mb-1">
                 {t('minAmount')}
               </label>
@@ -1042,8 +1042,8 @@ export function ReconciliationDetailsView({
                 className="w-full px-3 py-2 border border-ink-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
-            
-            <div className="w-32">
+
+            <div className="w-[calc(50%-0.375rem)] sm:w-32">
               <label className="block text-sm font-medium text-ink-700 mb-1">
                 {t('maxAmount')}
               </label>
@@ -1077,11 +1077,11 @@ export function ReconciliationDetailsView({
       <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
         <CardContent className="p-0">
           {/* Tab Headers */}
-          <div className="flex border-b border-ink-200">
+          <div className="flex overflow-x-auto border-b border-ink-200" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
             {Object.entries(TAB_CONFIG).map(([key, config]) => {
               const count = getTabData(key as TabType).length;
               const isActive = activeTab === key;
-              
+
               return (
                 <button
                   key={key}
@@ -1091,15 +1091,15 @@ export function ReconciliationDetailsView({
                     setSelectedItems(new Set());
                     setShowBulkActions(false);
                   }}
-                  className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
+                  className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-3 border-b-2 transition-colors whitespace-nowrap ${
                     isActive
                       ? `${config.color} border-current bg-white`
                       : 'text-ink-500 border-transparent hover:text-ink-700 hover:border-ink-300'
                   }`}
                 >
-                  <config.icon className="w-4 h-4" />
-                  <span className="font-medium">{config.label}</span>
-                  <span className={`px-2 py-1 text-xs rounded-full ${
+                  <config.icon className="w-4 h-4 hidden sm:block" />
+                  <span className="font-medium text-xs sm:text-sm">{config.label}</span>
+                  <span className={`px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs rounded-full ${
                     isActive ? config.bgColor : 'bg-ink-100'
                   }`}>
                     {count}
@@ -1111,8 +1111,8 @@ export function ReconciliationDetailsView({
 
           {/* Bulk Actions Bar */}
           {(activeTab === 'fuzzy' || activeTab === 'unmatched-system' || activeTab === 'unmatched-bank') && (showBulkActions || tabData.length > 0) && (
-            <div className="bg-ink-50 border-b border-ink-200 p-4">
-              <div className="flex items-center justify-between">
+            <div className="bg-ink-50 border-b border-ink-200 p-3 sm:p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="flex items-center gap-4">
                   {/* Select All Checkbox */}
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -1126,7 +1126,7 @@ export function ReconciliationDetailsView({
                       {t('selectAllCount', { count: tabData.length })}
                     </span>
                   </label>
-                  
+
                   {selectedItems.size > 0 && (
                     <span className="text-sm text-ink-600">
                       {t('itemsSelected', { count: selectedItems.size })}
@@ -1136,7 +1136,7 @@ export function ReconciliationDetailsView({
 
                 {/* Bulk Action Buttons */}
                 {showBulkActions && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     {activeTab === 'fuzzy' && (
                       <>
                         {/* Quick Approve Buttons for Fuzzy Matches */}
@@ -1240,10 +1240,10 @@ export function ReconciliationDetailsView({
           )}
 
           {/* Tab Content */}
-          <div className="p-6">
-            {/* Drag and Drop Instructions for Unmatched Tabs */}
+          <div className="p-3 sm:p-6">
+            {/* Drag and Drop Instructions for Unmatched Tabs - hidden on mobile */}
             {(activeTab === 'unmatched-bank' || activeTab === 'unmatched-system') && tabData.length > 0 && (
-              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg hidden md:block">
                 <div className="flex items-center gap-2 text-blue-800 text-sm">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1302,14 +1302,14 @@ export function ReconciliationDetailsView({
       {/* Actions */}
       <Card className="bg-white/90 backdrop-blur-xs border-0 shadow-lg">
         <CardContent className="p-6">
-          <div className="flex justify-end gap-3">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
             <Button variant="secondary" onClick={onBack}>
               {t('backToMatching')}
             </Button>
             <Button
               onClick={onCompleteReconciliation}
               disabled={loading}
-              className="flex items-center gap-2"
+              className="flex items-center justify-center gap-2"
             >
               {loading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
               {t('completeReconciliation')}
