@@ -71,6 +71,14 @@ public static partial class AccountMapper
     [MapperIgnoreTarget(nameof(AccountWithBalanceDto.IsSharedWithMe))]
     [MapperIgnoreTarget(nameof(AccountWithBalanceDto.ShareRole))]
     [MapperIgnoreTarget(nameof(AccountWithBalanceDto.SharedByUserName))]
+    [MapperIgnoreSource(nameof(Account.UserId))]
+    [MapperIgnoreSource(nameof(Account.Transactions))]
+    [MapperIgnoreSource(nameof(Account.BankConnection))]
+    [MapperIgnoreSource(nameof(Account.Shares))]
+    [MapperIgnoreSource(nameof(Account.IsDeleted))]
+    [MapperIgnoreSource(nameof(Account.LastReconciledDate))]
+    [MapperIgnoreSource(nameof(Account.LastReconciledBalance))]
+    [MapperIgnoreSource(nameof(Account.LastFourDigits))]
     public static partial AccountWithBalanceDto ToWithBalanceDto(Account account);
 
     // Account -> AccountDetailsDto (with custom TypeDisplayName)
