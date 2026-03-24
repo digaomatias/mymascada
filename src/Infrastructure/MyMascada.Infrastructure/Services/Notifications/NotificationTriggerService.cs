@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using MyMascada.Application.Common.Interfaces;
@@ -70,8 +72,21 @@ public class NotificationTriggerService : INotificationTriggerService
     {
         try
         {
-            var groupKey = $"transaction-reminder-{merchantName}-{dueDate:yyyy-MM-dd}";
-            var data = JsonSerializer.Serialize(new { href = "/transactions" });
+            // Hash the merchant name to guard against unbounded external strings exceeding the
+            // 200-char GroupKey DB column limit.
+            var merchantHash = Convert.ToHexString(
+                SHA256.HashData(Encoding.UTF8.GetBytes(merchantName.Trim().ToUpperInvariant())))[..16];
+            var groupKey = $"transaction-reminder-{merchantHash}-{dueDate:yyyy-MM-dd}";
+
+            // Store structured payload so the client can render localised copy.
+            var data = JsonSerializer.Serialize(new
+            {
+                href = "/transactions",
+                templateKey = "TransactionReminder",
+                merchantName,
+                amountMinorUnits = (long)Math.Round(amount * 100),
+                dateIso = dueDate.ToString("yyyy-MM-dd")
+            });
 
             await _notificationService.CreateNotificationAsync(
                 userId,

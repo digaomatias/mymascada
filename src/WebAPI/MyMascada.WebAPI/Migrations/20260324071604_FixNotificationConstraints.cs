@@ -19,7 +19,7 @@ namespace MyMascada.WebAPI.Migrations
                 table: "Notifications",
                 columns: new[] { "UserId", "GroupKey" },
                 unique: true,
-                filter: "\"GroupKey\" IS NOT NULL");
+                filter: "\"GroupKey\" IS NOT NULL AND \"IsDeleted\" = false");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_NotificationPreferences_Users_UserId",

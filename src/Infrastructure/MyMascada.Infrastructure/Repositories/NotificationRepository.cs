@@ -22,6 +22,7 @@ public class NotificationRepository : INotificationRepository
     public async Task<Notification?> GetByIdAsync(Guid id, Guid userId, CancellationToken cancellationToken = default)
     {
         return await _context.Notifications
+            .AsNoTracking()
             .FirstOrDefaultAsync(n => n.Id == id && n.UserId == userId && !n.IsDeleted, cancellationToken);
     }
 
@@ -34,6 +35,7 @@ public class NotificationRepository : INotificationRepository
         CancellationToken cancellationToken = default)
     {
         var query = _context.Notifications
+            .AsNoTracking()
             .Where(n => n.UserId == userId && !n.IsDeleted);
 
         if (type.HasValue)
@@ -56,6 +58,7 @@ public class NotificationRepository : INotificationRepository
     public async Task<int> GetUnreadCountAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         return await _context.Notifications
+            .AsNoTracking()
             .CountAsync(n => n.UserId == userId && !n.IsRead && !n.IsDeleted, cancellationToken);
     }
 
@@ -146,6 +149,7 @@ public class NotificationRepository : INotificationRepository
     public async Task<bool> ExistsByGroupKeyAsync(Guid userId, string groupKey, CancellationToken cancellationToken = default)
     {
         return await _context.Notifications
+            .AsNoTracking()
             .AnyAsync(n => n.UserId == userId && n.GroupKey == groupKey && !n.IsDeleted, cancellationToken);
     }
 
@@ -153,12 +157,12 @@ public class NotificationRepository : INotificationRepository
     {
         var since = DateTime.UtcNow - window;
         return await _context.Notifications
+            .AsNoTracking()
             .CountAsync(n => n.UserId == userId && n.Type == type && n.CreatedAt >= since && !n.IsDeleted, cancellationToken);
     }
 
     public async Task<Notification?> CreateIfRateLimitNotExceededAsync(
         Notification notification,
-        NotificationType type,
         TimeSpan rateLimitWindow,
         int maxCount,
         CancellationToken cancellationToken = default)
@@ -168,7 +172,8 @@ public class NotificationRepository : INotificationRepository
         await using var transaction = await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
         try
         {
-            var count = await CountRecentByTypeAsync(notification.UserId, type, rateLimitWindow, cancellationToken);
+            // Use notification.Type so the rate-limit bucket always matches what will be inserted.
+            var count = await CountRecentByTypeAsync(notification.UserId, notification.Type, rateLimitWindow, cancellationToken);
             if (count >= maxCount)
             {
                 await transaction.RollbackAsync(cancellationToken);

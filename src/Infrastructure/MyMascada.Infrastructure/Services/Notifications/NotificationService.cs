@@ -116,7 +116,7 @@ public class NotificationService : INotificationService
 
         // Rate limiting: atomically check daily count and insert to prevent races.
         var created = await _notificationRepository.CreateIfRateLimitNotExceededAsync(
-            notification, type, TimeSpan.FromDays(1), MaxNotificationsPerTypePerDay, cancellationToken);
+            notification, TimeSpan.FromDays(1), MaxNotificationsPerTypePerDay, cancellationToken);
         if (created == null)
         {
             _logger.LogDebug("Rate limit reached for user {UserId}, type {Type}. Skipping notification", userId, type);

@@ -3569,6 +3569,8 @@
     "title": "Notifications",
     "empty": "No notifications yet",
     "loading": "Loading notifications...",
+    "loadError": "Failed to load notifications",
+    "retry": "Retry",
     "markAllRead": "Mark all as read",
     "markRead": "Mark as read",
     "dismiss": "Dismiss",

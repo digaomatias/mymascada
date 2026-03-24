@@ -3569,6 +3569,8 @@
     "title": "Notificações",
     "empty": "Nenhuma notificação ainda",
     "loading": "Carregando notificações...",
+    "loadError": "Falha ao carregar notificações",
+    "retry": "Tentar novamente",
     "markAllRead": "Marcar todas como lidas",
     "markRead": "Marcar como lida",
     "dismiss": "Dispensar",

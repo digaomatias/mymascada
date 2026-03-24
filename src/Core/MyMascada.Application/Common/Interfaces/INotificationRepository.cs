@@ -24,11 +24,11 @@ public interface INotificationRepository
 
     /// <summary>
     /// Atomically checks the per-type rate limit and, if not exceeded, inserts the notification.
+    /// The rate-limit bucket is determined from <paramref name="notification"/>.Type.
     /// Returns <c>null</c> if the rate limit was exceeded (notification was not created).
     /// </summary>
     Task<Notification?> CreateIfRateLimitNotExceededAsync(
         Notification notification,
-        NotificationType type,
         TimeSpan rateLimitWindow,
         int maxCount,
         CancellationToken cancellationToken = default);

@@ -37,7 +37,8 @@ public class NotificationsController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         [FromQuery] NotificationType? type = null,
-        [FromQuery] bool? isRead = null)
+        [FromQuery] bool? isRead = null,
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -50,8 +51,12 @@ public class NotificationsController : ControllerBase
                 IsRead = isRead
             };
 
-            var result = await _mediator.Send(query);
+            var result = await _mediator.Send(query, cancellationToken);
             return Ok(result);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -68,7 +73,7 @@ public class NotificationsController : ControllerBase
     /// Get unread notification count for badge display
     /// </summary>
     [HttpGet("unread-count")]
-    public async Task<ActionResult<UnreadCountResponse>> GetUnreadCount()
+    public async Task<ActionResult<UnreadCountResponse>> GetUnreadCount(CancellationToken cancellationToken = default)
     {
         try
         {
@@ -77,8 +82,12 @@ public class NotificationsController : ControllerBase
                 UserId = _currentUserService.GetUserId()
             };
 
-            var result = await _mediator.Send(query);
+            var result = await _mediator.Send(query, cancellationToken);
             return Ok(result);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -95,7 +104,7 @@ public class NotificationsController : ControllerBase
     /// Mark a single notification as read
     /// </summary>
     [HttpPatch("{id:guid}/read")]
-    public async Task<ActionResult> MarkAsRead(Guid id)
+    public async Task<ActionResult> MarkAsRead(Guid id, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -105,8 +114,12 @@ public class NotificationsController : ControllerBase
                 UserId = _currentUserService.GetUserId()
             };
 
-            await _mediator.Send(command);
+            await _mediator.Send(command, cancellationToken);
             return NoContent();
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -123,7 +136,7 @@ public class NotificationsController : ControllerBase
     /// Mark all notifications as read
     /// </summary>
     [HttpPost("read-all")]
-    public async Task<ActionResult> MarkAllAsRead()
+    public async Task<ActionResult> MarkAllAsRead(CancellationToken cancellationToken = default)
     {
         try
         {
@@ -132,8 +145,12 @@ public class NotificationsController : ControllerBase
                 UserId = _currentUserService.GetUserId()
             };
 
-            await _mediator.Send(command);
+            await _mediator.Send(command, cancellationToken);
             return NoContent();
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -150,7 +167,7 @@ public class NotificationsController : ControllerBase
     /// Delete/dismiss a notification
     /// </summary>
     [HttpDelete("{id:guid}")]
-    public async Task<ActionResult> DeleteNotification(Guid id)
+    public async Task<ActionResult> DeleteNotification(Guid id, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -160,8 +177,12 @@ public class NotificationsController : ControllerBase
                 UserId = _currentUserService.GetUserId()
             };
 
-            await _mediator.Send(command);
+            await _mediator.Send(command, cancellationToken);
             return NoContent();
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -178,7 +199,7 @@ public class NotificationsController : ControllerBase
     /// Get notification preferences
     /// </summary>
     [HttpGet("preferences")]
-    public async Task<ActionResult<NotificationPreferenceDto>> GetPreferences()
+    public async Task<ActionResult<NotificationPreferenceDto>> GetPreferences(CancellationToken cancellationToken = default)
     {
         try
         {
@@ -187,8 +208,12 @@ public class NotificationsController : ControllerBase
                 UserId = _currentUserService.GetUserId()
             };
 
-            var result = await _mediator.Send(query);
+            var result = await _mediator.Send(query, cancellationToken);
             return Ok(result);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -206,7 +231,8 @@ public class NotificationsController : ControllerBase
     /// </summary>
     [HttpPut("preferences")]
     public async Task<ActionResult<NotificationPreferenceDto>> UpdatePreferences(
-        [FromBody] UpdateNotificationPreferenceRequest request)
+        [FromBody] UpdateNotificationPreferenceRequest request,
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -222,8 +248,12 @@ public class NotificationsController : ControllerBase
                 RunwayWarningMonths = request.RunwayWarningMonths
             };
 
-            var result = await _mediator.Send(command);
+            var result = await _mediator.Send(command, cancellationToken);
             return Ok(result);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (UnauthorizedAccessException ex)
         {

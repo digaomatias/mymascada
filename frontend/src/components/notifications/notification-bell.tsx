@@ -3,10 +3,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { BellIcon, CheckIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { BellIcon, CheckIcon, TrashIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { BellAlertIcon } from '@heroicons/react/24/solid';
 import { apiClient } from '@/lib/api-client';
 import { useAuth } from '@/contexts/auth-context';
+import { useLocale } from '@/contexts/locale-context';
 import { cn } from '@/lib/utils';
 import type { NotificationDto } from '@/types/notifications';
 
@@ -16,11 +17,13 @@ export function NotificationBell() {
   const { isAuthenticated } = useAuth();
   const t = useTranslations('notifications');
   const router = useRouter();
+  const { locale } = useLocale();
 
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<NotificationDto[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -45,11 +48,13 @@ export function NotificationBell() {
   const fetchNotifications = useCallback(async () => {
     if (!isAuthenticated) return;
     setIsLoading(true);
+    setLoadError(false);
     try {
       const result = await apiClient.getNotifications({ pageSize: 15 });
       setNotifications(result.items);
-    } catch {
-      // silently ignore
+    } catch (error) {
+      console.error('Failed to load notifications:', error);
+      setLoadError(true);
     } finally {
       setIsLoading(false);
     }
@@ -98,6 +103,9 @@ export function NotificationBell() {
         prev.map((n) => (n.id === id ? { ...n, isRead: false } : n))
       );
       setUnreadCount((prev) => prev + 1);
+    } finally {
+      // Re-sync badge count from server to resolve any races with the polling interval
+      void fetchUnreadCount();
     }
   };
 
@@ -120,6 +128,9 @@ export function NotificationBell() {
         prev.map((n) => (flippedSet.has(n.id) ? { ...n, isRead: false } : n))
       );
       setUnreadCount((prev) => prev + flippedCount);
+    } finally {
+      // Re-sync badge count from server to resolve any races with the polling interval
+      void fetchUnreadCount();
     }
   };
 
@@ -151,6 +162,9 @@ export function NotificationBell() {
           setUnreadCount((prev) => prev + 1);
         }
       }
+    } finally {
+      // Re-sync badge count from server to resolve any races with the polling interval
+      void fetchUnreadCount();
     }
   };
 
@@ -175,6 +189,9 @@ export function NotificationBell() {
           )
         );
         setUnreadCount((prev) => prev + 1);
+      } finally {
+        // Re-sync badge count from server to resolve any races with the polling interval
+        void fetchUnreadCount();
       }
     }
 
@@ -216,7 +233,8 @@ export function NotificationBell() {
     const diffDays = Math.floor(diffHours / 24);
     if (diffDays < 7) return t('daysAgo', { count: diffDays });
 
-    return date.toLocaleDateString();
+    // Use the active app locale so older dates match the selected language
+    return date.toLocaleDateString(locale);
   };
 
   if (!isAuthenticated) return null;
@@ -266,6 +284,18 @@ export function NotificationBell() {
             {isLoading ? (
               <div className="py-8 text-center text-ink-400 text-sm">
                 {t('loading')}
+              </div>
+            ) : loadError ? (
+              <div className="py-8 text-center text-ink-400 text-sm flex flex-col items-center gap-2">
+                <span>{t('loadError')}</span>
+                <button
+                  type="button"
+                  onClick={fetchNotifications}
+                  className="flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700 font-medium cursor-pointer"
+                >
+                  <ArrowPathIcon className="w-3.5 h-3.5" />
+                  {t('retry')}
+                </button>
               </div>
             ) : notifications.length === 0 ? (
               <div className="py-8 text-center text-ink-400 text-sm">

@@ -1372,7 +1372,7 @@ namespace MyMascada.WebAPI.Migrations
 
                     b.HasIndex("UserId", "GroupKey")
                         .IsUnique()
-                        .HasFilter("\"GroupKey\" IS NOT NULL");
+                        .HasFilter("\"GroupKey\" IS NOT NULL AND \"IsDeleted\" = false");
 
                     b.HasIndex("UserId", "IsRead");
 

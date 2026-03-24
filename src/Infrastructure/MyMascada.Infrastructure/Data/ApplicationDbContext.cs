@@ -961,10 +961,12 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => new { e.UserId, e.IsRead });
             entity.HasIndex(e => new { e.UserId, e.Type });
             entity.HasIndex(e => new { e.UserId, e.CreatedAt });
-            // Composite unique index on (UserId, GroupKey) to enforce idempotency at DB level
+            // Composite unique index on (UserId, GroupKey) to enforce idempotency at DB level.
+            // Filter excludes NULL GroupKey and soft-deleted rows so that deleted notifications
+            // do not block future inserts for the same (UserId, GroupKey) combination.
             entity.HasIndex(e => new { e.UserId, e.GroupKey })
                 .IsUnique()
-                .HasFilter("\"GroupKey\" IS NOT NULL");
+                .HasFilter("\"GroupKey\" IS NOT NULL AND \"IsDeleted\" = false");
 
             entity.HasQueryFilter(e => !e.IsDeleted);
         });
