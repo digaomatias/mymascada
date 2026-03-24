@@ -30,6 +30,11 @@ public class RegisterCommand : IRequest<AuthenticationResponse>
 
 public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthenticationResponse>
 {
+    /// <summary>
+    /// The platform identifier sent by mobile clients to bypass invite code requirements.
+    /// </summary>
+    public const string MobileClientPlatform = "mobile";
+
     private static readonly string[] SupportedLocales = ["en", "pt-BR"];
     private static readonly HashSet<string> ValidCountryCodes = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -84,7 +89,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Authentic
         if (_betaAccessOptions.RequireInviteCode)
         {
             var isMobileBypass = _betaAccessOptions.MobileBypassEnabled
-                && string.Equals(request.ClientPlatform, "mobile", StringComparison.OrdinalIgnoreCase);
+                && string.Equals(request.ClientPlatform, MobileClientPlatform, StringComparison.OrdinalIgnoreCase);
 
             if (!isMobileBypass)
             {

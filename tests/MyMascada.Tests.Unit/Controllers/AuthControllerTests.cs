@@ -11,6 +11,7 @@ using MyMascada.Application.Features.Authentication.Commands;
 using MyMascada.Application.Features.Authentication.DTOs;
 using MyMascada.Application.Features.Authentication.Queries;
 using MyMascada.Domain.Entities;
+using MyMascada.WebAPI.Constants;
 using MyMascada.WebAPI.Controllers;
 using NSubstitute;
 using System.Security.Claims;
@@ -128,7 +129,7 @@ public class AuthControllerTests
             TimeZone = "UTC"
         };
 
-        _controller.ControllerContext.HttpContext.Request.Headers["X-Client-Platform"] = "mobile";
+        _controller.ControllerContext.HttpContext.Request.Headers[CustomHeaders.ClientPlatform] = RegisterCommandHandler.MobileClientPlatform;
 
         var expectedResponse = new AuthenticationResponse { IsSuccess = true, Token = "jwt" };
         _mediator.Send(Arg.Any<RegisterCommand>()).Returns(expectedResponse);
@@ -138,7 +139,7 @@ public class AuthControllerTests
 
         // Assert
         await _mediator.Received(1).Send(Arg.Is<RegisterCommand>(cmd =>
-            cmd.ClientPlatform == "mobile"));
+            cmd.ClientPlatform == RegisterCommandHandler.MobileClientPlatform));
     }
 
     [Fact]

@@ -82,7 +82,7 @@ public class RegisterCommandHandlerTests
         _betaAccessOptions.MobileBypassEnabled = true;
 
         var handler = CreateHandler();
-        var command = CreateValidCommand(clientPlatform: "mobile");
+        var command = CreateValidCommand(clientPlatform: RegisterCommandHandler.MobileClientPlatform);
 
         // Act
         var result = await handler.Handle(command, CancellationToken.None);
@@ -125,7 +125,7 @@ public class RegisterCommandHandlerTests
             .Returns((false, "A valid invite code is required to register during the beta period."));
 
         var handler = CreateHandler();
-        var command = CreateValidCommand(clientPlatform: "mobile");
+        var command = CreateValidCommand(clientPlatform: RegisterCommandHandler.MobileClientPlatform);
 
         // Act
         var result = await handler.Handle(command, CancellationToken.None);
