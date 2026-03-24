@@ -247,7 +247,10 @@ public class TransactionRepository : ITransactionRepository
             .AsNoTracking()
             .Include(t => t.Account)
             .Include(t => t.Category)
-            .Where(t => accessibleIds.Contains(t.AccountId) && !t.Account.IsDeleted)
+            .Where(t => accessibleIds.Contains(t.AccountId)
+                        && !t.Account.IsDeleted
+                        && !t.TransferId.HasValue
+                        && t.Type != TransactionType.TransferComponent)
             .OrderByDescending(t => t.TransactionDate)
             .Take(count)
             .ToListAsync(cancellationToken);
@@ -684,7 +687,9 @@ public class TransactionRepository : ITransactionRepository
             .Include(t => t.Account)
             .Where(t => accessibleIds.Contains(t.AccountId) &&
                        !t.CategoryId.HasValue &&
-                       !t.IsDeleted)
+                       !t.IsDeleted &&
+                       !t.TransferId.HasValue &&
+                       t.Type != TransactionType.TransferComponent)
             .OrderByDescending(t => t.CreatedAt)
             .Take(maxCount)
             .ToListAsync(cancellationToken);

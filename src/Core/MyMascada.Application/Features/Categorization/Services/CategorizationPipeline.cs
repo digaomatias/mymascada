@@ -52,6 +52,18 @@ public class CategorizationPipeline : ICategorizationPipeline
     public async Task<CategorizationResult> ProcessAsync(IEnumerable<Transaction> transactions, CancellationToken cancellationToken = default)
     {
         var transactionsList = transactions.ToList();
+
+        // Filter out transfer components — they should not be categorized as expenses/income
+        var transfers = transactionsList.Where(t => t.IsTransfer()).ToList();
+        if (transfers.Any())
+        {
+            _logger.LogInformation(
+                "Skipping {TransferCount} transfer component(s) from categorization pipeline. IDs: [{TransferIds}]",
+                transfers.Count, string.Join(", ", transfers.Select(t => t.Id)));
+            transactionsList = transactionsList.Where(t => !t.IsTransfer()).ToList();
+        }
+
+        // Check after filtering: covers both empty input and all-transfer input
         if (!transactionsList.Any())
         {
             return new CategorizationResult();
@@ -60,10 +72,10 @@ public class CategorizationPipeline : ICategorizationPipeline
         var stopwatch = Stopwatch.StartNew();
         var finalResult = new CategorizationResult();
         finalResult.Metrics.TotalTransactions = transactionsList.Count;
-        
+
         // Log transaction IDs for better traceability
         var transactionIds = transactionsList.Select(t => t.Id).ToList();
-        _logger.LogInformation("Starting categorization pipeline for {TransactionCount} transactions. IDs: [{TransactionIds}]", 
+        _logger.LogInformation("Starting categorization pipeline for {TransactionCount} transactions. IDs: [{TransactionIds}]",
             transactionsList.Count, string.Join(", ", transactionIds));
 
         try

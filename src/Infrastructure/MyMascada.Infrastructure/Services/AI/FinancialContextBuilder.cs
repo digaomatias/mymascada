@@ -284,6 +284,8 @@ public class FinancialContextBuilder : IFinancialContextBuilder
         IEnumerable<Domain.Entities.Transaction>? transactions)
     {
         sb.AppendLine("=== RECENT TRANSACTIONS (Last 15) ===");
+        sb.AppendLine("  Note: inter-account transfers are excluded here to keep spending analysis accurate.");
+        sb.AppendLine("  Use the GetTransfers tool if the user asks about transfers or money moved between accounts.");
 
         if (transactions == null || !transactions.Any())
         {
@@ -294,7 +296,7 @@ public class FinancialContextBuilder : IFinancialContextBuilder
 
         sb.AppendLine("  Date | Description | Amount | Category");
 
-        foreach (var t in transactions)
+        foreach (var t in transactions.Where(t => !t.IsTransfer()))
         {
             var categoryName = t.Category?.Name ?? "Uncategorized";
             var description = t.GetDisplayDescription();
