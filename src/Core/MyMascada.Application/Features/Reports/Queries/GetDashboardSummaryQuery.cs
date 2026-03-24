@@ -31,16 +31,21 @@ public class GetDashboardSummaryQueryHandler : IRequestHandler<GetDashboardSumma
         // Get user's accounts
         var userAccounts = (await _accountRepository.GetByUserIdAsync(request.UserId)).ToList();
 
-        // Calculate total balance from accounts
-        var totalBalance = userAccounts.Sum(a => a.CurrentBalance);
+        // Get real-time balances (initial balance + transaction sums)
+        var accountBalances = await _transactionRepository.GetAccountBalancesAsync(request.UserId);
 
-        // Net worth breakdown: CreditCard(3) + Loan(5) = liabilities, rest = assets
-        var totalAssets = userAccounts
-            .Where(a => a.Type != AccountType.CreditCard && a.Type != AccountType.Loan)
-            .Sum(a => a.CurrentBalance);
-        var totalLiabilities = Math.Abs(userAccounts
-            .Where(a => a.Type == AccountType.CreditCard || a.Type == AccountType.Loan)
-            .Sum(a => a.CurrentBalance));
+        decimal GetBalance(Domain.Entities.Account a) => accountBalances.GetValueOrDefault(a.Id, a.CurrentBalance);
+
+        // Calculate total balance, assets, and liabilities in one pass
+        var balanceByType = userAccounts
+            .GroupBy(a => a.Type == AccountType.CreditCard || a.Type == AccountType.Loan) // true: liabilities, false: assets
+            .ToDictionary(g => g.Key, g => g.Sum(GetBalance));
+
+        var totalAssets = balanceByType.GetValueOrDefault(false, 0m);
+        var totalLiabilitiesRaw = balanceByType.GetValueOrDefault(true, 0m);
+
+        var totalBalance = totalAssets + totalLiabilitiesRaw;
+        var totalLiabilities = Math.Abs(totalLiabilitiesRaw);
         var netWorth = totalAssets - totalLiabilities;
 
         // Get current month boundaries
