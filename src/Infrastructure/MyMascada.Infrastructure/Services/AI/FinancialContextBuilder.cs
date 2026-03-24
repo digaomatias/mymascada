@@ -284,6 +284,8 @@ public class FinancialContextBuilder : IFinancialContextBuilder
         IEnumerable<Domain.Entities.Transaction>? transactions)
     {
         sb.AppendLine("=== RECENT TRANSACTIONS (Last 15) ===");
+        sb.AppendLine("  Note: inter-account transfers are excluded here to keep spending analysis accurate.");
+        sb.AppendLine("  Use the GetTransfers tool if the user asks about transfers or money moved between accounts.");
 
         if (transactions == null || !transactions.Any())
         {
