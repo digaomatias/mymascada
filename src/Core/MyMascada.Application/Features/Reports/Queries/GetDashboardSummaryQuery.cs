@@ -31,16 +31,21 @@ public class GetDashboardSummaryQueryHandler : IRequestHandler<GetDashboardSumma
         // Get user's accounts
         var userAccounts = (await _accountRepository.GetByUserIdAsync(request.UserId)).ToList();
 
-        // Calculate total balance from accounts
-        var totalBalance = userAccounts.Sum(a => a.CurrentBalance);
+        // Get real-time balances (initial balance + transaction sums)
+        var accountBalances = await _transactionRepository.GetAccountBalancesAsync(request.UserId);
+
+        decimal GetBalance(Domain.Entities.Account a) => accountBalances.GetValueOrDefault(a.Id, a.CurrentBalance);
+
+        // Calculate total balance from real-time balances
+        var totalBalance = userAccounts.Sum(GetBalance);
 
         // Net worth breakdown: CreditCard(3) + Loan(5) = liabilities, rest = assets
         var totalAssets = userAccounts
             .Where(a => a.Type != AccountType.CreditCard && a.Type != AccountType.Loan)
-            .Sum(a => a.CurrentBalance);
+            .Sum(GetBalance);
         var totalLiabilities = Math.Abs(userAccounts
             .Where(a => a.Type == AccountType.CreditCard || a.Type == AccountType.Loan)
-            .Sum(a => a.CurrentBalance));
+            .Sum(GetBalance));
         var netWorth = totalAssets - totalLiabilities;
 
         // Get current month boundaries
