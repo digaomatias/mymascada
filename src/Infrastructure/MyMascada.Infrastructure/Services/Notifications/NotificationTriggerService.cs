@@ -35,11 +35,13 @@ public class NotificationTriggerService : INotificationTriggerService
             var groupKey = $"categorization-reminder-{DateTime.UtcNow:yyyy-MM-dd}";
             var data = JsonSerializer.Serialize(new { href = "/transactions/categorize", count });
 
+            // Use template keys for title/body so the client can render localised copy.
+            // Raw values (count) are passed in the structured data payload.
             await _notificationService.CreateNotificationAsync(
                 userId,
                 NotificationType.CategorizationReminder,
-                "Uncategorized Transactions",
-                $"You have {count} uncategorized transaction{(count == 1 ? "" : "s")} waiting for review.",
+                "CategorizationReminder",
+                "CategorizationReminder.body",
                 data,
                 NotificationPriority.Normal,
                 groupKey,
@@ -88,11 +90,13 @@ public class NotificationTriggerService : INotificationTriggerService
                 dateIso = dueDate.ToString("yyyy-MM-dd")
             });
 
+            // Use template keys for title/body so the client can render localised copy.
+            // Structured raw values (merchantName, amountMinorUnits, dateIso) are in the data payload.
             await _notificationService.CreateNotificationAsync(
                 userId,
                 NotificationType.TransactionReminder,
-                "Upcoming Transaction",
-                $"{merchantName} — {amount:C} due on {dueDate:MMM dd}.",
+                "TransactionReminder",
+                "TransactionReminder.body",
                 data,
                 NotificationPriority.Normal,
                 groupKey,
