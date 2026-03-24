@@ -11,6 +11,7 @@ using MyMascada.Application.Features.Authentication.DTOs;
 using MyMascada.Application.Features.Authentication.Queries;
 using MyMascada.Application.Common.Interfaces;
 using Microsoft.AspNetCore.RateLimiting;
+using MyMascada.WebAPI.Constants;
 using MyMascada.WebAPI.Extensions;
 
 namespace MyMascada.WebAPI.Controllers;
@@ -74,6 +75,7 @@ public class AuthController : ControllerBase
             InviteCode = request.InviteCode,
             Country = request.Country,
             Language = request.Language,
+            ClientPlatform = Request.Headers[CustomHeaders.ClientPlatform].FirstOrDefault(),
             IpAddress = GetClientIpAddress(),
             UserAgent = Request.Headers.UserAgent.FirstOrDefault()
         };

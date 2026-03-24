@@ -11,6 +11,7 @@ using MyMascada.Application.Features.Authentication.Commands;
 using MyMascada.Application.Features.Authentication.DTOs;
 using MyMascada.Application.Features.Authentication.Queries;
 using MyMascada.Domain.Entities;
+using MyMascada.WebAPI.Constants;
 using MyMascada.WebAPI.Controllers;
 using NSubstitute;
 using System.Security.Claims;
@@ -110,6 +111,35 @@ public class AuthControllerTests
             cmd.PhoneNumber == request.PhoneNumber &&
             cmd.Currency == request.Currency &&
             cmd.TimeZone == request.TimeZone));
+    }
+
+    [Fact]
+    public async Task Register_WithClientPlatformHeader_ShouldPassItToCommand()
+    {
+        // Arrange
+        var request = new RegisterRequest
+        {
+            Email = "mobile@example.com",
+            UserName = "mobileuser",
+            Password = "TestPass123!",
+            ConfirmPassword = "TestPass123!",
+            FirstName = "Mobile",
+            LastName = "User",
+            Currency = "USD",
+            TimeZone = "UTC"
+        };
+
+        _controller.ControllerContext.HttpContext.Request.Headers[CustomHeaders.ClientPlatform] = RegisterCommandHandler.MobileClientPlatform;
+
+        var expectedResponse = new AuthenticationResponse { IsSuccess = true, Token = "jwt" };
+        _mediator.Send(Arg.Any<RegisterCommand>()).Returns(expectedResponse);
+
+        // Act
+        await _controller.Register(request);
+
+        // Assert
+        await _mediator.Received(1).Send(Arg.Is<RegisterCommand>(cmd =>
+            cmd.ClientPlatform == RegisterCommandHandler.MobileClientPlatform));
     }
 
     [Fact]
