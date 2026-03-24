@@ -42,6 +42,7 @@ public interface ITransactionRepository
     Task<IEnumerable<CategorizationRule>> GetCategorizationRulesAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<IEnumerable<Transaction>> GetCategorizedTransactionsAsync(Guid userId, int count = 200, CancellationToken cancellationToken = default);
     Task<IEnumerable<Transaction>> GetUncategorizedTransactionsAsync(Guid userId, int maxCount = 500, CancellationToken cancellationToken = default);
+    Task<int> CountUncategorizedTransactionsAsync(Guid userId, CancellationToken cancellationToken = default);
 
     Task SaveChangesAsync();
     

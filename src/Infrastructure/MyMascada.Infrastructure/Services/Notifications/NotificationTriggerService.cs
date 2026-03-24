@@ -25,15 +25,10 @@ public class NotificationTriggerService : INotificationTriggerService
     {
         try
         {
-            var uncategorized = await _transactionRepository.GetUncategorizedTransactionsAsync(userId, maxCount: 1, cancellationToken: cancellationToken);
-            var uncategorizedList = uncategorized.ToList();
+            var count = await _transactionRepository.CountUncategorizedTransactionsAsync(userId, cancellationToken);
 
-            if (uncategorizedList.Count == 0)
+            if (count == 0)
                 return;
-
-            // Get the actual full count for the notification message
-            var allUncategorized = await _transactionRepository.GetUncategorizedTransactionsAsync(userId, cancellationToken: cancellationToken);
-            var count = allUncategorized.Count();
 
             var groupKey = $"categorization-reminder-{DateTime.UtcNow:yyyy-MM-dd}";
             var data = JsonSerializer.Serialize(new { href = "/transactions/categorize", count });

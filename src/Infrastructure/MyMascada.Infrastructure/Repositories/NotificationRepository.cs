@@ -108,9 +108,14 @@ public class NotificationRepository : INotificationRepository
     public async Task DeleteExpiredAsync(int retentionDays = 90, CancellationToken cancellationToken = default)
     {
         var cutoff = DateTime.UtcNow.AddDays(-retentionDays);
+        var now = DateTime.UtcNow;
         await _context.Notifications
-            .Where(n => n.CreatedAt < cutoff)
-            .ExecuteDeleteAsync(cancellationToken);
+            .Where(n => n.CreatedAt < cutoff && !n.IsDeleted)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(n => n.IsDeleted, true)
+                .SetProperty(n => n.DeletedAt, now)
+                .SetProperty(n => n.UpdatedAt, now),
+                cancellationToken);
     }
 
     public async Task<bool> ExistsByGroupKeyAsync(Guid userId, string groupKey, CancellationToken cancellationToken = default)

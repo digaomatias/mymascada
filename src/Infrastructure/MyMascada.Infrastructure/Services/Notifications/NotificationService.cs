@@ -55,14 +55,28 @@ public class NotificationService : INotificationService
             return;
         }
 
-        // Check user preferences (is this type enabled for in-app?)
+        // Check user preferences: skip if the user has explicitly disabled in-app for this type
         var preferences = await _preferenceRepository.GetByUserIdAsync(userId, cancellationToken);
         if (preferences?.ChannelPreferences != null)
         {
-            // For now, channel preferences are stored as JSON but we only check for in-app.
-            // If the user has explicitly disabled in-app for this type, skip.
-            // This is a simplified check — a full implementation would parse the JSON.
-            // By default, all types are enabled for in-app delivery.
+            try
+            {
+                var channelPrefs = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, System.Text.Json.JsonElement>>(
+                    preferences.ChannelPreferences);
+                var typeName = type.ToString();
+                if (channelPrefs != null &&
+                    channelPrefs.TryGetValue(typeName, out var typePrefs) &&
+                    typePrefs.TryGetProperty("inApp", out var inAppProp) &&
+                    inAppProp.ValueKind == System.Text.Json.JsonValueKind.False)
+                {
+                    _logger.LogDebug("Skipping in-app notification for user {UserId}, type {Type} — disabled by user preference", userId, type);
+                    return;
+                }
+            }
+            catch (System.Text.Json.JsonException ex)
+            {
+                _logger.LogWarning(ex, "Failed to parse ChannelPreferences for user {UserId}; proceeding with notification delivery", userId);
+            }
         }
 
         var notification = new Notification

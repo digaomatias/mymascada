@@ -2,6 +2,7 @@ using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Notifications.Commands;
 using MyMascada.Application.Features.Notifications.DTOs;
@@ -19,11 +20,13 @@ public class NotificationsController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ICurrentUserService _currentUserService;
+    private readonly ILogger<NotificationsController> _logger;
 
-    public NotificationsController(IMediator mediator, ICurrentUserService currentUserService)
+    public NotificationsController(IMediator mediator, ICurrentUserService currentUserService, ILogger<NotificationsController> logger)
     {
         _mediator = mediator;
         _currentUserService = currentUserService;
+        _logger = logger;
     }
 
     /// <summary>
@@ -56,6 +59,7 @@ public class NotificationsController : ControllerBase
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error retrieving notifications for user");
             return StatusCode(500, new { message = "An error occurred while retrieving notifications." });
         }
     }
@@ -82,6 +86,7 @@ public class NotificationsController : ControllerBase
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error getting unread notification count for user");
             return StatusCode(500, new { message = "An error occurred while getting unread count." });
         }
     }
@@ -109,6 +114,7 @@ public class NotificationsController : ControllerBase
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error marking notification {NotificationId} as read", id);
             return StatusCode(500, new { message = "An error occurred while marking notification as read." });
         }
     }
@@ -135,6 +141,7 @@ public class NotificationsController : ControllerBase
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error marking all notifications as read for user");
             return StatusCode(500, new { message = "An error occurred while marking all notifications as read." });
         }
     }
@@ -162,6 +169,7 @@ public class NotificationsController : ControllerBase
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error deleting notification {NotificationId}", id);
             return StatusCode(500, new { message = "An error occurred while deleting the notification." });
         }
     }
@@ -188,6 +196,7 @@ public class NotificationsController : ControllerBase
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error retrieving notification preferences for user");
             return StatusCode(500, new { message = "An error occurred while retrieving preferences." });
         }
     }
@@ -222,6 +231,7 @@ public class NotificationsController : ControllerBase
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error updating notification preferences for user");
             return StatusCode(500, new { message = "An error occurred while updating preferences." });
         }
     }
