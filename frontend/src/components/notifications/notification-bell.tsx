@@ -82,10 +82,8 @@ export function NotificationBell() {
 
   const handleMarkAsRead = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    const originalNotifications = [...notifications];
-    const originalUnreadCount = unreadCount;
 
-    // Optimistic update
+    // Optimistic update — use functional updater to avoid clobbering concurrent state changes
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
     );
@@ -95,17 +93,20 @@ export function NotificationBell() {
       await apiClient.markNotificationRead(id);
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
-      // Revert on error
-      setNotifications(originalNotifications);
-      setUnreadCount(originalUnreadCount);
+      // Revert only the specific notification that failed
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, isRead: false } : n))
+      );
+      setUnreadCount((prev) => prev + 1);
     }
   };
 
   const handleMarkAllRead = async () => {
-    const originalNotifications = [...notifications];
-    const originalUnreadCount = unreadCount;
+    // Track which IDs were flipped so we can revert only those on failure
+    const flippedIds = notifications.filter((n) => !n.isRead).map((n) => n.id);
+    const flippedCount = flippedIds.length;
 
-    // Optimistic update
+    // Optimistic update — use functional updater to avoid clobbering concurrent state changes
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
     setUnreadCount(0);
 
@@ -113,21 +114,23 @@ export function NotificationBell() {
       await apiClient.markAllNotificationsRead();
     } catch (error) {
       console.error('Failed to mark all notifications as read:', error);
-      // Revert on error
-      setNotifications(originalNotifications);
-      setUnreadCount(originalUnreadCount);
+      // Revert only the notifications that were flipped
+      const flippedSet = new Set(flippedIds);
+      setNotifications((prev) =>
+        prev.map((n) => (flippedSet.has(n.id) ? { ...n, isRead: false } : n))
+      );
+      setUnreadCount((prev) => prev + flippedCount);
     }
   };
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    const originalNotifications = [...notifications];
-    const originalUnreadCount = unreadCount;
     const deleted = notifications.find((n) => n.id === id);
+    const wasUnread = deleted != null && !deleted.isRead;
 
-    // Optimistic update
+    // Optimistic update — use functional updater to avoid clobbering concurrent state changes
     setNotifications((prev) => prev.filter((n) => n.id !== id));
-    if (deleted && !deleted.isRead) {
+    if (wasUnread) {
       setUnreadCount((prev) => Math.max(0, prev - 1));
     }
 
@@ -135,29 +138,57 @@ export function NotificationBell() {
       await apiClient.deleteNotification(id);
     } catch (error) {
       console.error('Failed to delete notification:', error);
-      // Revert on error
-      setNotifications(originalNotifications);
-      setUnreadCount(originalUnreadCount);
+      // Restore only the deleted item on failure
+      if (deleted != null) {
+        setNotifications((prev) => {
+          // Re-insert in original position if possible, otherwise append
+          const idx = notifications.findIndex((n) => n.id === id);
+          const next = [...prev];
+          next.splice(Math.min(idx, next.length), 0, deleted);
+          return next;
+        });
+        if (wasUnread) {
+          setUnreadCount((prev) => prev + 1);
+        }
+      }
     }
   };
 
-  const handleNotificationClick = (notification: NotificationDto) => {
-    // Mark as read
+  const handleNotificationClick = async (notification: NotificationDto) => {
+    // Mark as read optimistically; await and revert on failure
     if (!notification.isRead) {
-      apiClient.markNotificationRead(notification.id).catch(() => {});
       setNotifications((prev) =>
         prev.map((n) =>
           n.id === notification.id ? { ...n, isRead: true } : n
         )
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
+
+      try {
+        await apiClient.markNotificationRead(notification.id);
+      } catch (error) {
+        console.error('Failed to mark notification as read:', error);
+        // Revert optimistic change
+        setNotifications((prev) =>
+          prev.map((n) =>
+            n.id === notification.id ? { ...n, isRead: false } : n
+          )
+        );
+        setUnreadCount((prev) => prev + 1);
+      }
     }
 
-    // Deep linking via data payload — only allow internal paths (starting with '/')
+    // Deep linking via data payload — only allow internal paths (starting with '/', but not '//')
     if (notification.data) {
       try {
         const data = JSON.parse(notification.data);
-        if (data.href && typeof data.href === 'string' && data.href.startsWith('/')) {
+        if (
+          data.href &&
+          typeof data.href === 'string' &&
+          data.href.startsWith('/') &&
+          !data.href.startsWith('//') &&
+          !data.href.includes('://')
+        ) {
           setIsOpen(false);
           router.push(data.href);
           return;

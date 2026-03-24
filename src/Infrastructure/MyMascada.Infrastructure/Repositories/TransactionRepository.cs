@@ -696,7 +696,8 @@ public class TransactionRepository : ITransactionRepository
         return await _context.Transactions
             .CountAsync(t => accessibleIds.Contains(t.AccountId) &&
                              !t.CategoryId.HasValue &&
-                             !t.IsDeleted,
+                             !t.IsDeleted &&
+                             !t.Account.IsDeleted,
                         cancellationToken);
     }
 

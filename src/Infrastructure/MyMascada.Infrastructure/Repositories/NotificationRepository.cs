@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MyMascada.Application.Common.Interfaces;
@@ -153,5 +154,35 @@ public class NotificationRepository : INotificationRepository
         var since = DateTime.UtcNow - window;
         return await _context.Notifications
             .CountAsync(n => n.UserId == userId && n.Type == type && n.CreatedAt >= since && !n.IsDeleted, cancellationToken);
+    }
+
+    public async Task<Notification?> CreateIfRateLimitNotExceededAsync(
+        Notification notification,
+        NotificationType type,
+        TimeSpan rateLimitWindow,
+        int maxCount,
+        CancellationToken cancellationToken = default)
+    {
+        // Wrap count-check + insert in a serializable transaction to prevent races
+        // where two concurrent requests both pass the count check and both insert.
+        await using var transaction = await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+        try
+        {
+            var count = await CountRecentByTypeAsync(notification.UserId, type, rateLimitWindow, cancellationToken);
+            if (count >= maxCount)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return null;
+            }
+
+            var created = await CreateAsync(notification, cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            return created;
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
     }
 }

@@ -21,4 +21,15 @@ public interface INotificationRepository
     Task DeleteExpiredAsync(int retentionDays = 90, CancellationToken cancellationToken = default);
     Task<bool> ExistsByGroupKeyAsync(Guid userId, string groupKey, CancellationToken cancellationToken = default);
     Task<int> CountRecentByTypeAsync(Guid userId, NotificationType type, TimeSpan window, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Atomically checks the per-type rate limit and, if not exceeded, inserts the notification.
+    /// Returns <c>null</c> if the rate limit was exceeded (notification was not created).
+    /// </summary>
+    Task<Notification?> CreateIfRateLimitNotExceededAsync(
+        Notification notification,
+        NotificationType type,
+        TimeSpan rateLimitWindow,
+        int maxCount,
+        CancellationToken cancellationToken = default);
 }

@@ -43,6 +43,10 @@ public class NotificationTriggerService : INotificationTriggerService
                 groupKey,
                 cancellationToken: cancellationToken);
         }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error checking categorization reminder for user {UserId}", userId);
@@ -78,6 +82,10 @@ public class NotificationTriggerService : INotificationTriggerService
                 NotificationPriority.Normal,
                 groupKey,
                 cancellationToken: cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch (Exception ex)
         {

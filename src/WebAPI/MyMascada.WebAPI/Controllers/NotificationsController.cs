@@ -44,7 +44,7 @@ public class NotificationsController : ControllerBase
             var query = new GetNotificationsQuery
             {
                 UserId = _currentUserService.GetUserId(),
-                Page = page,
+                Page = Math.Max(1, page),
                 PageSize = Math.Clamp(pageSize, 1, 50),
                 Type = type,
                 IsRead = isRead

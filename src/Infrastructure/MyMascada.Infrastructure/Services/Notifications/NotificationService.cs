@@ -47,16 +47,6 @@ public class NotificationService : INotificationService
             }
         }
 
-        // Rate limiting: check daily count for this type.
-        // This is a best-effort guard; under high concurrency a small burst above the cap is acceptable.
-        var recentCount = await _notificationRepository.CountRecentByTypeAsync(
-            userId, type, TimeSpan.FromDays(1), cancellationToken);
-        if (recentCount >= MaxNotificationsPerTypePerDay)
-        {
-            _logger.LogDebug("Rate limit reached for user {UserId}, type {Type}. Skipping notification", userId, type);
-            return;
-        }
-
         // Check user preferences: skip if the user has explicitly disabled in-app for this type, or if quiet hours are active
         var preferences = await _preferenceRepository.GetByUserIdAsync(userId, cancellationToken);
         if (preferences != null)
@@ -124,7 +114,14 @@ public class NotificationService : INotificationService
             ExpiresAt = expiresAt
         };
 
-        await _notificationRepository.CreateAsync(notification, cancellationToken);
+        // Rate limiting: atomically check daily count and insert to prevent races.
+        var created = await _notificationRepository.CreateIfRateLimitNotExceededAsync(
+            notification, type, TimeSpan.FromDays(1), MaxNotificationsPerTypePerDay, cancellationToken);
+        if (created == null)
+        {
+            _logger.LogDebug("Rate limit reached for user {UserId}, type {Type}. Skipping notification", userId, type);
+            return;
+        }
 
         _logger.LogInformation("Created {Type} notification for user {UserId}", type, userId);
 
