@@ -218,6 +218,47 @@ export function NotificationBell() {
     setIsOpen(false);
   };
 
+  // Resolve notification title/body: the backend stores template keys (e.g. "CategorizationReminder").
+  // Try to look up a translation under notifications.templates.<key>; fall back to the raw string.
+  const resolveText = (key: string, dataJson: string | null): string => {
+    try {
+      // next-intl returns the key itself when the message is missing; use t.has() to avoid that.
+      const templateKey = `templates.${key}` as Parameters<typeof t>[0];
+      if (t.has(templateKey)) {
+        return t(templateKey, parseDataArgs(dataJson));
+      }
+      return key;
+    } catch {
+      return key;
+    }
+  };
+
+  const parseDataArgs = (dataJson: string | null): Record<string, string | number> => {
+    if (!dataJson) return {};
+    try {
+      const parsed = JSON.parse(dataJson) as Record<string, unknown>;
+      const args: Record<string, string | number> = {};
+      if (typeof parsed.count === 'number') args.count = parsed.count;
+      if (typeof parsed.merchantName === 'string') args.merchantName = parsed.merchantName;
+      if (typeof parsed.dateIso === 'string') args.date = parsed.dateIso;
+      if (typeof parsed.amountMinorUnits === 'number') {
+        // Format amount using active locale; fall back to raw value
+        try {
+          args.amount = new Intl.NumberFormat(locale, {
+            style: 'currency',
+            currency: 'USD', // TODO: include currency in data payload
+            minimumFractionDigits: 2,
+          }).format(parsed.amountMinorUnits / 100);
+        } catch {
+          args.amount = String(parsed.amountMinorUnits / 100);
+        }
+      }
+      return args;
+    } catch {
+      return {};
+    }
+  };
+
   const formatTime = (dateStr: string) => {
     const date = new Date(dateStr);
     const now = new Date();
@@ -243,9 +284,12 @@ export function NotificationBell() {
     <div className="relative">
       <button
         ref={buttonRef}
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 rounded-xl text-ink-500 hover:text-primary-600 hover:bg-ink-100 transition-colors cursor-pointer"
         aria-label={t('title')}
+        aria-expanded={isOpen}
+        aria-controls="notification-panel"
       >
         {unreadCount > 0 ? (
           <BellAlertIcon className="w-5 h-5" />
@@ -261,6 +305,7 @@ export function NotificationBell() {
 
       {isOpen && (
         <div
+          id="notification-panel"
           ref={panelRef}
           className="absolute right-0 top-full mt-2 w-80 sm:w-96 max-h-[70vh] bg-white rounded-xl border border-ink-200 shadow-xl z-50 flex flex-col overflow-hidden"
         >
@@ -316,7 +361,7 @@ export function NotificationBell() {
                       type="button"
                       onClick={() => handleNotificationClick(notification)}
                       className="flex items-start gap-3 px-4 py-3 flex-1 min-w-0 text-left cursor-pointer"
-                      aria-label={notification.title}
+                      aria-label={resolveText(notification.title, notification.data)}
                     >
                       {/* Unread dot */}
                       <div className="pt-1.5 shrink-0">
@@ -333,10 +378,10 @@ export function NotificationBell() {
                       {/* Content */}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-ink-900 truncate">
-                          {notification.title}
+                          {resolveText(notification.title, notification.data)}
                         </p>
                         <p className="text-xs text-ink-500 mt-0.5 line-clamp-2">
-                          {notification.body}
+                          {resolveText(notification.body, notification.data)}
                         </p>
                         <p className="text-[11px] text-ink-400 mt-1">
                           {formatTime(notification.createdAt)}

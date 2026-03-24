@@ -1,5 +1,6 @@
 using System.Data;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Microsoft.Extensions.Logging;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Domain.Entities;
@@ -72,8 +73,7 @@ public class NotificationRepository : INotificationRepository
         {
             await _context.SaveChangesAsync(cancellationToken);
         }
-        catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("duplicate", StringComparison.OrdinalIgnoreCase) == true
-            || ex.InnerException?.Message.Contains("unique", StringComparison.OrdinalIgnoreCase) == true)
+        catch (DbUpdateException ex) when (ex.InnerException is Npgsql.PostgresException { SqlState: "23505" })
         {
             // Race condition: another request inserted the same (UserId, GroupKey) concurrently.
             // Treat as a no-op — return the existing notification instead.
@@ -156,9 +156,12 @@ public class NotificationRepository : INotificationRepository
     public async Task<int> CountRecentByTypeAsync(Guid userId, NotificationType type, TimeSpan window, CancellationToken cancellationToken = default)
     {
         var since = DateTime.UtcNow - window;
+        // Count ALL notifications regardless of soft-delete status to prevent rate-limit bypass
+        // (a user could delete notifications to reset the counter and trigger more than allowed).
         return await _context.Notifications
+            .IgnoreQueryFilters()
             .AsNoTracking()
-            .CountAsync(n => n.UserId == userId && n.Type == type && n.CreatedAt >= since && !n.IsDeleted, cancellationToken);
+            .CountAsync(n => n.UserId == userId && n.Type == type && n.CreatedAt >= since, cancellationToken);
     }
 
     public async Task<Notification?> CreateIfRateLimitNotExceededAsync(

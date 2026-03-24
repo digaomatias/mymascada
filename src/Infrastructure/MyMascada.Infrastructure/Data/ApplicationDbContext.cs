@@ -968,6 +968,10 @@ public class ApplicationDbContext : DbContext
                 .IsUnique()
                 .HasFilter("\"GroupKey\" IS NOT NULL AND \"IsDeleted\" = false");
 
+            // Partial index to speed up DeleteExpiredAsync which filters on ExpiresAt IS NOT NULL.
+            entity.HasIndex(e => e.ExpiresAt)
+                .HasFilter("\"ExpiresAt\" IS NOT NULL AND \"IsDeleted\" = false");
+
             entity.HasQueryFilter(e => !e.IsDeleted);
         });
 

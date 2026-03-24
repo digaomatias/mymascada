@@ -3577,6 +3577,12 @@
     "justNow": "Just now",
     "minutesAgo": "{count, plural, one {1 minute ago} other {# minutes ago}}",
     "hoursAgo": "{count, plural, one {1 hour ago} other {# hours ago}}",
-    "daysAgo": "{count, plural, one {1 day ago} other {# days ago}}"
+    "daysAgo": "{count, plural, one {1 day ago} other {# days ago}}",
+    "templates": {
+      "CategorizationReminder": "Transactions to categorize",
+      "CategorizationReminder.body": "{count, plural, one {You have 1 uncategorized transaction} other {You have # uncategorized transactions}}",
+      "TransactionReminder": "Upcoming transaction",
+      "TransactionReminder.body": "{merchantName} — {amount} due on {date}"
+    }
   }
 }

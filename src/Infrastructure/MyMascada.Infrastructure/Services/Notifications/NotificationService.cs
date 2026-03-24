@@ -87,6 +87,7 @@ public class NotificationService : INotificationService
                     var typeName = type.ToString();
                     if (channelPrefs != null &&
                         channelPrefs.TryGetValue(typeName, out var typePrefs) &&
+                        typePrefs.ValueKind == System.Text.Json.JsonValueKind.Object &&
                         typePrefs.TryGetProperty("inApp", out var inAppProp) &&
                         inAppProp.ValueKind == System.Text.Json.JsonValueKind.False)
                     {
