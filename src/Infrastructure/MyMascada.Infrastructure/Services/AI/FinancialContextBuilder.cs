@@ -294,7 +294,7 @@ public class FinancialContextBuilder : IFinancialContextBuilder
 
         sb.AppendLine("  Date | Description | Amount | Category");
 
-        foreach (var t in transactions)
+        foreach (var t in transactions.Where(t => !t.IsTransfer()))
         {
             var categoryName = t.Category?.Name ?? "Uncategorized";
             var description = t.GetDisplayDescription();
