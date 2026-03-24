@@ -154,4 +154,24 @@ public class RegisterCommandHandlerTests
         // Assert
         result.IsSuccess.Should().BeTrue();
     }
+
+    [Theory]
+    [InlineData("mobile")]
+    [InlineData("Mobile")]
+    [InlineData("MOBILE")]
+    public async Task Handle_MobileClient_CaseInsensitive_ShouldSucceed(string platform)
+    {
+        // Arrange
+        _betaAccessOptions.RequireInviteCode = true;
+        _betaAccessOptions.MobileBypassEnabled = true;
+
+        var handler = CreateHandler();
+        var command = CreateValidCommand(clientPlatform: platform);
+
+        // Act
+        var result = await handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+    }
 }
