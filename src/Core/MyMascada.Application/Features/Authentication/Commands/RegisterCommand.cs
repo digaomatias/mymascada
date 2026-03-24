@@ -25,6 +25,7 @@ public class RegisterCommand : IRequest<AuthenticationResponse>
     public string? InviteCode { get; set; }
     public string? Country { get; set; }
     public string? Language { get; set; }
+    public string? ClientPlatform { get; set; }
 }
 
 public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthenticationResponse>
@@ -82,12 +83,18 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Authentic
         // Validate invite code if required
         if (_betaAccessOptions.RequireInviteCode)
         {
-            var (isValid, errorMessage) = await _inviteCodeValidationService.ValidateAsync(request.InviteCode);
-            if (!isValid)
+            var isMobileBypass = _betaAccessOptions.MobileBypassEnabled
+                && string.Equals(request.ClientPlatform, "mobile", StringComparison.OrdinalIgnoreCase);
+
+            if (!isMobileBypass)
             {
-                _logger.LogWarning("Registration attempted with invalid invite code: {InviteCode}", request.InviteCode ?? "(empty)");
-                response.Errors.Add(errorMessage ?? "A valid invite code is required to register during the beta period.");
-                return response;
+                var (isValid, errorMessage) = await _inviteCodeValidationService.ValidateAsync(request.InviteCode);
+                if (!isValid)
+                {
+                    _logger.LogWarning("Registration attempted with invalid invite code: {InviteCode}", request.InviteCode ?? "(empty)");
+                    response.Errors.Add(errorMessage ?? "A valid invite code is required to register during the beta period.");
+                    return response;
+                }
             }
         }
 

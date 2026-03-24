@@ -14,6 +14,11 @@ public class BetaAccessOptions
     public bool RequireInviteCode { get; set; } = false;
 
     /// <summary>
+    /// Whether mobile clients (identified by X-Client-Platform header) can bypass invite code validation.
+    /// </summary>
+    public bool MobileBypassEnabled { get; set; } = true;
+
+    /// <summary>
     /// Comma-separated list of valid invite codes.
     /// </summary>
     public string ValidInviteCodes { get; set; } = string.Empty;

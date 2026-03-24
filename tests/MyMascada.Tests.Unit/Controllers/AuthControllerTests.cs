@@ -113,6 +113,35 @@ public class AuthControllerTests
     }
 
     [Fact]
+    public async Task Register_WithClientPlatformHeader_ShouldPassItToCommand()
+    {
+        // Arrange
+        var request = new RegisterRequest
+        {
+            Email = "mobile@example.com",
+            UserName = "mobileuser",
+            Password = "TestPass123!",
+            ConfirmPassword = "TestPass123!",
+            FirstName = "Mobile",
+            LastName = "User",
+            Currency = "USD",
+            TimeZone = "UTC"
+        };
+
+        _controller.ControllerContext.HttpContext.Request.Headers["X-Client-Platform"] = "mobile";
+
+        var expectedResponse = new AuthenticationResponse { IsSuccess = true, Token = "jwt" };
+        _mediator.Send(Arg.Any<RegisterCommand>()).Returns(expectedResponse);
+
+        // Act
+        await _controller.Register(request);
+
+        // Assert
+        await _mediator.Received(1).Send(Arg.Is<RegisterCommand>(cmd =>
+            cmd.ClientPlatform == "mobile"));
+    }
+
+    [Fact]
     public async Task Register_WithInvalidRequest_ShouldReturnBadRequest()
     {
         // Arrange

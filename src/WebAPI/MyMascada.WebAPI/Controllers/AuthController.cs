@@ -74,6 +74,7 @@ public class AuthController : ControllerBase
             InviteCode = request.InviteCode,
             Country = request.Country,
             Language = request.Language,
+            ClientPlatform = Request.Headers["X-Client-Platform"].FirstOrDefault(),
             IpAddress = GetClientIpAddress(),
             UserAgent = Request.Headers.UserAgent.FirstOrDefault()
         };
