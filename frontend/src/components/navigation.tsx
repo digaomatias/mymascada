@@ -21,6 +21,7 @@ import {
   ArrowRightOnRectangleIcon,
 } from '@heroicons/react/24/outline';
 import { AppIcon } from '@/components/app-icon';
+import { NotificationBell } from '@/components/notifications/notification-bell';
 
 export default function Navigation() {
   const { user, logout, isAuthenticated } = useAuth();
@@ -179,7 +180,11 @@ export default function Navigation() {
               <span className="text-lg font-bold text-white">MyMascada</span>
             </Link>
 
-            <button
+            <div className="flex items-center gap-1">
+              <div className="[&_button]:text-white [&_span]:bg-white [&_span]:text-[oklch(20%_0.06_168)]">
+                <NotificationBell />
+              </div>
+              <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="text-white p-2 rounded-xl hover:bg-white/10 focus:outline-hidden focus:ring-2 focus:ring-white/30 cursor-pointer"
               aria-label={t('toggleMenu')}
@@ -192,6 +197,7 @@ export default function Navigation() {
                 )}
               </svg>
             </button>
+            </div>
           </div>
         </div>
 

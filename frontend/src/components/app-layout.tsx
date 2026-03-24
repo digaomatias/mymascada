@@ -2,6 +2,7 @@
 
 import Navigation from '@/components/navigation';
 import { DashboardBackground } from '@/components/dashboard/dashboard-background';
+import { NotificationBell } from '@/components/notifications/notification-bell';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -19,6 +20,11 @@ export function AppLayout({ children, mainClassName, noBackground }: AppLayoutPr
       {/* Main content area — offset by sidebar width on lg+ */}
       <div className="flex-1 flex flex-col min-w-0 pb-20 lg:pb-0 lg:ml-[260px]">
         {!noBackground && <DashboardBackground />}
+
+        {/* Desktop notification bell — floats top-right */}
+        <div className="hidden lg:flex justify-end relative z-20 px-8 pt-6 -mb-6">
+          <NotificationBell />
+        </div>
 
         <main
           className={

@@ -52,6 +52,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<AiTokenUsage> AiTokenUsages => Set<AiTokenUsage>();
     public DbSet<BillingPlan> BillingPlans => Set<BillingPlan>();
     public DbSet<UserSubscription> UserSubscriptions => Set<UserSubscription>();
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -934,6 +936,43 @@ public class ApplicationDbContext : DbContext
                 .WithMany(p => p.Subscriptions)
                 .HasForeignKey(e => e.PlanId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
+        // Notification configuration
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.Type).IsRequired();
+            entity.Property(e => e.Priority).IsRequired().HasDefaultValue(MyMascada.Domain.Enums.NotificationPriority.Normal);
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Body).IsRequired().HasMaxLength(2000);
+            entity.Property(e => e.Data).HasColumnType("jsonb");
+            entity.Property(e => e.GroupKey).HasMaxLength(200);
+
+            // Indexes for efficient querying
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => new { e.UserId, e.IsRead });
+            entity.HasIndex(e => new { e.UserId, e.Type });
+            entity.HasIndex(e => new { e.UserId, e.CreatedAt });
+            entity.HasIndex(e => e.GroupKey);
+
+            entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
+        // NotificationPreference configuration
+        modelBuilder.Entity<NotificationPreference>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.ChannelPreferences).HasColumnType("jsonb");
+            entity.Property(e => e.QuietHoursTimezone).HasMaxLength(50);
+            entity.Property(e => e.LargeTransactionThreshold).HasPrecision(18, 2);
+
+            // One preference record per user
+            entity.HasIndex(e => e.UserId).IsUnique();
 
             entity.HasQueryFilter(e => !e.IsDeleted);
         });

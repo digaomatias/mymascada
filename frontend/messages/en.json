@@ -3564,5 +3564,17 @@
     "message": "We use essential cookies only — for your session and language preference. No tracking or advertising cookies.",
     "learnMore": "Learn more",
     "accept": "Got it"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications yet",
+    "loading": "Loading notifications...",
+    "markAllRead": "Mark all as read",
+    "markRead": "Mark as read",
+    "dismiss": "Dismiss",
+    "justNow": "Just now",
+    "minutesAgo": "{count, plural, one {1 minute ago} other {# minutes ago}}",
+    "hoursAgo": "{count, plural, one {1 hour ago} other {# hours ago}}",
+    "daysAgo": "{count, plural, one {1 day ago} other {# days ago}}"
   }
 }
