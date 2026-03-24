@@ -52,10 +52,6 @@ public class CategorizationPipeline : ICategorizationPipeline
     public async Task<CategorizationResult> ProcessAsync(IEnumerable<Transaction> transactions, CancellationToken cancellationToken = default)
     {
         var transactionsList = transactions.ToList();
-        if (!transactionsList.Any())
-        {
-            return new CategorizationResult();
-        }
 
         // Filter out transfer components — they should not be categorized as expenses/income
         var transfers = transactionsList.Where(t => t.IsTransfer()).ToList();
@@ -67,6 +63,7 @@ public class CategorizationPipeline : ICategorizationPipeline
             transactionsList = transactionsList.Where(t => !t.IsTransfer()).ToList();
         }
 
+        // Check after filtering: covers both empty input and all-transfer input
         if (!transactionsList.Any())
         {
             return new CategorizationResult();
