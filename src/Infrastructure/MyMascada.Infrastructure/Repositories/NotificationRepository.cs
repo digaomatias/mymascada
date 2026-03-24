@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Domain.Entities;
 using MyMascada.Domain.Enums;
@@ -9,10 +10,12 @@ namespace MyMascada.Infrastructure.Repositories;
 public class NotificationRepository : INotificationRepository
 {
     private readonly ApplicationDbContext _context;
+    private readonly ILogger<NotificationRepository> _logger;
 
-    public NotificationRepository(ApplicationDbContext context)
+    public NotificationRepository(ApplicationDbContext context, ILogger<NotificationRepository> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task<Notification?> GetByIdAsync(Guid id, Guid userId, CancellationToken cancellationToken = default)
@@ -61,7 +64,28 @@ public class NotificationRepository : INotificationRepository
         notification.UpdatedAt = DateTime.UtcNow;
 
         _context.Notifications.Add(notification);
-        await _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("duplicate", StringComparison.OrdinalIgnoreCase) == true
+            || ex.InnerException?.Message.Contains("unique", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            // Race condition: another request inserted the same (UserId, GroupKey) concurrently.
+            // Treat as a no-op — return the existing notification instead.
+            _logger.LogDebug(
+                "Duplicate notification suppressed for user {UserId} with groupKey {GroupKey} (concurrent insert)",
+                notification.UserId, notification.GroupKey);
+
+            _context.Entry(notification).State = EntityState.Detached;
+
+            var existing = await _context.Notifications
+                .FirstOrDefaultAsync(
+                    n => n.UserId == notification.UserId && n.GroupKey == notification.GroupKey && !n.IsDeleted,
+                    cancellationToken);
+
+            return existing ?? notification;
+        }
 
         return notification;
     }

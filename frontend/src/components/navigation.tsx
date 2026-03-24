@@ -181,7 +181,7 @@ export default function Navigation() {
             </Link>
 
             <div className="flex items-center gap-1">
-              <div className="[&_button]:text-white [&_span]:bg-white [&_span]:text-[oklch(20%_0.06_168)]">
+              <div className="[&>div>button]:text-white [&>div>button]:hover:text-white [&>div>button]:hover:bg-white/10 [&>div>button>span]:bg-white [&>div>button>span]:text-[oklch(20%_0.06_168)]">
                 <NotificationBell />
               </div>
               <button

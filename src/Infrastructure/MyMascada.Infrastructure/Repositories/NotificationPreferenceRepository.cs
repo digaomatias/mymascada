@@ -22,8 +22,11 @@ public class NotificationPreferenceRepository : INotificationPreferenceRepositor
 
     public async Task<NotificationPreference> CreateOrUpdateAsync(NotificationPreference preference, CancellationToken cancellationToken = default)
     {
+        // Use IgnoreQueryFilters to also find soft-deleted rows — inserting when a soft-deleted
+        // row exists would violate the unique index on UserId.
         var existing = await _context.NotificationPreferences
-            .FirstOrDefaultAsync(p => p.UserId == preference.UserId && !p.IsDeleted, cancellationToken);
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(p => p.UserId == preference.UserId, cancellationToken);
 
         if (existing == null)
         {
@@ -33,6 +36,9 @@ public class NotificationPreferenceRepository : INotificationPreferenceRepositor
         }
         else
         {
+            // Revive a soft-deleted row if needed
+            existing.IsDeleted = false;
+            existing.DeletedAt = null;
             existing.ChannelPreferences = preference.ChannelPreferences;
             existing.QuietHoursStart = preference.QuietHoursStart;
             existing.QuietHoursEnd = preference.QuietHoursEnd;

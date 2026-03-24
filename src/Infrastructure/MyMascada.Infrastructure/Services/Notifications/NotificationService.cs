@@ -35,7 +35,8 @@ public class NotificationService : INotificationService
         DateTime? expiresAt = null,
         CancellationToken cancellationToken = default)
     {
-        // Idempotency check: if a groupKey is provided, skip if already exists
+        // Idempotency pre-check (optimization — the real guard is the DB unique constraint on (UserId, GroupKey)).
+        // A concurrent insert that races past this check will be caught by DbUpdateException in CreateAsync.
         if (!string.IsNullOrEmpty(groupKey))
         {
             var exists = await _notificationRepository.ExistsByGroupKeyAsync(userId, groupKey, cancellationToken);
@@ -46,7 +47,8 @@ public class NotificationService : INotificationService
             }
         }
 
-        // Rate limiting: check daily count for this type
+        // Rate limiting: check daily count for this type.
+        // This is a best-effort guard; under high concurrency a small burst above the cap is acceptable.
         var recentCount = await _notificationRepository.CountRecentByTypeAsync(
             userId, type, TimeSpan.FromDays(1), cancellationToken);
         if (recentCount >= MaxNotificationsPerTypePerDay)
@@ -55,27 +57,57 @@ public class NotificationService : INotificationService
             return;
         }
 
-        // Check user preferences: skip if the user has explicitly disabled in-app for this type
+        // Check user preferences: skip if the user has explicitly disabled in-app for this type, or if quiet hours are active
         var preferences = await _preferenceRepository.GetByUserIdAsync(userId, cancellationToken);
-        if (preferences?.ChannelPreferences != null)
+        if (preferences != null)
         {
-            try
+            // Enforce quiet hours
+            if (preferences.QuietHoursStart.HasValue && preferences.QuietHoursEnd.HasValue)
             {
-                var channelPrefs = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, System.Text.Json.JsonElement>>(
-                    preferences.ChannelPreferences);
-                var typeName = type.ToString();
-                if (channelPrefs != null &&
-                    channelPrefs.TryGetValue(typeName, out var typePrefs) &&
-                    typePrefs.TryGetProperty("inApp", out var inAppProp) &&
-                    inAppProp.ValueKind == System.Text.Json.JsonValueKind.False)
+                try
                 {
-                    _logger.LogDebug("Skipping in-app notification for user {UserId}, type {Type} — disabled by user preference", userId, type);
-                    return;
+                    var tz = string.IsNullOrWhiteSpace(preferences.QuietHoursTimezone)
+                        ? TimeZoneInfo.Utc
+                        : TimeZoneInfo.FindSystemTimeZoneById(preferences.QuietHoursTimezone);
+                    var userNow = TimeOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz));
+                    var start = preferences.QuietHoursStart.Value;
+                    var end = preferences.QuietHoursEnd.Value;
+                    var inQuietHours = start <= end
+                        ? userNow >= start && userNow < end         // same-day window e.g. 22:00–23:59
+                        : userNow >= start || userNow < end;        // overnight window e.g. 22:00–08:00
+                    if (inQuietHours)
+                    {
+                        _logger.LogDebug("Skipping notification for user {UserId} — currently in quiet hours", userId);
+                        return;
+                    }
+                }
+                catch (TimeZoneNotFoundException ex)
+                {
+                    _logger.LogWarning(ex, "Unknown timezone '{Timezone}' in quiet hours preference for user {UserId}; skipping quiet hours check", preferences.QuietHoursTimezone, userId);
                 }
             }
-            catch (System.Text.Json.JsonException ex)
+
+            // Enforce per-type channel preferences (inApp toggle)
+            if (preferences.ChannelPreferences != null)
             {
-                _logger.LogWarning(ex, "Failed to parse ChannelPreferences for user {UserId}; proceeding with notification delivery", userId);
+                try
+                {
+                    var channelPrefs = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, System.Text.Json.JsonElement>>(
+                        preferences.ChannelPreferences);
+                    var typeName = type.ToString();
+                    if (channelPrefs != null &&
+                        channelPrefs.TryGetValue(typeName, out var typePrefs) &&
+                        typePrefs.TryGetProperty("inApp", out var inAppProp) &&
+                        inAppProp.ValueKind == System.Text.Json.JsonValueKind.False)
+                    {
+                        _logger.LogDebug("Skipping in-app notification for user {UserId}, type {Type} — disabled by user preference", userId, type);
+                        return;
+                    }
+                }
+                catch (System.Text.Json.JsonException ex)
+                {
+                    _logger.LogWarning(ex, "Failed to parse ChannelPreferences for user {UserId}; proceeding with notification delivery", userId);
+                }
             }
         }
 

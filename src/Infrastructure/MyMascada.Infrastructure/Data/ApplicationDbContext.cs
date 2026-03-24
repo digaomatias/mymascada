@@ -945,6 +945,10 @@ public class ApplicationDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.UserId).IsRequired();
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
             entity.Property(e => e.Type).IsRequired();
             entity.Property(e => e.Priority).IsRequired().HasDefaultValue(MyMascada.Domain.Enums.NotificationPriority.Normal);
             entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
@@ -957,7 +961,10 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => new { e.UserId, e.IsRead });
             entity.HasIndex(e => new { e.UserId, e.Type });
             entity.HasIndex(e => new { e.UserId, e.CreatedAt });
-            entity.HasIndex(e => e.GroupKey);
+            // Composite unique index on (UserId, GroupKey) to enforce idempotency at DB level
+            entity.HasIndex(e => new { e.UserId, e.GroupKey })
+                .IsUnique()
+                .HasFilter("\"GroupKey\" IS NOT NULL");
 
             entity.HasQueryFilter(e => !e.IsDeleted);
         });
@@ -967,6 +974,10 @@ public class ApplicationDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.UserId).IsRequired();
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
             entity.Property(e => e.ChannelPreferences).HasColumnType("jsonb");
             entity.Property(e => e.QuietHoursTimezone).HasMaxLength(50);
             entity.Property(e => e.LargeTransactionThreshold).HasPrecision(18, 2);
