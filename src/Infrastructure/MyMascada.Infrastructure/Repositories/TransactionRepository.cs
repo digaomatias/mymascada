@@ -695,6 +695,17 @@ public class TransactionRepository : ITransactionRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<int> CountUncategorizedTransactionsAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
+        return await _context.Transactions
+            .CountAsync(t => accessibleIds.Contains(t.AccountId) &&
+                             !t.CategoryId.HasValue &&
+                             !t.IsDeleted &&
+                             !t.Account.IsDeleted,
+                        cancellationToken);
+    }
+
     public async Task<HashSet<int>> GetCategorizedTransactionIdsAsync(IEnumerable<int> transactionIds)
     {
         var ids = transactionIds.ToList();

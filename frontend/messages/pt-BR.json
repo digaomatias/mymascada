@@ -3564,5 +3564,25 @@
     "message": "Usamos apenas cookies essenciais — para sua sessão e preferência de idioma. Sem cookies de rastreamento ou publicidade.",
     "learnMore": "Saiba mais",
     "accept": "Entendido"
+  },
+  "notifications": {
+    "title": "Notificações",
+    "empty": "Nenhuma notificação ainda",
+    "loading": "Carregando notificações...",
+    "loadError": "Falha ao carregar notificações",
+    "retry": "Tentar novamente",
+    "markAllRead": "Marcar todas como lidas",
+    "markRead": "Marcar como lida",
+    "dismiss": "Dispensar",
+    "justNow": "Agora mesmo",
+    "minutesAgo": "{count, plural, one {1 minuto atrás} other {# minutos atrás}}",
+    "hoursAgo": "{count, plural, one {1 hora atrás} other {# horas atrás}}",
+    "daysAgo": "{count, plural, one {1 dia atrás} other {# dias atrás}}",
+    "templates": {
+      "CategorizationReminder": "Transações para categorizar",
+      "CategorizationReminder.body": "{count, plural, one {Você tem 1 transação sem categoria} other {Você tem # transações sem categoria}}",
+      "TransactionReminder": "Transação próxima",
+      "TransactionReminder.body": "{merchantName} — {amount} vence em {date}"
+    }
   }
 }

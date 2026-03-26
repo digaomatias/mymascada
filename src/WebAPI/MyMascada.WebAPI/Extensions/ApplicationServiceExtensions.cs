@@ -98,6 +98,10 @@ public static class ApplicationServiceExtensions
         services.AddScoped<MyMascada.Application.Features.RecurringPatterns.Services.IRecurringPatternPersistenceService,
             MyMascada.Application.Features.RecurringPatterns.Services.RecurringPatternPersistenceService>();
 
+        // Notification services
+        services.AddScoped<INotificationService, MyMascada.Infrastructure.Services.Notifications.NotificationService>();
+        services.AddScoped<INotificationTriggerService, MyMascada.Infrastructure.Services.Notifications.NotificationTriggerService>();
+
         return services;
     }
 }

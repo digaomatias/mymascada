@@ -49,6 +49,12 @@ import type {
   BudgetHealthSummaryResponse,
   CoachingInsightResponse,
 } from '@/types/api-responses';
+import type {
+  NotificationListResponse,
+  UnreadCountResponse,
+  NotificationPreferenceDto,
+  UpdateNotificationPreferenceRequest,
+} from '@/types/notifications';
 
 class ApiClient {
   private baseURL: string;
@@ -2090,6 +2096,49 @@ class ApiClient {
     return this.request('/api/billing/portal', {
       method: 'POST',
       body: JSON.stringify({ returnUrl }),
+    });
+  }
+
+  // Notification methods
+  async getNotifications(params?: {
+    page?: number;
+    pageSize?: number;
+    type?: string;
+    isRead?: boolean;
+  }): Promise<NotificationListResponse> {
+    const queryParams = new URLSearchParams();
+    if (params?.page !== undefined) queryParams.append('page', params.page.toString());
+    if (params?.pageSize !== undefined) queryParams.append('pageSize', params.pageSize.toString());
+    if (params?.type !== undefined) queryParams.append('type', params.type);
+    if (params?.isRead !== undefined) queryParams.append('isRead', params.isRead.toString());
+    const queryString = queryParams.toString();
+    return this.request(`/api/notifications${queryString ? `?${queryString}` : ''}`);
+  }
+
+  async getNotificationUnreadCount(): Promise<UnreadCountResponse> {
+    return this.request('/api/notifications/unread-count');
+  }
+
+  async markNotificationRead(id: string): Promise<void> {
+    return this.request(`/api/notifications/${id}/read`, { method: 'PATCH' });
+  }
+
+  async markAllNotificationsRead(): Promise<void> {
+    return this.request('/api/notifications/read-all', { method: 'POST' });
+  }
+
+  async deleteNotification(id: string): Promise<void> {
+    return this.request(`/api/notifications/${id}`, { method: 'DELETE' });
+  }
+
+  async getNotificationPreferences(): Promise<NotificationPreferenceDto> {
+    return this.request('/api/notifications/preferences');
+  }
+
+  async updateNotificationPreferences(request: UpdateNotificationPreferenceRequest): Promise<NotificationPreferenceDto> {
+    return this.request('/api/notifications/preferences', {
+      method: 'PUT',
+      body: JSON.stringify(request),
     });
   }
 

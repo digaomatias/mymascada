@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MyMascada.Infrastructure.Data;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MyMascada.WebAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260324064941_AddNotificationSystem")]
+    partial class AddNotificationSystem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1363,16 +1366,11 @@ namespace MyMascada.WebAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ExpiresAt")
-                        .HasFilter("\"ExpiresAt\" IS NOT NULL AND \"IsDeleted\" = false");
+                    b.HasIndex("GroupKey");
 
                     b.HasIndex("UserId");
 
                     b.HasIndex("UserId", "CreatedAt");
-
-                    b.HasIndex("UserId", "GroupKey")
-                        .IsUnique()
-                        .HasFilter("\"GroupKey\" IS NOT NULL AND \"IsDeleted\" = false");
 
                     b.HasIndex("UserId", "IsRead");
 
@@ -3206,24 +3204,6 @@ namespace MyMascada.WebAPI.Migrations
                     b.Navigation("ClaimedByUser");
 
                     b.Navigation("WaitlistEntry");
-                });
-
-            modelBuilder.Entity("MyMascada.Domain.Entities.Notification", b =>
-                {
-                    b.HasOne("MyMascada.Domain.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("MyMascada.Domain.Entities.NotificationPreference", b =>
-                {
-                    b.HasOne("MyMascada.Domain.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("MyMascada.Domain.Entities.PasswordResetToken", b =>

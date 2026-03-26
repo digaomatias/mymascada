@@ -58,6 +58,10 @@ public static class RepositoryServiceExtensions
         // Dashboard nudge repositories
         services.AddScoped<IDashboardNudgeDismissalRepository, DashboardNudgeDismissalRepository>();
 
+        // Notification repositories
+        services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<INotificationPreferenceRepository, NotificationPreferenceRepository>();
+
         return services;
     }
 }
