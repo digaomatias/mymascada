@@ -51,6 +51,10 @@
     "typescript": "^5.8.3",
     "workbox-webpack-plugin": "^7.4.0"
   },
+  "overrides": {
+    "flatted": "3.4.2",
+    "serialize-javascript": "7.0.5"
+  },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
     "@testing-library/jest-dom": "^6.6.3",
