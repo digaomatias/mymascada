@@ -1,7 +1,10 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.BankConnections.Commands;
 using MyMascada.Application.Features.BankConnections.DTOs;
@@ -15,7 +18,11 @@ public class AkahuWebhookController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly IAkahuWebhookSignatureService _signatureService;
+    private readonly IMemoryCache _cache;
     private readonly ILogger<AkahuWebhookController> _logger;
+
+    private const string ReplayCachePrefix = "akahu_webhook_";
+    private static readonly TimeSpan ReplayWindow = TimeSpan.FromHours(24);
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -26,10 +33,12 @@ public class AkahuWebhookController : ControllerBase
     public AkahuWebhookController(
         IMediator mediator,
         IAkahuWebhookSignatureService signatureService,
+        IMemoryCache cache,
         ILogger<AkahuWebhookController> logger)
     {
         _mediator = mediator;
         _signatureService = signatureService;
+        _cache = cache;
         _logger = logger;
     }
 
@@ -60,6 +69,18 @@ public class AkahuWebhookController : ControllerBase
             _logger.LogWarning("Akahu webhook signature verification failed for key {KeyId}", signingKeyId);
             return BadRequest();
         }
+
+        // Replay protection — hash the body to detect duplicate deliveries
+        var bodyHash = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(body)));
+        var cacheKey = ReplayCachePrefix + bodyHash;
+
+        if (_cache.TryGetValue(cacheKey, out _))
+        {
+            _logger.LogWarning("Akahu webhook replay detected, ignoring duplicate payload");
+            return Ok();
+        }
+
+        _cache.Set(cacheKey, true, ReplayWindow);
 
         // Parse and process — always return 200 to prevent Akahu retries
         try
