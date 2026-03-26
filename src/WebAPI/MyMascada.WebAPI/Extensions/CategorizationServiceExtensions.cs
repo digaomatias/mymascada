@@ -16,6 +16,8 @@ public static class CategorizationServiceExtensions
             configuration.GetSection(CategorizationOptions.SectionName));
 
         // SSRF protection for user-configured AI endpoints
+        services.Configure<EndpointValidationOptions>(
+            configuration.GetSection(EndpointValidationOptions.SectionName));
         services.AddSingleton<IEndpointValidator, EndpointValidator>();
 
         // User AI Kernel Factory and Settings Repository

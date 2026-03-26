@@ -2,6 +2,8 @@ using System.Net;
 using System.Net.Sockets;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using MyMascada.Application.Common.Configuration;
 using MyMascada.Application.Common.Interfaces;
 
 namespace MyMascada.Infrastructure.Services.Security;
@@ -10,24 +12,16 @@ public class EndpointValidator : IEndpointValidator
 {
     private readonly IHostEnvironment _environment;
     private readonly ILogger<EndpointValidator> _logger;
+    private readonly HashSet<string> _allowedHosts;
 
-    private static readonly HashSet<string> AllowedAiProviderHosts = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "api.openai.com",
-        "api.anthropic.com",
-        "api.deepseek.com",
-        "api.groq.com",
-        "generativelanguage.googleapis.com",
-        "api.mistral.ai",
-        "api.cohere.com",
-        "api.together.xyz",
-        "openrouter.ai",
-    };
-
-    public EndpointValidator(IHostEnvironment environment, ILogger<EndpointValidator> logger)
+    public EndpointValidator(
+        IHostEnvironment environment,
+        ILogger<EndpointValidator> logger,
+        IOptions<EndpointValidationOptions> options)
     {
         _environment = environment;
         _logger = logger;
+        _allowedHosts = new HashSet<string>(options.Value.AllowedAiProviderHosts, StringComparer.OrdinalIgnoreCase);
     }
 
     public async Task<EndpointValidationResult> ValidateEndpointAsync(string url)
@@ -55,7 +49,7 @@ public class EndpointValidator : IEndpointValidator
             return EndpointValidationResult.Invalid("API endpoint must use HTTPS.");
 
         // Known AI provider hosts are always allowed (skip DNS resolution)
-        if (AllowedAiProviderHosts.Contains(uri.Host))
+        if (_allowedHosts.Contains(uri.Host))
             return EndpointValidationResult.Valid();
 
         // Resolve hostname and check all resolved IPs
@@ -64,8 +58,12 @@ public class EndpointValidator : IEndpointValidator
         {
             addresses = await Dns.GetHostAddressesAsync(uri.Host);
         }
-        catch (SocketException)
+        catch (SocketException ex)
         {
+            _logger.LogWarning(
+                ex,
+                "DNS resolution failed for AI endpoint host {Host} (SocketErrorCode: {ErrorCode})",
+                uri.Host, ex.SocketErrorCode);
             return EndpointValidationResult.Invalid("Could not resolve the API endpoint hostname.");
         }
 
