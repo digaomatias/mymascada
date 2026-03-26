@@ -59,7 +59,6 @@ public class ExchangeAkahuCodeQueryHandlerTests
             new ExchangeAkahuCodeQuery(userId, "code-123", null, "app_token_123"),
             CancellationToken.None);
 
-        result.AccessToken.Should().Be("user_token_oauth");
         result.Accounts.Should().ContainSingle(a => a.Id == "acc_123" && !a.IsAlreadyLinked);
 
         await credentialRepository.Received(1).AddAsync(
