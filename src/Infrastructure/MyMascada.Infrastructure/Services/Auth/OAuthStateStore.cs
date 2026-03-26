@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using MyMascada.Application.Common.Interfaces;
@@ -12,7 +12,8 @@ namespace MyMascada.Infrastructure.Services.Auth;
 public class OAuthStateStore : IOAuthStateStore
 {
     private static readonly TimeSpan StateExpiry = TimeSpan.FromMinutes(10);
-    private readonly ConcurrentDictionary<string, SemaphoreSlim> _locks = new();
+    private readonly object _locksGate = new();
+    private readonly Dictionary<string, LockEntry> _locks = new();
     private readonly IMemoryCache _cache;
     private readonly ILogger<OAuthStateStore> _logger;
 
@@ -22,20 +23,27 @@ public class OAuthStateStore : IOAuthStateStore
         _logger = logger;
     }
 
-    public Task StoreAsync(Guid userId, string state, CancellationToken cancellationToken = default)
+    public async Task StoreAsync(Guid userId, string state, CancellationToken cancellationToken = default)
     {
         var key = CacheKey(userId);
-        _cache.Set(key, state, StateExpiry);
-        _logger.LogDebug("Stored OAuth state for user {UserId}", userId);
-        return Task.CompletedTask;
+        var lockEntry = await AcquireLockAsync(key, cancellationToken);
+
+        try
+        {
+            _cache.Set(key, state, StateExpiry);
+            _logger.LogDebug("Stored OAuth state for user {UserId}", userId);
+        }
+        finally
+        {
+            ReleaseLock(key, lockEntry);
+        }
     }
 
     public async Task<bool> ValidateAndConsumeAsync(Guid userId, string state, CancellationToken cancellationToken = default)
     {
         var key = CacheKey(userId);
-        var keyLock = _locks.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
+        var lockEntry = await AcquireLockAsync(key, cancellationToken);
 
-        await keyLock.WaitAsync(cancellationToken);
         try
         {
             if (!_cache.TryGetValue(key, out string? storedState))
@@ -58,9 +66,68 @@ public class OAuthStateStore : IOAuthStateStore
         }
         finally
         {
-            keyLock.Release();
-            _locks.TryRemove(key, out _);
+            ReleaseLock(key, lockEntry);
         }
+    }
+
+    private async Task<LockEntry> AcquireLockAsync(string key, CancellationToken cancellationToken)
+    {
+        LockEntry lockEntry;
+
+        lock (_locksGate)
+        {
+            if (!_locks.TryGetValue(key, out lockEntry!))
+            {
+                lockEntry = new LockEntry();
+                _locks[key] = lockEntry;
+            }
+
+            lockEntry.RefCount++;
+        }
+
+        try
+        {
+            await lockEntry.Semaphore.WaitAsync(cancellationToken);
+            return lockEntry;
+        }
+        catch
+        {
+            ReleaseLockReference(key, lockEntry);
+            throw;
+        }
+    }
+
+    private void ReleaseLock(string key, LockEntry lockEntry)
+    {
+        lockEntry.Semaphore.Release();
+        ReleaseLockReference(key, lockEntry);
+    }
+
+    private void ReleaseLockReference(string key, LockEntry lockEntry)
+    {
+        var shouldDispose = false;
+
+        lock (_locksGate)
+        {
+            lockEntry.RefCount--;
+
+            if (lockEntry.RefCount == 0)
+            {
+                _locks.Remove(key);
+                shouldDispose = true;
+            }
+        }
+
+        if (shouldDispose)
+        {
+            lockEntry.Semaphore.Dispose();
+        }
+    }
+
+    private sealed class LockEntry
+    {
+        public SemaphoreSlim Semaphore { get; } = new(1, 1);
+        public int RefCount;
     }
 
     private static string CacheKey(Guid userId) => $"oauth_state:{userId}";
