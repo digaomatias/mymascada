@@ -830,7 +830,7 @@ public class AuthController : ControllerBase
         var cookieOptions = new CookieOptions
         {
             HttpOnly = true,
-            Secure = !_environment.IsDevelopment(),
+            Secure = !_environment.IsLocalDevelopment(),
             SameSite = SameSiteMode.Lax,
             Expires = expires
         };
