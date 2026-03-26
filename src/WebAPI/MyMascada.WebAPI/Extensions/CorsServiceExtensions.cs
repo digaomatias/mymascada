@@ -36,8 +36,8 @@ public static class CorsServiceExtensions
                     .ToArray();
 
                 policy.WithOrigins(allOrigins)
-                      .AllowAnyMethod()
-                      .AllowAnyHeader()
+                      .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+                      .WithHeaders("Content-Type", "Authorization", "Accept", "X-Requested-With")
                       .AllowCredentials()
                       .SetPreflightMaxAge(TimeSpan.FromMinutes(10))
                       .WithExposedHeaders("Authorization", "Content-Type", "Accept", "Origin", "Access-Control-Allow-Origin");
