@@ -3,6 +3,7 @@ using MyMascada.Application.Common.Interfaces;
 using MyMascada.Infrastructure.Repositories;
 using MyMascada.Infrastructure.Services;
 using MyMascada.Infrastructure.Services.AI;
+using MyMascada.Infrastructure.Services.Security;
 
 namespace MyMascada.WebAPI.Extensions;
 
@@ -13,6 +14,9 @@ public static class CategorizationServiceExtensions
         // Configure categorization options
         services.Configure<CategorizationOptions>(
             configuration.GetSection(CategorizationOptions.SectionName));
+
+        // SSRF protection for user-configured AI endpoints
+        services.AddSingleton<IEndpointValidator, EndpointValidator>();
 
         // User AI Kernel Factory and Settings Repository
         services.AddScoped<IUserAiKernelFactory, UserAiKernelFactory>();
