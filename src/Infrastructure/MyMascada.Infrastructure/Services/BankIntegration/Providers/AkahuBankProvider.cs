@@ -102,8 +102,8 @@ public class AkahuBankProvider : IBankProvider
                 to,
                 ct);
 
-            _logger.LogInformation("Fetched {Count} transactions from Akahu for account {AccountId} ({From:yyyy-MM-dd} to {To:yyyy-MM-dd})",
-                transactions.Count, accountId, from, to);
+            _logger.LogInformation("Fetched {Count} transactions from Akahu ({From:yyyy-MM-dd} to {To:yyyy-MM-dd})",
+                transactions.Count, from, to);
 
             var mapped = transactions.Select(MapTransaction).ToList();
             return BankTransactionFetchResult.Success(mapped);
@@ -184,8 +184,8 @@ public class AkahuBankProvider : IBankProvider
             var total = pendingTransactions.Sum(t => t.Amount);
 
             _logger.LogInformation(
-                "Fetched {Count} pending transactions totalling {Total:C} for account {AccountId}",
-                pendingTransactions.Count, total, accountId);
+                "Fetched {Count} pending transactions totalling {Total:C}",
+                pendingTransactions.Count, total);
 
             return new PendingTransactionsSummary(total, pendingTransactions.Count);
         }
