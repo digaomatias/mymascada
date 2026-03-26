@@ -11,13 +11,19 @@ namespace MyMascada.Infrastructure.Services.UserData;
 public class UserDataDeletionService : IUserDataDeletionService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IAkahuApiClient _akahuApiClient;
+    private readonly ISettingsEncryptionService _encryptionService;
     private readonly ILogger<UserDataDeletionService> _logger;
 
     public UserDataDeletionService(
         ApplicationDbContext context,
+        IAkahuApiClient akahuApiClient,
+        ISettingsEncryptionService encryptionService,
         ILogger<UserDataDeletionService> logger)
     {
         _context = context;
+        _akahuApiClient = akahuApiClient;
+        _encryptionService = encryptionService;
         _logger = logger;
     }
 
@@ -233,25 +239,52 @@ public class UserDataDeletionService : IUserDataDeletionService
                 .Where(a => a.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
-            // 19. Delete AkahuUserCredentials
+            // 19. Revoke Akahu token before deleting credentials
+            try
+            {
+                var credential = await _context.AkahuUserCredentials
+                    .IgnoreQueryFilters()
+                    .FirstOrDefaultAsync(auc => auc.UserId == userId, cancellationToken);
+
+                if (credential != null)
+                {
+                    var appIdToken = _encryptionService.DecryptSettings<string>(credential.EncryptedAppToken);
+                    var accessToken = _encryptionService.DecryptSettings<string>(credential.EncryptedUserToken);
+
+                    if (!string.IsNullOrEmpty(appIdToken) && !string.IsNullOrEmpty(accessToken))
+                    {
+                        _logger.LogDebug("Revoking Akahu access token for user {UserId} during account deletion", userId);
+                        await _akahuApiClient.RevokeTokenAsync(appIdToken, accessToken, cancellationToken);
+                        _logger.LogDebug("Successfully revoked Akahu access token for user {UserId}", userId);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Failed to revoke Akahu access token for user {UserId} during account deletion. Continuing with deletion.",
+                    userId);
+            }
+
+            // 20. Delete AkahuUserCredentials
             await _context.AkahuUserCredentials
                 .IgnoreQueryFilters()
                 .Where(auc => auc.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
-            // 20. Delete RefreshTokens
+            // 21. Delete RefreshTokens
             await _context.RefreshTokens
                 .IgnoreQueryFilters()
                 .Where(rt => rt.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
-            // 21. Delete PasswordResetTokens
+            // 22. Delete PasswordResetTokens
             await _context.PasswordResetTokens
                 .IgnoreQueryFilters()
                 .Where(prt => prt.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
-            // 22. Delete User
+            // 23. Delete User
             await _context.Users
                 .IgnoreQueryFilters()
                 .Where(u => u.Id == userId)
