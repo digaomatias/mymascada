@@ -44,6 +44,10 @@ public static class BackgroundJobServiceExtensions
         services.AddScoped<MyMascada.Application.BackgroundJobs.IDataRetentionService,
             MyMascada.Infrastructure.BackgroundJobs.DataRetentionService>();
 
+        // Token revocation retry service
+        services.AddScoped<MyMascada.Application.BackgroundJobs.ITokenRevocationRetryJobService,
+            MyMascada.Infrastructure.BackgroundJobs.TokenRevocationRetryJobService>();
+
         return services;
     }
 }

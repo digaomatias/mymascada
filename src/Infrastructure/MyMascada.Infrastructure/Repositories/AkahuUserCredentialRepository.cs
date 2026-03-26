@@ -54,6 +54,14 @@ public class AkahuUserCredentialRepository : IAkahuUserCredentialRepository
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyList<AkahuUserCredential>> GetPendingRevocationsAsync(CancellationToken ct = default)
+    {
+        return await _context.AkahuUserCredentials
+            .Where(c => c.IsRevocationPending && !c.IsDeleted)
+            .ToListAsync(ct);
+    }
+
+    /// <inheritdoc />
     public async Task DeleteByUserIdAsync(Guid userId, CancellationToken ct = default)
     {
         var credential = await _context.AkahuUserCredentials
