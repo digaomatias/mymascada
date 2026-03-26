@@ -145,7 +145,6 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Authentic
             TimeZone = request.TimeZone,
             EmailConfirmed = _registrationStrategy.AutoConfirmEmail,
             PhoneNumberConfirmed = false,
-            TwoFactorEnabled = false,
             LockoutEnabled = true,
             AccessFailedCount = 0
         };
