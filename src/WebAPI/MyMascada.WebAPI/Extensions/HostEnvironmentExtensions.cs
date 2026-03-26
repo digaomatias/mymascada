@@ -16,7 +16,7 @@ public static class HostEnvironmentExtensions
     public static bool IsLocalDevelopment(this IHostEnvironment environment)
     {
         return environment.IsDevelopment()
-            || environment.EnvironmentName == "Debug"
-            || environment.EnvironmentName == "Prod-QA";
+            || environment.IsEnvironment("Debug")
+            || environment.IsEnvironment("Prod-QA");
     }
 }

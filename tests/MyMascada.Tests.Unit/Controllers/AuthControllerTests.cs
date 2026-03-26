@@ -143,6 +143,80 @@ public class AuthControllerTests
     }
 
     [Fact]
+    public async Task Register_WithRefreshToken_InProduction_ShouldSetSecureHttpOnlyLaxCookie()
+    {
+        // Arrange
+        _environment.EnvironmentName.Returns("Production");
+
+        var request = new RegisterRequest
+        {
+            Email = "secure@example.com",
+            UserName = "secureuser",
+            Password = "TestPass123!",
+            ConfirmPassword = "TestPass123!",
+            FirstName = "Secure",
+            LastName = "User",
+            Currency = "USD",
+            TimeZone = "UTC"
+        };
+
+        _mediator.Send(Arg.Any<RegisterCommand>()).Returns(new AuthenticationResponse
+        {
+            IsSuccess = true,
+            Token = "jwt",
+            RefreshToken = "refresh-token",
+            RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(30)
+        });
+
+        // Act
+        await _controller.Register(request);
+
+        // Assert
+        var setCookie = _controller.ControllerContext.HttpContext.Response.Headers["Set-Cookie"].ToString().ToLowerInvariant();
+        setCookie.Should().Contain("refresh_token=refresh-token");
+        setCookie.Should().Contain("httponly");
+        setCookie.Should().Contain("samesite=lax");
+        setCookie.Should().Contain("secure");
+    }
+
+    [Fact]
+    public async Task Register_WithRefreshToken_InDevelopment_ShouldNotSetSecureCookie()
+    {
+        // Arrange
+        _environment.EnvironmentName.Returns("Development");
+
+        var request = new RegisterRequest
+        {
+            Email = "dev@example.com",
+            UserName = "devuser",
+            Password = "TestPass123!",
+            ConfirmPassword = "TestPass123!",
+            FirstName = "Dev",
+            LastName = "User",
+            Currency = "USD",
+            TimeZone = "UTC"
+        };
+
+        _mediator.Send(Arg.Any<RegisterCommand>()).Returns(new AuthenticationResponse
+        {
+            IsSuccess = true,
+            Token = "jwt",
+            RefreshToken = "refresh-token",
+            RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(30)
+        });
+
+        // Act
+        await _controller.Register(request);
+
+        // Assert
+        var setCookie = _controller.ControllerContext.HttpContext.Response.Headers["Set-Cookie"].ToString().ToLowerInvariant();
+        setCookie.Should().Contain("refresh_token=refresh-token");
+        setCookie.Should().Contain("httponly");
+        setCookie.Should().Contain("samesite=lax");
+        setCookie.Should().NotContain("secure");
+    }
+
+    [Fact]
     public async Task Register_WithInvalidRequest_ShouldReturnBadRequest()
     {
         // Arrange
