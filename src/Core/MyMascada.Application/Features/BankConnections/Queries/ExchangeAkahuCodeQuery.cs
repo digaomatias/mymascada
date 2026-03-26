@@ -18,11 +18,11 @@ public record ExchangeAkahuCodeQuery(
 ) : IRequest<ExchangeAkahuCodeResult>;
 
 /// <summary>
-/// Result of the OAuth code exchange, containing available accounts and the access token.
+/// Result of the OAuth code exchange, containing available accounts.
+/// The access token is persisted server-side only and never returned to the client.
 /// </summary>
 public record ExchangeAkahuCodeResult(
-    IEnumerable<AkahuAccountDto> Accounts,
-    string AccessToken
+    IEnumerable<AkahuAccountDto> Accounts
 );
 
 /// <summary>
@@ -136,6 +136,6 @@ public class ExchangeAkahuCodeQueryHandler : IRequestHandler<ExchangeAkahuCodeQu
             "Found {TotalCount} Akahu accounts, {LinkedCount} already linked for user {UserId}",
             accountDtos.Count, accountDtos.Count(a => a.IsAlreadyLinked), request.UserId);
 
-        return new ExchangeAkahuCodeResult(accountDtos, tokenResponse.AccessToken);
+        return new ExchangeAkahuCodeResult(accountDtos);
     }
 }
