@@ -242,10 +242,10 @@ namespace MyMascada.WebAPI.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
-                    b.Property<DateTime?>("ConsentGrantedAt")
+                    b.Property<DateTimeOffset?>("ConsentGrantedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("ConsentRevokedAt")
+                    b.Property<DateTimeOffset?>("ConsentRevokedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ConsentScope")

@@ -55,7 +55,7 @@ public class AkahuUserCredential : BaseEntity
     /// <summary>
     /// When the user granted OAuth consent.
     /// </summary>
-    public DateTime? ConsentGrantedAt { get; set; }
+    public DateTimeOffset? ConsentGrantedAt { get; set; }
 
     /// <summary>
     /// OAuth state/correlation ID used during the consent flow for audit trail.
@@ -66,5 +66,5 @@ public class AkahuUserCredential : BaseEntity
     /// <summary>
     /// When the user revoked consent (token revocation / disconnect).
     /// </summary>
-    public DateTime? ConsentRevokedAt { get; set; }
+    public DateTimeOffset? ConsentRevokedAt { get; set; }
 }
