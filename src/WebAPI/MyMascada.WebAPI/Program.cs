@@ -109,6 +109,39 @@ var keysDirectory = isLocalDev
 
 Directory.CreateDirectory(keysDirectory);
 
+if (!isLocalDev)
+{
+    // Verify the key directory is on a persistent volume.
+    // If /app/data is not mounted, keys will be lost on container restart,
+    // breaking encrypted data (cookies, tokens, Data Protection payloads).
+    var markerFile = Path.Combine("/app/data", ".volume-marker");
+    if (!Directory.Exists("/app/data") || !IsPersistentVolume(markerFile))
+    {
+        Log.Warning(
+            "Data Protection key directory {KeysDirectory} may not be on a persistent volume. " +
+            "Ensure a volume is mounted at /app/data to prevent key loss on restart.",
+            keysDirectory);
+    }
+
+    static bool IsPersistentVolume(string markerPath)
+    {
+        // Write a marker file on first boot; if it exists on subsequent boots,
+        // the volume survived a restart.
+        if (File.Exists(markerPath))
+            return true;
+
+        try
+        {
+            File.WriteAllText(markerPath, DateTimeOffset.UtcNow.ToString("O"));
+        }
+        catch
+        {
+            // If we can't write, the directory isn't usable anyway
+        }
+        return false;
+    }
+}
+
 builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(keysDirectory))
     .SetApplicationName("MyMascada");
