@@ -1,4 +1,6 @@
+using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Reflection;
 using MediatR;
 using MyMascada.Application.Common.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -110,7 +112,7 @@ public class AuditLoggingBehaviour<TRequest, TResponse> : IPipelineBehavior<TReq
         ConfigurationChange
     }
 
-    private static readonly string[] TransactionCommands =
+    private static readonly HashSet<string> TransactionCommands =
     [
         "CreateTransactionCommand",
         "UpdateTransactionCommand",
@@ -130,7 +132,7 @@ public class AuditLoggingBehaviour<TRequest, TResponse> : IPipelineBehavior<TReq
         "DeleteAccountCommand"
     ];
 
-    private static readonly string[] AuthenticationCommands =
+    private static readonly HashSet<string> AuthenticationCommands =
     [
         "RegisterCommand",
         "ChangePasswordCommand",
@@ -139,7 +141,7 @@ public class AuditLoggingBehaviour<TRequest, TResponse> : IPipelineBehavior<TReq
         "ConfirmEmailCommand"
     ];
 
-    private static readonly string[] DataAccessCommands =
+    private static readonly HashSet<string> DataAccessCommands =
     [
         "DeleteUserAccountCommand",
         "InitiateAkahuConnectionCommand",
@@ -154,7 +156,7 @@ public class AuditLoggingBehaviour<TRequest, TResponse> : IPipelineBehavior<TReq
         "AcceptAccountShareByIdCommand"
     ];
 
-    private static readonly string[] ConfigurationChangeCommands =
+    private static readonly HashSet<string> ConfigurationChangeCommands =
     [
         "UpdateNotificationPreferencesCommand",
         "CompleteOnboardingCommand",
@@ -166,15 +168,17 @@ public class AuditLoggingBehaviour<TRequest, TResponse> : IPipelineBehavior<TReq
         "SetBankCategoryExclusionCommand"
     ];
 
+    private static readonly ConcurrentDictionary<(Type, string), PropertyInfo?> PropertyCache = new();
+
     private static AuditCategory? GetAuditCategory(string requestName)
     {
-        if (TransactionCommands.Any(cmd => requestName.Contains(cmd)))
+        if (TransactionCommands.Contains(requestName))
             return AuditCategory.Transaction;
-        if (AuthenticationCommands.Any(cmd => requestName.Contains(cmd)))
+        if (AuthenticationCommands.Contains(requestName))
             return AuditCategory.Authentication;
-        if (DataAccessCommands.Any(cmd => requestName.Contains(cmd)))
+        if (DataAccessCommands.Contains(requestName))
             return AuditCategory.DataAccess;
-        if (ConfigurationChangeCommands.Any(cmd => requestName.Contains(cmd)))
+        if (ConfigurationChangeCommands.Contains(requestName))
             return AuditCategory.ConfigurationChange;
         return null;
     }
@@ -267,7 +271,9 @@ public class AuditLoggingBehaviour<TRequest, TResponse> : IPipelineBehavior<TReq
 
     private static string? ExtractStringProperty(TRequest request, string propertyName)
     {
-        var property = request.GetType().GetProperty(propertyName);
+        var property = PropertyCache.GetOrAdd(
+            (request.GetType(), propertyName),
+            key => key.Item1.GetProperty(key.Item2));
         return property?.GetValue(request)?.ToString();
     }
 
