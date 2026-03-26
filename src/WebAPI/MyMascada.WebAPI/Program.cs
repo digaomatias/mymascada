@@ -121,7 +121,7 @@ builder.Services.Configure<CookiePolicyOptions>(options =>
 {
     options.CheckConsentNeeded = context => false; // Disable for development
     options.MinimumSameSitePolicy = SameSiteMode.Lax;
-    options.Secure = CookieSecurePolicy.SameAsRequest;
+    options.Secure = isLocalDev ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
 });
 
 // Configure beta access options
