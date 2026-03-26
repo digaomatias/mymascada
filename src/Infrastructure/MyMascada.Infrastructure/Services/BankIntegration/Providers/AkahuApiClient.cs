@@ -401,9 +401,11 @@ public class AkahuApiClient : IAkahuApiClient
 
         throw response.StatusCode switch
         {
+            HttpStatusCode.BadRequest => new AkahuApiException($"Akahu: {operation} - Bad request.", response.StatusCode),
             HttpStatusCode.Unauthorized => new UnauthorizedAccessException($"Akahu: {operation} - Unauthorized. Token may be expired or revoked."),
-            HttpStatusCode.Forbidden => new UnauthorizedAccessException($"Akahu: {operation} - Forbidden. Insufficient permissions."),
-            HttpStatusCode.TooManyRequests => new InvalidOperationException($"Akahu: {operation} - Rate limit exceeded. Please try again later."),
+            HttpStatusCode.Forbidden => new AkahuApiException($"Akahu: {operation} - Forbidden. Insufficient permissions.", response.StatusCode),
+            HttpStatusCode.NotFound => new AkahuApiException($"Akahu: {operation} - Resource not found.", response.StatusCode),
+            HttpStatusCode.TooManyRequests => new AkahuApiException($"Akahu: {operation} - Rate limit exceeded. Please try again later.", response.StatusCode),
             _ => new AkahuApiException($"Akahu: {operation} failed with status {response.StatusCode}", response.StatusCode)
         };
     }
