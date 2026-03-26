@@ -422,6 +422,11 @@ recurringJobManager.AddOrUpdate<MyMascada.Application.BackgroundJobs.IExpiredBud
     service => service.ProcessAllUsersAsync(null),
     Hangfire.Cron.Daily(1, 0)); // Run daily at 1:00 AM
 
+recurringJobManager.AddOrUpdate<MyMascada.Application.BackgroundJobs.IDataRetentionService>(
+    "cleanup-expired-chat-messages",
+    service => service.CleanupExpiredChatMessagesAsync(),
+    Hangfire.Cron.Daily(3, 30)); // Run daily at 3:30 AM
+
 // Map controllers
 app.MapControllers();
 
