@@ -55,54 +55,83 @@ public class UserDataDeletionService : IUserDataDeletionService
 
         try
         {
-            // Get all user's accounts first (needed for related queries)
-            var accountIds = await _context.Accounts
+            // Batch 1: Fetch all IDs that only depend on userId (parallel)
+            var accountIdsTask = _context.Accounts
                 .IgnoreQueryFilters()
                 .Where(a => a.UserId == userId)
                 .Select(a => a.Id)
                 .ToListAsync(cancellationToken);
 
-            // Get all user's categories (needed for related queries)
-            var categoryIds = await _context.Categories
+            var categoryIdsTask = _context.Categories
                 .IgnoreQueryFilters()
                 .Where(c => c.UserId == userId)
                 .Select(c => c.Id)
                 .ToListAsync(cancellationToken);
 
-            // Get all user's rules
-            var ruleIds = await _context.CategorizationRules
+            var ruleIdsTask = _context.CategorizationRules
                 .IgnoreQueryFilters()
                 .Where(r => r.UserId == userId)
                 .Select(r => r.Id)
                 .ToListAsync(cancellationToken);
 
-            // Get all transactions for these accounts
-            var transactionIds = await _context.Transactions
+            var budgetIdsTask = _context.Budgets
+                .IgnoreQueryFilters()
+                .Where(b => b.UserId == userId)
+                .Select(b => b.Id)
+                .ToListAsync(cancellationToken);
+
+            var walletIdsTask = _context.Wallets
+                .IgnoreQueryFilters()
+                .Where(w => w.UserId == userId)
+                .Select(w => w.Id)
+                .ToListAsync(cancellationToken);
+
+            var recurringPatternIdsTask = _context.RecurringPatterns
+                .IgnoreQueryFilters()
+                .Where(rp => rp.UserId == userId)
+                .Select(rp => rp.Id)
+                .ToListAsync(cancellationToken);
+
+            await Task.WhenAll(accountIdsTask, categoryIdsTask, ruleIdsTask, budgetIdsTask, walletIdsTask, recurringPatternIdsTask);
+
+            var accountIds = accountIdsTask.Result;
+            var categoryIds = categoryIdsTask.Result;
+            var ruleIds = ruleIdsTask.Result;
+            var budgetIds = budgetIdsTask.Result;
+            var walletIds = walletIdsTask.Result;
+            var recurringPatternIds = recurringPatternIdsTask.Result;
+
+            // Batch 2: Fetch IDs that depend on batch 1 results (parallel)
+            var transactionIdsTask = _context.Transactions
                 .IgnoreQueryFilters()
                 .Where(t => accountIds.Contains(t.AccountId))
                 .Select(t => t.Id)
                 .ToListAsync(cancellationToken);
 
-            // Get all reconciliations
-            var reconciliationIds = await _context.Reconciliations
+            var reconciliationIdsTask = _context.Reconciliations
                 .IgnoreQueryFilters()
                 .Where(r => accountIds.Contains(r.AccountId))
                 .Select(r => r.Id)
                 .ToListAsync(cancellationToken);
 
-            // Get all bank connections
-            var bankConnectionIds = await _context.BankConnections
+            var bankConnectionIdsTask = _context.BankConnections
                 .IgnoreQueryFilters()
                 .Where(bc => accountIds.Contains(bc.AccountId))
                 .Select(bc => bc.Id)
                 .ToListAsync(cancellationToken);
 
-            // Get all rule suggestions for user's categories
-            var ruleSuggestionIds = await _context.RuleSuggestions
+            var ruleSuggestionIdsTask = _context.RuleSuggestions
                 .IgnoreQueryFilters()
                 .Where(rs => categoryIds.Contains(rs.SuggestedCategoryId))
                 .Select(rs => rs.Id)
                 .ToListAsync(cancellationToken);
+
+            await Task.WhenAll(transactionIdsTask, reconciliationIdsTask, bankConnectionIdsTask, ruleSuggestionIdsTask);
+
+            var transactionIds = transactionIdsTask.Result;
+            var reconciliationIds = reconciliationIdsTask.Result;
+            var bankConnectionIds = bankConnectionIdsTask.Result;
+            var ruleSuggestionIds = ruleSuggestionIdsTask.Result;
 
             // 1. Delete RuleSuggestionSamples
             if (ruleSuggestionIds.Any())
@@ -203,43 +232,124 @@ public class UserDataDeletionService : IUserDataDeletionService
                 .Where(de => de.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
-            // 13. Delete Transactions
+            // 13. Delete BudgetCategories
+            if (budgetIds.Any())
+            {
+                await _context.BudgetCategories
+                    .IgnoreQueryFilters()
+                    .Where(bc => budgetIds.Contains(bc.BudgetId))
+                    .ExecuteDeleteAsync(cancellationToken);
+            }
+
+            // 14. Delete Budgets
+            await _context.Budgets
+                .IgnoreQueryFilters()
+                .Where(b => b.UserId == userId)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            // 15. Delete WalletAllocations
+            if (walletIds.Any())
+            {
+                await _context.WalletAllocations
+                    .IgnoreQueryFilters()
+                    .Where(wa => walletIds.Contains(wa.WalletId))
+                    .ExecuteDeleteAsync(cancellationToken);
+            }
+
+            // 16. Delete Wallets
+            await _context.Wallets
+                .IgnoreQueryFilters()
+                .Where(w => w.UserId == userId)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            // 17. Delete RecurringOccurrences
+            if (recurringPatternIds.Any())
+            {
+                await _context.RecurringOccurrences
+                    .IgnoreQueryFilters()
+                    .Where(ro => recurringPatternIds.Contains(ro.PatternId))
+                    .ExecuteDeleteAsync(cancellationToken);
+            }
+
+            // 18. Delete RecurringPatterns
+            await _context.RecurringPatterns
+                .IgnoreQueryFilters()
+                .Where(rp => rp.UserId == userId)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            // 19. Delete Goals
+            await _context.Goals
+                .IgnoreQueryFilters()
+                .Where(g => g.UserId == userId)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            // 20. Delete AccountShares
+            await _context.AccountShares
+                .IgnoreQueryFilters()
+                .Where(ash => ash.SharedByUserId == userId || ash.SharedWithUserId == userId)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            // 21. Delete ChatMessages
+            await _context.ChatMessages
+                .IgnoreQueryFilters()
+                .Where(cm => cm.UserId == userId)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            // 22. Delete Notifications
+            await _context.Notifications
+                .IgnoreQueryFilters()
+                .Where(n => n.UserId == userId)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            // 23. Delete NotificationPreferences
+            await _context.NotificationPreferences
+                .IgnoreQueryFilters()
+                .Where(np => np.UserId == userId)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            // 24. Delete DashboardNudgeDismissals
+            await _context.DashboardNudgeDismissals
+                .IgnoreQueryFilters()
+                .Where(dnd => dnd.UserId == userId)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            // 25. Delete Transactions
             result.TransactionsDeleted = await _context.Transactions
                 .IgnoreQueryFilters()
                 .Where(t => transactionIds.Contains(t.Id))
                 .ExecuteDeleteAsync(cancellationToken);
 
-            // 14. Delete Transfers
+            // 26. Delete Transfers
             result.TransfersDeleted = await _context.Transfers
                 .IgnoreQueryFilters()
                 .Where(t => t.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
-            // 15. Delete Reconciliations
+            // 27. Delete Reconciliations
             result.ReconciliationsDeleted = await _context.Reconciliations
                 .IgnoreQueryFilters()
                 .Where(r => reconciliationIds.Contains(r.Id))
                 .ExecuteDeleteAsync(cancellationToken);
 
-            // 16. Delete CategorizationRules
+            // 28. Delete CategorizationRules
             result.RulesDeleted = await _context.CategorizationRules
                 .IgnoreQueryFilters()
                 .Where(r => r.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
-            // 17. Delete Categories
+            // 29. Delete Categories
             result.CategoriesDeleted = await _context.Categories
                 .IgnoreQueryFilters()
                 .Where(c => c.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
-            // 18. Delete Accounts
+            // 30. Delete Accounts
             result.AccountsDeleted = await _context.Accounts
                 .IgnoreQueryFilters()
                 .Where(a => a.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
-            // 19. Revoke Akahu token before deleting credentials
+            // 31. Revoke Akahu token before deleting credentials
             try
             {
                 var credential = await _context.AkahuUserCredentials
@@ -266,25 +376,61 @@ public class UserDataDeletionService : IUserDataDeletionService
                     userId);
             }
 
-            // 20. Delete AkahuUserCredentials
+            // 32. Delete AkahuUserCredentials
             await _context.AkahuUserCredentials
                 .IgnoreQueryFilters()
                 .Where(auc => auc.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
-            // 21. Delete RefreshTokens
+            // 33. Delete RefreshTokens
             await _context.RefreshTokens
                 .IgnoreQueryFilters()
                 .Where(rt => rt.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
-            // 22. Delete PasswordResetTokens
+            // 34. Delete PasswordResetTokens
             await _context.PasswordResetTokens
                 .IgnoreQueryFilters()
                 .Where(prt => prt.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
-            // 23. Delete User
+            // 35. Delete EmailVerificationTokens
+            await _context.EmailVerificationTokens
+                .IgnoreQueryFilters()
+                .Where(evt => evt.UserId == userId)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            // 36. Delete UserAiSettings
+            await _context.UserAiSettings
+                .IgnoreQueryFilters()
+                .Where(uas => uas.UserId == userId)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            // 37. Delete UserTelegramSettings
+            await _context.UserTelegramSettings
+                .IgnoreQueryFilters()
+                .Where(uts => uts.UserId == userId)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            // 38. Delete UserFinancialProfiles
+            await _context.UserFinancialProfiles
+                .IgnoreQueryFilters()
+                .Where(ufp => ufp.UserId == userId)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            // 39. Delete AiTokenUsages
+            await _context.AiTokenUsages
+                .IgnoreQueryFilters()
+                .Where(atu => atu.UserId == userId)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            // 40. Delete UserSubscriptions
+            await _context.UserSubscriptions
+                .IgnoreQueryFilters()
+                .Where(us => us.UserId == userId)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            // 41. Delete User
             await _context.Users
                 .IgnoreQueryFilters()
                 .Where(u => u.Id == userId)
