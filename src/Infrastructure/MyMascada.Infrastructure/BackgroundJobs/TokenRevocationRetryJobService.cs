@@ -58,7 +58,8 @@ public class TokenRevocationRetryJobService : ITokenRevocationRetryJobService
 
             foreach (var credential in pendingCredentials)
             {
-                if (credential.RevocationFailureCount >= MaxRetryAttempts)
+                // Circuit breaker: treat corrupted retry counts as max retries exceeded
+                if (credential.RevocationFailureCount < 0 || credential.RevocationFailureCount >= MaxRetryAttempts)
                 {
                     _logger.LogError(
                         "Abandoning token revocation for user {UserId} after {Attempts} failed attempts. Manual intervention required.",
@@ -97,14 +98,24 @@ public class TokenRevocationRetryJobService : ITokenRevocationRetryJobService
                 }
                 catch (Exception ex)
                 {
-                    credential.RevocationFailureCount++;
-                    credential.RevocationFailedAt = DateTime.UtcNow;
-                    await credentialRepository.UpdateAsync(credential);
                     failCount++;
 
                     _logger.LogError(ex,
                         "Retry failed for user {UserId} (attempt {Attempt}/{MaxAttempts})",
-                        credential.UserId, credential.RevocationFailureCount, MaxRetryAttempts);
+                        credential.UserId, credential.RevocationFailureCount + 1, MaxRetryAttempts);
+
+                    try
+                    {
+                        credential.RevocationFailureCount++;
+                        credential.RevocationFailedAt = DateTime.UtcNow;
+                        await credentialRepository.UpdateAsync(credential);
+                    }
+                    catch (Exception persistEx)
+                    {
+                        _logger.LogError(persistEx,
+                            "Failed to persist retry count for user {UserId}. Skipping to avoid infinite retry loop.",
+                            credential.UserId);
+                    }
                 }
             }
 
