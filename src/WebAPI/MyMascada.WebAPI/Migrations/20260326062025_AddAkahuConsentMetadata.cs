@@ -18,13 +18,13 @@ namespace MyMascada.WebAPI.Migrations
                 maxLength: 256,
                 nullable: true);
 
-            migrationBuilder.AddColumn<DateTimeOffset>(
+            migrationBuilder.AddColumn<DateTime>(
                 name: "ConsentGrantedAt",
                 table: "AkahuUserCredentials",
                 type: "timestamp with time zone",
                 nullable: true);
 
-            migrationBuilder.AddColumn<DateTimeOffset>(
+            migrationBuilder.AddColumn<DateTime>(
                 name: "ConsentRevokedAt",
                 table: "AkahuUserCredentials",
                 type: "timestamp with time zone",

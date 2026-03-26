@@ -87,7 +87,7 @@ public class DisconnectBankConnectionCommandHandler : IRequestHandler<Disconnect
                     }
 
                     // Record consent revocation timestamp for compliance evidence
-                    credential.ConsentRevokedAt = DateTimeOffset.UtcNow;
+                    credential.ConsentRevokedAt = DateTime.UtcNow;
                     credential.UpdatedAt = DateTime.UtcNow;
                     await _credentialRepository.UpdateAsync(credential, cancellationToken);
                 }
