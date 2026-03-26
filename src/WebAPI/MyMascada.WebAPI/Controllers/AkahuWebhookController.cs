@@ -84,33 +84,34 @@ public class AkahuWebhookController : ControllerBase
                 return Ok();
             }
 
-            _cache.Set(cacheKey, true, ReplayWindow);
+            // Parse and process — always return 200 to prevent Akahu retries
+            try
+            {
+                var payload = JsonSerializer.Deserialize<AkahuWebhookPayload>(body, JsonOptions);
+                if (payload == null)
+                {
+                    _logger.LogWarning("Failed to deserialize Akahu webhook payload");
+                    return Ok();
+                }
+
+                _logger.LogInformation("Akahu webhook received: {Type}/{Code}", payload.WebhookType, payload.WebhookCode);
+
+                await _mediator.Send(new ProcessAkahuWebhookCommand(payload));
+
+                // Mark as processed only after the handler completes successfully.
+                _cache.Set(cacheKey, true, ReplayWindow);
+            }
+            catch (Exception ex)
+            {
+                // Log but don't throw — return 200 to prevent Akahu from retrying
+                _logger.LogError(ex, "Error processing Akahu webhook");
+            }
+
+            return Ok();
         }
         finally
         {
             ReplayLock.Release();
         }
-
-        // Parse and process — always return 200 to prevent Akahu retries
-        try
-        {
-            var payload = JsonSerializer.Deserialize<AkahuWebhookPayload>(body, JsonOptions);
-            if (payload == null)
-            {
-                _logger.LogWarning("Failed to deserialize Akahu webhook payload");
-                return Ok();
-            }
-
-            _logger.LogInformation("Akahu webhook received: {Type}/{Code}", payload.WebhookType, payload.WebhookCode);
-
-            await _mediator.Send(new ProcessAkahuWebhookCommand(payload));
-        }
-        catch (Exception ex)
-        {
-            // Log but don't throw — return 200 to prevent Akahu from retrying
-            _logger.LogError(ex, "Error processing Akahu webhook");
-        }
-
-        return Ok();
     }
 }
