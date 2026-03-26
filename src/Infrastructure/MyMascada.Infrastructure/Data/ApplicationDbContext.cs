@@ -768,14 +768,14 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.UserId).IsRequired();
             entity.Property(e => e.EncryptedBotToken).IsRequired();
-            entity.Property(e => e.WebhookSecret).IsRequired().HasMaxLength(64);
+            entity.Property(e => e.WebhookSecretHash).IsRequired().HasMaxLength(64);
             entity.Property(e => e.BotUsername).HasMaxLength(100);
 
             // One bot per user
             entity.HasIndex(e => e.UserId).IsUnique();
 
-            // O(1) webhook lookup
-            entity.HasIndex(e => e.WebhookSecret).IsUnique();
+            // O(1) webhook lookup by hash
+            entity.HasIndex(e => e.WebhookSecretHash).IsUnique();
 
             entity.HasQueryFilter(e => !e.IsDeleted);
         });
