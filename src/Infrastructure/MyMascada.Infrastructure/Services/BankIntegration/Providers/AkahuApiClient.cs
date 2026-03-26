@@ -390,17 +390,21 @@ public class AkahuApiClient : IAkahuApiClient
         if (response.IsSuccessStatusCode)
             return;
 
-        var content = await response.Content.ReadAsStringAsync(ct);
+        // Extract request ID from response headers for correlation (safe to log)
+        response.Headers.TryGetValues("X-Request-Id", out var requestIdValues);
+        var requestId = requestIdValues?.FirstOrDefault();
+
+        // Log only safe metadata — never log raw response bodies as they may contain tokens, PII, or account identifiers
         _logger.LogError(new HttpRequestException($"Akahu API error: {response.StatusCode}"),
-            "Akahu API error - {Operation}: {StatusCode} - {Content}",
-            operation, response.StatusCode, content);
+            "Akahu API error - {Operation}: {StatusCode}, RequestUri: {RequestUri}, RequestId: {RequestId}",
+            operation, response.StatusCode, response.RequestMessage?.RequestUri?.AbsolutePath, requestId);
 
         throw response.StatusCode switch
         {
             HttpStatusCode.Unauthorized => new UnauthorizedAccessException($"Akahu: {operation} - Unauthorized. Token may be expired or revoked."),
             HttpStatusCode.Forbidden => new UnauthorizedAccessException($"Akahu: {operation} - Forbidden. Insufficient permissions."),
             HttpStatusCode.TooManyRequests => new InvalidOperationException($"Akahu: {operation} - Rate limit exceeded. Please try again later."),
-            _ => new AkahuApiException($"Akahu: {operation} failed with status {response.StatusCode}: {content}", response.StatusCode)
+            _ => new AkahuApiException($"Akahu: {operation} failed with status {response.StatusCode}", response.StatusCode)
         };
     }
 }
