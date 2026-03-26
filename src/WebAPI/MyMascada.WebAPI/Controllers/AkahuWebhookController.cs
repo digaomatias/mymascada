@@ -23,6 +23,7 @@ public class AkahuWebhookController : ControllerBase
 
     private const string ReplayCachePrefix = "akahu_webhook_";
     private static readonly TimeSpan ReplayWindow = TimeSpan.FromHours(24);
+    private static readonly SemaphoreSlim ReplayLock = new(1, 1);
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -74,13 +75,21 @@ public class AkahuWebhookController : ControllerBase
         var bodyHash = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(body)));
         var cacheKey = ReplayCachePrefix + bodyHash;
 
-        if (_cache.TryGetValue(cacheKey, out _))
+        await ReplayLock.WaitAsync();
+        try
         {
-            _logger.LogWarning("Akahu webhook replay detected, ignoring duplicate payload");
-            return Ok();
-        }
+            if (_cache.TryGetValue(cacheKey, out _))
+            {
+                _logger.LogWarning("Akahu webhook replay detected, ignoring duplicate payload");
+                return Ok();
+            }
 
-        _cache.Set(cacheKey, true, ReplayWindow);
+            _cache.Set(cacheKey, true, ReplayWindow);
+        }
+        finally
+        {
+            ReplayLock.Release();
+        }
 
         // Parse and process — always return 200 to prevent Akahu retries
         try
