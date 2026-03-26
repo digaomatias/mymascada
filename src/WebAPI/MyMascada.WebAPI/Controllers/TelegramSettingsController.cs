@@ -96,7 +96,7 @@ public class TelegramSettingsController : ControllerBase
 
         var encryptedToken = _encryptionService.Encrypt(request.BotToken);
         var webhookSecret = GenerateWebhookSecret();
-        var webhookUrl = BuildWebhookUrl(webhookSecret);
+        var webhookUrl = BuildWebhookUrl();
 
         // Set webhook with Telegram
         var webhookSet = await _telegramBotService.SetWebhookAsync(request.BotToken, webhookUrl, webhookSecret);
@@ -199,7 +199,7 @@ public class TelegramSettingsController : ControllerBase
         });
     }
 
-    private string BuildWebhookUrl(string webhookSecret)
+    private string BuildWebhookUrl()
     {
         var baseUrl = _configuration["Telegram:WebhookBaseUrl"];
         if (string.IsNullOrEmpty(baseUrl))
@@ -209,7 +209,7 @@ public class TelegramSettingsController : ControllerBase
 
         // Remove trailing slash
         baseUrl = baseUrl.TrimEnd('/');
-        return $"{baseUrl}/api/telegram/webhook/{webhookSecret}";
+        return $"{baseUrl}/api/telegram/webhook";
     }
 
     private static string GenerateWebhookSecret()
