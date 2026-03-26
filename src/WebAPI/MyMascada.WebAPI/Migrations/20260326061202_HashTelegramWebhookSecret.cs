@@ -32,15 +32,10 @@ namespace MyMascada.WebAPI.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.RenameColumn(
-                name: "WebhookSecretHash",
-                table: "UserTelegramSettings",
-                newName: "WebhookSecret");
-
-            migrationBuilder.RenameIndex(
-                name: "IX_UserTelegramSettings_WebhookSecretHash",
-                table: "UserTelegramSettings",
-                newName: "IX_UserTelegramSettings_WebhookSecret");
+            // This migration is irreversible because SHA-256 hashing is one-way.
+            // Original plaintext webhook secrets cannot be recovered from their hashes.
+            throw new NotSupportedException(
+                "Cannot revert HashTelegramWebhookSecret: SHA-256 hashing is one-way and the original plaintext secrets cannot be recovered.");
         }
     }
 }
