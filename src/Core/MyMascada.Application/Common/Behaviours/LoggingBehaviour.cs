@@ -151,7 +151,10 @@ public class AuditLoggingBehaviour<TRequest, TResponse> : IPipelineBehavior<TReq
         "SyncBankConnectionCommand",
         "SyncAllConnectionsCommand",
         "CreateAccountShareCommand",
+        "DeclineAccountShareCommand",
+        "DeclineAccountShareByIdCommand",
         "RevokeAccountShareCommand",
+        "UpdateAccountShareRoleCommand",
         "AcceptAccountShareCommand",
         "AcceptAccountShareByIdCommand"
     ];
@@ -260,7 +263,7 @@ public class AuditLoggingBehaviour<TRequest, TResponse> : IPipelineBehavior<TReq
     private static Guid ExtractUserId(TRequest request)
     {
         // Use reflection to find UserId property in request
-        var userIdProperty = request.GetType().GetProperty("UserId");
+        var userIdProperty = GetCachedProperty(request.GetType(), "UserId");
         if (userIdProperty?.GetValue(request) is Guid userId)
         {
             return userId;
@@ -271,10 +274,13 @@ public class AuditLoggingBehaviour<TRequest, TResponse> : IPipelineBehavior<TReq
 
     private static string? ExtractStringProperty(TRequest request, string propertyName)
     {
-        var property = PropertyCache.GetOrAdd(
-            (request.GetType(), propertyName),
-            key => key.Item1.GetProperty(key.Item2));
+        var property = GetCachedProperty(request.GetType(), propertyName);
         return property?.GetValue(request)?.ToString();
+    }
+
+    private static PropertyInfo? GetCachedProperty(Type type, string propertyName)
+    {
+        return PropertyCache.GetOrAdd((type, propertyName), key => key.Item1.GetProperty(key.Item2));
     }
 
     private static (int? TransactionId, decimal? Amount, string? Description) ExtractAuditData(TRequest request, TResponse? response)
@@ -283,21 +289,23 @@ public class AuditLoggingBehaviour<TRequest, TResponse> : IPipelineBehavior<TReq
         decimal? amount = null;
         string? description = null;
 
+        var requestType = request.GetType();
+
         // Extract transaction ID from request or response
-        var requestTransactionId = request.GetType().GetProperty("TransactionId")?.GetValue(request) as int?;
-        var requestId = request.GetType().GetProperty("Id")?.GetValue(request) as int?;
+        var requestTransactionId = GetCachedProperty(requestType, "TransactionId")?.GetValue(request) as int?;
+        var requestId = GetCachedProperty(requestType, "Id")?.GetValue(request) as int?;
 
         transactionId = requestTransactionId ?? requestId;
 
         // Extract amount from request
-        var amountProperty = request.GetType().GetProperty("Amount");
+        var amountProperty = GetCachedProperty(requestType, "Amount");
         if (amountProperty?.GetValue(request) is decimal amt)
         {
             amount = amt;
         }
 
         // Extract description from request - mask PII before logging
-        var descriptionProperty = request.GetType().GetProperty("Description");
+        var descriptionProperty = GetCachedProperty(requestType, "Description");
         if (descriptionProperty?.GetValue(request) is string desc)
         {
             // Mask any PII patterns in the description (emails, phone numbers, etc.)
