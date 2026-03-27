@@ -4,6 +4,7 @@ using FluentValidation;
 using Microsoft.Extensions.Logging;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Domain.Common;
+using MyMascada.Infrastructure.Services.BankIntegration.Providers;
 
 namespace MyMascada.WebAPI.Middleware;
 
@@ -175,7 +176,24 @@ public class GlobalExceptionHandlingMiddleware
             // Not found scenarios
             KeyNotFoundException _ => (HttpStatusCode.NotFound, LogLevel.Warning,
                 "The requested resource was not found."),
-            
+
+            // Akahu bank provider errors — forward 4xx status codes, map 5xx to 502 Bad Gateway
+            AkahuApiException akahuEx => (
+                akahuEx.AkahuStatusCode >= HttpStatusCode.InternalServerError
+                    ? HttpStatusCode.BadGateway
+                    : akahuEx.AkahuStatusCode,
+                akahuEx.AkahuStatusCode >= HttpStatusCode.InternalServerError ? LogLevel.Error : LogLevel.Warning,
+                akahuEx.AkahuStatusCode switch
+                {
+                    HttpStatusCode.BadRequest => "The bank provider rejected the request.",
+                    HttpStatusCode.Forbidden => "Access to the bank provider resource is forbidden.",
+                    HttpStatusCode.NotFound => "The requested bank provider resource was not found.",
+                    HttpStatusCode.TooManyRequests => "Too many requests to the bank provider. Please try again later.",
+                    _ when akahuEx.AkahuStatusCode >= HttpStatusCode.InternalServerError =>
+                        "The bank provider is temporarily unavailable. Please try again later.",
+                    _ => "Bank provider request failed."
+                }),
+
             // Data access issues
             TimeoutException _ => (HttpStatusCode.RequestTimeout, LogLevel.Error,
                 "The request timed out. Please try again later."),

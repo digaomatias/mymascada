@@ -132,7 +132,90 @@ public class AkahuApiClientTests
             .Which.Should().Be(TestAppToken);
     }
 
+    [Fact]
+    public async Task GetAccountsInternalAsync_Status401_ThrowsUnauthorizedAccessException()
+    {
+        var handler = new DelegatingHandlerStub((_, _) =>
+            Task.FromResult(new HttpResponseMessage(HttpStatusCode.Unauthorized)));
+        var client = CreateClient(handler);
+
+        Func<Task> act = async () =>
+            await client.GetAccountsInternalAsync(TestAppToken, "user_token_abc");
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.BadRequest)]
+    [InlineData(HttpStatusCode.Forbidden)]
+    [InlineData(HttpStatusCode.NotFound)]
+    [InlineData(HttpStatusCode.TooManyRequests)]
+    [InlineData(HttpStatusCode.InternalServerError)]
+    public async Task GetAccountsInternalAsync_Non401Errors_ThrowAkahuApiExceptionWithStatusCode(HttpStatusCode statusCode)
+    {
+        var handler = new DelegatingHandlerStub((_, _) =>
+            Task.FromResult(new HttpResponseMessage(statusCode)));
+        var client = CreateClient(handler);
+
+        Func<Task> act = async () =>
+            await client.GetAccountsInternalAsync(TestAppToken, "user_token_abc");
+
+        var ex = await act.Should().ThrowAsync<AkahuApiException>();
+        ex.Which.AkahuStatusCode.Should().Be(statusCode);
+    }
+
+    [Fact]
+    public async Task GetAccountInternalAsync_ErrorLog_ExcludesSensitiveIdentifiers()
+    {
+        const string sensitiveAccountId = "acc_sensitive_123";
+        const string sensitiveTokenFragment = "user_token_sensitive_456";
+
+        var response = new HttpResponseMessage(HttpStatusCode.BadRequest)
+        {
+            RequestMessage = new HttpRequestMessage(
+                HttpMethod.Get,
+                $"https://api.akahu.io/v1/accounts/{sensitiveAccountId}"),
+            Content = new StringContent(
+                $"{{\"error\":\"invalid token {sensitiveTokenFragment}\"}}",
+                Encoding.UTF8,
+                "application/json")
+        };
+        response.Headers.Add("X-Request-Id", "req_abc123");
+
+        var handler = new DelegatingHandlerStub((_, _) => Task.FromResult(response));
+        var (client, logger) = CreateClientWithLogger(handler);
+
+        Func<Task> act = async () =>
+            await client.GetAccountInternalAsync(TestAppToken, "user_token_abc", sensitiveAccountId);
+
+        await act.Should().ThrowAsync<AkahuApiException>();
+
+        var logCall = logger.ReceivedCalls().Single();
+        var callArguments = logCall.GetArguments();
+
+        callArguments[1].Should().Be("Akahu API error - {Operation}: {StatusCode}, RequestId: {RequestId}");
+
+        var structuredArgs = callArguments[2].Should().BeAssignableTo<object[]>().Subject;
+        structuredArgs.Should().HaveCount(3);
+        structuredArgs[0].Should().Be("Get account");
+        structuredArgs[1].Should().Be(HttpStatusCode.BadRequest);
+        structuredArgs[2].Should().Be("req_abc123");
+
+        structuredArgs
+            .Select(arg => arg?.ToString())
+            .Should()
+            .NotContain(value =>
+                !string.IsNullOrEmpty(value) &&
+                (value.Contains(sensitiveAccountId, StringComparison.Ordinal) ||
+                 value.Contains(sensitiveTokenFragment, StringComparison.Ordinal)));
+    }
+
     private static AkahuApiClient CreateClient(DelegatingHandlerStub handler)
+    {
+        return CreateClientWithLogger(handler).Client;
+    }
+
+    private static (AkahuApiClient Client, IApplicationLogger<AkahuApiClient> Logger) CreateClientWithLogger(DelegatingHandlerStub handler)
     {
         var options = Options.Create(new AkahuOptions
         {
@@ -145,7 +228,7 @@ public class AkahuApiClientTests
 
         var logger = Substitute.For<IApplicationLogger<AkahuApiClient>>();
         var httpClient = new HttpClient(handler);
-        return new AkahuApiClient(httpClient, options, logger);
+        return (new AkahuApiClient(httpClient, options, logger), logger);
     }
 
     /// <summary>
