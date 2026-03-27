@@ -15,8 +15,8 @@ public interface IEndpointValidator
 
 public class EndpointValidationResult
 {
-    public bool IsValid { get; init; }
-    public string? Error { get; init; }
+    public bool IsValid { get; private set; }
+    public string? Error { get; private set; }
 
     public static EndpointValidationResult Valid() => new() { IsValid = true };
     public static EndpointValidationResult Invalid(string error) => new() { IsValid = false, Error = error };

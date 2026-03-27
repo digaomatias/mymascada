@@ -32,11 +32,14 @@ public class EndpointValidator : IEndpointValidator
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
             return EndpointValidationResult.Invalid("Invalid API endpoint URL format.");
 
+        // Validate scheme first — block non-HTTP(S) schemes (e.g. file://) before any other checks
         var isLocalhost = uri.Host is "localhost" or "127.0.0.1" or "::1";
 
-        // In development, allow localhost/loopback for local AI testing (e.g. Ollama)
         if (isLocalhost)
         {
+            if (uri.Scheme is not "http" and not "https")
+                return EndpointValidationResult.Invalid("API endpoint must use HTTP or HTTPS scheme.");
+
             if (_environment.IsDevelopment())
                 return EndpointValidationResult.Valid();
 
@@ -62,8 +65,8 @@ public class EndpointValidator : IEndpointValidator
         {
             _logger.LogWarning(
                 ex,
-                "DNS resolution failed for AI endpoint host {Host} (SocketErrorCode: {ErrorCode})",
-                uri.Host, ex.SocketErrorCode);
+                "DNS resolution failed for AI endpoint host {Host} (SocketErrorCode: {ErrorCode}, Message: {ErrorMessage})",
+                SanitizeForLog(uri.Host), ex.SocketErrorCode, ex.Message);
             return EndpointValidationResult.Invalid("Could not resolve the API endpoint hostname.");
         }
 
@@ -75,8 +78,8 @@ public class EndpointValidator : IEndpointValidator
             if (IsBlockedAddress(ip))
             {
                 _logger.LogWarning(
-                    "SSRF attempt blocked: endpoint {Url} resolved to blocked IP {IP}",
-                    url, ip);
+                    "SSRF attempt blocked: endpoint host {Host} resolved to blocked IP {IP}",
+                    SanitizeForLog(uri.Host), ip);
                 return EndpointValidationResult.Invalid(
                     "API endpoint resolves to a private or reserved IP address, which is not allowed.");
             }
@@ -84,6 +87,12 @@ public class EndpointValidator : IEndpointValidator
 
         return EndpointValidationResult.Valid();
     }
+
+    /// <summary>
+    /// Strips control characters and truncates user input for safe log inclusion (prevents log injection).
+    /// </summary>
+    private static string SanitizeForLog(string input)
+        => new(input.Where(c => !char.IsControl(c)).Take(200).ToArray());
 
     private static bool IsBlockedAddress(IPAddress ip)
     {

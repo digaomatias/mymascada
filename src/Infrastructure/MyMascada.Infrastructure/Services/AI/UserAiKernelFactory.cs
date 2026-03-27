@@ -150,9 +150,14 @@ public class UserAiKernelFactory : IUserAiKernelFactory
     {
         var builder = Kernel.CreateBuilder();
 
+        // Disable auto-redirect to prevent SSRF bypass: an attacker-controlled host could pass
+        // endpoint validation then redirect to an internal IP. With auto-redirect disabled,
+        // the HttpClient will not follow redirects automatically.
+        var handler = new HttpClientHandler { AllowAutoRedirect = false };
+
         if (providerType == "openai-compatible" && !string.IsNullOrEmpty(apiEndpoint))
         {
-            var httpClient = new HttpClient
+            var httpClient = new HttpClient(handler)
             {
                 BaseAddress = new Uri(apiEndpoint),
                 Timeout = TimeSpan.FromMinutes(5)
@@ -161,7 +166,7 @@ public class UserAiKernelFactory : IUserAiKernelFactory
         }
         else
         {
-            var httpClient = new HttpClient
+            var httpClient = new HttpClient(handler)
             {
                 Timeout = TimeSpan.FromMinutes(5)
             };
