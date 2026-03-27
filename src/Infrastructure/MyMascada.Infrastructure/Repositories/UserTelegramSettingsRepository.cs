@@ -1,7 +1,6 @@
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.EntityFrameworkCore;
 using MyMascada.Application.Common.Interfaces;
+using MyMascada.Application.Common.Security;
 using MyMascada.Domain.Common;
 using MyMascada.Domain.Entities;
 using MyMascada.Infrastructure.Data;
@@ -25,7 +24,7 @@ public class UserTelegramSettingsRepository : IUserTelegramSettingsRepository
 
     public async Task<UserTelegramSettings?> GetByWebhookSecretAsync(string webhookSecret)
     {
-        var hash = HashSecret(webhookSecret);
+        var hash = Sha256Hasher.Hash(webhookSecret);
         return await _context.UserTelegramSettings
             .FirstOrDefaultAsync(s => s.WebhookSecretHash == hash && s.IsActive);
     }
@@ -50,11 +49,5 @@ public class UserTelegramSettingsRepository : IUserTelegramSettingsRepository
         settings.IsActive = false;
         _context.UserTelegramSettings.Update(settings);
         await _context.SaveChangesAsync();
-    }
-
-    public static string HashSecret(string secret)
-    {
-        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(secret));
-        return Convert.ToHexStringLower(bytes);
     }
 }

@@ -6,8 +6,8 @@ using MyMascada.Application.Common.Configuration;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Telegram.DTOs;
 using MyMascada.Domain.Common;
+using MyMascada.Application.Common.Security;
 using MyMascada.Domain.Entities;
-using MyMascada.Infrastructure.Repositories;
 using System.Security.Cryptography;
 
 namespace MyMascada.WebAPI.Controllers;
@@ -112,7 +112,7 @@ public class TelegramSettingsController : ControllerBase
             {
                 UserId = userId,
                 EncryptedBotToken = encryptedToken,
-                WebhookSecretHash = UserTelegramSettingsRepository.HashSecret(webhookSecret),
+                WebhookSecretHash = Sha256Hasher.Hash(webhookSecret),
                 BotUsername = botInfo.Username,
                 IsActive = true,
                 IsVerified = true,
@@ -124,7 +124,7 @@ public class TelegramSettingsController : ControllerBase
         else
         {
             existing.EncryptedBotToken = encryptedToken;
-            existing.WebhookSecretHash = UserTelegramSettingsRepository.HashSecret(webhookSecret);
+            existing.WebhookSecretHash = Sha256Hasher.Hash(webhookSecret);
             existing.BotUsername = botInfo.Username;
             existing.IsActive = true;
             existing.IsVerified = true;
