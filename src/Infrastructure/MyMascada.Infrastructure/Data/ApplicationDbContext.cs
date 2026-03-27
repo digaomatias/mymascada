@@ -453,6 +453,8 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.EncryptedAppToken).IsRequired();
             entity.Property(e => e.EncryptedUserToken).IsRequired();
             entity.Property(e => e.LastValidationError).HasMaxLength(500);
+            entity.Property(e => e.ConsentScope).HasMaxLength(500);
+            entity.Property(e => e.ConsentCorrelationId).HasMaxLength(256);
 
             // Unique constraint: one credential per user (user can only have one Akahu Personal App)
             entity.HasIndex(e => e.UserId).IsUnique();

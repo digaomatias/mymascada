@@ -85,6 +85,11 @@ public class DisconnectBankConnectionCommandHandler : IRequestHandler<Disconnect
                         await _akahuApiClient.RevokeTokenAsync(appIdToken, accessToken, cancellationToken);
                         _logger.LogDebug("Successfully revoked Akahu access token");
                     }
+
+                    // Record consent revocation timestamp for compliance evidence
+                    credential.ConsentRevokedAt = DateTimeOffset.UtcNow;
+                    credential.UpdatedAt = DateTime.UtcNow;
+                    await _credentialRepository.UpdateAsync(credential, cancellationToken);
                 }
             }
             catch (Exception ex)

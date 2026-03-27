@@ -105,6 +105,10 @@ public class ExchangeAkahuCodeQueryHandler : IRequestHandler<ExchangeAkahuCodeQu
             existingCredential.EncryptedUserToken = encryptedUserToken;
             existingCredential.LastValidatedAt = DateTime.UtcNow;
             existingCredential.LastValidationError = null;
+            existingCredential.ConsentScope = tokenResponse.Scope;
+            existingCredential.ConsentGrantedAt = DateTimeOffset.UtcNow;
+            existingCredential.ConsentCorrelationId = request.State;
+            existingCredential.ConsentRevokedAt = null;
             existingCredential.UpdatedAt = DateTime.UtcNow;
             await _credentialRepository.UpdateAsync(existingCredential, cancellationToken);
         }
@@ -116,6 +120,9 @@ public class ExchangeAkahuCodeQueryHandler : IRequestHandler<ExchangeAkahuCodeQu
                 EncryptedAppToken = encryptedAppToken,
                 EncryptedUserToken = encryptedUserToken,
                 LastValidatedAt = DateTime.UtcNow,
+                ConsentScope = tokenResponse.Scope,
+                ConsentGrantedAt = DateTimeOffset.UtcNow,
+                ConsentCorrelationId = request.State,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             }, cancellationToken);

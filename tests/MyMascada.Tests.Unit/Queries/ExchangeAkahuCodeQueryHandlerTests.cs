@@ -71,7 +71,59 @@ public class ExchangeAkahuCodeQueryHandlerTests
                 c.UserId == userId &&
                 c.EncryptedAppToken == "enc_app" &&
                 c.EncryptedUserToken == "enc_user" &&
-                c.LastValidatedAt.HasValue),
+                c.LastValidatedAt.HasValue &&
+                c.ConsentScope == "ENDURING_CONSENT" &&
+                c.ConsentGrantedAt.HasValue &&
+                c.ConsentCorrelationId == null),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_PersistsConsentCorrelationId_WhenStateIsProvided()
+    {
+        var userId = Guid.NewGuid();
+        var akahuApiClient = Substitute.For<IAkahuApiClient>();
+        var credentialRepository = Substitute.For<IAkahuUserCredentialRepository>();
+        var bankConnectionRepository = Substitute.For<IBankConnectionRepository>();
+        var encryptionService = Substitute.For<ISettingsEncryptionService>();
+        var logger = Substitute.For<IApplicationLogger<ExchangeAkahuCodeQueryHandler>>();
+
+        akahuApiClient.ExchangeCodeForTokenAsync("code-456", Arg.Any<CancellationToken>())
+            .Returns(new AkahuTokenResponse
+            {
+                AccessToken = "user_token_oauth",
+                TokenType = "Bearer",
+                Scope = "ENDURING_CONSENT"
+            });
+
+        akahuApiClient.GetAccountsWithCredentialsAsync("app_token_123", "user_token_oauth", Arg.Any<CancellationToken>())
+            .Returns(Array.Empty<AkahuAccountInfo>());
+
+        credentialRepository.GetByUserIdAsync(userId, Arg.Any<CancellationToken>())
+            .Returns((AkahuUserCredential?)null);
+
+        bankConnectionRepository.GetByUserIdAsync(userId, Arg.Any<CancellationToken>())
+            .Returns(Array.Empty<BankConnection>());
+
+        encryptionService.EncryptSettings("app_token_123").Returns("enc_app");
+        encryptionService.EncryptSettings("user_token_oauth").Returns("enc_user");
+
+        var handler = new ExchangeAkahuCodeQueryHandler(
+            akahuApiClient,
+            credentialRepository,
+            bankConnectionRepository,
+            encryptionService,
+            logger);
+
+        await handler.Handle(
+            new ExchangeAkahuCodeQuery(userId, "code-456", "state-abc-123", "app_token_123"),
+            CancellationToken.None);
+
+        await credentialRepository.Received(1).AddAsync(
+            Arg.Is<AkahuUserCredential>(c =>
+                c.ConsentScope == "ENDURING_CONSENT" &&
+                c.ConsentGrantedAt.HasValue &&
+                c.ConsentCorrelationId == "state-abc-123"),
             Arg.Any<CancellationToken>());
     }
 
