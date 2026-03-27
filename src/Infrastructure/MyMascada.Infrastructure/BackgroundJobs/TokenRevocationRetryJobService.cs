@@ -83,38 +83,82 @@ public class TokenRevocationRetryJobService : ITokenRevocationRetryJobService
                         continue;
                     }
 
+                    var attemptNumber = credential.RevocationFailureCount + 1;
                     await akahuApiClient.RevokeTokenAsync(appIdToken, accessToken);
 
-                    // Success — clear the pending flag
+                    // Token revoked successfully — persist the cleared state
                     credential.IsRevocationPending = false;
                     credential.RevocationFailedAt = null;
                     credential.RevocationFailureCount = 0;
-                    await credentialRepository.UpdateAsync(credential);
-                    successCount++;
-
-                    _logger.LogInformation(
-                        "Successfully revoked token for user {UserId} on retry attempt {Attempt}",
-                        credential.UserId, credential.RevocationFailureCount + 1);
-                }
-                catch (Exception ex)
-                {
-                    failCount++;
-
-                    _logger.LogError(ex,
-                        "Retry failed for user {UserId} (attempt {Attempt}/{MaxAttempts})",
-                        credential.UserId, credential.RevocationFailureCount + 1, MaxRetryAttempts);
 
                     try
                     {
-                        credential.RevocationFailureCount++;
-                        credential.RevocationFailedAt = DateTime.UtcNow;
                         await credentialRepository.UpdateAsync(credential);
                     }
                     catch (Exception persistEx)
                     {
-                        _logger.LogError(persistEx,
-                            "Failed to persist retry count for user {UserId}. Skipping to avoid infinite retry loop.",
+                        // Token is already revoked at Akahu — log but don't fall into failure handler.
+                        // Next run will re-attempt revocation (which is a no-op) and try to clear the flag again.
+                        _logger.LogWarning(persistEx,
+                            "Token for user {UserId} was revoked successfully but failed to persist cleared state. " +
+                            "Will be retried on next run.",
                             credential.UserId);
+                        continue;
+                    }
+
+                    successCount++;
+                    _logger.LogInformation(
+                        "Successfully revoked token for user {UserId} on retry attempt {Attempt}",
+                        credential.UserId, attemptNumber);
+                }
+                catch (Exception ex)
+                {
+                    failCount++;
+                    credential.RevocationFailureCount++;
+                    credential.RevocationFailedAt = DateTime.UtcNow;
+
+                    _logger.LogError(ex,
+                        "Retry failed for user {UserId} (attempt {Attempt}/{MaxAttempts})",
+                        credential.UserId, credential.RevocationFailureCount, MaxRetryAttempts);
+
+                    try
+                    {
+                        // If max retries reached, abandon to prevent further retries
+                        if (credential.RevocationFailureCount >= MaxRetryAttempts)
+                        {
+                            credential.IsRevocationPending = false;
+                            _logger.LogError(
+                                "Max retry attempts reached for user {UserId}. Marking as abandoned. Manual intervention required.",
+                                credential.UserId);
+                        }
+
+                        await credentialRepository.UpdateAsync(credential);
+                    }
+                    catch (Exception persistEx)
+                    {
+                        // Cannot persist the failure count. Mark as abandoned to break the retry cycle.
+                        _logger.LogCritical(persistEx,
+                            "Failed to persist failure count for user {UserId} (attempt {Attempt}). " +
+                            "Credential may be retried with stale count on next run.",
+                            credential.UserId, credential.RevocationFailureCount);
+
+                        try
+                        {
+                            credential.IsRevocationPending = false;
+                            await credentialRepository.UpdateAsync(credential);
+                            _logger.LogWarning(
+                                "Abandoned revocation retry for user {UserId} after persist failure to prevent infinite loop.",
+                                credential.UserId);
+                            abandonedCount++;
+                        }
+                        catch
+                        {
+                            // DB is completely unavailable for this credential — nothing more we can do.
+                            // The Hangfire job-level retry (AutomaticRetry) will handle rescheduling.
+                            _logger.LogCritical(
+                                "Cannot persist any state for user {UserId}. Credential will be retried on next job run.",
+                                credential.UserId);
+                        }
                     }
                 }
             }
