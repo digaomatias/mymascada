@@ -38,6 +38,7 @@ public class ExchangeAkahuCodeQueryHandler : IRequestHandler<ExchangeAkahuCodeQu
     private readonly IAkahuUserCredentialRepository _credentialRepository;
     private readonly IBankConnectionRepository _bankConnectionRepository;
     private readonly ISettingsEncryptionService _encryptionService;
+    private readonly IOAuthStateStore _oauthStateStore;
     private readonly IApplicationLogger<ExchangeAkahuCodeQueryHandler> _logger;
 
     public ExchangeAkahuCodeQueryHandler(
@@ -45,12 +46,14 @@ public class ExchangeAkahuCodeQueryHandler : IRequestHandler<ExchangeAkahuCodeQu
         IAkahuUserCredentialRepository credentialRepository,
         IBankConnectionRepository bankConnectionRepository,
         ISettingsEncryptionService encryptionService,
+        IOAuthStateStore oauthStateStore,
         IApplicationLogger<ExchangeAkahuCodeQueryHandler> logger)
     {
         _akahuApiClient = akahuApiClient ?? throw new ArgumentNullException(nameof(akahuApiClient));
         _credentialRepository = credentialRepository ?? throw new ArgumentNullException(nameof(credentialRepository));
         _bankConnectionRepository = bankConnectionRepository ?? throw new ArgumentNullException(nameof(bankConnectionRepository));
         _encryptionService = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
+        _oauthStateStore = oauthStateStore ?? throw new ArgumentNullException(nameof(oauthStateStore));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -68,6 +71,18 @@ public class ExchangeAkahuCodeQueryHandler : IRequestHandler<ExchangeAkahuCodeQu
         if (string.IsNullOrWhiteSpace(request.AppIdToken))
         {
             throw new ArgumentException("AppIdToken is required for OAuth mode");
+        }
+
+        // Validate OAuth state server-side (CSRF protection)
+        if (string.IsNullOrWhiteSpace(request.State))
+        {
+            throw new ArgumentException("OAuth state parameter is required");
+        }
+
+        var stateValid = await _oauthStateStore.ValidateAndConsumeAsync(request.UserId, request.State, cancellationToken);
+        if (!stateValid)
+        {
+            throw new UnauthorizedAccessException("Invalid or expired OAuth state. Please restart the connection flow.");
         }
 
         // 1. Exchange code for access token
