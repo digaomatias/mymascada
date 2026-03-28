@@ -65,8 +65,8 @@ public class EndpointValidator : IEndpointValidator
         {
             _logger.LogWarning(
                 ex,
-                "DNS resolution failed for AI endpoint host {Host} (SocketErrorCode: {ErrorCode}, Message: {ErrorMessage})",
-                SanitizeForLog(uri.Host), ex.SocketErrorCode, ex.Message);
+                "DNS resolution failed for AI endpoint host (SocketErrorCode: {ErrorCode})",
+                ex.SocketErrorCode);
             return EndpointValidationResult.Invalid("Could not resolve the API endpoint hostname.");
         }
 
@@ -78,8 +78,8 @@ public class EndpointValidator : IEndpointValidator
             if (IsBlockedAddress(ip))
             {
                 _logger.LogWarning(
-                    "SSRF attempt blocked: endpoint host {Host} resolved to blocked IP {IP}",
-                    SanitizeForLog(uri.Host), ip);
+                    "SSRF attempt blocked: endpoint resolved to blocked IP {IP}",
+                    ip);
                 return EndpointValidationResult.Invalid(
                     "API endpoint resolves to a private or reserved IP address, which is not allowed.");
             }
