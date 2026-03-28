@@ -74,7 +74,7 @@ public class ExchangeAkahuCodeQueryHandlerTests
                 c.LastValidatedAt.HasValue &&
                 c.ConsentScope == "ENDURING_CONSENT" &&
                 c.ConsentGrantedAt.HasValue &&
-                c.ConsentCorrelationId == null),
+                c.ConsentCorrelationId == "valid-state"),
             Arg.Any<CancellationToken>());
     }
 
