@@ -65,6 +65,29 @@ vi.mock('sonner', () => ({
   },
 }))
 
+// Mock next-intl with actual English messages
+vi.mock('next-intl', async () => {
+  const messagesModule = await import('./messages/en.json')
+  const messages = (messagesModule as any).default || messagesModule
+
+  function getNestedValue(obj: any, keyPath: string): any {
+    return keyPath.split('.').reduce((current, key) => current?.[key], obj)
+  }
+
+  return {
+    useTranslations: (namespace?: string) => {
+      const section = namespace ? getNestedValue(messages, namespace) : messages
+      return (key: string, values?: Record<string, any>) => {
+        const value = getNestedValue(section, key)
+        if (typeof value !== 'string') return `${namespace}.${key}`
+        if (!values) return value
+        return value.replace(/\{(\w+)\}/g, (_: string, k: string) => String(values[k] ?? `{${k}}`))
+      }
+    },
+    NextIntlClientProvider: ({ children }: any) => children,
+  }
+})
+
 // Mock Heroicons
 vi.mock('@heroicons/react/24/outline', () => ({
   CheckCircleIcon: () => null,
