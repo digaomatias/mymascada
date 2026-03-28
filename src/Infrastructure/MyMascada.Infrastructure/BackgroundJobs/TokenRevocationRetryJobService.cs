@@ -1,3 +1,4 @@
+using System.Net;
 using Hangfire;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -64,6 +65,19 @@ public class TokenRevocationRetryJobService : ITokenRevocationRetryJobService
                     _logger.LogError(
                         "Abandoning token revocation for user {UserId} after {Attempts} failed attempts. Manual intervention required.",
                         credential.UserId, credential.RevocationFailureCount);
+
+                    try
+                    {
+                        credential.IsRevocationPending = false;
+                        await credentialRepository.UpdateAsync(credential);
+                    }
+                    catch (Exception persistEx)
+                    {
+                        _logger.LogCritical(persistEx,
+                            "Failed to persist abandoned state for user {UserId}. Credential will be retried on next run.",
+                            credential.UserId);
+                    }
+
                     abandonedCount++;
                     continue;
                 }
@@ -111,8 +125,30 @@ public class TokenRevocationRetryJobService : ITokenRevocationRetryJobService
                         "Successfully revoked token for user {UserId} on retry attempt {Attempt}",
                         credential.UserId, attemptNumber);
                 }
+                catch (HttpRequestException httpEx) when (IsTransientHttpError(httpEx))
+                {
+                    // Transient errors (5xx, 429, network issues): don't count against retry limit
+                    failCount++;
+                    credential.RevocationFailedAt = DateTime.UtcNow;
+
+                    _logger.LogWarning(httpEx,
+                        "Transient error revoking token for user {UserId} (attempt {Attempt}/{MaxAttempts}). Will retry on next run.",
+                        credential.UserId, credential.RevocationFailureCount + 1, MaxRetryAttempts);
+
+                    try
+                    {
+                        await credentialRepository.UpdateAsync(credential);
+                    }
+                    catch (Exception persistEx)
+                    {
+                        _logger.LogError(persistEx,
+                            "Failed to persist transient failure timestamp for user {UserId}.",
+                            credential.UserId);
+                    }
+                }
                 catch (Exception ex)
                 {
+                    // Terminal errors (401, 403, unknown): count against retry limit
                     failCount++;
                     credential.RevocationFailureCount++;
                     credential.RevocationFailedAt = DateTime.UtcNow;
@@ -136,7 +172,6 @@ public class TokenRevocationRetryJobService : ITokenRevocationRetryJobService
                     }
                     catch (Exception persistEx)
                     {
-                        // Cannot persist the failure count. Mark as abandoned to break the retry cycle.
                         _logger.LogCritical(persistEx,
                             "Failed to persist failure count for user {UserId} (attempt {Attempt}). " +
                             "Credential may be retried with stale count on next run.",
@@ -153,8 +188,6 @@ public class TokenRevocationRetryJobService : ITokenRevocationRetryJobService
                         }
                         catch
                         {
-                            // DB is completely unavailable for this credential — nothing more we can do.
-                            // The Hangfire job-level retry (AutomaticRetry) will handle rescheduling.
                             _logger.LogCritical(
                                 "Cannot persist any state for user {UserId}. Credential will be retried on next job run.",
                                 credential.UserId);
@@ -172,5 +205,22 @@ public class TokenRevocationRetryJobService : ITokenRevocationRetryJobService
             _logger.LogError(ex, "Token revocation retry job failed unexpectedly");
             throw; // Let Hangfire retry
         }
+    }
+
+    /// <summary>
+    /// Determines if an HttpRequestException represents a transient error that should not
+    /// count against the retry limit (e.g. 5xx, 429, or network-level failures).
+    /// </summary>
+    private static bool IsTransientHttpError(HttpRequestException ex)
+    {
+        if (ex.StatusCode is null)
+            return true; // Network-level failure (DNS, timeout, connection refused)
+
+        return ex.StatusCode.Value is
+            HttpStatusCode.TooManyRequests or           // 429
+            HttpStatusCode.InternalServerError or       // 500
+            HttpStatusCode.BadGateway or                // 502
+            HttpStatusCode.ServiceUnavailable or        // 503
+            HttpStatusCode.GatewayTimeout;              // 504
     }
 }

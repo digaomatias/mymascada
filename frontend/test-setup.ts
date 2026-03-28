@@ -79,7 +79,7 @@ vi.mock('next-intl', async () => {
       const section = namespace ? getNestedValue(messages, namespace) : messages
       return (key: string, values?: Record<string, any>) => {
         const value = getNestedValue(section, key)
-        if (typeof value !== 'string') return `${namespace}.${key}`
+        if (typeof value !== 'string') return namespace ? `${namespace}.${key}` : key
         if (!values) return value
         return value.replace(/\{(\w+)\}/g, (_: string, k: string) => String(values[k] ?? `{${k}}`))
       }

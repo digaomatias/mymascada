@@ -512,9 +512,10 @@ export class ImportAnalysisService {
   validateImportCandidate(candidate: ImportCandidate) {
     const errors: string[] = [];
 
-    if (!candidate.date) {
+    const dateStr = typeof candidate.date === 'string' ? candidate.date.trim() : candidate.date;
+    if (!dateStr) {
       errors.push('Date is required');
-    } else if (isNaN(new Date(candidate.date).getTime())) {
+    } else if (isNaN(new Date(dateStr).getTime())) {
       errors.push('Invalid date format');
     }
 
