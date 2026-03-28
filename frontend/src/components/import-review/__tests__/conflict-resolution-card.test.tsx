@@ -161,11 +161,9 @@ describe('ConflictResolutionCard', () => {
       />
     );
 
-    // Click expand button (the one that is not Import/Skip/Merge/Replace)
+    // The expand button is the first button (no text content, only a mocked icon → empty)
     const allButtons = screen.getAllByRole('button');
-    const expandButton = allButtons.find(btn =>
-      !['Import', 'Skip', 'Merge', 'Replace'].includes(btn.textContent?.trim() || '')
-    )!;
+    const expandButton = allButtons.find(btn => btn.textContent?.trim() === '') || allButtons[0];
     fireEvent.click(expandButton);
 
     await waitFor(() => {
@@ -185,9 +183,7 @@ describe('ConflictResolutionCard', () => {
 
     // Expand to see confidence details
     const allButtons = screen.getAllByRole('button');
-    const expandButton = allButtons.find(btn =>
-      !['Import', 'Skip', 'Merge', 'Replace'].includes(btn.textContent?.trim() || '')
-    )!;
+    const expandButton = allButtons.find(btn => btn.textContent?.trim() === '') || allButtons[0];
     fireEvent.click(expandButton);
 
     expect(screen.getByText('Confidence: 85%')).toBeInTheDocument();
@@ -201,9 +197,9 @@ describe('ConflictResolutionCard', () => {
       />
     );
 
-    // Check conflict styling - find the card container with border styling
-    const conflictContainer = document.querySelector('.border-l-orange-400');
-    expect(conflictContainer).toBeInTheDocument();
+    // The Card mock renders with data-testid="card" and passes className through
+    const conflictCard = screen.getByTestId('card');
+    expect(conflictCard.className).toContain('border-l-orange-400');
 
     // Switch to clean item
     rerender(
@@ -213,9 +209,8 @@ describe('ConflictResolutionCard', () => {
       />
     );
 
-    // Check clean styling
-    const cleanContainer = document.querySelector('.border-l-green-400');
-    expect(cleanContainer).toBeInTheDocument();
+    const cleanCard = screen.getByTestId('card');
+    expect(cleanCard.className).toContain('border-l-green-400');
   });
 
   test('shows only basic buttons for clean items', () => {

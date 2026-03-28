@@ -9,8 +9,8 @@ describe('ImportAnalysisService', () => {
         amount: 100.00,
         transactionDate: '2024-01-01',
         description: 'Coffee Shop',
-        referenceId: 'REF123',
-        externalReferenceId: 'EXT456',
+        referenceNumber: 'REF123',
+        externalId: 'EXT456',
         source: TransactionSource.Manual,
         status: 2,
         createdAt: '2024-01-01T10:00:00Z'
@@ -20,7 +20,7 @@ describe('ImportAnalysisService', () => {
         amount: 250.50,
         transactionDate: '2024-01-02',
         description: 'Grocery Store Purchase',
-        referenceId: 'REF789',
+        referenceNumber: 'REF789',
         source: TransactionSource.CsvImport,
         status: 2,
         createdAt: '2024-01-02T09:00:00Z'

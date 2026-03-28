@@ -1,7 +1,39 @@
-import React from 'react'
 import '@testing-library/jest-dom/vitest'
 import { vi } from 'vitest'
-import messages from './messages/en.json'
+
+// Mock next-intl with actual translations
+vi.mock('next-intl', () => {
+  const path = require('path')
+  const fs = require('fs')
+  const messages = JSON.parse(
+    fs.readFileSync(path.join(process.cwd(), 'messages', 'en.json'), 'utf-8')
+  )
+
+  function getNestedValue(obj: any, keyPath: string): any {
+    return keyPath.split('.').reduce((acc: any, key: string) => acc?.[key], obj)
+  }
+
+  function interpolate(template: string, params?: Record<string, any>): string {
+    if (!params || typeof template !== 'string') return template
+    return template.replace(/\{(\w+)\}/g, (match, key) => {
+      return params[key] !== undefined ? String(params[key]) : match
+    })
+  }
+
+  return {
+    useTranslations: (namespace: string) => {
+      const section = getNestedValue(messages, namespace)
+      return (key: string, params?: Record<string, any>): string => {
+        const value = getNestedValue(section, key)
+        if (typeof value !== 'string') return `${namespace}.${key}`
+        return interpolate(value, params)
+      }
+    },
+    useLocale: () => 'en',
+    useMessages: () => messages,
+    NextIntlClientProvider: ({ children }: any) => children,
+  }
+})
 
 // Mock Next.js router
 vi.mock('next/navigation', () => ({
@@ -35,93 +67,54 @@ vi.mock('sonner', () => ({
 
 // Mock Heroicons
 vi.mock('@heroicons/react/24/outline', () => ({
-  CheckCircleIcon: vi.fn(() => null),
-  XMarkIcon: vi.fn(() => null),
-  ExclamationTriangleIcon: vi.fn(() => null),
-  InformationCircleIcon: vi.fn(() => null),
-  ArrowLeftIcon: vi.fn(() => null),
-  DocumentCheckIcon: vi.fn(() => null),
-  ChevronDownIcon: vi.fn(() => null),
-  ChevronUpIcon: vi.fn(() => null),
-  ArrowPathIcon: vi.fn(() => null),
-  EllipsisHorizontalIcon: vi.fn(() => null),
-  DocumentDuplicateIcon: vi.fn(() => null),
-  ClockIcon: vi.fn(() => null),
-  ShieldCheckIcon: vi.fn(() => null),
-  ArrowsRightLeftIcon: vi.fn(() => null),
-  PencilSquareIcon: vi.fn(() => null),
-  QuestionMarkCircleIcon: vi.fn(() => null),
+  CheckCircleIcon: () => null,
+  XMarkIcon: () => null,
+  ExclamationTriangleIcon: () => null,
+  InformationCircleIcon: () => null,
+  ArrowLeftIcon: () => null,
+  DocumentCheckIcon: () => null,
+  ChevronDownIcon: () => null,
+  ChevronUpIcon: () => null,
+  ArrowPathIcon: () => null,
+  EllipsisHorizontalIcon: () => null,
+  DocumentDuplicateIcon: () => null,
+  ClockIcon: () => null,
 }))
 
-// Mock UI components  
-vi.mock('@/components/ui/button', () => ({
-  Button: vi.fn(({ children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: string; size?: string; asChild?: boolean }) => {
-    const { variant, size, asChild, ...htmlProps } = props as any
-    return React.createElement('button', htmlProps, children)
-  }),
-}))
+// Mock UI components
+vi.mock('@/components/ui/button', () => {
+  const React = require('react')
+  return {
+    Button: ({ children, disabled, onClick, className, type, ...rest }: any) => {
+      return React.createElement('button', { disabled: disabled || undefined, onClick, className, type }, children)
+    },
+  }
+})
 
-vi.mock('@/components/ui/card', () => ({
-  Card: vi.fn(({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) =>
-    React.createElement('div', props, children)
-  ),
-  CardContent: vi.fn(({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) =>
-    React.createElement('div', props, children)
-  ),
-  CardHeader: vi.fn(({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) =>
-    React.createElement('div', props, children)
-  ),
-  CardTitle: vi.fn(({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) =>
-    React.createElement('div', props, children)
-  ),
-}))
+vi.mock('@/components/ui/card', () => {
+  const React = require('react')
+  return {
+    Card: ({ children, className, ...rest }: any) => React.createElement('div', { className, 'data-testid': 'card' }, children),
+    CardContent: ({ children, className, ...rest }: any) => React.createElement('div', { className }, children),
+    CardHeader: ({ children, className, onClick, ...rest }: any) => React.createElement('div', { className, onClick }, children),
+    CardTitle: ({ children, className, ...rest }: any) => React.createElement('div', { className }, children),
+  }
+})
 
-vi.mock('@/components/ui/badge', () => ({
-  Badge: vi.fn(({ children, ...props }: React.HTMLAttributes<HTMLSpanElement> & { variant?: string }) => {
-    const { variant, ...htmlProps } = props as any
-    return React.createElement('span', htmlProps, children)
-  }),
-}))
+vi.mock('@/components/ui/badge', () => {
+  const React = require('react')
+  return {
+    Badge: ({ children, className, ...rest }: any) => React.createElement('span', { className }, children),
+  }
+})
 
 vi.mock('@/components/ui/confidence-indicator', () => ({
-  ConfidenceIndicator: vi.fn(() => 'Confidence Indicator'),
+  ConfidenceIndicator: () => null,
 }))
 
 vi.mock('@/lib/utils', () => ({
   formatCurrency: (amount: number) => `$${amount.toFixed(2)}`,
   formatDate: (date: string) => new Date(date).toLocaleDateString(),
-}))
-
-// Mock next-intl with real English messages
-function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
-  return path.split('.').reduce((acc: unknown, part: string) => {
-    if (acc && typeof acc === 'object') return (acc as Record<string, unknown>)[part]
-    return undefined
-  }, obj)
-}
-
-vi.mock('next-intl', () => ({
-  useTranslations: (namespace?: string) => {
-    const section = namespace
-      ? getNestedValue(messages as Record<string, unknown>, namespace)
-      : messages
-    return (key: string, params?: Record<string, string | number>) => {
-      let value = getNestedValue(
-        (section || {}) as Record<string, unknown>,
-        key
-      )
-      if (typeof value !== 'string') return key
-      if (params) {
-        Object.entries(params).forEach(([k, v]) => {
-          value = (value as string).replace(`{${k}}`, String(v))
-        })
-      }
-      return value
-    }
-  },
-  useLocale: () => 'en',
-  useMessages: () => messages,
-  NextIntlClientProvider: ({ children }: { children: unknown }) => children,
 }))
 
 // Global test setup
@@ -138,8 +131,8 @@ Object.defineProperty(window, 'matchMedia', {
     matches: false,
     media: query,
     onchange: null,
-    addListener: vi.fn(), // deprecated
-    removeListener: vi.fn(), // deprecated
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
