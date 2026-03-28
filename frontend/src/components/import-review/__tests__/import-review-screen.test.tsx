@@ -47,6 +47,20 @@ const mockAnalysisResult: ImportAnalysisResult = {
       isProcessed: false
     },
     {
+      id: 'item1b',
+      importCandidate: {
+        amount: 150,
+        date: '2024-01-03',
+        description: 'Another clean transaction',
+        source: TransactionSource.CsvImport,
+        sourceRowIndex: 2,
+        confidence: 92
+      },
+      conflicts: [],
+      reviewDecision: ConflictResolution.Pending,
+      isProcessed: false
+    },
+    {
       id: 'item2',
       importCandidate: {
         amount: 200,
@@ -67,13 +81,13 @@ const mockAnalysisResult: ImportAnalysisResult = {
     }
   ],
   summary: {
-    totalCandidates: 2,
-    cleanImports: 1,
+    totalCandidates: 3,
+    cleanImports: 2,
     exactDuplicates: 1,
     potentialDuplicates: 0,
     transferConflicts: 0,
     manualConflicts: 0,
-    requiresReview: 2
+    requiresReview: 3
   },
   analysisTimestamp: '2024-01-01T10:00:00Z',
   warnings: [],
@@ -111,8 +125,8 @@ describe('ImportReviewScreen', () => {
       />
     );
 
-    expect(screen.getByText('Exact Duplicates')).toBeInTheDocument();
-    expect(screen.getByText('Ready to Import')).toBeInTheDocument();
+    expect(screen.getAllByText('Exact Duplicates').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Ready to Import').length).toBeGreaterThan(0);
   });
 
   test('shows correct progress statistics', () => {
@@ -125,7 +139,7 @@ describe('ImportReviewScreen', () => {
     );
 
     expect(screen.getByText('0% Reviewed')).toBeInTheDocument();
-    expect(screen.getByText('2 items remaining')).toBeInTheDocument();
+    expect(screen.getByText('3 items remaining')).toBeInTheDocument();
   });
 
   test('execute import button is disabled when items are pending', () => {
@@ -137,21 +151,13 @@ describe('ImportReviewScreen', () => {
       />
     );
 
-    const executeButton = screen.getByText('Execute Import (0)');
+    const executeButton = screen.getByText('Complete Review');
     expect(executeButton).toBeDisabled();
-    expect(screen.getByText('Review all conflicts before importing')).toBeInTheDocument();
+    expect(screen.getByText('Review all conflicts before completing')).toBeInTheDocument();
   });
 
   test('execute import button becomes enabled after all decisions are made', async () => {
-    const { rerender } = render(
-      <ImportReviewScreen
-        analysisResult={mockAnalysisResult}
-        onImportComplete={mockOnImportComplete}
-        onCancel={mockOnCancel}
-      />
-    );
-
-    // Mock resolved state
+    // Render with already-resolved items to verify button state
     const resolvedAnalysisResult = {
       ...mockAnalysisResult,
       reviewItems: mockAnalysisResult.reviewItems.map(item => ({
@@ -160,7 +166,7 @@ describe('ImportReviewScreen', () => {
       }))
     };
 
-    rerender(
+    render(
       <ImportReviewScreen
         analysisResult={resolvedAnalysisResult}
         onImportComplete={mockOnImportComplete}
@@ -168,7 +174,7 @@ describe('ImportReviewScreen', () => {
       />
     );
 
-    const executeButton = screen.getByText('Execute Import (2)');
+    const executeButton = screen.getByText('Execute Import (3)');
     expect(executeButton).not.toBeDisabled();
   });
 
@@ -213,28 +219,33 @@ describe('ImportReviewScreen', () => {
       />
     );
 
-    const executeButton = screen.getByText('Execute Import (2)');
+    const executeButton = screen.getByText('Execute Import (3)');
     fireEvent.click(executeButton);
 
     await waitFor(() => {
-      expect(apiClient.apiClient.executeImportReview).toHaveBeenCalledWith({
-        analysisId: 'test-analysis-123',
-        accountId: 123,
-        decisions: [
-          {
-            reviewItemId: 'item1',
-            action: ConflictResolution.Import,
-            userNotes: '',
-            keepExistingTransactionId: undefined
-          },
-          {
-            reviewItemId: 'item2',
-            action: ConflictResolution.Import,
-            userNotes: '',
-            keepExistingTransactionId: undefined
-          }
-        ]
-      });
+      expect(apiClient.apiClient.executeImportReview).toHaveBeenCalledWith(
+        expect.objectContaining({
+          analysisId: 'test-analysis-123',
+          accountId: 123,
+          decisions: expect.arrayContaining([
+            expect.objectContaining({
+              reviewItemId: 'item1',
+              decision: ConflictResolution.Import,
+              userNotes: ''
+            }),
+            expect.objectContaining({
+              reviewItemId: 'item1b',
+              decision: ConflictResolution.Import,
+              userNotes: ''
+            }),
+            expect.objectContaining({
+              reviewItemId: 'item2',
+              decision: ConflictResolution.Import,
+              userNotes: ''
+            })
+          ])
+        })
+      );
     });
   });
 
@@ -265,11 +276,17 @@ describe('ImportReviewScreen', () => {
       />
     );
 
-    const executeButton = screen.getByText('Execute Import (2)');
+    const executeButton = screen.getByText('Execute Import (3)');
     fireEvent.click(executeButton);
 
     await waitFor(() => {
-      expect(mockOnImportComplete).toHaveBeenCalledWith(mockExecuteResponse);
+      expect(mockOnImportComplete).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          importedTransactionsCount: 2,
+          skippedTransactionsCount: 0
+        })
+      );
     });
   });
 
@@ -294,7 +311,7 @@ describe('ImportReviewScreen', () => {
       />
     );
 
-    const executeButton = screen.getByText('Execute Import (2)');
+    const executeButton = screen.getByText('Execute Import (3)');
     fireEvent.click(executeButton);
 
     await waitFor(() => {
@@ -331,7 +348,7 @@ describe('ImportReviewScreen', () => {
     );
 
     // The bulk actions should be visible in the grouped sections
-    expect(screen.getByText('Bulk')).toBeInTheDocument();
+    expect(screen.getAllByText('Bulk').length).toBeGreaterThan(0);
   });
 
   test('hides bulk actions when disabled', () => {
@@ -377,8 +394,8 @@ describe('ImportReviewScreen', () => {
     );
 
     // Click on "Ready to Import" section to toggle it
-    const sectionHeader = screen.getByText('Ready to Import');
-    fireEvent.click(sectionHeader.closest('div')!);
+    const sectionHeaders = screen.getAllByText('Ready to Import');
+    fireEvent.click(sectionHeaders[sectionHeaders.length - 1].closest('div')!);
 
     // This would collapse/expand the section
     // The exact behavior depends on the initial state

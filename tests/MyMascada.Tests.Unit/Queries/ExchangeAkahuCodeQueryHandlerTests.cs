@@ -74,7 +74,7 @@ public class ExchangeAkahuCodeQueryHandlerTests
                 c.LastValidatedAt.HasValue &&
                 c.ConsentScope == "ENDURING_CONSENT" &&
                 c.ConsentGrantedAt.HasValue &&
-                c.ConsentCorrelationId == null),
+                c.ConsentCorrelationId == "valid-state"),
             Arg.Any<CancellationToken>());
     }
 
@@ -86,7 +86,11 @@ public class ExchangeAkahuCodeQueryHandlerTests
         var credentialRepository = Substitute.For<IAkahuUserCredentialRepository>();
         var bankConnectionRepository = Substitute.For<IBankConnectionRepository>();
         var encryptionService = Substitute.For<ISettingsEncryptionService>();
+        var oauthStateStore = Substitute.For<IOAuthStateStore>();
         var logger = Substitute.For<IApplicationLogger<ExchangeAkahuCodeQueryHandler>>();
+
+        oauthStateStore.ValidateAndConsumeAsync(userId, "state-abc-123", Arg.Any<CancellationToken>())
+            .Returns(true);
 
         akahuApiClient.ExchangeCodeForTokenAsync("code-456", Arg.Any<CancellationToken>())
             .Returns(new AkahuTokenResponse
@@ -113,6 +117,7 @@ public class ExchangeAkahuCodeQueryHandlerTests
             credentialRepository,
             bankConnectionRepository,
             encryptionService,
+            oauthStateStore,
             logger);
 
         await handler.Handle(

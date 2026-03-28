@@ -436,6 +436,94 @@ export class ImportAnalysisService {
   }
 
   /**
+   * Instance method: detects conflicts between candidates and existing transactions
+   */
+  detectConflicts(
+    candidates: ImportCandidate[],
+    existingTransactions: Transaction[]
+  ): ImportReviewItem[] {
+    return candidates.map((candidate, index) => {
+      const conflicts = ImportAnalysisService.detectConflicts(
+        candidate,
+        existingTransactions,
+        {
+          dateToleranceDays: ImportAnalysisService.DEFAULT_DATE_TOLERANCE_DAYS,
+          amountTolerance: ImportAnalysisService.DEFAULT_AMOUNT_TOLERANCE,
+          enableTransferDetection: true,
+          conflictDetectionLevel: 'moderate'
+        }
+      );
+
+      return {
+        id: `import-item-${index}`,
+        importCandidate: candidate,
+        conflicts,
+        reviewDecision: ImportAnalysisService.suggestInitialDecision(candidate, conflicts),
+        isProcessed: false
+      };
+    });
+  }
+
+  /**
+   * Instance method: calculates confidence score between candidate and existing transaction
+   */
+  calculateConfidenceScore(candidate: ImportCandidate, existing: Transaction): number {
+    return ImportAnalysisService.calculateSimilarityScore(candidate, existing);
+  }
+
+  /**
+   * Instance method: generates analysis summary
+   */
+  generateAnalysisSummary(reviewItems: ImportReviewItem[]) {
+    return ImportAnalysisService.createAnalysisSummary(reviewItems);
+  }
+
+  /**
+   * Instance method: suggests bulk actions for review items
+   */
+  optimizeBulkActions(reviewItems: ImportReviewItem[]): {
+    importAllClean: boolean;
+    skipAllExactDuplicates: boolean;
+    hasLowConfidenceItems: boolean;
+  } {
+    const cleanItems = reviewItems.filter(item => item.conflicts.length === 0);
+    const exactDuplicates = reviewItems.filter(item =>
+      item.conflicts.some(c => c.type === ConflictType.ExactDuplicate)
+    );
+    const lowConfidenceItems = reviewItems.filter(item =>
+      item.conflicts.some(c => c.confidenceScore < 0.8) && item.conflicts.length > 0
+    );
+
+    return {
+      importAllClean: cleanItems.length > 0,
+      skipAllExactDuplicates: exactDuplicates.length > 0,
+      hasLowConfidenceItems: lowConfidenceItems.length > 0
+    };
+  }
+
+  /**
+   * Instance method: validates an import candidate
+   */
+  validateImportCandidate(candidate: ImportCandidate): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+
+    if (!candidate.date || candidate.date.trim() === '') {
+      errors.push('Date is required');
+    } else if (isNaN(new Date(candidate.date).getTime())) {
+      errors.push('Invalid date format');
+    }
+
+    if (isNaN(candidate.amount)) {
+      errors.push('Invalid amount');
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  }
+
+  /**
    * Creates a summary of analysis results
    */
   static createAnalysisSummary(reviewItems: ImportReviewItem[]) {
