@@ -1,5 +1,5 @@
 import { ImportAnalysisService } from '../import-analysis-service';
-import { TransactionSource, ConflictType, ConflictResolution } from '@/types/import-review';
+import { TransactionSource, ConflictType, ConflictResolution, ConflictSeverity } from '@/types/import-review';
 
 describe('ImportAnalysisService', () => {
   describe('detectConflicts', () => {
@@ -101,7 +101,7 @@ describe('ImportAnalysisService', () => {
         item.conflicts.some(c => c.type === ConflictType.ExactDuplicate)
       );
 
-      expect(exactDuplicate?.conflicts[0].severity).toBe('High');
+      expect(exactDuplicate?.conflicts[0].severity).toBe(ConflictSeverity.High);
     });
 
     test('generates appropriate conflict messages', () => {

@@ -161,8 +161,11 @@ describe('ConflictResolutionCard', () => {
       />
     );
 
-    // Click expand button
-    const expandButton = screen.getByRole('button');
+    // Click expand button (the one that is not Import/Skip/Merge/Replace)
+    const allButtons = screen.getAllByRole('button');
+    const expandButton = allButtons.find(btn =>
+      !['Import', 'Skip', 'Merge', 'Replace'].includes(btn.textContent?.trim() || '')
+    )!;
     fireEvent.click(expandButton);
 
     await waitFor(() => {
@@ -181,7 +184,10 @@ describe('ConflictResolutionCard', () => {
     );
 
     // Expand to see confidence details
-    const expandButton = screen.getByRole('button');
+    const allButtons = screen.getAllByRole('button');
+    const expandButton = allButtons.find(btn =>
+      !['Import', 'Skip', 'Merge', 'Replace'].includes(btn.textContent?.trim() || '')
+    )!;
     fireEvent.click(expandButton);
 
     expect(screen.getByText('Confidence: 85%')).toBeInTheDocument();
@@ -195,9 +201,9 @@ describe('ConflictResolutionCard', () => {
       />
     );
 
-    // Check conflict styling
-    const conflictCard = screen.getByRole('generic').closest('.border-l-orange-400');
-    expect(conflictCard).toBeInTheDocument();
+    // Check conflict styling - find the card container with border styling
+    const conflictContainer = document.querySelector('.border-l-orange-400');
+    expect(conflictContainer).toBeInTheDocument();
 
     // Switch to clean item
     rerender(
@@ -208,8 +214,8 @@ describe('ConflictResolutionCard', () => {
     );
 
     // Check clean styling
-    const cleanCard = screen.getByRole('generic').closest('.border-l-green-400');
-    expect(cleanCard).toBeInTheDocument();
+    const cleanContainer = document.querySelector('.border-l-green-400');
+    expect(cleanContainer).toBeInTheDocument();
   });
 
   test('shows only basic buttons for clean items', () => {

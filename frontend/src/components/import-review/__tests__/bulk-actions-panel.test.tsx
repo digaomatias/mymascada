@@ -53,7 +53,7 @@ const mockItems: ImportReviewItem[] = [
       type: ConflictType.PotentialDuplicate,
       severity: 'Medium' as any,
       message: 'Potential duplicate found',
-      confidenceScore: 0.75
+      confidenceScore: 0.90
     }],
     reviewDecision: ConflictResolution.Pending,
     isProcessed: false
@@ -79,7 +79,7 @@ describe('BulkActionsPanel', () => {
     fireEvent.click(screen.getByText('Bulk'));
     
     await waitFor(() => {
-      expect(screen.getByText(/Bulk Actions \(3 items\)/)).toBeInTheDocument();
+      expect(screen.getByText(/Bulk Actions \(3 pending of 3 total\)/)).toBeInTheDocument();
     });
   });
 
