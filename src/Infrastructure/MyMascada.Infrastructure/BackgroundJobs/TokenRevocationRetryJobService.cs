@@ -68,8 +68,8 @@ public class TokenRevocationRetryJobService : ITokenRevocationRetryJobService
 
                     try
                     {
-                        credential.IsRevocationPending = false;
-                        await credentialRepository.UpdateAsync(credential);
+                        await credentialRepository.UpdateRevocationStateAsync(
+                            credential.Id, false, credential.RevocationFailureCount, credential.RevocationFailedAt);
                     }
                     catch (Exception persistEx)
                     {
@@ -92,8 +92,8 @@ public class TokenRevocationRetryJobService : ITokenRevocationRetryJobService
                         _logger.LogError(
                             "Cannot retry revocation for user {UserId}: tokens are empty. Clearing pending flag.",
                             credential.UserId);
-                        credential.IsRevocationPending = false;
-                        await credentialRepository.UpdateAsync(credential);
+                        await credentialRepository.UpdateRevocationStateAsync(
+                            credential.Id, false, credential.RevocationFailureCount, credential.RevocationFailedAt);
                         continue;
                     }
 
@@ -101,13 +101,10 @@ public class TokenRevocationRetryJobService : ITokenRevocationRetryJobService
                     await akahuApiClient.RevokeTokenAsync(appIdToken, accessToken);
 
                     // Token revoked successfully — persist the cleared state
-                    credential.IsRevocationPending = false;
-                    credential.RevocationFailedAt = null;
-                    credential.RevocationFailureCount = 0;
-
                     try
                     {
-                        await credentialRepository.UpdateAsync(credential);
+                        await credentialRepository.UpdateRevocationStateAsync(
+                            credential.Id, false, 0, null);
                     }
                     catch (Exception persistEx)
                     {
@@ -129,7 +126,6 @@ public class TokenRevocationRetryJobService : ITokenRevocationRetryJobService
                 {
                     // Transient errors (5xx, 429, network issues): don't count against retry limit
                     failCount++;
-                    credential.RevocationFailedAt = DateTime.UtcNow;
 
                     _logger.LogWarning(httpEx,
                         "Transient error revoking token for user {UserId} (attempt {Attempt}/{MaxAttempts}). Will retry on next run.",
@@ -137,7 +133,8 @@ public class TokenRevocationRetryJobService : ITokenRevocationRetryJobService
 
                     try
                     {
-                        await credentialRepository.UpdateAsync(credential);
+                        await credentialRepository.UpdateRevocationStateAsync(
+                            credential.Id, credential.IsRevocationPending, credential.RevocationFailureCount, DateTime.UtcNow);
                     }
                     catch (Exception persistEx)
                     {
@@ -150,37 +147,36 @@ public class TokenRevocationRetryJobService : ITokenRevocationRetryJobService
                 {
                     // Terminal errors (401, 403, unknown): count against retry limit
                     failCount++;
-                    credential.RevocationFailureCount++;
-                    credential.RevocationFailedAt = DateTime.UtcNow;
+                    var newFailureCount = credential.RevocationFailureCount + 1;
+                    var isAbandoned = newFailureCount >= MaxRetryAttempts;
 
                     _logger.LogError(ex,
                         "Retry failed for user {UserId} (attempt {Attempt}/{MaxAttempts})",
-                        credential.UserId, credential.RevocationFailureCount, MaxRetryAttempts);
+                        credential.UserId, newFailureCount, MaxRetryAttempts);
 
                     try
                     {
-                        // If max retries reached, abandon to prevent further retries
-                        if (credential.RevocationFailureCount >= MaxRetryAttempts)
+                        if (isAbandoned)
                         {
-                            credential.IsRevocationPending = false;
                             _logger.LogError(
                                 "Max retry attempts reached for user {UserId}. Marking as abandoned. Manual intervention required.",
                                 credential.UserId);
                         }
 
-                        await credentialRepository.UpdateAsync(credential);
+                        await credentialRepository.UpdateRevocationStateAsync(
+                            credential.Id, !isAbandoned, newFailureCount, DateTime.UtcNow);
                     }
                     catch (Exception persistEx)
                     {
                         _logger.LogCritical(persistEx,
                             "Failed to persist failure count for user {UserId} (attempt {Attempt}). " +
                             "Credential may be retried with stale count on next run.",
-                            credential.UserId, credential.RevocationFailureCount);
+                            credential.UserId, newFailureCount);
 
                         try
                         {
-                            credential.IsRevocationPending = false;
-                            await credentialRepository.UpdateAsync(credential);
+                            await credentialRepository.UpdateRevocationStateAsync(
+                                credential.Id, false, newFailureCount, DateTime.UtcNow);
                             _logger.LogWarning(
                                 "Abandoned revocation retry for user {UserId} after persist failure to prevent infinite loop.",
                                 credential.UserId);

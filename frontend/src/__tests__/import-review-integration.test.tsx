@@ -41,7 +41,7 @@ vi.mock('@/components/import-review/bulk-actions-panel', () => ({
   BulkActionsPanel: ({ items, onBulkAction }: any) => (
     <div>
       <button onClick={() => onBulkAction(items.map((i: any) => i.id), ConflictResolution.Import)}>Bulk</button>
-      <button onClick={() => onBulkAction(items.map((i: any) => i.id), ConflictResolution.Import)}>Import all clean</button>
+      <button onClick={() => onBulkAction(items.filter((i: any) => i.conflicts.length === 0).map((i: any) => i.id), ConflictResolution.Import)}>Import all clean</button>
       <button onClick={() => {
         // Auto-resolve: import clean, skip duplicates
         const cleanIds = items.filter((i: any) => i.conflicts.length === 0).map((i: any) => i.id);
@@ -282,16 +282,7 @@ describe('Import Review Integration Tests', () => {
       const bulkButtons = screen.getAllByRole('button', { name: 'Bulk' });
       fireEvent.click(bulkButtons[0]);
 
-      // Manually resolve remaining items not covered by the bulk action
-      await waitFor(() => {
-        // Some items should be resolved, resolve any remaining
-        const remainingImportButtons = screen.queryAllByText('Import');
-        remainingImportButtons.forEach(btn => fireEvent.click(btn));
-        const remainingSkipButtons = screen.queryAllByText('Skip');
-        remainingSkipButtons.forEach(btn => fireEvent.click(btn));
-      });
-
-      // Wait for auto-resolve to take effect (2 clean items resolved → 50%)
+      // Keep conflict items pending; this scenario expects 50% after bulk on clean items.
       await waitFor(() => {
         expect(screen.getByText('50% Reviewed')).toBeInTheDocument();
       });
