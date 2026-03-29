@@ -29,6 +29,27 @@ public class UserDeletionResultDto
     public int TransfersDeleted { get; set; }
     public int ReconciliationsDeleted { get; set; }
     public int BankConnectionsDeleted { get; set; }
+    public int BudgetsDeleted { get; set; }
+    public int WalletsDeleted { get; set; }
+    public int RecurringPatternsDeleted { get; set; }
+    public int GoalsDeleted { get; set; }
+    public int AccountSharesDeleted { get; set; }
+    public int ChatMessagesDeleted { get; set; }
+    public int NotificationsDeleted { get; set; }
+    public int NotificationPreferencesDeleted { get; set; }
+    public int DashboardNudgeDismissalsDeleted { get; set; }
+    public int BankCategoryMappingsDeleted { get; set; }
+    public int DuplicateExclusionsDeleted { get; set; }
+    public int RuleSuggestionsDeleted { get; set; }
+    public int EmailVerificationTokensDeleted { get; set; }
+    public int RefreshTokensDeleted { get; set; }
+    public int PasswordResetTokensDeleted { get; set; }
+    public int AkahuUserCredentialsDeleted { get; set; }
+    public int UserAiSettingsDeleted { get; set; }
+    public int UserTelegramSettingsDeleted { get; set; }
+    public int UserFinancialProfilesDeleted { get; set; }
+    public int AiTokenUsagesDeleted { get; set; }
+    public int UserSubscriptionsDeleted { get; set; }
     public bool Success { get; set; }
     public string? ErrorMessage { get; set; }
 }
