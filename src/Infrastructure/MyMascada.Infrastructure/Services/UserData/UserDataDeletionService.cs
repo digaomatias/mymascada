@@ -129,7 +129,7 @@ public class UserDataDeletionService : IUserDataDeletionService
             // 2. Delete RuleSuggestions
             if (ruleSuggestionIds.Any())
             {
-                await _context.RuleSuggestions
+                result.RuleSuggestionsDeleted = await _context.RuleSuggestions
                     .IgnoreQueryFilters()
                     .Where(rs => ruleSuggestionIds.Contains(rs.Id))
                     .ExecuteDeleteAsync(cancellationToken);
@@ -205,13 +205,13 @@ public class UserDataDeletionService : IUserDataDeletionService
                 .ExecuteDeleteAsync(cancellationToken);
 
             // 11. Delete BankCategoryMappings
-            await _context.BankCategoryMappings
+            result.BankCategoryMappingsDeleted = await _context.BankCategoryMappings
                 .IgnoreQueryFilters()
                 .Where(bcm => bcm.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
             // 12. Delete DuplicateExclusions
-            await _context.DuplicateExclusions
+            result.DuplicateExclusionsDeleted = await _context.DuplicateExclusions
                 .IgnoreQueryFilters()
                 .Where(de => de.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
@@ -286,13 +286,13 @@ public class UserDataDeletionService : IUserDataDeletionService
                 .ExecuteDeleteAsync(cancellationToken);
 
             // 23. Delete NotificationPreferences
-            await _context.NotificationPreferences
+            result.NotificationPreferencesDeleted = await _context.NotificationPreferences
                 .IgnoreQueryFilters()
                 .Where(np => np.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
             // 24. Delete DashboardNudgeDismissals
-            await _context.DashboardNudgeDismissals
+            result.DashboardNudgeDismissalsDeleted = await _context.DashboardNudgeDismissals
                 .IgnoreQueryFilters()
                 .Where(dnd => dnd.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
@@ -361,55 +361,55 @@ public class UserDataDeletionService : IUserDataDeletionService
             }
 
             // 32. Delete AkahuUserCredentials
-            await _context.AkahuUserCredentials
+            result.AkahuUserCredentialsDeleted = await _context.AkahuUserCredentials
                 .IgnoreQueryFilters()
                 .Where(auc => auc.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
             // 33. Delete RefreshTokens
-            await _context.RefreshTokens
+            result.RefreshTokensDeleted = await _context.RefreshTokens
                 .IgnoreQueryFilters()
                 .Where(rt => rt.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
             // 34. Delete PasswordResetTokens
-            await _context.PasswordResetTokens
+            result.PasswordResetTokensDeleted = await _context.PasswordResetTokens
                 .IgnoreQueryFilters()
                 .Where(prt => prt.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
             // 35. Delete EmailVerificationTokens
-            await _context.EmailVerificationTokens
+            result.EmailVerificationTokensDeleted = await _context.EmailVerificationTokens
                 .IgnoreQueryFilters()
                 .Where(evt => evt.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
             // 36. Delete UserAiSettings
-            await _context.UserAiSettings
+            result.UserAiSettingsDeleted = await _context.UserAiSettings
                 .IgnoreQueryFilters()
                 .Where(uas => uas.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
             // 37. Delete UserTelegramSettings
-            await _context.UserTelegramSettings
+            result.UserTelegramSettingsDeleted = await _context.UserTelegramSettings
                 .IgnoreQueryFilters()
                 .Where(uts => uts.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
             // 38. Delete UserFinancialProfiles
-            await _context.UserFinancialProfiles
+            result.UserFinancialProfilesDeleted = await _context.UserFinancialProfiles
                 .IgnoreQueryFilters()
                 .Where(ufp => ufp.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
             // 39. Delete AiTokenUsages
-            await _context.AiTokenUsages
+            result.AiTokenUsagesDeleted = await _context.AiTokenUsages
                 .IgnoreQueryFilters()
                 .Where(atu => atu.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
             // 40. Delete UserSubscriptions
-            await _context.UserSubscriptions
+            result.UserSubscriptionsDeleted = await _context.UserSubscriptions
                 .IgnoreQueryFilters()
                 .Where(us => us.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
@@ -425,14 +425,28 @@ public class UserDataDeletionService : IUserDataDeletionService
             result.Success = true;
 
             _logger.LogInformation(
-                "Data deletion completed for user {UserId}: {Accounts} accounts, {Transactions} transactions, {Categories} categories, {Rules} rules, " +
+                "Data deletion completed for user {UserId}: " +
+                "{Accounts} accounts, {Transactions} transactions, {Categories} categories, {Rules} rules, " +
+                "{Transfers} transfers, {Reconciliations} reconciliations, {BankConnections} bank connections, " +
                 "{Budgets} budgets, {Wallets} wallets, {RecurringPatterns} recurring patterns, {Goals} goals, " +
                 "{AccountShares} account shares, {ChatMessages} chat messages, {Notifications} notifications, " +
-                "{Transfers} transfers, {Reconciliations} reconciliations, {BankConnections} bank connections",
-                userId, result.AccountsDeleted, result.TransactionsDeleted, result.CategoriesDeleted, result.RulesDeleted,
+                "{NotificationPreferences} notification preferences, {DashboardNudgeDismissals} nudge dismissals, " +
+                "{BankCategoryMappings} bank category mappings, {DuplicateExclusions} duplicate exclusions, " +
+                "{RuleSuggestions} rule suggestions, {RefreshTokens} refresh tokens, {PasswordResetTokens} password reset tokens, " +
+                "{EmailVerificationTokens} email verification tokens, {AkahuUserCredentials} akahu credentials, " +
+                "{UserAiSettings} AI settings, {UserTelegramSettings} telegram settings, " +
+                "{UserFinancialProfiles} financial profiles, {AiTokenUsages} AI token usages, {UserSubscriptions} subscriptions",
+                userId,
+                result.AccountsDeleted, result.TransactionsDeleted, result.CategoriesDeleted, result.RulesDeleted,
+                result.TransfersDeleted, result.ReconciliationsDeleted, result.BankConnectionsDeleted,
                 result.BudgetsDeleted, result.WalletsDeleted, result.RecurringPatternsDeleted, result.GoalsDeleted,
                 result.AccountSharesDeleted, result.ChatMessagesDeleted, result.NotificationsDeleted,
-                result.TransfersDeleted, result.ReconciliationsDeleted, result.BankConnectionsDeleted);
+                result.NotificationPreferencesDeleted, result.DashboardNudgeDismissalsDeleted,
+                result.BankCategoryMappingsDeleted, result.DuplicateExclusionsDeleted,
+                result.RuleSuggestionsDeleted, result.RefreshTokensDeleted, result.PasswordResetTokensDeleted,
+                result.EmailVerificationTokensDeleted, result.AkahuUserCredentialsDeleted,
+                result.UserAiSettingsDeleted, result.UserTelegramSettingsDeleted,
+                result.UserFinancialProfilesDeleted, result.AiTokenUsagesDeleted, result.UserSubscriptionsDeleted);
 
             return result;
         }
