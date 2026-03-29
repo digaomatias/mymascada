@@ -226,7 +226,7 @@ public class UserDataDeletionService : IUserDataDeletionService
             }
 
             // 14. Delete Budgets
-            await _context.Budgets
+            result.BudgetsDeleted = await _context.Budgets
                 .IgnoreQueryFilters()
                 .Where(b => b.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
@@ -241,7 +241,7 @@ public class UserDataDeletionService : IUserDataDeletionService
             }
 
             // 16. Delete Wallets
-            await _context.Wallets
+            result.WalletsDeleted = await _context.Wallets
                 .IgnoreQueryFilters()
                 .Where(w => w.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
@@ -256,31 +256,31 @@ public class UserDataDeletionService : IUserDataDeletionService
             }
 
             // 18. Delete RecurringPatterns
-            await _context.RecurringPatterns
+            result.RecurringPatternsDeleted = await _context.RecurringPatterns
                 .IgnoreQueryFilters()
                 .Where(rp => rp.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
             // 19. Delete Goals
-            await _context.Goals
+            result.GoalsDeleted = await _context.Goals
                 .IgnoreQueryFilters()
                 .Where(g => g.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
             // 20. Delete AccountShares
-            await _context.AccountShares
+            result.AccountSharesDeleted = await _context.AccountShares
                 .IgnoreQueryFilters()
                 .Where(ash => ash.SharedByUserId == userId || ash.SharedWithUserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
             // 21. Delete ChatMessages
-            await _context.ChatMessages
+            result.ChatMessagesDeleted = await _context.ChatMessages
                 .IgnoreQueryFilters()
                 .Where(cm => cm.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
             // 22. Delete Notifications
-            await _context.Notifications
+            result.NotificationsDeleted = await _context.Notifications
                 .IgnoreQueryFilters()
                 .Where(n => n.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
@@ -425,8 +425,14 @@ public class UserDataDeletionService : IUserDataDeletionService
             result.Success = true;
 
             _logger.LogInformation(
-                "Data deletion completed for user {UserId}: {Accounts} accounts, {Transactions} transactions, {Categories} categories, {Rules} rules",
-                userId, result.AccountsDeleted, result.TransactionsDeleted, result.CategoriesDeleted, result.RulesDeleted);
+                "Data deletion completed for user {UserId}: {Accounts} accounts, {Transactions} transactions, {Categories} categories, {Rules} rules, " +
+                "{Budgets} budgets, {Wallets} wallets, {RecurringPatterns} recurring patterns, {Goals} goals, " +
+                "{AccountShares} account shares, {ChatMessages} chat messages, {Notifications} notifications, " +
+                "{Transfers} transfers, {Reconciliations} reconciliations, {BankConnections} bank connections",
+                userId, result.AccountsDeleted, result.TransactionsDeleted, result.CategoriesDeleted, result.RulesDeleted,
+                result.BudgetsDeleted, result.WalletsDeleted, result.RecurringPatternsDeleted, result.GoalsDeleted,
+                result.AccountSharesDeleted, result.ChatMessagesDeleted, result.NotificationsDeleted,
+                result.TransfersDeleted, result.ReconciliationsDeleted, result.BankConnectionsDeleted);
 
             return result;
         }

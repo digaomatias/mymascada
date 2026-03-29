@@ -29,6 +29,13 @@ public class UserDeletionResultDto
     public int TransfersDeleted { get; set; }
     public int ReconciliationsDeleted { get; set; }
     public int BankConnectionsDeleted { get; set; }
+    public int BudgetsDeleted { get; set; }
+    public int WalletsDeleted { get; set; }
+    public int RecurringPatternsDeleted { get; set; }
+    public int GoalsDeleted { get; set; }
+    public int AccountSharesDeleted { get; set; }
+    public int ChatMessagesDeleted { get; set; }
+    public int NotificationsDeleted { get; set; }
     public bool Success { get; set; }
     public string? ErrorMessage { get; set; }
 }
