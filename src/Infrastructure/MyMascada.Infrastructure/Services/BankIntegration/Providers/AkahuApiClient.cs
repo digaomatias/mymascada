@@ -321,7 +321,10 @@ public class AkahuApiClient : IAkahuApiClient
         var response = await _httpClient.SendAsync(request, ct);
         if (!response.IsSuccessStatusCode)
         {
-            var ex = new HttpRequestException($"Akahu token revocation failed with status {response.StatusCode}");
+            var ex = new HttpRequestException(
+                $"Akahu token revocation failed with status {response.StatusCode}",
+                inner: null,
+                response.StatusCode);
             _logger.LogError(ex, "Failed to revoke Akahu token: {StatusCode}", response.StatusCode);
             throw ex;
         }
