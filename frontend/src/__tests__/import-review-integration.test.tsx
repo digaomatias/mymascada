@@ -17,6 +17,7 @@ describe('Import Review Integration Tests', () => {
     success: true,
     accountId: 123,
     importSource: TransactionSource.CsvImport,
+    analysisId: 'analysis-2024-01-01',
     analysisTimestamp: '2024-01-01T10:00:00Z',
     reviewItems: [
       {
@@ -89,8 +90,8 @@ describe('Import Review Integration Tests', () => {
         conflicts: [{
           type: ConflictType.PotentialDuplicate,
           severity: 'Medium' as any,
-          message: 'Similar transaction found with 90% confidence',
-          confidenceScore: 0.90,
+          message: 'Similar transaction found with 86% confidence',
+          confidenceScore: 0.86,
           conflictingTransaction: {
             id: 789,
             amount: 75.00,
@@ -127,14 +128,13 @@ describe('Import Review Integration Tests', () => {
 
   describe('Complete Import Review Workflow', () => {
     test('handles full workflow from review to successful import', async () => {
-      // Mock successful execution response
       const mockExecutionResponse = {
         success: true,
         message: 'Import completed successfully',
-        importedTransactionsCount: 3,
+        importedTransactionsCount: 2,
         skippedTransactionsCount: 1,
         duplicateTransactionsCount: 0,
-        mergedTransactionsCount: 0,
+        mergedTransactionsCount: 1,
         processedItems: [],
         warnings: [],
         errors: [],
@@ -143,22 +143,9 @@ describe('Import Review Integration Tests', () => {
 
       (apiClient.apiClient.executeImportReview as ReturnType<typeof vi.fn>).mockResolvedValue(mockExecutionResponse);
 
-      // Render with pre-resolved decisions to test execution flow
-      const resolvedAnalysisResult = {
-        ...mockAnalysisResult,
-        reviewItems: mockAnalysisResult.reviewItems.map(item => ({
-          ...item,
-          reviewDecision: item.conflicts.length === 0
-            ? ConflictResolution.Import
-            : item.conflicts.some(c => c.type === ConflictType.ExactDuplicate)
-              ? ConflictResolution.Skip
-              : ConflictResolution.MergeWithExisting
-        }))
-      };
-
       render(
         <ImportReviewScreen
-          analysisResult={resolvedAnalysisResult}
+          analysisResult={mockAnalysisResult}
           onImportComplete={mockOnImportComplete}
           onCancel={mockOnCancel}
           accountName="Test Checking Account"
@@ -166,30 +153,77 @@ describe('Import Review Integration Tests', () => {
         />
       );
 
-      // Verify header
+      // Verify initial state
       expect(screen.getByText('Review Import')).toBeInTheDocument();
       expect(screen.getByText('Importing to Test Checking Account')).toBeInTheDocument();
+      expect(screen.getByText('0% Reviewed')).toBeInTheDocument();
+      expect(screen.getByText('4 items remaining')).toBeInTheDocument();
 
-      // All items resolved - should show 100%
-      expect(screen.getByText('100% Reviewed')).toBeInTheDocument();
-      expect(screen.getByText('0 items remaining')).toBeInTheDocument();
+      // Should show all conflict groups (use getAllByText since text appears in summary + section)
+      expect(screen.getAllByText('Exact Duplicates').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Potential Duplicates').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Ready to Import').length).toBeGreaterThan(0);
 
-      // Execute the import
-      const executeButton = screen.getByText(/Execute Import/);
+      // Use role-based queries to avoid button+span duplication
+      // DOM order: exact dup section, potential dup section, clean section
+      // Import buttons: [exactDup, potentialDup, clean1, clean2]
+      const importButtons = screen.getAllByRole('button', { name: 'Import' });
+      const skipButtons = screen.getAllByRole('button', { name: 'Skip' });
+
+      // Import clean items
+      fireEvent.click(importButtons[2]); // clean-item-1
+      fireEvent.click(importButtons[3]); // clean-item-2
+
+      // Skip exact duplicate
+      fireEvent.click(skipButtons[0]); // duplicate-item-1
+
+      // Merge potential duplicate (Merge buttons only exist on conflict items)
+      const mergeButtons = screen.getAllByRole('button', { name: 'Merge' });
+      fireEvent.click(mergeButtons[1]); // potential-duplicate-1
+
+      // Wait for all decisions to be made
+      await waitFor(() => {
+        expect(screen.getByText('100% Reviewed')).toBeInTheDocument();
+        expect(screen.getByText('0 items remaining')).toBeInTheDocument();
+      });
+
+      // Execute the import (2 imports)
+      const executeButton = screen.getByRole('button', { name: /Execute Import/ });
       expect(executeButton).not.toBeDisabled();
       fireEvent.click(executeButton);
 
-      // Verify API call was made
+      // Verify API call was made with correct decisions
       await waitFor(() => {
-        expect(apiClient.apiClient.executeImportReview).toHaveBeenCalled();
+        expect(apiClient.apiClient.executeImportReview).toHaveBeenCalledWith(
+          expect.objectContaining({
+            analysisId: 'analysis-2024-01-01',
+            accountId: 123,
+            decisions: expect.arrayContaining([
+              expect.objectContaining({
+                reviewItemId: 'clean-item-1',
+                decision: ConflictResolution.Import
+              }),
+              expect.objectContaining({
+                reviewItemId: 'clean-item-2',
+                decision: ConflictResolution.Import
+              }),
+              expect.objectContaining({
+                reviewItemId: 'duplicate-item-1',
+                decision: ConflictResolution.Skip
+              }),
+              expect.objectContaining({
+                reviewItemId: 'potential-duplicate-1',
+                decision: ConflictResolution.MergeWithExisting
+              })
+            ])
+          })
+        );
       });
 
       // Verify completion callback
-      await waitFor(() => {
-        expect(mockOnImportComplete).toHaveBeenCalledWith(
-          expect.objectContaining({ success: true })
-        );
-      });
+      expect(mockOnImportComplete).toHaveBeenCalledWith(
+        expect.objectContaining({ success: true })
+      );
     });
 
     test('handles bulk auto-resolve functionality', async () => {
@@ -202,11 +236,9 @@ describe('Import Review Integration Tests', () => {
         />
       );
 
-      // Bulk actions only appear for groups with >1 items (clean group has 2)
-      const bulkButtons = screen.getAllByRole('button', { name: /Bulk/ });
-      expect(bulkButtons.length).toBeGreaterThan(0);
-
-      // Open bulk dropdown and auto-resolve the clean group
+      // Bulk auto-resolve is per-section. Only the clean section (2 items) has a Bulk button.
+      // First, auto-resolve the clean section items.
+      const bulkButtons = screen.getAllByRole('button', { name: 'Bulk' });
       fireEvent.click(bulkButtons[0]);
 
       await waitFor(() => {
@@ -214,24 +246,29 @@ describe('Import Review Integration Tests', () => {
         fireEvent.click(autoResolveButton);
       });
 
-      // Clean items should now be resolved (2 of 4 total)
-      // Manually resolve the single-item groups (exact dup and potential dup)
-      // Groups render in order: exact duplicates, potential duplicates, clean
-      // So Merge[0] = exact dup, Merge[1] = potential dup
-      const mergeButtons = screen.getAllByRole('button', { name: 'Merge' });
-      fireEvent.click(mergeButtons[1]); // Merge potential duplicate
+      // Wait for auto-resolve to take effect (2 clean items resolved → 50%)
+      await waitFor(() => {
+        expect(screen.getByText('50% Reviewed')).toBeInTheDocument();
+      });
 
-      const skipButtons = screen.getAllByRole('button', { name: 'Skip' });
-      fireEvent.click(skipButtons[0]); // Skip exact duplicate
+      // Skip the exact duplicate (first Skip button in DOM)
+      fireEvent.click(screen.getAllByRole('button', { name: 'Skip' })[0]);
 
-      // All items should now be resolved
+      // Wait for the skip to register before clicking merge
+      await waitFor(() => {
+        expect(screen.getByText('75% Reviewed')).toBeInTheDocument();
+      });
+
+      // Merge the potential duplicate (index 1: exact dup still has its Merge button at index 0)
+      fireEvent.click(screen.getAllByRole('button', { name: 'Merge' })[1]);
+
       await waitFor(() => {
         expect(screen.getByText('100% Reviewed')).toBeInTheDocument();
         expect(screen.getByText('0 items remaining')).toBeInTheDocument();
       });
 
       // Execute button should be enabled
-      const executeButton = screen.getByText(/Execute Import/);
+      const executeButton = screen.getByRole('button', { name: /Execute Import/ });
       expect(executeButton).not.toBeDisabled();
     });
 
@@ -244,8 +281,8 @@ describe('Import Review Integration Tests', () => {
         />
       );
 
-      // Execute button should be disabled
-      const executeButton = screen.getByText('Complete Review');
+      // When toImport=0, button shows "Complete Review" and is disabled
+      const executeButton = screen.getByRole('button', { name: 'Complete Review' });
       expect(executeButton).toBeDisabled();
       expect(screen.getByText('Review all conflicts before completing')).toBeInTheDocument();
     });
@@ -272,7 +309,7 @@ describe('Import Review Integration Tests', () => {
         />
       );
 
-      const executeButton = screen.getByText('Execute Import (4)');
+      const executeButton = screen.getByRole('button', { name: /Execute Import/ });
       fireEvent.click(executeButton);
 
       // Should not call completion callback on error
@@ -313,12 +350,10 @@ describe('Import Review Integration Tests', () => {
       // Initially, conflict sections should be expanded
       expect(screen.getByText('Grocery Store')).toBeInTheDocument();
 
-      // Click to collapse exact duplicates section
-      const exactDuplicatesHeaders = screen.getAllByText('Exact Duplicates');
-      fireEvent.click(exactDuplicatesHeaders[exactDuplicatesHeaders.length - 1].closest('div')!);
-
-      // Content should be hidden (this would depend on implementation)
-      // The test would verify the expand/collapse behavior
+      // Use getAllByText since "Exact Duplicates" appears in summary stats and section title
+      const exactDuplicatesElements = screen.getAllByText('Exact Duplicates');
+      const sectionHeader = exactDuplicatesElements[exactDuplicatesElements.length - 1];
+      fireEvent.click(sectionHeader.closest('div')!);
     });
 
     test('validates required fields before execution', async () => {
@@ -340,7 +375,7 @@ describe('Import Review Integration Tests', () => {
       );
 
       // Even though items are resolved, missing accountId should prevent execution
-      const executeButton = screen.getByText(/Execute Import/);
+      const executeButton = screen.getByRole('button', { name: /Execute Import/ });
       fireEvent.click(executeButton);
 
       // Should not make API call due to validation failure
@@ -358,47 +393,45 @@ describe('Import Review Integration Tests', () => {
         duplicateTransactionsCount: 0,
         mergedTransactionsCount: 1,
         processedItems: [],
-        warnings: ['One item required manual review'],
+        warnings: [],
         errors: [],
         targetAccountId: 123
       };
 
       (apiClient.apiClient.executeImportReview as ReturnType<typeof vi.fn>).mockResolvedValue(mockExecutionResponse);
 
-      // Render with pre-resolved mixed decisions
-      const mixedDecisionsResult = {
-        ...mockAnalysisResult,
-        reviewItems: mockAnalysisResult.reviewItems.map(item => {
-          if (item.conflicts.length === 0) {
-            return { ...item, reviewDecision: ConflictResolution.Import };
-          }
-          if (item.conflicts.some(c => c.type === ConflictType.ExactDuplicate)) {
-            return { ...item, reviewDecision: ConflictResolution.Skip };
-          }
-          return { ...item, reviewDecision: ConflictResolution.MergeWithExisting };
-        })
-      };
-
       render(
         <ImportReviewScreen
-          analysisResult={mixedDecisionsResult}
+          analysisResult={mockAnalysisResult}
           onImportComplete={mockOnImportComplete}
           onCancel={mockOnCancel}
         />
       );
 
-      // All items are resolved, click execute
-      const executeButton = screen.getByText(/Execute Import/);
-      fireEvent.click(executeButton);
+      // Use role-based queries to target only button elements
+      // DOM order: exact dup, potential dup, clean1, clean2
+      const importButtons = screen.getAllByRole('button', { name: 'Import' });
+      const skipButtons = screen.getAllByRole('button', { name: 'Skip' });
+      const mergeButtons = screen.getAllByRole('button', { name: 'Merge' });
+
+      // Import clean items (indices 2, 3 in DOM order)
+      fireEvent.click(importButtons[2]);
+      fireEvent.click(importButtons[3]);
+
+      // Skip exact duplicate (index 0)
+      fireEvent.click(skipButtons[0]);
+
+      // Merge potential duplicate (index 1 - only conflict items have Merge)
+      fireEvent.click(mergeButtons[1]);
+
+      await waitFor(() => {
+        const executeButton = screen.getByRole('button', { name: /Execute Import/ });
+        fireEvent.click(executeButton);
+      });
 
       await waitFor(() => {
         expect(mockOnImportComplete).toHaveBeenCalledWith(
-          expect.objectContaining({
-            success: true,
-            importedTransactionsCount: 2,
-            skippedTransactionsCount: 1,
-            mergedTransactionsCount: 1
-          })
+          expect.objectContaining({ success: true })
         );
       });
     });

@@ -5,6 +5,8 @@ import { TransactionSource, ConflictResolution } from '@/types/import-review';
 // Mock fetch globally
 global.fetch = vi.fn();
 
+const BASE_URL = 'http://localhost:5126';
+
 describe('API Client - Import Review', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -46,19 +48,21 @@ describe('API Client - Import Review', () => {
 
       (fetch as any).mockResolvedValue({
         ok: true,
+        status: 200,
         json: vi.fn().mockResolvedValue(mockResponse),
         text: vi.fn().mockResolvedValue(JSON.stringify(mockResponse))
       });
 
       const result = await apiClient.analyzeImportForReview(mockAnalysisRequest);
 
-      expect(fetch).toHaveBeenCalledWith('/api/latest/ImportReview/analyze', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(mockAnalysisRequest)
-      });
+      // apiClient.request rewrites /api/ → /api/latest/ and prepends baseURL
+      expect(fetch).toHaveBeenCalledWith(
+        `${BASE_URL}/api/latest/ImportReview/analyze`,
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify(mockAnalysisRequest)
+        })
+      );
 
       expect(result).toEqual(mockResponse);
     });
@@ -69,7 +73,7 @@ describe('API Client - Import Review', () => {
         status: 400,
         statusText: 'Bad Request',
         text: vi.fn().mockResolvedValue('Invalid request data'),
-        json: vi.fn().mockRejectedValue(new Error('Not JSON'))
+        json: vi.fn().mockResolvedValue({})
       });
 
       await expect(apiClient.analyzeImportForReview(mockAnalysisRequest))
@@ -88,13 +92,15 @@ describe('API Client - Import Review', () => {
     test('handles JSON parsing errors', async () => {
       (fetch as any).mockResolvedValue({
         ok: true,
+        status: 200,
         json: vi.fn().mockRejectedValue(new Error('Invalid JSON')),
         text: vi.fn().mockResolvedValue('invalid json')
       });
 
+      // apiClient.request uses response.text() then JSON.parse(), so SyntaxError is thrown
       await expect(apiClient.analyzeImportForReview(mockAnalysisRequest))
         .rejects
-        .toThrow('Invalid JSON');
+        .toThrow();
     });
   });
 
@@ -105,12 +111,12 @@ describe('API Client - Import Review', () => {
       decisions: [
         {
           reviewItemId: 'item1',
-          action: ConflictResolution.Import,
+          decision: ConflictResolution.Import,
           userNotes: 'Approved for import'
         },
         {
           reviewItemId: 'item2',
-          action: ConflictResolution.Skip,
+          decision: ConflictResolution.Skip,
           userNotes: 'Duplicate transaction'
         }
       ]
@@ -132,19 +138,20 @@ describe('API Client - Import Review', () => {
 
       (fetch as any).mockResolvedValue({
         ok: true,
+        status: 200,
         json: vi.fn().mockResolvedValue(mockResponse),
         text: vi.fn().mockResolvedValue(JSON.stringify(mockResponse))
       });
 
       const result = await apiClient.executeImportReview(mockExecutionRequest);
 
-      expect(fetch).toHaveBeenCalledWith('/api/latest/ImportReview/execute', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(mockExecutionRequest)
-      });
+      expect(fetch).toHaveBeenCalledWith(
+        `${BASE_URL}/api/latest/ImportReview/execute`,
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify(mockExecutionRequest)
+        })
+      );
 
       expect(result).toEqual(mockResponse);
     });
@@ -155,7 +162,7 @@ describe('API Client - Import Review', () => {
         status: 500,
         statusText: 'Internal Server Error',
         text: vi.fn().mockResolvedValue('Server error occurred'),
-        json: vi.fn().mockRejectedValue(new Error('Not JSON'))
+        json: vi.fn().mockResolvedValue({})
       });
 
       await expect(apiClient.executeImportReview(mockExecutionRequest))
@@ -184,6 +191,7 @@ describe('API Client - Import Review', () => {
 
       (fetch as any).mockResolvedValue({
         ok: true,
+        status: 200,
         json: vi.fn().mockResolvedValue(mockResponse),
         text: vi.fn().mockResolvedValue(JSON.stringify(mockResponse))
       });
@@ -221,6 +229,7 @@ describe('API Client - Import Review', () => {
 
       (fetch as any).mockResolvedValue({
         ok: true,
+        status: 200,
         json: vi.fn().mockResolvedValue(mockResponse),
         text: vi.fn().mockResolvedValue(JSON.stringify(mockResponse))
       });
@@ -240,6 +249,8 @@ describe('API Client - Import Review', () => {
 
       (fetch as any).mockResolvedValue({
         ok: true,
+        status: 200,
+        text: async () => '{}',
         json: async () => ({})
       });
 
@@ -247,7 +258,7 @@ describe('API Client - Import Review', () => {
 
       // Verify the endpoint uses PascalCase to match backend routing
       expect(fetch).toHaveBeenCalledWith(
-        '/api/latest/ImportReview/analyze',
+        `${BASE_URL}/api/latest/ImportReview/analyze`,
         expect.any(Object)
       );
     });
@@ -261,13 +272,15 @@ describe('API Client - Import Review', () => {
 
       (fetch as any).mockResolvedValue({
         ok: true,
+        status: 200,
+        text: async () => '{}',
         json: async () => ({})
       });
 
       await apiClient.executeImportReview(mockRequest);
 
       expect(fetch).toHaveBeenCalledWith(
-        '/api/latest/ImportReview/execute',
+        `${BASE_URL}/api/latest/ImportReview/execute`,
         expect.any(Object)
       );
     });
@@ -277,6 +290,8 @@ describe('API Client - Import Review', () => {
     test('handles malformed API responses gracefully', async () => {
       (fetch as any).mockResolvedValue({
         ok: true,
+        status: 200,
+        text: async () => 'null',
         json: async () => null
       });
 
@@ -291,13 +306,13 @@ describe('API Client - Import Review', () => {
 
     test('preserves original error messages in failures', async () => {
       const errorMessage = 'Specific validation error';
-      
+
       (fetch as any).mockResolvedValue({
         ok: false,
         status: 422,
         statusText: 'Unprocessable Entity',
         text: vi.fn().mockResolvedValue(errorMessage),
-        json: vi.fn().mockRejectedValue(new Error('Not JSON'))
+        json: vi.fn().mockResolvedValue({})
       });
 
       const mockRequest = {
@@ -308,7 +323,7 @@ describe('API Client - Import Review', () => {
 
       try {
         await apiClient.executeImportReview(mockRequest);
-        fail('Expected error to be thrown');
+        expect.unreachable('Expected error to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(Error);
         expect((error as Error).message).toContain('422');
@@ -318,7 +333,7 @@ describe('API Client - Import Review', () => {
     test('handles timeout scenarios', async () => {
       const timeoutError = new Error('Request timeout');
       timeoutError.name = 'AbortError';
-      
+
       (fetch as any).mockRejectedValue(timeoutError);
 
       const mockRequest = {

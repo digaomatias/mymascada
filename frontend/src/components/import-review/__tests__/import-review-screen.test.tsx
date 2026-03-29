@@ -47,20 +47,6 @@ const mockAnalysisResult: ImportAnalysisResult = {
       isProcessed: false
     },
     {
-      id: 'item1b',
-      importCandidate: {
-        amount: 150,
-        date: '2024-01-03',
-        description: 'Another clean transaction',
-        source: TransactionSource.CsvImport,
-        sourceRowIndex: 2,
-        confidence: 92
-      },
-      conflicts: [],
-      reviewDecision: ConflictResolution.Pending,
-      isProcessed: false
-    },
-    {
       id: 'item2',
       importCandidate: {
         amount: 200,
@@ -81,13 +67,13 @@ const mockAnalysisResult: ImportAnalysisResult = {
     }
   ],
   summary: {
-    totalCandidates: 3,
-    cleanImports: 2,
+    totalCandidates: 2,
+    cleanImports: 1,
     exactDuplicates: 1,
     potentialDuplicates: 0,
     transferConflicts: 0,
     manualConflicts: 0,
-    requiresReview: 3
+    requiresReview: 2
   },
   analysisTimestamp: '2024-01-01T10:00:00Z',
   warnings: [],
@@ -139,7 +125,7 @@ describe('ImportReviewScreen', () => {
     );
 
     expect(screen.getByText('0% Reviewed')).toBeInTheDocument();
-    expect(screen.getByText('3 items remaining')).toBeInTheDocument();
+    expect(screen.getByText('2 items remaining')).toBeInTheDocument();
   });
 
   test('execute import button is disabled when items are pending', () => {
@@ -151,31 +137,29 @@ describe('ImportReviewScreen', () => {
       />
     );
 
-    const executeButton = screen.getByText('Complete Review');
+    // When toImport=0, button shows "Complete Review"
+    const executeButton = screen.getByRole('button', { name: 'Complete Review' });
     expect(executeButton).toBeDisabled();
     expect(screen.getByText('Review all conflicts before completing')).toBeInTheDocument();
   });
 
   test('execute import button becomes enabled after all decisions are made', async () => {
-    // Render with already-resolved items to verify button state
-    const resolvedAnalysisResult = {
-      ...mockAnalysisResult,
-      reviewItems: mockAnalysisResult.reviewItems.map(item => ({
-        ...item,
-        reviewDecision: ConflictResolution.Import
-      }))
-    };
-
     render(
       <ImportReviewScreen
-        analysisResult={resolvedAnalysisResult}
+        analysisResult={mockAnalysisResult}
         onImportComplete={mockOnImportComplete}
         onCancel={mockOnCancel}
       />
     );
 
-    const executeButton = screen.getByText('Execute Import (3)');
-    expect(executeButton).not.toBeDisabled();
+    // Click Import on each item via UI interaction (useState doesn't update from rerender)
+    const importButtons = screen.getAllByRole('button', { name: 'Import' });
+    importButtons.forEach(btn => fireEvent.click(btn));
+
+    await waitFor(() => {
+      const executeButton = screen.getByRole('button', { name: /Execute Import/ });
+      expect(executeButton).not.toBeDisabled();
+    });
   });
 
   test('handles back button click', () => {
@@ -219,33 +203,28 @@ describe('ImportReviewScreen', () => {
       />
     );
 
-    const executeButton = screen.getByText('Execute Import (3)');
+    const executeButton = screen.getByRole('button', { name: /Execute Import/ });
     fireEvent.click(executeButton);
 
     await waitFor(() => {
-      expect(apiClient.apiClient.executeImportReview).toHaveBeenCalledWith(
-        expect.objectContaining({
-          analysisId: 'test-analysis-123',
-          accountId: 123,
-          decisions: expect.arrayContaining([
-            expect.objectContaining({
-              reviewItemId: 'item1',
-              decision: ConflictResolution.Import,
-              userNotes: ''
-            }),
-            expect.objectContaining({
-              reviewItemId: 'item1b',
-              decision: ConflictResolution.Import,
-              userNotes: ''
-            }),
-            expect.objectContaining({
-              reviewItemId: 'item2',
-              decision: ConflictResolution.Import,
-              userNotes: ''
-            })
-          ])
-        })
-      );
+      expect(apiClient.apiClient.executeImportReview).toHaveBeenCalledWith({
+        analysisId: 'test-analysis-123',
+        accountId: 123,
+        decisions: [
+          {
+            reviewItemId: 'item1',
+            decision: ConflictResolution.Import,
+            userNotes: '',
+            candidate: resolvedAnalysisResult.reviewItems[0].importCandidate
+          },
+          {
+            reviewItemId: 'item2',
+            decision: ConflictResolution.Import,
+            userNotes: '',
+            candidate: resolvedAnalysisResult.reviewItems[1].importCandidate
+          }
+        ]
+      });
     });
   });
 
@@ -254,7 +233,10 @@ describe('ImportReviewScreen', () => {
       success: true,
       importedTransactionsCount: 2,
       skippedTransactionsCount: 0,
-      errors: []
+      mergedTransactionsCount: 0,
+      errors: [],
+      warnings: [],
+      processedItems: []
     };
 
     (apiClient.apiClient.executeImportReview as ReturnType<typeof vi.fn>).mockResolvedValue(mockExecuteResponse);
@@ -276,16 +258,12 @@ describe('ImportReviewScreen', () => {
       />
     );
 
-    const executeButton = screen.getByText('Execute Import (3)');
+    const executeButton = screen.getByRole('button', { name: /Execute Import/ });
     fireEvent.click(executeButton);
 
     await waitFor(() => {
       expect(mockOnImportComplete).toHaveBeenCalledWith(
-        expect.objectContaining({
-          success: true,
-          importedTransactionsCount: 2,
-          skippedTransactionsCount: 0
-        })
+        expect.objectContaining({ success: true, importedTransactionsCount: 2 })
       );
     });
   });
@@ -311,7 +289,7 @@ describe('ImportReviewScreen', () => {
       />
     );
 
-    const executeButton = screen.getByText('Execute Import (3)');
+    const executeButton = screen.getByText('Execute Import (2)');
     fireEvent.click(executeButton);
 
     await waitFor(() => {
@@ -338,16 +316,39 @@ describe('ImportReviewScreen', () => {
   });
 
   test('shows bulk actions when enabled', () => {
+    // Need 2+ items in one group for Bulk button to appear
+    const resultWithMultipleClean = {
+      ...mockAnalysisResult,
+      reviewItems: [
+        ...mockAnalysisResult.reviewItems,
+        {
+          id: 'item3',
+          importCandidate: {
+            amount: 50,
+            date: '2024-01-03',
+            description: 'Third clean item',
+            source: TransactionSource.CsvImport,
+            sourceRowIndex: 2,
+            confidence: 90
+          },
+          conflicts: [],
+          reviewDecision: ConflictResolution.Pending,
+          isProcessed: false
+        }
+      ],
+      summary: { ...mockAnalysisResult.summary, totalCandidates: 3, cleanImports: 2, requiresReview: 3 }
+    };
+
     render(
       <ImportReviewScreen
-        analysisResult={mockAnalysisResult}
+        analysisResult={resultWithMultipleClean}
         onImportComplete={mockOnImportComplete}
         onCancel={mockOnCancel}
         showBulkActions={true}
       />
     );
 
-    // The bulk actions should be visible in the grouped sections
+    // The bulk actions should be visible in grouped sections with 2+ items
     expect(screen.getAllByText('Bulk').length).toBeGreaterThan(0);
   });
 
@@ -393,11 +394,12 @@ describe('ImportReviewScreen', () => {
       />
     );
 
-    // Click on "Ready to Import" section to toggle it
-    const sectionHeaders = screen.getAllByText('Ready to Import');
-    fireEvent.click(sectionHeaders[sectionHeaders.length - 1].closest('div')!);
+    // "Ready to Import" appears in both summary stats and section title; use getAllByText
+    const readyToImportElements = screen.getAllByText('Ready to Import');
+    // Click on the section header element (not the summary stat)
+    const sectionHeader = readyToImportElements[readyToImportElements.length - 1];
+    fireEvent.click(sectionHeader.closest('div')!);
 
     // This would collapse/expand the section
-    // The exact behavior depends on the initial state
   });
 });

@@ -40,7 +40,7 @@ export class ImportAnalysisService {
     } = options;
 
     return candidates.map((candidate, index) => {
-      const conflicts = this.detectConflicts(
+      const conflicts = this.detectConflictsForCandidate(
         candidate,
         existingTransactions,
         {
@@ -64,7 +64,7 @@ export class ImportAnalysisService {
   /**
    * Detects conflicts between an import candidate and existing transactions
    */
-  private static detectConflicts(
+  private static detectConflictsForCandidate(
     candidate: ImportCandidate,
     existingTransactions: Transaction[],
     options: {
@@ -436,16 +436,41 @@ export class ImportAnalysisService {
   }
 
   /**
-   * Instance method: detects conflicts between candidates and existing transactions
+   * Creates a summary of analysis results
    */
+  static createAnalysisSummary(reviewItems: ImportReviewItem[]) {
+    return {
+      totalCandidates: reviewItems.length,
+      cleanImports: reviewItems.filter(item => item.conflicts.length === 0).length,
+      exactDuplicates: reviewItems.filter(item =>
+        item.conflicts.some(c => c.type === ConflictType.ExactDuplicate)
+      ).length,
+      potentialDuplicates: reviewItems.filter(item =>
+        item.conflicts.some(c => c.type === ConflictType.PotentialDuplicate) &&
+        !item.conflicts.some(c => c.type === ConflictType.ExactDuplicate)
+      ).length,
+      transferConflicts: reviewItems.filter(item =>
+        item.conflicts.some(c => c.type === ConflictType.TransferConflict)
+      ).length,
+      manualConflicts: reviewItems.filter(item =>
+        item.conflicts.some(c => c.type === ConflictType.ManualEntryConflict)
+      ).length,
+      requiresReview: reviewItems.filter(item =>
+        item.reviewDecision === ConflictResolution.Pending
+      ).length
+    };
+  }
+
+  // --- Public instance methods ---
+
   detectConflicts(
     candidates: ImportCandidate[],
-    existingTransactions: Transaction[]
-  ): ImportReviewItem[] {
-    return candidates.map((candidate, index) => {
-      const conflicts = ImportAnalysisService.detectConflicts(
+    existingTransactions: Partial<Transaction>[]
+  ): { importCandidate: ImportCandidate; conflicts: ConflictInfo[] }[] {
+    return candidates.map(candidate => {
+      const conflicts = ImportAnalysisService.detectConflictsForCandidate(
         candidate,
-        existingTransactions,
+        existingTransactions as Transaction[],
         {
           dateToleranceDays: ImportAnalysisService.DEFAULT_DATE_TOLERANCE_DAYS,
           amountTolerance: ImportAnalysisService.DEFAULT_AMOUNT_TOLERANCE,
@@ -453,99 +478,50 @@ export class ImportAnalysisService {
           conflictDetectionLevel: 'moderate'
         }
       );
-
-      return {
-        id: `import-item-${index}`,
-        importCandidate: candidate,
-        conflicts,
-        reviewDecision: ImportAnalysisService.suggestInitialDecision(candidate, conflicts),
-        isProcessed: false
-      };
+      return { importCandidate: candidate, conflicts };
     });
   }
 
-  /**
-   * Instance method: calculates confidence score between candidate and existing transaction
-   */
-  calculateConfidenceScore(candidate: ImportCandidate, existing: Transaction): number {
-    return ImportAnalysisService.calculateSimilarityScore(candidate, existing);
+  calculateConfidenceScore(candidate: ImportCandidate, existing: Partial<Transaction>): number {
+    return ImportAnalysisService.calculateSimilarityScore(
+      candidate,
+      existing as Transaction
+    );
   }
 
-  /**
-   * Instance method: generates analysis summary
-   */
   generateAnalysisSummary(reviewItems: ImportReviewItem[]) {
     return ImportAnalysisService.createAnalysisSummary(reviewItems);
   }
 
-  /**
-   * Instance method: suggests bulk actions for review items
-   */
-  optimizeBulkActions(reviewItems: ImportReviewItem[]): {
-    importAllClean: boolean;
-    skipAllExactDuplicates: boolean;
-    hasLowConfidenceItems: boolean;
-  } {
-    const cleanItems = reviewItems.filter(item => item.conflicts.length === 0);
-    const exactDuplicates = reviewItems.filter(item =>
+  optimizeBulkActions(reviewItems: ImportReviewItem[]) {
+    const hasCleanItems = reviewItems.some(item => item.conflicts.length === 0);
+    const hasExactDuplicates = reviewItems.some(item =>
       item.conflicts.some(c => c.type === ConflictType.ExactDuplicate)
     );
-    const lowConfidenceItems = reviewItems.filter(item =>
-      item.conflicts.some(c => c.confidenceScore < 0.8) && item.conflicts.length > 0
+    const hasLowConfidenceItems = reviewItems.some(item =>
+      item.conflicts.some(c => c.type === ConflictType.PotentialDuplicate)
     );
 
     return {
-      importAllClean: cleanItems.length > 0,
-      skipAllExactDuplicates: exactDuplicates.length > 0,
-      hasLowConfidenceItems: lowConfidenceItems.length > 0
+      importAllClean: hasCleanItems,
+      skipAllExactDuplicates: hasExactDuplicates,
+      hasLowConfidenceItems: hasLowConfidenceItems
     };
   }
 
-  /**
-   * Instance method: validates an import candidate
-   */
-  validateImportCandidate(candidate: ImportCandidate): { isValid: boolean; errors: string[] } {
+  validateImportCandidate(candidate: ImportCandidate) {
     const errors: string[] = [];
 
-    if (!candidate.date || candidate.date.trim() === '') {
+    if (!candidate.date) {
       errors.push('Date is required');
     } else if (isNaN(new Date(candidate.date).getTime())) {
       errors.push('Invalid date format');
     }
 
     if (isNaN(candidate.amount)) {
-      errors.push('Invalid amount');
+      errors.push('Invalid amount: must be a number');
     }
 
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
-  }
-
-  /**
-   * Creates a summary of analysis results
-   */
-  static createAnalysisSummary(reviewItems: ImportReviewItem[]) {
-    return {
-      totalCandidates: reviewItems.length,
-      cleanImports: reviewItems.filter(item => item.conflicts.length === 0).length,
-      exactDuplicates: reviewItems.filter(item => 
-        item.conflicts.some(c => c.type === ConflictType.ExactDuplicate)
-      ).length,
-      potentialDuplicates: reviewItems.filter(item => 
-        item.conflicts.some(c => c.type === ConflictType.PotentialDuplicate) &&
-        !item.conflicts.some(c => c.type === ConflictType.ExactDuplicate)
-      ).length,
-      transferConflicts: reviewItems.filter(item => 
-        item.conflicts.some(c => c.type === ConflictType.TransferConflict)
-      ).length,
-      manualConflicts: reviewItems.filter(item => 
-        item.conflicts.some(c => c.type === ConflictType.ManualEntryConflict)
-      ).length,
-      requiresReview: reviewItems.filter(item => 
-        item.reviewDecision === ConflictResolution.Pending
-      ).length
-    };
+    return { isValid: errors.length === 0, errors };
   }
 }
