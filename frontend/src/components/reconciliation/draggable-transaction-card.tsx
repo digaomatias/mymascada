@@ -280,6 +280,7 @@ export function DraggableTransactionCard({
                   }}
                   className="p-1 text-primary-500 hover:text-primary-700 hover:bg-primary-50 rounded transition-colors"
                   title={t('previewAiDescription')}
+                  aria-label={t('previewAiDescription')}
                 >
                   <SparklesIcon className="w-4 h-4" />
                 </button>
