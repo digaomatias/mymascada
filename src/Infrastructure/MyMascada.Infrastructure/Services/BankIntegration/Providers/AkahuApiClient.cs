@@ -319,10 +319,14 @@ public class AkahuApiClient : IAkahuApiClient
         request.Headers.Add("X-Akahu-Id", appIdToken);
 
         var response = await _httpClient.SendAsync(request, ct);
-        // Don't throw on failure - token may already be revoked
         if (!response.IsSuccessStatusCode)
         {
-            _logger.LogWarning("Failed to revoke Akahu token: {StatusCode}", response.StatusCode);
+            var ex = new HttpRequestException(
+                $"Akahu token revocation failed with status {response.StatusCode}",
+                inner: null,
+                response.StatusCode);
+            _logger.LogError(ex, "Failed to revoke Akahu token: {StatusCode}", response.StatusCode);
+            throw ex;
         }
     }
 

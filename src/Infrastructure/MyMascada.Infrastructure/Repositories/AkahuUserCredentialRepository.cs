@@ -54,6 +54,25 @@ public class AkahuUserCredentialRepository : IAkahuUserCredentialRepository
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyList<AkahuUserCredential>> GetPendingRevocationsAsync(CancellationToken ct = default)
+    {
+        return await _context.AkahuUserCredentials
+            .Where(c => c.IsRevocationPending && !c.IsDeleted)
+            .ToListAsync(ct);
+    }
+
+    /// <inheritdoc />
+    public async Task UpdateRevocationStateAsync(int credentialId, bool isRevocationPending, int revocationFailureCount, DateTime? revocationFailedAt, CancellationToken ct = default)
+    {
+        await _context.AkahuUserCredentials
+            .Where(c => c.Id == credentialId)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(c => c.IsRevocationPending, isRevocationPending)
+                .SetProperty(c => c.RevocationFailureCount, revocationFailureCount)
+                .SetProperty(c => c.RevocationFailedAt, revocationFailedAt), ct);
+    }
+
+    /// <inheritdoc />
     public async Task DeleteByUserIdAsync(Guid userId, CancellationToken ct = default)
     {
         var credential = await _context.AkahuUserCredentials

@@ -458,6 +458,11 @@ recurringJobManager.AddOrUpdate<MyMascada.Application.BackgroundJobs.IDataRetent
     service => service.CleanupExpiredChatMessagesAsync(),
     Hangfire.Cron.Daily(3, 30)); // Run daily at 3:30 AM
 
+recurringJobManager.AddOrUpdate<MyMascada.Application.BackgroundJobs.ITokenRevocationRetryJobService>(
+    "retry-failed-token-revocations",
+    service => service.RetryPendingRevocationsAsync(),
+    Hangfire.Cron.Daily(3, 45)); // Run daily at 3:45 AM
+
 // Map controllers
 app.MapControllers();
 

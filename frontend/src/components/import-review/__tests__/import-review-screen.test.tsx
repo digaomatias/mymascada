@@ -12,19 +12,35 @@ vi.mock('@/lib/api-client', () => ({
   }
 }));
 
-// Mock toast notifications
-vi.mock('sonner', () => ({
-  toast: {
-    success: vi.fn(),
-    error: vi.fn(),
-    warning: vi.fn()
-  }
+// Override Button to render actual button element (test-setup renders just children)
+vi.mock('@/components/ui/button', () => ({
+  Button: ({ children, disabled, onClick, className, ...props }: any) => (
+    <button disabled={disabled} onClick={onClick} className={className}>
+      {children}
+    </button>
+  ),
 }));
 
-// Mock utilities
-vi.mock('@/lib/utils', () => ({
-  formatCurrency: (amount: number) => `$${amount.toFixed(2)}`,
-  formatDate: (date: string) => new Date(date).toLocaleDateString()
+// Mock sub-components for test isolation
+vi.mock('../import-summary-stats', () => ({
+  ImportSummaryStats: () => <div data-testid="summary-stats" />,
+}));
+
+vi.mock('../conflict-resolution-card', () => ({
+  ConflictResolutionCard: ({ reviewItem, onDecisionChange }: any) => (
+    <div data-testid={`card-${reviewItem.id}`}>
+      <span>{reviewItem.importCandidate.description}</span>
+      <button onClick={() => onDecisionChange(reviewItem.id, ConflictResolution.Import)}>Import</button>
+      <button onClick={() => onDecisionChange(reviewItem.id, ConflictResolution.Skip)}>Skip</button>
+      <button onClick={() => onDecisionChange(reviewItem.id, ConflictResolution.MergeWithExisting)}>Merge</button>
+    </div>
+  ),
+}));
+
+vi.mock('../bulk-actions-panel', () => ({
+  BulkActionsPanel: ({ items, onBulkAction }: any) => (
+    <button onClick={() => onBulkAction(items.map((i: any) => i.id), ConflictResolution.Import)}>Bulk</button>
+  ),
 }));
 
 const mockAnalysisResult: ImportAnalysisResult = {
@@ -111,8 +127,8 @@ describe('ImportReviewScreen', () => {
       />
     );
 
-    expect(screen.getAllByText('Exact Duplicates').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Ready to Import').length).toBeGreaterThan(0);
+    expect(screen.getByText('Exact Duplicates')).toBeInTheDocument();
+    expect(screen.getByText('Ready to Import')).toBeInTheDocument();
   });
 
   test('shows correct progress statistics', () => {
@@ -185,7 +201,7 @@ describe('ImportReviewScreen', () => {
 
     (apiClient.apiClient.executeImportReview as ReturnType<typeof vi.fn>).mockResolvedValue(mockExecuteResponse);
 
-    // Create a resolved analysis result
+    // Create a resolved analysis result (useState will use this as initial value)
     const resolvedAnalysisResult = {
       ...mockAnalysisResult,
       analysisId: 'test-analysis-123',

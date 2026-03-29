@@ -84,6 +84,15 @@ public class DisconnectBankConnectionCommandHandler : IRequestHandler<Disconnect
                         _logger.LogDebug("Revoking Akahu access token for connection {ConnectionId}", request.BankConnectionId);
                         await _akahuApiClient.RevokeTokenAsync(appIdToken, accessToken, cancellationToken);
                         _logger.LogDebug("Successfully revoked Akahu access token");
+
+                        // Clear any previous pending revocation flag on success
+                        if (credential.IsRevocationPending)
+                        {
+                            credential.IsRevocationPending = false;
+                            credential.RevocationFailedAt = null;
+                            credential.RevocationFailureCount = 0;
+                            await _credentialRepository.UpdateAsync(credential, cancellationToken);
+                        }
                     }
 
                     // Record consent revocation timestamp for compliance evidence
@@ -94,10 +103,30 @@ public class DisconnectBankConnectionCommandHandler : IRequestHandler<Disconnect
             }
             catch (Exception ex)
             {
-                // Log but continue - we still want to delete the connection even if token revocation fails
-                _logger.LogWarning(ex,
-                    "Failed to revoke access token for connection {ConnectionId}. Continuing with deletion.",
+                // Log as error so monitoring catches it, but continue with deletion
+                _logger.LogError(ex,
+                    "Failed to revoke access token for connection {ConnectionId}. " +
+                    "Marking credential for retry. Continuing with deletion.",
                     request.BankConnectionId);
+
+                // Mark the credential for background retry
+                try
+                {
+                    var credential = await _credentialRepository.GetByUserIdAsync(request.UserId, cancellationToken);
+                    if (credential != null)
+                    {
+                        credential.IsRevocationPending = true;
+                        credential.RevocationFailedAt = DateTime.UtcNow;
+                        credential.RevocationFailureCount++;
+                        await _credentialRepository.UpdateAsync(credential, cancellationToken);
+                    }
+                }
+                catch (Exception updateEx)
+                {
+                    _logger.LogError(updateEx,
+                        "Failed to mark credential for revocation retry for connection {ConnectionId}",
+                        request.BankConnectionId);
+                }
             }
         }
 

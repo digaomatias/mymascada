@@ -1,32 +1,23 @@
 import '@testing-library/jest-dom/vitest'
 import { vi } from 'vitest'
 
-// Mock next-intl with actual translations
-vi.mock('next-intl', () => {
-  const path = require('path')
-  const fs = require('fs')
-  const messages = JSON.parse(
-    fs.readFileSync(path.join(process.cwd(), 'messages', 'en.json'), 'utf-8')
-  )
+// Mock next-intl with actual translations — single consolidated mock
+vi.mock('next-intl', async () => {
+  const messagesModule = await import('./messages/en.json')
+  const messages = (messagesModule as any).default || messagesModule
 
   function getNestedValue(obj: any, keyPath: string): any {
-    return keyPath.split('.').reduce((acc: any, key: string) => acc?.[key], obj)
-  }
-
-  function interpolate(template: string, params?: Record<string, any>): string {
-    if (!params || typeof template !== 'string') return template
-    return template.replace(/\{(\w+)\}/g, (match, key) => {
-      return params[key] !== undefined ? String(params[key]) : match
-    })
+    return keyPath.split('.').reduce((current, key) => current?.[key], obj)
   }
 
   return {
-    useTranslations: (namespace: string) => {
-      const section = getNestedValue(messages, namespace)
-      return (key: string, params?: Record<string, any>): string => {
+    useTranslations: (namespace?: string) => {
+      const section = namespace ? getNestedValue(messages, namespace) : messages
+      return (key: string, values?: Record<string, any>) => {
         const value = getNestedValue(section, key)
-        if (typeof value !== 'string') return `${namespace}.${key}`
-        return interpolate(value, params)
+        if (typeof value !== 'string') return namespace ? `${namespace}.${key}` : key
+        if (!values) return value
+        return value.replace(/\{(\w+)\}/g, (_: string, k: string) => String(values[k] ?? `{${k}}`))
       }
     },
     useLocale: () => 'en',
