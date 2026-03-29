@@ -55,83 +55,67 @@ public class UserDataDeletionService : IUserDataDeletionService
 
         try
         {
-            // Batch 1: Fetch all IDs that only depend on userId (parallel)
-            var accountIdsTask = _context.Accounts
+            // Batch 1: Fetch all IDs that only depend on userId (sequential - DbContext is not thread-safe)
+            var accountIds = await _context.Accounts
                 .IgnoreQueryFilters()
                 .Where(a => a.UserId == userId)
                 .Select(a => a.Id)
                 .ToListAsync(cancellationToken);
 
-            var categoryIdsTask = _context.Categories
+            var categoryIds = await _context.Categories
                 .IgnoreQueryFilters()
                 .Where(c => c.UserId == userId)
                 .Select(c => c.Id)
                 .ToListAsync(cancellationToken);
 
-            var ruleIdsTask = _context.CategorizationRules
+            var ruleIds = await _context.CategorizationRules
                 .IgnoreQueryFilters()
                 .Where(r => r.UserId == userId)
                 .Select(r => r.Id)
                 .ToListAsync(cancellationToken);
 
-            var budgetIdsTask = _context.Budgets
+            var budgetIds = await _context.Budgets
                 .IgnoreQueryFilters()
                 .Where(b => b.UserId == userId)
                 .Select(b => b.Id)
                 .ToListAsync(cancellationToken);
 
-            var walletIdsTask = _context.Wallets
+            var walletIds = await _context.Wallets
                 .IgnoreQueryFilters()
                 .Where(w => w.UserId == userId)
                 .Select(w => w.Id)
                 .ToListAsync(cancellationToken);
 
-            var recurringPatternIdsTask = _context.RecurringPatterns
+            var recurringPatternIds = await _context.RecurringPatterns
                 .IgnoreQueryFilters()
                 .Where(rp => rp.UserId == userId)
                 .Select(rp => rp.Id)
                 .ToListAsync(cancellationToken);
 
-            await Task.WhenAll(accountIdsTask, categoryIdsTask, ruleIdsTask, budgetIdsTask, walletIdsTask, recurringPatternIdsTask);
-
-            var accountIds = accountIdsTask.Result;
-            var categoryIds = categoryIdsTask.Result;
-            var ruleIds = ruleIdsTask.Result;
-            var budgetIds = budgetIdsTask.Result;
-            var walletIds = walletIdsTask.Result;
-            var recurringPatternIds = recurringPatternIdsTask.Result;
-
-            // Batch 2: Fetch IDs that depend on batch 1 results (parallel)
-            var transactionIdsTask = _context.Transactions
+            // Batch 2: Fetch IDs that depend on batch 1 results (sequential - DbContext is not thread-safe)
+            var transactionIds = await _context.Transactions
                 .IgnoreQueryFilters()
                 .Where(t => accountIds.Contains(t.AccountId))
                 .Select(t => t.Id)
                 .ToListAsync(cancellationToken);
 
-            var reconciliationIdsTask = _context.Reconciliations
+            var reconciliationIds = await _context.Reconciliations
                 .IgnoreQueryFilters()
                 .Where(r => accountIds.Contains(r.AccountId))
                 .Select(r => r.Id)
                 .ToListAsync(cancellationToken);
 
-            var bankConnectionIdsTask = _context.BankConnections
+            var bankConnectionIds = await _context.BankConnections
                 .IgnoreQueryFilters()
                 .Where(bc => accountIds.Contains(bc.AccountId))
                 .Select(bc => bc.Id)
                 .ToListAsync(cancellationToken);
 
-            var ruleSuggestionIdsTask = _context.RuleSuggestions
+            var ruleSuggestionIds = await _context.RuleSuggestions
                 .IgnoreQueryFilters()
                 .Where(rs => categoryIds.Contains(rs.SuggestedCategoryId))
                 .Select(rs => rs.Id)
                 .ToListAsync(cancellationToken);
-
-            await Task.WhenAll(transactionIdsTask, reconciliationIdsTask, bankConnectionIdsTask, ruleSuggestionIdsTask);
-
-            var transactionIds = transactionIdsTask.Result;
-            var reconciliationIds = reconciliationIdsTask.Result;
-            var bankConnectionIds = bankConnectionIdsTask.Result;
-            var ruleSuggestionIds = ruleSuggestionIdsTask.Result;
 
             // 1. Delete RuleSuggestionSamples
             if (ruleSuggestionIds.Any())
