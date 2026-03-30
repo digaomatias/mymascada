@@ -387,7 +387,7 @@ public class TransactionsController : ControllerBase
     [HttpGet("duplicates")]
     public async Task<ActionResult<DuplicateTransactionsResponse>> GetDuplicateTransactions(
         [FromQuery] decimal amountTolerance = 0.01m,
-        [FromQuery] int dateToleranceDays = 1,
+        [FromQuery] int dateToleranceDays = 2,
         [FromQuery] bool includeReviewed = false,
         [FromQuery] bool sameAccountOnly = false,
         [FromQuery] decimal minConfidence = 0.5m)
