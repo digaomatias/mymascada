@@ -11,6 +11,7 @@ using MyMascada.Application.Features.Authentication.Commands;
 using MyMascada.Application.Features.Authentication.DTOs;
 using MyMascada.Application.Features.Authentication.Queries;
 using MyMascada.Domain.Entities;
+using MyMascada.WebAPI.Constants;
 using MyMascada.WebAPI.Controllers;
 using NSubstitute;
 using System.Security.Claims;
@@ -110,6 +111,109 @@ public class AuthControllerTests
             cmd.PhoneNumber == request.PhoneNumber &&
             cmd.Currency == request.Currency &&
             cmd.TimeZone == request.TimeZone));
+    }
+
+    [Fact]
+    public async Task Register_WithClientPlatformHeader_ShouldPassItToCommand()
+    {
+        // Arrange
+        var request = new RegisterRequest
+        {
+            Email = "mobile@example.com",
+            UserName = "mobileuser",
+            Password = "TestPass123!",
+            ConfirmPassword = "TestPass123!",
+            FirstName = "Mobile",
+            LastName = "User",
+            Currency = "USD",
+            TimeZone = "UTC"
+        };
+
+        _controller.ControllerContext.HttpContext.Request.Headers[CustomHeaders.ClientPlatform] = RegisterCommandHandler.MobileClientPlatform;
+
+        var expectedResponse = new AuthenticationResponse { IsSuccess = true, Token = "jwt" };
+        _mediator.Send(Arg.Any<RegisterCommand>()).Returns(expectedResponse);
+
+        // Act
+        await _controller.Register(request);
+
+        // Assert
+        await _mediator.Received(1).Send(Arg.Is<RegisterCommand>(cmd =>
+            cmd.ClientPlatform == RegisterCommandHandler.MobileClientPlatform));
+    }
+
+    [Fact]
+    public async Task Register_WithRefreshToken_InProduction_ShouldSetSecureHttpOnlyLaxCookie()
+    {
+        // Arrange
+        _environment.EnvironmentName.Returns("Production");
+
+        var request = new RegisterRequest
+        {
+            Email = "secure@example.com",
+            UserName = "secureuser",
+            Password = "TestPass123!",
+            ConfirmPassword = "TestPass123!",
+            FirstName = "Secure",
+            LastName = "User",
+            Currency = "USD",
+            TimeZone = "UTC"
+        };
+
+        _mediator.Send(Arg.Any<RegisterCommand>()).Returns(new AuthenticationResponse
+        {
+            IsSuccess = true,
+            Token = "jwt",
+            RefreshToken = "refresh-token",
+            RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(30)
+        });
+
+        // Act
+        await _controller.Register(request);
+
+        // Assert
+        var setCookie = _controller.ControllerContext.HttpContext.Response.Headers["Set-Cookie"].ToString().ToLowerInvariant();
+        setCookie.Should().Contain("refresh_token=refresh-token");
+        setCookie.Should().Contain("httponly");
+        setCookie.Should().Contain("samesite=lax");
+        setCookie.Should().Contain("secure");
+    }
+
+    [Fact]
+    public async Task Register_WithRefreshToken_InDevelopment_ShouldNotSetSecureCookie()
+    {
+        // Arrange
+        _environment.EnvironmentName.Returns("Development");
+
+        var request = new RegisterRequest
+        {
+            Email = "dev@example.com",
+            UserName = "devuser",
+            Password = "TestPass123!",
+            ConfirmPassword = "TestPass123!",
+            FirstName = "Dev",
+            LastName = "User",
+            Currency = "USD",
+            TimeZone = "UTC"
+        };
+
+        _mediator.Send(Arg.Any<RegisterCommand>()).Returns(new AuthenticationResponse
+        {
+            IsSuccess = true,
+            Token = "jwt",
+            RefreshToken = "refresh-token",
+            RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(30)
+        });
+
+        // Act
+        await _controller.Register(request);
+
+        // Assert
+        var setCookie = _controller.ControllerContext.HttpContext.Response.Headers["Set-Cookie"].ToString().ToLowerInvariant();
+        setCookie.Should().Contain("refresh_token=refresh-token");
+        setCookie.Should().Contain("httponly");
+        setCookie.Should().Contain("samesite=lax");
+        setCookie.Should().NotContain("secure");
     }
 
     [Fact]

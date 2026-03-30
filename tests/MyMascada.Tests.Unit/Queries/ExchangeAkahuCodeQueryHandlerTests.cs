@@ -7,14 +7,18 @@ namespace MyMascada.Tests.Unit.Queries;
 public class ExchangeAkahuCodeQueryHandlerTests
 {
     [Fact]
-    public async Task Handle_PersistsOAuthCredential_WhenStateIsMissing()
+    public async Task Handle_ValidState_PersistsOAuthCredentialAndReturnsAccounts()
     {
         var userId = Guid.NewGuid();
         var akahuApiClient = Substitute.For<IAkahuApiClient>();
         var credentialRepository = Substitute.For<IAkahuUserCredentialRepository>();
         var bankConnectionRepository = Substitute.For<IBankConnectionRepository>();
         var encryptionService = Substitute.For<ISettingsEncryptionService>();
+        var oauthStateStore = Substitute.For<IOAuthStateStore>();
         var logger = Substitute.For<IApplicationLogger<ExchangeAkahuCodeQueryHandler>>();
+
+        oauthStateStore.ValidateAndConsumeAsync(userId, "valid-state", Arg.Any<CancellationToken>())
+            .Returns(true);
 
         akahuApiClient.ExchangeCodeForTokenAsync("code-123", Arg.Any<CancellationToken>())
             .Returns(new AkahuTokenResponse
@@ -53,13 +57,13 @@ public class ExchangeAkahuCodeQueryHandlerTests
             credentialRepository,
             bankConnectionRepository,
             encryptionService,
+            oauthStateStore,
             logger);
 
         var result = await handler.Handle(
-            new ExchangeAkahuCodeQuery(userId, "code-123", null, "app_token_123"),
+            new ExchangeAkahuCodeQuery(userId, "code-123", "valid-state", "app_token_123"),
             CancellationToken.None);
 
-        result.AccessToken.Should().Be("user_token_oauth");
         result.Accounts.Should().ContainSingle(a => a.Id == "acc_123" && !a.IsAlreadyLinked);
 
         await credentialRepository.Received(1).AddAsync(
@@ -67,7 +71,107 @@ public class ExchangeAkahuCodeQueryHandlerTests
                 c.UserId == userId &&
                 c.EncryptedAppToken == "enc_app" &&
                 c.EncryptedUserToken == "enc_user" &&
-                c.LastValidatedAt.HasValue),
+                c.LastValidatedAt.HasValue &&
+                c.ConsentScope == "ENDURING_CONSENT" &&
+                c.ConsentGrantedAt.HasValue &&
+                c.ConsentCorrelationId == "valid-state"),
             Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_PersistsConsentCorrelationId_WhenStateIsProvided()
+    {
+        var userId = Guid.NewGuid();
+        var akahuApiClient = Substitute.For<IAkahuApiClient>();
+        var credentialRepository = Substitute.For<IAkahuUserCredentialRepository>();
+        var bankConnectionRepository = Substitute.For<IBankConnectionRepository>();
+        var encryptionService = Substitute.For<ISettingsEncryptionService>();
+        var oauthStateStore = Substitute.For<IOAuthStateStore>();
+        var logger = Substitute.For<IApplicationLogger<ExchangeAkahuCodeQueryHandler>>();
+
+        oauthStateStore.ValidateAndConsumeAsync(userId, "state-abc-123", Arg.Any<CancellationToken>())
+            .Returns(true);
+
+        akahuApiClient.ExchangeCodeForTokenAsync("code-456", Arg.Any<CancellationToken>())
+            .Returns(new AkahuTokenResponse
+            {
+                AccessToken = "user_token_oauth",
+                TokenType = "Bearer",
+                Scope = "ENDURING_CONSENT"
+            });
+
+        akahuApiClient.GetAccountsWithCredentialsAsync("app_token_123", "user_token_oauth", Arg.Any<CancellationToken>())
+            .Returns(Array.Empty<AkahuAccountInfo>());
+
+        credentialRepository.GetByUserIdAsync(userId, Arg.Any<CancellationToken>())
+            .Returns((AkahuUserCredential?)null);
+
+        bankConnectionRepository.GetByUserIdAsync(userId, Arg.Any<CancellationToken>())
+            .Returns(Array.Empty<BankConnection>());
+
+        encryptionService.EncryptSettings("app_token_123").Returns("enc_app");
+        encryptionService.EncryptSettings("user_token_oauth").Returns("enc_user");
+
+        var handler = new ExchangeAkahuCodeQueryHandler(
+            akahuApiClient,
+            credentialRepository,
+            bankConnectionRepository,
+            encryptionService,
+            oauthStateStore,
+            logger);
+
+        await handler.Handle(
+            new ExchangeAkahuCodeQuery(userId, "code-456", "state-abc-123", "app_token_123"),
+            CancellationToken.None);
+
+        await credentialRepository.Received(1).AddAsync(
+            Arg.Is<AkahuUserCredential>(c =>
+                c.ConsentScope == "ENDURING_CONSENT" &&
+                c.ConsentGrantedAt.HasValue &&
+                c.ConsentCorrelationId == "state-abc-123"),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_NullState_ThrowsArgumentException()
+    {
+        var userId = Guid.NewGuid();
+        var handler = CreateHandler();
+
+        var act = () => handler.Handle(
+            new ExchangeAkahuCodeQuery(userId, "code-123", null, "app_token_123"),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<ArgumentException>()
+            .WithMessage("*state*");
+    }
+
+    [Fact]
+    public async Task Handle_InvalidState_ThrowsUnauthorizedAccessException()
+    {
+        var userId = Guid.NewGuid();
+        var oauthStateStore = Substitute.For<IOAuthStateStore>();
+        oauthStateStore.ValidateAndConsumeAsync(userId, "wrong-state", Arg.Any<CancellationToken>())
+            .Returns(false);
+
+        var handler = CreateHandler(oauthStateStore: oauthStateStore);
+
+        var act = () => handler.Handle(
+            new ExchangeAkahuCodeQuery(userId, "code-123", "wrong-state", "app_token_123"),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>()
+            .WithMessage("*expired*");
+    }
+
+    private static ExchangeAkahuCodeQueryHandler CreateHandler(IOAuthStateStore? oauthStateStore = null)
+    {
+        return new ExchangeAkahuCodeQueryHandler(
+            Substitute.For<IAkahuApiClient>(),
+            Substitute.For<IAkahuUserCredentialRepository>(),
+            Substitute.For<IBankConnectionRepository>(),
+            Substitute.For<ISettingsEncryptionService>(),
+            oauthStateStore ?? Substitute.For<IOAuthStateStore>(),
+            Substitute.For<IApplicationLogger<ExchangeAkahuCodeQueryHandler>>());
     }
 }

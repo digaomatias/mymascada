@@ -122,7 +122,7 @@ public class RulesHandlerTests
         var autoApplied = result.AutoAppliedTransactions.First();
         autoApplied.CategoryId.Should().Be(categoryId);
         autoApplied.CategoryName.Should().Be(categoryName);
-        autoApplied.ConfidenceScore.Should().BeGreaterOrEqualTo(0.95m);
+        autoApplied.ConfidenceScore.Should().BeGreaterThanOrEqualTo(0.95m);
         autoApplied.ProcessedBy.Should().Be("Rules");
     }
 

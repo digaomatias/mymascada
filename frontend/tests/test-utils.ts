@@ -1,4 +1,5 @@
 import { Page, expect } from '@playwright/test';
+import { API_BASE_URL } from './e2e/helpers/config';
 
 /**
  * Common test utilities for MyMascada finance app
@@ -248,7 +249,7 @@ export class TestUtils {
     const token = await this.page.evaluate(() => localStorage.getItem('auth_token'));
     if (!token) throw new Error('No auth token found');
 
-    const response = await this.page.request.post('https://localhost:5126/api/v1/accounts', {
+    const response = await this.page.request.post(`${API_BASE_URL}/accounts`, {
       data: defaultAccount,
       headers: {
         'Content-Type': 'application/json',
@@ -296,7 +297,7 @@ export class TestUtils {
 
     console.log('Creating transaction with data:', requestData);
 
-    const response = await this.page.request.post('https://localhost:5126/api/v1/transactions', {
+    const response = await this.page.request.post(`${API_BASE_URL}/transactions`, {
       data: requestData,
       headers: {
         'Content-Type': 'application/json',

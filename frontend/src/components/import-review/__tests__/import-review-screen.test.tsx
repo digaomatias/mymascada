@@ -12,19 +12,35 @@ vi.mock('@/lib/api-client', () => ({
   }
 }));
 
-// Mock toast notifications
-vi.mock('sonner', () => ({
-  toast: {
-    success: vi.fn(),
-    error: vi.fn(),
-    warning: vi.fn()
-  }
+// Override Button to render actual button element (test-setup renders just children)
+vi.mock('@/components/ui/button', () => ({
+  Button: ({ children, disabled, onClick, className, ...props }: any) => (
+    <button disabled={disabled} onClick={onClick} className={className}>
+      {children}
+    </button>
+  ),
 }));
 
-// Mock utilities
-vi.mock('@/lib/utils', () => ({
-  formatCurrency: (amount: number) => `$${amount.toFixed(2)}`,
-  formatDate: (date: string) => new Date(date).toLocaleDateString()
+// Mock sub-components for test isolation
+vi.mock('../import-summary-stats', () => ({
+  ImportSummaryStats: () => <div data-testid="summary-stats" />,
+}));
+
+vi.mock('../conflict-resolution-card', () => ({
+  ConflictResolutionCard: ({ reviewItem, onDecisionChange }: any) => (
+    <div data-testid={`card-${reviewItem.id}`}>
+      <span>{reviewItem.importCandidate.description}</span>
+      <button onClick={() => onDecisionChange(reviewItem.id, ConflictResolution.Import)}>Import</button>
+      <button onClick={() => onDecisionChange(reviewItem.id, ConflictResolution.Skip)}>Skip</button>
+      <button onClick={() => onDecisionChange(reviewItem.id, ConflictResolution.MergeWithExisting)}>Merge</button>
+    </div>
+  ),
+}));
+
+vi.mock('../bulk-actions-panel', () => ({
+  BulkActionsPanel: ({ items, onBulkAction }: any) => (
+    <button onClick={() => onBulkAction(items.map((i: any) => i.id), ConflictResolution.Import)}>Bulk</button>
+  ),
 }));
 
 const mockAnalysisResult: ImportAnalysisResult = {
@@ -137,13 +153,14 @@ describe('ImportReviewScreen', () => {
       />
     );
 
-    const executeButton = screen.getByText('Execute Import (0)');
+    // When toImport=0, button shows "Complete Review"
+    const executeButton = screen.getByRole('button', { name: 'Complete Review' });
     expect(executeButton).toBeDisabled();
-    expect(screen.getByText('Review all conflicts before importing')).toBeInTheDocument();
+    expect(screen.getByText('Review all conflicts before completing')).toBeInTheDocument();
   });
 
   test('execute import button becomes enabled after all decisions are made', async () => {
-    const { rerender } = render(
+    render(
       <ImportReviewScreen
         analysisResult={mockAnalysisResult}
         onImportComplete={mockOnImportComplete}
@@ -151,25 +168,14 @@ describe('ImportReviewScreen', () => {
       />
     );
 
-    // Mock resolved state
-    const resolvedAnalysisResult = {
-      ...mockAnalysisResult,
-      reviewItems: mockAnalysisResult.reviewItems.map(item => ({
-        ...item,
-        reviewDecision: ConflictResolution.Import
-      }))
-    };
+    // Click Import on each item via UI interaction (useState doesn't update from rerender)
+    const importButtons = screen.getAllByRole('button', { name: 'Import' });
+    importButtons.forEach(btn => fireEvent.click(btn));
 
-    rerender(
-      <ImportReviewScreen
-        analysisResult={resolvedAnalysisResult}
-        onImportComplete={mockOnImportComplete}
-        onCancel={mockOnCancel}
-      />
-    );
-
-    const executeButton = screen.getByText('Execute Import (2)');
-    expect(executeButton).not.toBeDisabled();
+    await waitFor(() => {
+      const executeButton = screen.getByRole('button', { name: /Execute Import/ });
+      expect(executeButton).not.toBeDisabled();
+    });
   });
 
   test('handles back button click', () => {
@@ -195,7 +201,7 @@ describe('ImportReviewScreen', () => {
 
     (apiClient.apiClient.executeImportReview as ReturnType<typeof vi.fn>).mockResolvedValue(mockExecuteResponse);
 
-    // Create a resolved analysis result
+    // Create a resolved analysis result (useState will use this as initial value)
     const resolvedAnalysisResult = {
       ...mockAnalysisResult,
       analysisId: 'test-analysis-123',
@@ -213,7 +219,7 @@ describe('ImportReviewScreen', () => {
       />
     );
 
-    const executeButton = screen.getByText('Execute Import (2)');
+    const executeButton = screen.getByRole('button', { name: /Execute Import/ });
     fireEvent.click(executeButton);
 
     await waitFor(() => {
@@ -223,15 +229,15 @@ describe('ImportReviewScreen', () => {
         decisions: [
           {
             reviewItemId: 'item1',
-            action: ConflictResolution.Import,
+            decision: ConflictResolution.Import,
             userNotes: '',
-            keepExistingTransactionId: undefined
+            candidate: resolvedAnalysisResult.reviewItems[0].importCandidate
           },
           {
             reviewItemId: 'item2',
-            action: ConflictResolution.Import,
+            decision: ConflictResolution.Import,
             userNotes: '',
-            keepExistingTransactionId: undefined
+            candidate: resolvedAnalysisResult.reviewItems[1].importCandidate
           }
         ]
       });
@@ -243,7 +249,10 @@ describe('ImportReviewScreen', () => {
       success: true,
       importedTransactionsCount: 2,
       skippedTransactionsCount: 0,
-      errors: []
+      mergedTransactionsCount: 0,
+      errors: [],
+      warnings: [],
+      processedItems: []
     };
 
     (apiClient.apiClient.executeImportReview as ReturnType<typeof vi.fn>).mockResolvedValue(mockExecuteResponse);
@@ -265,11 +274,13 @@ describe('ImportReviewScreen', () => {
       />
     );
 
-    const executeButton = screen.getByText('Execute Import (2)');
+    const executeButton = screen.getByRole('button', { name: /Execute Import/ });
     fireEvent.click(executeButton);
 
     await waitFor(() => {
-      expect(mockOnImportComplete).toHaveBeenCalledWith(mockExecuteResponse);
+      expect(mockOnImportComplete).toHaveBeenCalledWith(
+        expect.objectContaining({ success: true, importedTransactionsCount: 2 })
+      );
     });
   });
 
@@ -321,17 +332,40 @@ describe('ImportReviewScreen', () => {
   });
 
   test('shows bulk actions when enabled', () => {
+    // Need 2+ items in one group for Bulk button to appear
+    const resultWithMultipleClean = {
+      ...mockAnalysisResult,
+      reviewItems: [
+        ...mockAnalysisResult.reviewItems,
+        {
+          id: 'item3',
+          importCandidate: {
+            amount: 50,
+            date: '2024-01-03',
+            description: 'Third clean item',
+            source: TransactionSource.CsvImport,
+            sourceRowIndex: 2,
+            confidence: 90
+          },
+          conflicts: [],
+          reviewDecision: ConflictResolution.Pending,
+          isProcessed: false
+        }
+      ],
+      summary: { ...mockAnalysisResult.summary, totalCandidates: 3, cleanImports: 2, requiresReview: 3 }
+    };
+
     render(
       <ImportReviewScreen
-        analysisResult={mockAnalysisResult}
+        analysisResult={resultWithMultipleClean}
         onImportComplete={mockOnImportComplete}
         onCancel={mockOnCancel}
         showBulkActions={true}
       />
     );
 
-    // The bulk actions should be visible in the grouped sections
-    expect(screen.getByText('Bulk')).toBeInTheDocument();
+    // The bulk actions should be visible in grouped sections with 2+ items
+    expect(screen.getAllByText('Bulk').length).toBeGreaterThan(0);
   });
 
   test('hides bulk actions when disabled', () => {
@@ -376,11 +410,12 @@ describe('ImportReviewScreen', () => {
       />
     );
 
-    // Click on "Ready to Import" section to toggle it
-    const sectionHeader = screen.getByText('Ready to Import');
+    // "Ready to Import" appears in both summary stats and section title; use getAllByText
+    const readyToImportElements = screen.getAllByText('Ready to Import');
+    // Click on the section header element (not the summary stat)
+    const sectionHeader = readyToImportElements[readyToImportElements.length - 1];
     fireEvent.click(sectionHeader.closest('div')!);
 
     // This would collapse/expand the section
-    // The exact behavior depends on the initial state
   });
 });

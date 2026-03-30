@@ -117,11 +117,11 @@ export function TransactionComparison({
 
   return (
     <Card className={`${className} border-l-4 ${matchConfidence >= 0.8 ? 'border-l-yellow-400' : 'border-l-orange-400'}`}>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <ArrowsRightLeftIcon className="w-5 h-5 text-ink-500" />
-            <CardTitle className="text-lg">{t('transactionComparison.title')}</CardTitle>
+      <CardHeader className="pb-3 px-3 sm:px-6">
+        <div className="flex items-start sm:items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <ArrowsRightLeftIcon className="w-5 h-5 text-ink-500 hidden sm:block" />
+            <CardTitle className="text-base sm:text-lg">{t('transactionComparison.title')}</CardTitle>
             <div className={`flex items-center gap-1 px-2 py-1 rounded-full border text-xs font-medium ${getConfidenceColor(matchConfidence)}`}>
               {getConfidenceIcon(matchConfidence)}
               {(matchConfidence * 100).toFixed(0)}% - {getConfidenceLabel(matchConfidence)}
@@ -139,8 +139,8 @@ export function TransactionComparison({
         </div>
       </CardHeader>
       
-      <CardContent>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <CardContent className="px-3 sm:px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Bank Transaction */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-3">

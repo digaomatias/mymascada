@@ -24,6 +24,7 @@ public class InitiateAkahuConnectionCommandHandler : IRequestHandler<InitiateAka
     private readonly IBankConnectionRepository _bankConnectionRepository;
     private readonly ISettingsEncryptionService _encryptionService;
     private readonly IBankProviderModeResolver _modeResolver;
+    private readonly IOAuthStateStore _oauthStateStore;
     private readonly IApplicationLogger<InitiateAkahuConnectionCommandHandler> _logger;
 
     public InitiateAkahuConnectionCommandHandler(
@@ -32,6 +33,7 @@ public class InitiateAkahuConnectionCommandHandler : IRequestHandler<InitiateAka
         IBankConnectionRepository bankConnectionRepository,
         ISettingsEncryptionService encryptionService,
         IBankProviderModeResolver modeResolver,
+        IOAuthStateStore oauthStateStore,
         IApplicationLogger<InitiateAkahuConnectionCommandHandler> logger)
     {
         _akahuApiClient = akahuApiClient ?? throw new ArgumentNullException(nameof(akahuApiClient));
@@ -39,6 +41,7 @@ public class InitiateAkahuConnectionCommandHandler : IRequestHandler<InitiateAka
         _bankConnectionRepository = bankConnectionRepository ?? throw new ArgumentNullException(nameof(bankConnectionRepository));
         _encryptionService = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
         _modeResolver = modeResolver ?? throw new ArgumentNullException(nameof(modeResolver));
+        _oauthStateStore = oauthStateStore ?? throw new ArgumentNullException(nameof(oauthStateStore));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -50,6 +53,7 @@ public class InitiateAkahuConnectionCommandHandler : IRequestHandler<InitiateAka
         if (mode.DefaultMode == "hosted_oauth")
         {
             var state = Guid.NewGuid().ToString("N");
+            await _oauthStateStore.StoreAsync(request.UserId, state, cancellationToken);
             var authorizationUrl = _akahuApiClient.GetAuthorizationUrl(state, request.Email);
 
             return new InitiateConnectionResult

@@ -11,6 +11,7 @@ using MyMascada.Application.Features.Authentication.DTOs;
 using MyMascada.Application.Features.Authentication.Queries;
 using MyMascada.Application.Common.Interfaces;
 using Microsoft.AspNetCore.RateLimiting;
+using MyMascada.WebAPI.Constants;
 using MyMascada.WebAPI.Extensions;
 
 namespace MyMascada.WebAPI.Controllers;
@@ -74,6 +75,7 @@ public class AuthController : ControllerBase
             InviteCode = request.InviteCode,
             Country = request.Country,
             Language = request.Language,
+            ClientPlatform = Request.Headers[CustomHeaders.ClientPlatform].FirstOrDefault(),
             IpAddress = GetClientIpAddress(),
             UserAgent = Request.Headers.UserAgent.FirstOrDefault()
         };
@@ -698,6 +700,8 @@ public class AuthController : ControllerBase
                 {
                     Token = authResult.Token,
                     ExpiresAt = authResult.ExpiresAt,
+                    RefreshToken = authResult.RefreshToken,
+                    RefreshTokenExpiresAt = authResult.RefreshTokenExpiresAt,
                     CreatedAt = DateTime.UtcNow
                 });
                 var authCode = _dataProtector.Protect(codePayload);
@@ -734,6 +738,22 @@ public class AuthController : ControllerBase
             var expiresAt = expiresAtElement.ValueKind != JsonValueKind.Null
                 ? expiresAtElement.GetDateTime()
                 : DateTime.SpecifyKind(DateTime.UtcNow.AddDays(7), DateTimeKind.Utc);
+
+            // Set refresh token cookie if available in the payload
+            if (payload.TryGetProperty("RefreshToken", out var rtElement)
+                && rtElement.ValueKind == JsonValueKind.String)
+            {
+                var refreshToken = rtElement.GetString();
+                if (!string.IsNullOrEmpty(refreshToken))
+                {
+                    var refreshTokenExpiresAt =
+                        payload.TryGetProperty("RefreshTokenExpiresAt", out var rtExpiresElement)
+                            && rtExpiresElement.ValueKind != JsonValueKind.Null
+                            ? rtExpiresElement.GetDateTime()
+                            : DateTime.UtcNow.AddDays(30);
+                    SetRefreshTokenCookie(refreshToken, refreshTokenExpiresAt);
+                }
+            }
 
             return Ok(new { Token = token, ExpiresAt = expiresAt });
         }
@@ -810,7 +830,7 @@ public class AuthController : ControllerBase
         var cookieOptions = new CookieOptions
         {
             HttpOnly = true,
-            Secure = Request.IsHttps, // Use secure cookies only over HTTPS
+            Secure = !_environment.IsLocalDevelopment(),
             SameSite = SameSiteMode.Lax,
             Expires = expires
         };

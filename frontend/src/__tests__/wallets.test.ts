@@ -4,6 +4,9 @@ import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 // mocking global.fetch.  The ApiClient constructor reads
 // NEXT_PUBLIC_API_URL which falls back to 'http://localhost:5126'.
 
+/** The fallback base URL used by ApiClient when NEXT_PUBLIC_API_URL is not set. */
+const API_CLIENT_BASE_URL = 'http://localhost:5126';
+
 // Dynamic import so we can reset module-level state between tests.
 async function createApiClient() {
   // Force-reimport to get a fresh class (not the singleton)
@@ -14,7 +17,7 @@ async function createApiClient() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const client = Object.create(Object.getPrototypeOf(mod.apiClient));
   // Re-run the constructor body manually
-  client.baseURL = 'http://localhost:5126';
+  client.baseURL = API_CLIENT_BASE_URL;
   client.refreshPromise = null;
   return client;
 }
@@ -56,7 +59,7 @@ describe('ApiClient wallet methods', () => {
 
     expect(mockFetch).toHaveBeenCalledTimes(1);
     const [url, options] = mockFetch.mock.calls[0];
-    expect(url).toBe('http://localhost:5126/api/latest/wallets');
+    expect(url).toBe(`${API_CLIENT_BASE_URL}/api/latest/wallets`);
     expect(options.method).toBeUndefined(); // defaults to GET when no method specified in getWallets
     expect(result).toEqual(wallets);
   });
@@ -94,7 +97,7 @@ describe('ApiClient wallet methods', () => {
 
     expect(mockFetch).toHaveBeenCalledTimes(1);
     const [url, options] = mockFetch.mock.calls[0];
-    expect(url).toBe('http://localhost:5126/api/latest/wallets');
+    expect(url).toBe(`${API_CLIENT_BASE_URL}/api/latest/wallets`);
     expect(options.method).toBe('POST');
     expect(JSON.parse(options.body)).toEqual(walletRequest);
     expect(result).toEqual(createdWallet);
@@ -111,7 +114,7 @@ describe('ApiClient wallet methods', () => {
 
     expect(mockFetch).toHaveBeenCalledTimes(1);
     const [url, options] = mockFetch.mock.calls[0];
-    expect(url).toBe('http://localhost:5126/api/latest/wallets/3');
+    expect(url).toBe(`${API_CLIENT_BASE_URL}/api/latest/wallets/3`);
     expect(options.method).toBe('DELETE');
   });
 
@@ -134,7 +137,7 @@ describe('ApiClient wallet methods', () => {
 
     expect(mockFetch).toHaveBeenCalledTimes(1);
     const [url, options] = mockFetch.mock.calls[0];
-    expect(url).toBe('http://localhost:5126/api/latest/wallets/1/allocations');
+    expect(url).toBe(`${API_CLIENT_BASE_URL}/api/latest/wallets/1/allocations`);
     expect(options.method).toBe('POST');
     expect(JSON.parse(options.body)).toEqual(allocationRequest);
     expect(result).toEqual(createdAllocation);
@@ -151,7 +154,7 @@ describe('ApiClient wallet methods', () => {
 
     expect(mockFetch).toHaveBeenCalledTimes(1);
     const [url, options] = mockFetch.mock.calls[0];
-    expect(url).toBe('http://localhost:5126/api/latest/wallets/2/allocations/50');
+    expect(url).toBe(`${API_CLIENT_BASE_URL}/api/latest/wallets/2/allocations/50`);
     expect(options.method).toBe('DELETE');
   });
 });

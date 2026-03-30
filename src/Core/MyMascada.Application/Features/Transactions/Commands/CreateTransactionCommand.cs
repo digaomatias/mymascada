@@ -1,7 +1,7 @@
-using AutoMapper;
 using MediatR;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Transactions.DTOs;
+using MyMascada.Application.Features.Transactions.Mappings;
 using MyMascada.Application.Features.Transactions.Services;
 using MyMascada.Application.Features.Categorization.Services;
 using MyMascada.Domain.Entities;
@@ -33,7 +33,6 @@ public class CreateTransactionCommandHandler : IRequestHandler<CreateTransaction
     private readonly IAccountRepository _accountRepository;
     private readonly ICategoryRepository _categoryRepository;
     private readonly IAccountAccessService _accountAccessService;
-    private readonly IMapper _mapper;
     private readonly TransactionDuplicateChecker _duplicateChecker;
     private readonly ICategorizationPipeline _categorizationPipeline;
 
@@ -42,7 +41,6 @@ public class CreateTransactionCommandHandler : IRequestHandler<CreateTransaction
         IAccountRepository accountRepository,
         ICategoryRepository categoryRepository,
         IAccountAccessService accountAccessService,
-        IMapper mapper,
         TransactionDuplicateChecker duplicateChecker,
         ICategorizationPipeline categorizationPipeline)
     {
@@ -50,7 +48,6 @@ public class CreateTransactionCommandHandler : IRequestHandler<CreateTransaction
         _accountRepository = accountRepository;
         _categoryRepository = categoryRepository;
         _accountAccessService = accountAccessService;
-        _mapper = mapper;
         _duplicateChecker = duplicateChecker;
         _categorizationPipeline = categorizationPipeline;
     }
@@ -86,7 +83,7 @@ public class CreateTransactionCommandHandler : IRequestHandler<CreateTransaction
             var existingTransaction = await _duplicateChecker.CheckForDuplicatesAsync(request);
             if (existingTransaction != null)
             {
-                return _mapper.Map<TransactionDto>(existingTransaction);
+                return TransactionMapper.ToDto(existingTransaction);
             }
         }
 
@@ -127,6 +124,6 @@ public class CreateTransactionCommandHandler : IRequestHandler<CreateTransaction
         }
 
         // Return DTO
-        return _mapper.Map<TransactionDto>(createdTransaction);
+        return TransactionMapper.ToDto(createdTransaction);
     }
 }

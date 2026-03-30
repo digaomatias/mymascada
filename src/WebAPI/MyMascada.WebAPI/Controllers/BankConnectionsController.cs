@@ -217,7 +217,7 @@ public class BankConnectionsController : ControllerBase
                 _akahuOptions.AppIdToken
             );
             var result = await _mediator.Send(query);
-            return Ok(new ExchangeAkahuCodeResponse(result.Accounts, result.AccessToken));
+            return Ok(new ExchangeAkahuCodeResponse(result.Accounts));
         }
         catch (ArgumentException ex)
         {
@@ -481,10 +481,5 @@ public record ExchangeAkahuCodeResponse(
     /// <summary>
     /// List of available Akahu accounts that can be linked.
     /// </summary>
-    [property: JsonPropertyName("accounts")] IEnumerable<AkahuAccountDto> Accounts,
-
-    /// <summary>
-    /// The access token for subsequent API calls.
-    /// </summary>
-    [property: JsonPropertyName("accessToken")] string AccessToken
+    [property: JsonPropertyName("accounts")] IEnumerable<AkahuAccountDto> Accounts
 );

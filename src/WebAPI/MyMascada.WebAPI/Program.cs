@@ -100,14 +100,45 @@ builder.Services.AddScoped<MyMascada.Application.Common.Interfaces.ICurrentUserS
 
 // Add Data Protection and Session support for OAuth
 // Persist keys to a directory so they survive container restarts
-var isLocalDev = builder.Environment.IsDevelopment()
-    || builder.Environment.EnvironmentName == "Debug"
-    || builder.Environment.EnvironmentName == "Prod-QA";
+var isLocalDev = builder.Environment.IsLocalDevelopment();
 var keysDirectory = isLocalDev
     ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MyMascada", "Keys")
     : "/app/data/keys";
 
 Directory.CreateDirectory(keysDirectory);
+
+if (!isLocalDev)
+{
+    // Verify the key directory is on a persistent volume.
+    // If /app/data is not mounted, keys will be lost on container restart,
+    // breaking encrypted data (cookies, tokens, Data Protection payloads).
+    var markerFile = Path.Combine("/app/data", ".volume-marker");
+    if (!Directory.Exists("/app/data") || !IsPersistentVolume(markerFile))
+    {
+        Log.Warning(
+            "Data Protection key directory {KeysDirectory} may not be on a persistent volume. " +
+            "Ensure a volume is mounted at /app/data to prevent key loss on restart.",
+            keysDirectory);
+    }
+
+    static bool IsPersistentVolume(string markerPath)
+    {
+        // Write a marker file on first boot; if it exists on subsequent boots,
+        // the volume survived a restart.
+        if (File.Exists(markerPath))
+            return true;
+
+        try
+        {
+            File.WriteAllText(markerPath, DateTimeOffset.UtcNow.ToString("O"));
+        }
+        catch
+        {
+            // If we can't write, the directory isn't usable anyway
+        }
+        return false;
+    }
+}
 
 builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(keysDirectory))
@@ -121,7 +152,7 @@ builder.Services.Configure<CookiePolicyOptions>(options =>
 {
     options.CheckConsentNeeded = context => false; // Disable for development
     options.MinimumSameSitePolicy = SameSiteMode.Lax;
-    options.Secure = CookieSecurePolicy.SameAsRequest;
+    options.Secure = isLocalDev ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
 });
 
 // Configure beta access options
@@ -421,6 +452,16 @@ recurringJobManager.AddOrUpdate<MyMascada.Application.BackgroundJobs.IExpiredBud
     "daily-expired-budget-processing",
     service => service.ProcessAllUsersAsync(null),
     Hangfire.Cron.Daily(1, 0)); // Run daily at 1:00 AM
+
+recurringJobManager.AddOrUpdate<MyMascada.Application.BackgroundJobs.IDataRetentionService>(
+    "cleanup-expired-chat-messages",
+    service => service.CleanupExpiredChatMessagesAsync(),
+    Hangfire.Cron.Daily(3, 30)); // Run daily at 3:30 AM
+
+recurringJobManager.AddOrUpdate<MyMascada.Application.BackgroundJobs.ITokenRevocationRetryJobService>(
+    "retry-failed-token-revocations",
+    service => service.RetryPendingRevocationsAsync(),
+    Hangfire.Cron.Daily(3, 45)); // Run daily at 3:45 AM
 
 // Map controllers
 app.MapControllers();

@@ -54,4 +54,17 @@ public interface IAkahuUserCredentialRepository
     /// <param name="userId">The user ID</param>
     /// <param name="ct">Cancellation token</param>
     Task DeleteByUserIdAsync(Guid userId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Gets all credentials with pending token revocations that need to be retried.
+    /// </summary>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>List of credentials with pending revocations</returns>
+    Task<IReadOnlyList<AkahuUserCredential>> GetPendingRevocationsAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// Updates only the revocation-related columns for a credential.
+    /// Uses a targeted UPDATE to avoid overwriting fields modified by other processes.
+    /// </summary>
+    Task UpdateRevocationStateAsync(int credentialId, bool isRevocationPending, int revocationFailureCount, DateTime? revocationFailedAt, CancellationToken ct = default);
 }

@@ -18,11 +18,11 @@ public record ExchangeAkahuCodeQuery(
 ) : IRequest<ExchangeAkahuCodeResult>;
 
 /// <summary>
-/// Result of the OAuth code exchange, containing available accounts and the access token.
+/// Result of the OAuth code exchange, containing available accounts.
+/// The access token is persisted server-side only and never returned to the client.
 /// </summary>
 public record ExchangeAkahuCodeResult(
-    IEnumerable<AkahuAccountDto> Accounts,
-    string AccessToken
+    IEnumerable<AkahuAccountDto> Accounts
 );
 
 /// <summary>
@@ -38,6 +38,7 @@ public class ExchangeAkahuCodeQueryHandler : IRequestHandler<ExchangeAkahuCodeQu
     private readonly IAkahuUserCredentialRepository _credentialRepository;
     private readonly IBankConnectionRepository _bankConnectionRepository;
     private readonly ISettingsEncryptionService _encryptionService;
+    private readonly IOAuthStateStore _oauthStateStore;
     private readonly IApplicationLogger<ExchangeAkahuCodeQueryHandler> _logger;
 
     public ExchangeAkahuCodeQueryHandler(
@@ -45,12 +46,14 @@ public class ExchangeAkahuCodeQueryHandler : IRequestHandler<ExchangeAkahuCodeQu
         IAkahuUserCredentialRepository credentialRepository,
         IBankConnectionRepository bankConnectionRepository,
         ISettingsEncryptionService encryptionService,
+        IOAuthStateStore oauthStateStore,
         IApplicationLogger<ExchangeAkahuCodeQueryHandler> logger)
     {
         _akahuApiClient = akahuApiClient ?? throw new ArgumentNullException(nameof(akahuApiClient));
         _credentialRepository = credentialRepository ?? throw new ArgumentNullException(nameof(credentialRepository));
         _bankConnectionRepository = bankConnectionRepository ?? throw new ArgumentNullException(nameof(bankConnectionRepository));
         _encryptionService = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
+        _oauthStateStore = oauthStateStore ?? throw new ArgumentNullException(nameof(oauthStateStore));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -68,6 +71,18 @@ public class ExchangeAkahuCodeQueryHandler : IRequestHandler<ExchangeAkahuCodeQu
         if (string.IsNullOrWhiteSpace(request.AppIdToken))
         {
             throw new ArgumentException("AppIdToken is required for OAuth mode");
+        }
+
+        // Validate OAuth state server-side (CSRF protection)
+        if (string.IsNullOrWhiteSpace(request.State))
+        {
+            throw new ArgumentException("OAuth state parameter is required");
+        }
+
+        var stateValid = await _oauthStateStore.ValidateAndConsumeAsync(request.UserId, request.State, cancellationToken);
+        if (!stateValid)
+        {
+            throw new UnauthorizedAccessException("Invalid or expired OAuth state. Please restart the connection flow.");
         }
 
         // 1. Exchange code for access token
@@ -90,6 +105,10 @@ public class ExchangeAkahuCodeQueryHandler : IRequestHandler<ExchangeAkahuCodeQu
             existingCredential.EncryptedUserToken = encryptedUserToken;
             existingCredential.LastValidatedAt = DateTime.UtcNow;
             existingCredential.LastValidationError = null;
+            existingCredential.ConsentScope = tokenResponse.Scope;
+            existingCredential.ConsentGrantedAt = DateTimeOffset.UtcNow;
+            existingCredential.ConsentCorrelationId = request.State;
+            existingCredential.ConsentRevokedAt = null;
             existingCredential.UpdatedAt = DateTime.UtcNow;
             await _credentialRepository.UpdateAsync(existingCredential, cancellationToken);
         }
@@ -101,6 +120,9 @@ public class ExchangeAkahuCodeQueryHandler : IRequestHandler<ExchangeAkahuCodeQu
                 EncryptedAppToken = encryptedAppToken,
                 EncryptedUserToken = encryptedUserToken,
                 LastValidatedAt = DateTime.UtcNow,
+                ConsentScope = tokenResponse.Scope,
+                ConsentGrantedAt = DateTimeOffset.UtcNow,
+                ConsentCorrelationId = request.State,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             }, cancellationToken);
@@ -136,6 +158,6 @@ public class ExchangeAkahuCodeQueryHandler : IRequestHandler<ExchangeAkahuCodeQu
             "Found {TotalCount} Akahu accounts, {LinkedCount} already linked for user {UserId}",
             accountDtos.Count, accountDtos.Count(a => a.IsAlreadyLinked), request.UserId);
 
-        return new ExchangeAkahuCodeResult(accountDtos, tokenResponse.AccessToken);
+        return new ExchangeAkahuCodeResult(accountDtos);
     }
 }

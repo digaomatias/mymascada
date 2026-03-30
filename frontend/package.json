@@ -48,6 +48,10 @@
     "tailwindcss": "^4.1.10",
     "workbox-webpack-plugin": "^7.4.0"
   },
+  "overrides": {
+    "flatted": "3.4.2",
+    "serialize-javascript": "7.0.5"
+  },
   "devDependencies": {
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.2.1",

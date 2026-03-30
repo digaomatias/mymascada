@@ -45,4 +45,41 @@ public class AkahuUserCredential : BaseEntity
     /// </summary>
     [MaxLength(500)]
     public string? LastValidationError { get; set; }
+
+    /// <summary>
+    /// The OAuth scope granted during consent (e.g. "ENDURING_CONSENT").
+    /// </summary>
+    [MaxLength(500)]
+    public string? ConsentScope { get; set; }
+
+    /// <summary>
+    /// When the user granted OAuth consent.
+    /// </summary>
+    public DateTimeOffset? ConsentGrantedAt { get; set; }
+
+    /// <summary>
+    /// OAuth state/correlation ID used during the consent flow for audit trail.
+    /// </summary>
+    [MaxLength(256)]
+    public string? ConsentCorrelationId { get; set; }
+
+    /// <summary>
+    /// When the user revoked consent (token revocation / disconnect).
+    /// </summary>
+    public DateTimeOffset? ConsentRevokedAt { get; set; }
+
+    /// <summary>
+    /// Whether a token revocation is pending retry after a previous failure.
+    /// </summary>
+    public bool IsRevocationPending { get; set; }
+
+    /// <summary>
+    /// UTC timestamp of the last failed revocation attempt.
+    /// </summary>
+    public DateTime? RevocationFailedAt { get; set; }
+
+    /// <summary>
+    /// Number of consecutive failed revocation attempts.
+    /// </summary>
+    public int RevocationFailureCount { get; set; }
 }

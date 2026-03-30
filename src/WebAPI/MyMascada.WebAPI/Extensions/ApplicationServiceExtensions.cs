@@ -24,9 +24,6 @@ public static class ApplicationServiceExtensions
         // Add FluentValidation
         services.AddValidatorsFromAssembly(typeof(MyMascada.Application.Features.Authentication.Commands.RegisterCommand).Assembly);
 
-        // Add AutoMapper
-        services.AddAutoMapper(typeof(MyMascada.Application.Features.Accounts.Mappings.AccountMappingProfile).Assembly);
-
         // Account access service (central authorization choke point)
         services.AddScoped<IAccountAccessService, AccountAccessService>();
 
@@ -78,6 +75,10 @@ public static class ApplicationServiceExtensions
         services.AddScoped<MyMascada.Application.Features.RuleSuggestions.Services.IPatternDetectionService,
             MyMascada.Application.Features.RuleSuggestions.Services.PatternDetectionService>();
 
+        // OAuth state store (singleton — backed by IMemoryCache which is also singleton)
+        services.AddSingleton<MyMascada.Application.Common.Interfaces.IOAuthStateStore,
+            MyMascada.Infrastructure.Services.Auth.OAuthStateStore>();
+
         // Event Handlers
         services.AddScoped<MyMascada.Application.Events.Handlers.TransactionsCreatedEventHandler>();
 
@@ -100,6 +101,10 @@ public static class ApplicationServiceExtensions
         // Recurring Pattern Persistence services
         services.AddScoped<MyMascada.Application.Features.RecurringPatterns.Services.IRecurringPatternPersistenceService,
             MyMascada.Application.Features.RecurringPatterns.Services.RecurringPatternPersistenceService>();
+
+        // Notification services
+        services.AddScoped<INotificationService, MyMascada.Infrastructure.Services.Notifications.NotificationService>();
+        services.AddScoped<INotificationTriggerService, MyMascada.Infrastructure.Services.Notifications.NotificationTriggerService>();
 
         return services;
     }
