@@ -17,6 +17,10 @@ public class GetDuplicateTransactionsQuery : IRequest<DuplicateTransactionsRespo
 
 public class GetDuplicateTransactionsQueryHandler : IRequestHandler<GetDuplicateTransactionsQuery, DuplicateTransactionsResponse>
 {
+    private static readonly System.Text.RegularExpressions.Regex AsteriskRegex = new(@"\*+", System.Text.RegularExpressions.RegexOptions.Compiled);
+    private static readonly System.Text.RegularExpressions.Regex NonAlphanumericRegex = new(@"[^a-zA-Z0-9\s]", System.Text.RegularExpressions.RegexOptions.Compiled);
+    private static readonly System.Text.RegularExpressions.Regex WhitespaceRegex = new(@"\s+", System.Text.RegularExpressions.RegexOptions.Compiled);
+
     private readonly ITransactionRepository _transactionRepository;
     private readonly IDuplicateExclusionRepository _duplicateExclusionRepository;
 
@@ -223,7 +227,7 @@ public class GetDuplicateTransactionsQueryHandler : IRequestHandler<GetDuplicate
     /// Bank descriptions are often truncated differently for the same merchant,
     /// so word overlap catches cases that Levenshtein misses.
     /// </summary>
-    private decimal CalculateCombinedDescriptionSimilarity(string str1, string str2)
+    private static decimal CalculateCombinedDescriptionSimilarity(string str1, string str2)
     {
         if (string.IsNullOrEmpty(str1) && string.IsNullOrEmpty(str2))
             return 1m;
@@ -251,11 +255,11 @@ public class GetDuplicateTransactionsQueryHandler : IRequestHandler<GetDuplicate
             return string.Empty;
 
         // Remove card number masks and asterisks
-        var cleaned = System.Text.RegularExpressions.Regex.Replace(input, @"\*+", " ");
+        var cleaned = AsteriskRegex.Replace(input, " ");
         // Remove non-alphanumeric (keep letters, digits, spaces)
-        cleaned = System.Text.RegularExpressions.Regex.Replace(cleaned, @"[^a-zA-Z0-9\s]", " ");
+        cleaned = NonAlphanumericRegex.Replace(cleaned, " ");
         // Normalize whitespace
-        cleaned = System.Text.RegularExpressions.Regex.Replace(cleaned.ToLowerInvariant().Trim(), @"\s+", " ");
+        cleaned = WhitespaceRegex.Replace(cleaned.ToLowerInvariant().Trim(), " ");
         return cleaned;
     }
 
@@ -298,7 +302,7 @@ public class GetDuplicateTransactionsQueryHandler : IRequestHandler<GetDuplicate
         return (decimal)matches / maxWords;
     }
 
-    private decimal CalculateStringSimilarity(string str1, string str2)
+    private static decimal CalculateStringSimilarity(string str1, string str2)
     {
         if (string.IsNullOrEmpty(str1) && string.IsNullOrEmpty(str2))
             return 1m;
@@ -320,10 +324,10 @@ public class GetDuplicateTransactionsQueryHandler : IRequestHandler<GetDuplicate
         if (string.IsNullOrEmpty(input))
             return string.Empty;
 
-        return System.Text.RegularExpressions.Regex.Replace(input.ToLowerInvariant().Trim(), @"\s+", " ");
+        return WhitespaceRegex.Replace(input.ToLowerInvariant().Trim(), " ");
     }
     
-    private int LevenshteinDistance(string s1, string s2)
+    private static int LevenshteinDistance(string s1, string s2)
     {
         if (s1.Length == 0) return s2.Length;
         if (s2.Length == 0) return s1.Length;
