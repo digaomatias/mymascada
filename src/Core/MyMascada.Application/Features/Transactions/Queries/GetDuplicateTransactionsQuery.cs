@@ -18,7 +18,7 @@ public class GetDuplicateTransactionsQuery : IRequest<DuplicateTransactionsRespo
 public class GetDuplicateTransactionsQueryHandler : IRequestHandler<GetDuplicateTransactionsQuery, DuplicateTransactionsResponse>
 {
     private static readonly System.Text.RegularExpressions.Regex AsteriskRegex = new(@"\*+", System.Text.RegularExpressions.RegexOptions.Compiled);
-    private static readonly System.Text.RegularExpressions.Regex NonAlphanumericRegex = new(@"[^a-zA-Z0-9\s]", System.Text.RegularExpressions.RegexOptions.Compiled);
+    private static readonly System.Text.RegularExpressions.Regex NonAlphanumericRegex = new(@"[^\p{L}\p{N}\s]", System.Text.RegularExpressions.RegexOptions.Compiled);
     private static readonly System.Text.RegularExpressions.Regex WhitespaceRegex = new(@"\s+", System.Text.RegularExpressions.RegexOptions.Compiled);
 
     private readonly ITransactionRepository _transactionRepository;
@@ -129,8 +129,8 @@ public class GetDuplicateTransactionsQueryHandler : IRequestHandler<GetDuplicate
             // Hard filter: Amount tolerance — require near-exact match.
             // Different amounts are the strongest signal that transactions are NOT duplicates.
             var amountDifference = Math.Abs(sourceTransaction.Amount - candidate.Amount);
-            if (amountDifference > request.AmountTolerance && amountDifference > Math.Abs(sourceTransaction.Amount) * 0.01m)
-                continue; // Skip if amount difference exceeds both absolute tolerance and 1% relative tolerance
+            if (amountDifference > Math.Max(request.AmountTolerance, Math.Abs(sourceTransaction.Amount) * 0.01m))
+                continue; // Skip if amount difference exceeds the stricter of absolute tolerance or 1% relative tolerance
                 
             var confidence = CalculateConfidenceScore(sourceTransaction, candidate, request);
             
@@ -238,6 +238,17 @@ public class GetDuplicateTransactionsQueryHandler : IRequestHandler<GetDuplicate
         // Clean merchant descriptions: remove card masks, special chars
         var clean1 = CleanMerchantDescription(str1);
         var clean2 = CleanMerchantDescription(str2);
+
+        // Guard: if cleaning stripped everything (e.g. Unicode-only merchants),
+        // fall back to comparing the original strings to avoid false positives.
+        if (string.IsNullOrWhiteSpace(clean1) && string.IsNullOrWhiteSpace(clean2))
+        {
+            return CalculateStringSimilarity(str1, str2);
+        }
+        if (string.IsNullOrWhiteSpace(clean1) || string.IsNullOrWhiteSpace(clean2))
+        {
+            return 0m;
+        }
 
         var levenshteinScore = CalculateStringSimilarity(clean1, clean2);
         var wordScore = CalculateWordSimilarity(clean1, clean2);
