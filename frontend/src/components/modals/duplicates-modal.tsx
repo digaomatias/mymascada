@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select } from '@/components/ui/select';
 import { apiClient } from '@/lib/api-client';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -41,6 +42,14 @@ const getConfidenceColor = (confidence: number) => {
   return 'text-orange-600 bg-orange-50 border-orange-200';
 };
 
+const SOURCE_LABELS: Record<number, { key: string; color: string }> = {
+  1: { key: 'manual', color: 'text-gray-600 bg-gray-50 border-gray-200' },
+  2: { key: 'csvImport', color: 'text-blue-600 bg-blue-50 border-blue-200' },
+  3: { key: 'bankApi', color: 'text-green-600 bg-green-50 border-green-200' },
+  4: { key: 'ofxImport', color: 'text-purple-600 bg-purple-50 border-purple-200' },
+  5: { key: 'import', color: 'text-indigo-600 bg-indigo-50 border-indigo-200' },
+};
+
 export function DuplicatesModal({ isOpen, onClose, onRefresh }: DuplicatesModalProps) {
   const t = useTranslations('transactions');
   const tCommon = useTranslations('common');
@@ -57,9 +66,10 @@ export function DuplicatesModal({ isOpen, onClose, onRefresh }: DuplicatesModalP
   const [params, setParams] = useState<DuplicateDetectionParams>({
     amountTolerance: 0.01,
     dateToleranceDays: 1,
-    includeReviewed: false,
+    includeReviewed: true,
     sameAccountOnly: false,
-    minConfidence: 0.5
+    minConfidence: 0.5,
+    sinceDays: 30
   });
 
   const fetchDuplicates = useCallback(async () => {
@@ -335,19 +345,25 @@ export function DuplicatesModal({ isOpen, onClose, onRefresh }: DuplicatesModalP
                 <div key={transaction.id} className="bg-ink-50 rounded-lg p-3">
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className="text-sm font-medium text-ink-900">
                           #{transaction.id}
                         </span>
-                        {transaction.userDescription && transaction.userDescription !== transaction.description && (
-                          <span className="text-sm text-ink-600">
-                            ({transaction.userDescription})
-                          </span>
+                        {SOURCE_LABELS[transaction.source] && (
+                          <Badge variant="outline" className={`${SOURCE_LABELS[transaction.source].color} border text-xs`}>
+                            {t(`duplicates.source.${SOURCE_LABELS[transaction.source].key}`)}
+                          </Badge>
                         )}
                         <Badge variant={transaction.isReviewed ? 'default' : 'secondary'}>
                           {transaction.isReviewed ? t('reviewed') : t('unreviewed')}
                         </Badge>
                       </div>
+                      {transaction.description && (
+                        <p className="text-sm text-ink-700 mb-1 truncate">{transaction.description}</p>
+                      )}
+                      {transaction.userDescription && transaction.userDescription !== transaction.description && (
+                        <p className="text-xs text-ink-500 mb-1 truncate">{transaction.userDescription}</p>
+                      )}
                       
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                         <div className="flex items-center gap-2">
@@ -446,6 +462,25 @@ export function DuplicatesModal({ isOpen, onClose, onRefresh }: DuplicatesModalP
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="sinceDays" className="text-sm font-medium text-ink-700">
+                  {t('duplicates.dateRange')}
+                </Label>
+                <Select
+                  id="sinceDays"
+                  value={(params.sinceDays ?? 30).toString()}
+                  onChange={(e) => handleParamChange('sinceDays', parseInt(e.target.value))}
+                  className="mt-1"
+                >
+                  <option value="7">{t('duplicates.sinceDaysOption', { days: 7 })}</option>
+                  <option value="14">{t('duplicates.sinceDaysOption', { days: 14 })}</option>
+                  <option value="30">{t('duplicates.sinceDaysOption', { days: 30 })}</option>
+                  <option value="60">{t('duplicates.sinceDaysOption', { days: 60 })}</option>
+                  <option value="90">{t('duplicates.sinceDaysOption', { days: 90 })}</option>
+                  <option value="0">{t('duplicates.allTime')}</option>
+                </Select>
+              </div>
+
               <div>
                 <Label htmlFor="minConfidence" className="text-sm font-medium text-ink-700">
                   {t('duplicates.minimumConfidence')}

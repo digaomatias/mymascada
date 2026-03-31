@@ -43,4 +43,5 @@ export interface DuplicateDetectionParams {
   includeReviewed?: boolean;
   sameAccountOnly?: boolean;
   minConfidence?: number;
+  sinceDays?: number;
 }
