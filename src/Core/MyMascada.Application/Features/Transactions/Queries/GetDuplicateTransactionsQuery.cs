@@ -36,7 +36,7 @@ public class GetDuplicateTransactionsQueryHandler : IRequestHandler<GetDuplicate
     public async Task<DuplicateTransactionsResponse> Handle(GetDuplicateTransactionsQuery request, CancellationToken cancellationToken)
     {
         // Get all transactions for the user (excluding transfers for now)
-        DateTime? sinceDate = request.SinceDays > 0 ? DateTime.UtcNow.AddDays(-request.SinceDays) : null;
+        DateTime? sinceDate = request.SinceDays > 0 ? DateTime.UtcNow.Date.AddDays(-request.SinceDays) : null;
         var allTransactions = await _transactionRepository.GetAllForDuplicateDetectionAsync(request.UserId, request.IncludeReviewed, sinceDate);
         
         // Get all exclusions for this user to filter out previously dismissed duplicates

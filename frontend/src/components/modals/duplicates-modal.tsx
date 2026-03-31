@@ -42,12 +42,21 @@ const getConfidenceColor = (confidence: number) => {
   return 'text-orange-600 bg-orange-50 border-orange-200';
 };
 
+// Must match backend TransactionSource enum (MyMascada.Domain/Enums/TransactionStatus.cs)
+const TransactionSource = {
+  Manual: 1,
+  CsvImport: 2,
+  BankApi: 3,
+  OfxImport: 4,
+  Import: 5,
+} as const;
+
 const SOURCE_LABELS: Record<number, { key: string; color: string }> = {
-  1: { key: 'manual', color: 'text-gray-600 bg-gray-50 border-gray-200' },
-  2: { key: 'csvImport', color: 'text-blue-600 bg-blue-50 border-blue-200' },
-  3: { key: 'bankApi', color: 'text-green-600 bg-green-50 border-green-200' },
-  4: { key: 'ofxImport', color: 'text-purple-600 bg-purple-50 border-purple-200' },
-  5: { key: 'import', color: 'text-indigo-600 bg-indigo-50 border-indigo-200' },
+  [TransactionSource.Manual]: { key: 'manual', color: 'text-gray-600 bg-gray-50 border-gray-200' },
+  [TransactionSource.CsvImport]: { key: 'csvImport', color: 'text-blue-600 bg-blue-50 border-blue-200' },
+  [TransactionSource.BankApi]: { key: 'bankApi', color: 'text-green-600 bg-green-50 border-green-200' },
+  [TransactionSource.OfxImport]: { key: 'ofxImport', color: 'text-purple-600 bg-purple-50 border-purple-200' },
+  [TransactionSource.Import]: { key: 'import', color: 'text-indigo-600 bg-indigo-50 border-indigo-200' },
 };
 
 export function DuplicatesModal({ isOpen, onClose, onRefresh }: DuplicatesModalProps) {
@@ -359,10 +368,10 @@ export function DuplicatesModal({ isOpen, onClose, onRefresh }: DuplicatesModalP
                         </Badge>
                       </div>
                       {transaction.description && (
-                        <p className="text-sm text-ink-700 mb-1 truncate">{transaction.description}</p>
+                        <p className="text-sm text-ink-700 mb-1">{transaction.description}</p>
                       )}
                       {transaction.userDescription && transaction.userDescription !== transaction.description && (
-                        <p className="text-xs text-ink-500 mb-1 truncate">{transaction.userDescription}</p>
+                        <p className="text-xs text-ink-500 mb-1">{transaction.userDescription}</p>
                       )}
                       
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
