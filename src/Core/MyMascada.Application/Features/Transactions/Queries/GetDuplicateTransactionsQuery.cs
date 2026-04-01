@@ -10,9 +10,10 @@ public class GetDuplicateTransactionsQuery : IRequest<DuplicateTransactionsRespo
     public Guid UserId { get; set; }
     public decimal AmountTolerance { get; set; } = 0.01m; // Allow small rounding differences in amount
     public int DateToleranceDays { get; set; } = 2; // Allow 2-day window for bank processing delays
-    public bool IncludeReviewed { get; set; } = false; // Include already reviewed transactions
+    public bool IncludeReviewed { get; set; } = true; // Include already reviewed transactions
     public bool SameAccountOnly { get; set; } = false; // Only check within same account
     public decimal MinConfidence { get; set; } = 0.5m; // Minimum confidence score
+    public int SinceDays { get; set; } = 30; // Only look at transactions from the last N days (0 = all)
 }
 
 public class GetDuplicateTransactionsQueryHandler : IRequestHandler<GetDuplicateTransactionsQuery, DuplicateTransactionsResponse>
@@ -35,7 +36,15 @@ public class GetDuplicateTransactionsQueryHandler : IRequestHandler<GetDuplicate
     public async Task<DuplicateTransactionsResponse> Handle(GetDuplicateTransactionsQuery request, CancellationToken cancellationToken)
     {
         // Get all transactions for the user (excluding transfers for now)
-        var allTransactions = await _transactionRepository.GetAllForDuplicateDetectionAsync(request.UserId, request.IncludeReviewed);
+        if (request.SinceDays < 0)
+            throw new ArgumentException("SinceDays must be zero (all time) or a positive number of days.", nameof(request));
+
+        // SinceDays == 0 means "all time" — use an explicit early sentinel instead of null
+        // (null falls back to the repository's default 180-day lookback)
+        DateTime? sinceDate = request.SinceDays == 0
+            ? DateTime.MinValue.ToUniversalTime()
+            : DateTime.UtcNow.Date.AddDays(-request.SinceDays);
+        var allTransactions = await _transactionRepository.GetAllForDuplicateDetectionAsync(request.UserId, request.IncludeReviewed, sinceDate);
         
         // Get all exclusions for this user to filter out previously dismissed duplicates
         var exclusions = await _duplicateExclusionRepository.GetByUserIdAsync(request.UserId);

@@ -388,9 +388,10 @@ public class TransactionsController : ControllerBase
     public async Task<ActionResult<DuplicateTransactionsResponse>> GetDuplicateTransactions(
         [FromQuery] decimal amountTolerance = 0.01m,
         [FromQuery] int dateToleranceDays = 2,
-        [FromQuery] bool includeReviewed = false,
+        [FromQuery] bool includeReviewed = true,
         [FromQuery] bool sameAccountOnly = false,
-        [FromQuery] decimal minConfidence = 0.5m)
+        [FromQuery] decimal minConfidence = 0.5m,
+        [FromQuery] int sinceDays = 30)
     {
         var query = new GetDuplicateTransactionsQuery
         {
@@ -399,7 +400,8 @@ public class TransactionsController : ControllerBase
             DateToleranceDays = dateToleranceDays,
             IncludeReviewed = includeReviewed,
             SameAccountOnly = sameAccountOnly,
-            MinConfidence = minConfidence
+            MinConfidence = minConfidence,
+            SinceDays = sinceDays
         };
 
         var result = await _mediator.Send(query);

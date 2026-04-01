@@ -549,9 +549,10 @@ class ApiClient {
     includeReviewed?: boolean;
     sameAccountOnly?: boolean;
     minConfidence?: number;
+    sinceDays?: number;
   }): Promise<unknown> {
     const searchParams = new URLSearchParams();
-    
+
     if (params?.amountTolerance !== undefined) {
       searchParams.append('amountTolerance', params.amountTolerance.toString());
     }
@@ -566,6 +567,9 @@ class ApiClient {
     }
     if (params?.minConfidence !== undefined) {
       searchParams.append('minConfidence', params.minConfidence.toString());
+    }
+    if (params?.sinceDays !== undefined) {
+      searchParams.append('sinceDays', params.sinceDays.toString());
     }
     
     const queryString = searchParams.toString();
