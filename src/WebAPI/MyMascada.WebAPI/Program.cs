@@ -177,7 +177,7 @@ builder.Services.AddCategorizationServices(builder.Configuration);
 builder.Services.AddDescriptionCleaningServices(builder.Configuration);
 builder.Services.AddBankProviderServices(builder.Configuration);
 builder.Services.AddEmailServices(builder.Configuration);
-builder.Services.AddHealthCheckServices(builder.Configuration);
+builder.Services.AddHealthCheckServices();
 builder.Services.AddBackgroundJobs(builder.Configuration);
 builder.Services.AddCorsConfiguration(builder.Configuration);
 builder.Services.AddRateLimitingConfiguration(builder.Configuration);
