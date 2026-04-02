@@ -23,7 +23,10 @@ export const metadata: Metadata = {
   description: 'AI-powered personal finance management application',
   manifest: '/manifest.json',
   icons: {
-    icon: '/favicon.png',
+    icon: [
+      { url: '/favicon.ico', sizes: '16x16 32x32', type: 'image/x-icon' },
+      { url: '/favicon.png', type: 'image/png', sizes: '32x32' },
+    ],
     apple: '/apple-touch-icon.png',
   },
 };
