@@ -16,6 +16,7 @@ public class CompleteOnboardingCommand : IRequest<OnboardingCompleteResponse>
     public string GoalType { get; set; } = "EmergencyFund";
     public string DataEntryMethod { get; set; } = "manual";
     public int? LinkedAccountId { get; set; }
+    public bool Skipped { get; set; }
 }
 
 public class CompleteOnboardingCommandHandler : IRequestHandler<CompleteOnboardingCommand, OnboardingCompleteResponse>
@@ -36,29 +37,32 @@ public class CompleteOnboardingCommandHandler : IRequestHandler<CompleteOnboardi
 
     public async Task<OnboardingCompleteResponse> Handle(CompleteOnboardingCommand request, CancellationToken cancellationToken)
     {
-        if (request.MonthlyIncome < 0)
+        if (!request.Skipped)
         {
-            throw new ArgumentException("Monthly income cannot be negative.");
-        }
+            if (request.MonthlyIncome < 0)
+            {
+                throw new ArgumentException("Monthly income cannot be negative.");
+            }
 
-        if (request.MonthlyExpenses < 0)
-        {
-            throw new ArgumentException("Monthly expenses cannot be negative.");
-        }
+            if (request.MonthlyExpenses < 0)
+            {
+                throw new ArgumentException("Monthly expenses cannot be negative.");
+            }
 
-        if (string.IsNullOrWhiteSpace(request.GoalName))
-        {
-            throw new ArgumentException("Goal name is required.");
-        }
+            if (string.IsNullOrWhiteSpace(request.GoalName))
+            {
+                throw new ArgumentException("Goal name is required.");
+            }
 
-        if (request.GoalTargetAmount <= 0)
-        {
-            throw new ArgumentException("Goal target amount must be greater than zero.");
-        }
+            if (request.GoalTargetAmount <= 0)
+            {
+                throw new ArgumentException("Goal target amount must be greater than zero.");
+            }
 
-        if (!Enum.TryParse<GoalType>(request.GoalType, true, out var goalType))
-        {
-            throw new ArgumentException($"Invalid goal type: {request.GoalType}.");
+            if (!Enum.TryParse<GoalType>(request.GoalType, true, out var goalType))
+            {
+                throw new ArgumentException($"Invalid goal type: {request.GoalType}.");
+            }
         }
 
         // Check if profile already exists (idempotency)
@@ -93,13 +97,27 @@ public class CompleteOnboardingCommandHandler : IRequestHandler<CompleteOnboardi
             profile = await _profileRepository.CreateAsync(profile, cancellationToken);
         }
 
+        // Skip goal creation when onboarding is skipped
+        if (request.Skipped)
+        {
+            return new OnboardingCompleteResponse
+            {
+                ProfileId = profile.Id,
+                GoalId = null,
+                MonthlyIncome = profile.MonthlyIncome,
+                MonthlyExpenses = profile.MonthlyExpenses,
+                MonthlyAvailable = profile.MonthlyAvailable
+            };
+        }
+
         // Create the first goal
+        var goalType2 = Enum.Parse<GoalType>(request.GoalType, true);
         var goal = new Goal
         {
             Name = request.GoalName.Trim(),
             TargetAmount = request.GoalTargetAmount,
             CurrentAmount = 0,
-            GoalType = goalType,
+            GoalType = goalType2,
             Status = GoalStatus.Active,
             UserId = request.UserId,
             DisplayOrder = 0,

@@ -2482,11 +2482,12 @@ export interface CompleteOnboardingRequest {
   goalType: string;
   dataEntryMethod: string;
   linkedAccountId?: number;
+  skipped?: boolean;
 }
 
 export interface CompleteOnboardingResponse {
   profileId: number;
-  goalId: number;
+  goalId: number | null;
   monthlyIncome: number;
   monthlyExpenses: number;
   monthlyAvailable: number;
