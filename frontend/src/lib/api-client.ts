@@ -2474,19 +2474,28 @@ export interface ExpenseCategoryBreakdown {
 }
 
 // Onboarding Types
-export interface CompleteOnboardingRequest {
-  monthlyIncome: number;
-  monthlyExpenses: number;
-  goalName: string;
-  goalTargetAmount: number;
-  goalType: string;
-  dataEntryMethod: string;
-  linkedAccountId?: number;
-}
+export type CompleteOnboardingRequest =
+  | {
+      skipped: true;
+      monthlyIncome: number;
+      monthlyExpenses: number;
+      dataEntryMethod: string;
+      linkedAccountId?: number;
+    }
+  | {
+      skipped?: false;
+      monthlyIncome: number;
+      monthlyExpenses: number;
+      goalName: string;
+      goalTargetAmount: number;
+      goalType: string;
+      dataEntryMethod: string;
+      linkedAccountId?: number;
+    };
 
 export interface CompleteOnboardingResponse {
   profileId: number;
-  goalId: number;
+  goalId: number | null;
   monthlyIncome: number;
   monthlyExpenses: number;
   monthlyAvailable: number;

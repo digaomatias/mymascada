@@ -16,6 +16,7 @@ public class CompleteOnboardingCommand : IRequest<OnboardingCompleteResponse>
     public string GoalType { get; set; } = "EmergencyFund";
     public string DataEntryMethod { get; set; } = "manual";
     public int? LinkedAccountId { get; set; }
+    public bool Skipped { get; set; }
 }
 
 public class CompleteOnboardingCommandHandler : IRequestHandler<CompleteOnboardingCommand, OnboardingCompleteResponse>
@@ -46,19 +47,23 @@ public class CompleteOnboardingCommandHandler : IRequestHandler<CompleteOnboardi
             throw new ArgumentException("Monthly expenses cannot be negative.");
         }
 
-        if (string.IsNullOrWhiteSpace(request.GoalName))
+        GoalType goalType = GoalType.EmergencyFund;
+        if (!request.Skipped)
         {
-            throw new ArgumentException("Goal name is required.");
-        }
+            if (string.IsNullOrWhiteSpace(request.GoalName))
+            {
+                throw new ArgumentException("Goal name is required.");
+            }
 
-        if (request.GoalTargetAmount <= 0)
-        {
-            throw new ArgumentException("Goal target amount must be greater than zero.");
-        }
+            if (request.GoalTargetAmount <= 0)
+            {
+                throw new ArgumentException("Goal target amount must be greater than zero.");
+            }
 
-        if (!Enum.TryParse<GoalType>(request.GoalType, true, out var goalType))
-        {
-            throw new ArgumentException($"Invalid goal type: {request.GoalType}.");
+            if (!Enum.TryParse<GoalType>(request.GoalType, true, out goalType))
+            {
+                throw new ArgumentException($"Invalid goal type: {request.GoalType}.");
+            }
         }
 
         // Check if profile already exists (idempotency)
@@ -91,6 +96,19 @@ public class CompleteOnboardingCommandHandler : IRequestHandler<CompleteOnboardi
                 OnboardingCompletedAt = DateTime.UtcNow
             };
             profile = await _profileRepository.CreateAsync(profile, cancellationToken);
+        }
+
+        // Skip goal creation when onboarding is skipped
+        if (request.Skipped)
+        {
+            return new OnboardingCompleteResponse
+            {
+                ProfileId = profile.Id,
+                GoalId = null,
+                MonthlyIncome = profile.MonthlyIncome,
+                MonthlyExpenses = profile.MonthlyExpenses,
+                MonthlyAvailable = profile.MonthlyAvailable
+            };
         }
 
         // Create the first goal
