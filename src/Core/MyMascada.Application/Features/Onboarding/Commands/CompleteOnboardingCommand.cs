@@ -37,18 +37,19 @@ public class CompleteOnboardingCommandHandler : IRequestHandler<CompleteOnboardi
 
     public async Task<OnboardingCompleteResponse> Handle(CompleteOnboardingCommand request, CancellationToken cancellationToken)
     {
+        if (request.MonthlyIncome < 0)
+        {
+            throw new ArgumentException("Monthly income cannot be negative.");
+        }
+
+        if (request.MonthlyExpenses < 0)
+        {
+            throw new ArgumentException("Monthly expenses cannot be negative.");
+        }
+
+        GoalType goalType = GoalType.EmergencyFund;
         if (!request.Skipped)
         {
-            if (request.MonthlyIncome < 0)
-            {
-                throw new ArgumentException("Monthly income cannot be negative.");
-            }
-
-            if (request.MonthlyExpenses < 0)
-            {
-                throw new ArgumentException("Monthly expenses cannot be negative.");
-            }
-
             if (string.IsNullOrWhiteSpace(request.GoalName))
             {
                 throw new ArgumentException("Goal name is required.");
@@ -59,7 +60,7 @@ public class CompleteOnboardingCommandHandler : IRequestHandler<CompleteOnboardi
                 throw new ArgumentException("Goal target amount must be greater than zero.");
             }
 
-            if (!Enum.TryParse<GoalType>(request.GoalType, true, out var goalType))
+            if (!Enum.TryParse<GoalType>(request.GoalType, true, out goalType))
             {
                 throw new ArgumentException($"Invalid goal type: {request.GoalType}.");
             }
@@ -111,13 +112,12 @@ public class CompleteOnboardingCommandHandler : IRequestHandler<CompleteOnboardi
         }
 
         // Create the first goal
-        var goalType2 = Enum.Parse<GoalType>(request.GoalType, true);
         var goal = new Goal
         {
             Name = request.GoalName.Trim(),
             TargetAmount = request.GoalTargetAmount,
             CurrentAmount = 0,
-            GoalType = goalType2,
+            GoalType = goalType,
             Status = GoalStatus.Active,
             UserId = request.UserId,
             DisplayOrder = 0,
