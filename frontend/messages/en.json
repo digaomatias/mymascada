@@ -639,7 +639,17 @@
       "bulkSelected": "{selected} of {total} groups selected",
       "keepNewest": "Keep Newest",
       "keepOldest": "Keep Oldest",
-      "markNotDuplicate": "Mark as Not Duplicate"
+      "markNotDuplicate": "Mark as Not Duplicate",
+      "dateRange": "Date Range",
+      "sinceDaysOption": "Last {days} days",
+      "allTime": "All time",
+      "source": {
+        "manual": "Manual",
+        "csvImport": "CSV Import",
+        "bankApi": "Bank API",
+        "ofxImport": "OFX Import",
+        "import": "Import"
+      }
     },
     "potentialDuplicates": "Potential Duplicates",
     "mergeTransactions": "Merge Transactions",

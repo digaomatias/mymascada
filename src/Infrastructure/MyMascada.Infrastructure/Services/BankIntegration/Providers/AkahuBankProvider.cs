@@ -1,5 +1,6 @@
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.BankConnections.DTOs;
+using MyMascada.Domain.Common;
 
 namespace MyMascada.Infrastructure.Services.BankIntegration.Providers;
 
@@ -263,7 +264,10 @@ public class AkahuBankProvider : IBankProvider
         return new BankTransactionDto
         {
             ExternalId = tx.Id,
-            Date = tx.Date,
+            // Normalize to start-of-day UTC to prevent timezone display shifts.
+            // Akahu dates may include a time component that, when converted to NZ timezone
+            // (UTC+13) on the frontend, can shift the displayed date forward by a day.
+            Date = DateTimeProvider.StartOfDayUtc(tx.Date),
             Amount = tx.Amount,  // Akahu uses standard convention: negative = expense
             Description = tx.Description,
             Reference = reference,
