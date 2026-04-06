@@ -41,80 +41,87 @@ public class MLHandler : CategorizationHandler
             return result;
         }
 
-        var firstTransaction = transactionsList.First();
-        var userId = firstTransaction.Account?.UserId;
-        if (userId == null)
+        // Group transactions by user to prevent cross-user data leakage
+        var transactionsByUser = transactionsList
+            .Where(t => t.Account?.UserId != null)
+            .GroupBy(t => t.Account!.UserId);
+
+        var skippedNoUser = transactionsList.Count(t => t.Account?.UserId == null);
+        if (skippedNoUser > 0)
         {
-            _logger.LogWarning("MLHandler: Cannot process — no user ID found in transactions");
-            UpdateMetrics(result, 0);
-            return result;
+            _logger.LogWarning("MLHandler: Skipping {Count} transactions with no user ID", skippedNoUser);
         }
 
         var autoApplyThreshold = _options.MLAutoApplyThreshold;
         var processedCount = 0;
 
-        foreach (var transaction in transactionsList)
+        foreach (var userGroup in transactionsByUser)
         {
-            var description = transaction.Description;
-            var normalized = DescriptionNormalizer.Normalize(description);
+            var userId = userGroup.Key;
 
-            if (string.IsNullOrWhiteSpace(normalized))
-                continue;
-
-            var match = await _similarityService.FindBestMatchAsync(userId.Value, normalized, cancellationToken);
-            if (match == null)
-                continue;
-
-            if (match.Confidence >= autoApplyThreshold)
+            foreach (var transaction in userGroup)
             {
-                // High confidence — auto-apply
-                var categorized = CreateCategorizedTransaction(
-                    transaction,
-                    match.CategoryId,
-                    match.CategoryName,
-                    match.Confidence,
-                    $"{match.MatchType} match on '{match.MatchedDescription}'");
+                var description = transaction.Description;
+                var normalized = DescriptionNormalizer.Normalize(description);
 
-                result.AutoAppliedTransactions.Add(categorized);
-                result.CategorizedTransactions.Add(categorized);
-                processedCount++;
+                if (string.IsNullOrWhiteSpace(normalized))
+                    continue;
 
-                _logger.LogDebug(
-                    "MLHandler: Auto-applying category {CategoryId} ({CategoryName}) to transaction {TransactionId} " +
-                    "with confidence {Confidence:F2} ({MatchType} match)",
-                    match.CategoryId, match.CategoryName, transaction.Id,
-                    match.Confidence, match.MatchType);
-            }
-            else
-            {
-                // Medium confidence — create candidate for user review
-                var candidate = new CategorizationCandidate
+                var match = await _similarityService.FindBestMatchAsync(userId, normalized, cancellationToken);
+                if (match == null)
+                    continue;
+
+                if (match.Confidence >= autoApplyThreshold)
                 {
-                    TransactionId = transaction.Id,
-                    CategoryId = match.CategoryId,
-                    CategorizationMethod = CandidateMethod.ML,
-                    ConfidenceScore = match.Confidence,
-                    ProcessedBy = "MLHandler",
-                    Reasoning = $"{match.MatchType} match: '{match.MatchedDescription}' (confidence: {match.Confidence:F2})",
-                    Status = CandidateStatus.Pending,
-                    CreatedBy = $"MLHandler-{userId.Value}",
-                    UpdatedBy = $"MLHandler-{userId.Value}"
-                };
+                    // High confidence — auto-apply
+                    var categorized = CreateCategorizedTransaction(
+                        transaction,
+                        match.CategoryId,
+                        match.CategoryName,
+                        match.Confidence,
+                        $"{match.MatchType} match on '{match.MatchedDescription}'");
 
-                result.Candidates.Add(candidate);
-                result.CategorizedTransactions.Add(CreateCategorizedTransaction(
-                    transaction,
-                    match.CategoryId,
-                    match.CategoryName,
-                    match.Confidence,
-                    $"{match.MatchType} match candidate"));
+                    result.AutoAppliedTransactions.Add(categorized);
+                    result.CategorizedTransactions.Add(categorized);
+                    processedCount++;
 
-                processedCount++;
+                    _logger.LogDebug(
+                        "MLHandler: Auto-applying category {CategoryId} ({CategoryName}) to transaction {TransactionId} " +
+                        "with confidence {Confidence:F2} ({MatchType} match)",
+                        match.CategoryId, match.CategoryName, transaction.Id,
+                        match.Confidence, match.MatchType);
+                }
+                else
+                {
+                    // Medium confidence — create candidate for user review
+                    var candidate = new CategorizationCandidate
+                    {
+                        TransactionId = transaction.Id,
+                        CategoryId = match.CategoryId,
+                        CategorizationMethod = CandidateMethod.ML,
+                        ConfidenceScore = match.Confidence,
+                        ProcessedBy = "MLHandler",
+                        Reasoning = $"{match.MatchType} match: '{match.MatchedDescription}' (confidence: {match.Confidence:F2})",
+                        Status = CandidateStatus.Pending,
+                        CreatedBy = $"MLHandler-{userId}",
+                        UpdatedBy = $"MLHandler-{userId}"
+                    };
 
-                _logger.LogDebug(
-                    "MLHandler: Creating candidate for transaction {TransactionId} — " +
-                    "category {CategoryId} ({CategoryName}), confidence {Confidence:F2}",
-                    transaction.Id, match.CategoryId, match.CategoryName, match.Confidence);
+                    result.Candidates.Add(candidate);
+                    result.CategorizedTransactions.Add(CreateCategorizedTransaction(
+                        transaction,
+                        match.CategoryId,
+                        match.CategoryName,
+                        match.Confidence,
+                        $"{match.MatchType} match candidate"));
+
+                    processedCount++;
+
+                    _logger.LogDebug(
+                        "MLHandler: Creating candidate for transaction {TransactionId} — " +
+                        "category {CategoryId} ({CategoryName}), confidence {Confidence:F2}",
+                        transaction.Id, match.CategoryId, match.CategoryName, match.Confidence);
+                }
             }
         }
 

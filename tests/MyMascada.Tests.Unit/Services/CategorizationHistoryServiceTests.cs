@@ -37,6 +37,7 @@ public class CategorizationHistoryServiceTests
             10,
             "Manual",
             Arg.Any<CancellationToken>());
+        await _historyRepo.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]

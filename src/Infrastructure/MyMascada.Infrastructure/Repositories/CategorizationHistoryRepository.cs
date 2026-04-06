@@ -40,8 +40,11 @@ public class CategorizationHistoryRepository : ICategorizationHistoryRepository
         string source,
         CancellationToken ct = default)
     {
-        var existing = await _context.CategorizationHistories
-            .FirstOrDefaultAsync(h => h.UserId == userId && h.NormalizedDescription == normalizedDescription, ct);
+        // Check Local (in-memory tracked entities) first to avoid duplicate tracking within a batch
+        var existing = _context.CategorizationHistories.Local
+            .FirstOrDefault(h => h.UserId == userId && h.NormalizedDescription == normalizedDescription)
+            ?? await _context.CategorizationHistories
+                .FirstOrDefaultAsync(h => h.UserId == userId && h.NormalizedDescription == normalizedDescription, ct);
 
         if (existing != null)
         {
@@ -76,7 +79,6 @@ public class CategorizationHistoryRepository : ICategorizationHistoryRepository
             _context.CategorizationHistories.Add(existing);
         }
 
-        await _context.SaveChangesAsync(ct);
         return existing;
     }
 

@@ -73,6 +73,9 @@ public class CategorizationHistoryBackfillJobService : ICategorizationHistoryBac
                     totalEntries++;
                 }
 
+                // Batch save per user instead of per entry
+                await historyRepo.SaveChangesAsync(ct);
+
                 totalUsers++;
                 _logger.LogDebug(
                     "Backfilled {EntryCount} history entries for user {UserId}",

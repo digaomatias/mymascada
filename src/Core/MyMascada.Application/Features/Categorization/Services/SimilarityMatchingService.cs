@@ -11,6 +11,10 @@ public class SimilarityMatchingService : ISimilarityMatchingService
 
     private const decimal MinimumCandidateConfidence = 0.60m;
 
+    // Cache pre-tokenized history per user to avoid redundant DB queries and tokenization
+    private Guid? _lastUserId;
+    private IReadOnlyList<(CategorizationHistory Entry, IReadOnlyList<string> Tokens)>? _cachedHistory;
+
     public SimilarityMatchingService(
         ICategorizationHistoryRepository historyRepository,
         ILogger<SimilarityMatchingService> logger)
@@ -50,18 +54,24 @@ public class SimilarityMatchingService : ISimilarityMatchingService
         if (inputTokens.Count == 0)
             return null;
 
-        var allHistory = await _historyRepository.GetAllForUserAsync(userId, ct);
-        if (allHistory.Count == 0)
+        // Fetch and cache pre-tokenized history for this user
+        if (_lastUserId != userId || _cachedHistory == null)
+        {
+            var history = await _historyRepository.GetAllForUserAsync(userId, ct);
+            _cachedHistory = history
+                .Select(h => (Entry: h, Tokens: (IReadOnlyList<string>)DescriptionNormalizer.ExtractTokens(h.NormalizedDescription)))
+                .Where(x => x.Tokens.Count > 0)
+                .ToList();
+            _lastUserId = userId;
+        }
+
+        if (_cachedHistory.Count == 0)
             return null;
 
         SimilarityMatch? bestMatch = null;
 
-        foreach (var entry in allHistory)
+        foreach (var (entry, entryTokens) in _cachedHistory)
         {
-            var entryTokens = DescriptionNormalizer.ExtractTokens(entry.NormalizedDescription);
-            if (entryTokens.Count == 0)
-                continue;
-
             var sharedTokens = inputTokens.Intersect(entryTokens, StringComparer.OrdinalIgnoreCase).Count();
             if (sharedTokens < 2)
                 continue;

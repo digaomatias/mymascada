@@ -34,6 +34,7 @@ public class CategorizationHistoryService : ICategorizationHistoryService
         {
             var entry = await _historyRepository.UpsertAsync(
                 userId, normalized, description, categoryId, source, ct);
+            await _historyRepository.SaveChangesAsync(ct);
 
             _logger.LogDebug(
                 "Recorded categorization history: '{Normalized}' → category {CategoryId}, " +
