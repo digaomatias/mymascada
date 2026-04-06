@@ -78,6 +78,7 @@ public class BulkAssignCategoryCommandHandler : IRequestHandler<BulkAssignCatego
         }
 
         var updatedCount = 0;
+        var changedTransactions = new List<Domain.Entities.Transaction>();
         var now = DateTime.UtcNow;
 
         foreach (var transaction in transactions)
@@ -88,23 +89,32 @@ public class BulkAssignCategoryCommandHandler : IRequestHandler<BulkAssignCatego
                 continue;
             }
 
+            // Track whether the category actually changed for history recording
+            var categoryChanged = transaction.CategoryId != request.CategoryId;
+
             transaction.CategoryId = request.CategoryId;
             transaction.UpdatedAt = now;
             transaction.UpdatedBy = request.UserId.ToString();
             updatedCount++;
+
+            if (categoryChanged)
+                changedTransactions.Add(transaction);
         }
 
         await _transactionRepository.SaveChangesAsync();
 
-        // Record categorization history for each manually categorized transaction
-        foreach (var transaction in transactions.Where(t => !t.TransferId.HasValue))
-        {
-            await _historyService.RecordCategorizationAsync(
+        // Record categorization history only for transactions where category actually changed
+        var historyEvents = changedTransactions
+            .Select(t => new CategorizationHistoryEvent(
                 request.UserId,
-                transaction.Description,
+                t.Description,
                 request.CategoryId,
-                CategorizationHistorySource.Manual,
-                cancellationToken);
+                CategorizationHistorySource.Manual))
+            .ToList();
+
+        if (historyEvents.Count > 0)
+        {
+            await _historyService.RecordCategorizationBatchAsync(historyEvents, cancellationToken);
         }
 
         return new BulkAssignCategoryResponse

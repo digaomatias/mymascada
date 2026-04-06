@@ -31,12 +31,26 @@ public class DescriptionNormalizerTests
     }
 
     [Theory]
+    [InlineData("PAYMENT #12345", "payment")]
+    [InlineData("PAYMENT REF:12345", "payment")]
+    [InlineData("PAYMENT REF-99999", "payment")]
     [InlineData("PAYMENT #REF-12345", "payment")]
-    [InlineData("PAYMENT REF:ABC123", "payment")]
-    [InlineData("PAYMENT REF-XYZ", "payment")]
     public void Normalize_RemovesReferenceNumbers(string input, string expected)
     {
         DescriptionNormalizer.Normalize(input).Should().Be(expected);
+    }
+
+    [Fact]
+    public void Normalize_PreservesRefInsideWords()
+    {
+        // "REFRESH" should not be stripped — REF is part of a word, not a standalone ref
+        DescriptionNormalizer.Normalize("REFRESH SUBSCRIPTION").Should().Be("refresh subscription");
+    }
+
+    [Fact]
+    public void Normalize_PreservesUnicodeLetters()
+    {
+        DescriptionNormalizer.Normalize("CAFÉ MÜNCHEN").Should().Be("café münchen");
     }
 
     [Fact]
@@ -48,7 +62,8 @@ public class DescriptionNormalizerTests
     [Fact]
     public void Normalize_RemovesSpecialChars_KeepsHyphensAndSpaces()
     {
-        DescriptionNormalizer.Normalize("PAK'N'SAVE @PETONE #1").Should().Be("pak n save petone 1");
+        // #1 is stripped by RefPattern (hash+digits), apostrophes and @ are special chars
+        DescriptionNormalizer.Normalize("PAK'N'SAVE @PETONE #1").Should().Be("pak n save petone");
     }
 
     [Fact]

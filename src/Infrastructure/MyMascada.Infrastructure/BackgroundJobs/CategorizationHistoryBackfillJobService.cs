@@ -10,8 +10,8 @@ namespace MyMascada.Infrastructure.BackgroundJobs;
 
 /// <summary>
 /// One-time Hangfire job that scans all categorized transactions per user,
-/// groups by normalized description + category, and populates CategorizationHistory.
-/// Idempotent — safe to re-run.
+/// groups by normalized description, and populates CategorizationHistory.
+/// Idempotent — safe to re-run (uses absolute counts instead of incremental).
 /// </summary>
 public class CategorizationHistoryBackfillJobService : ICategorizationHistoryBackfillJobService
 {
@@ -43,12 +43,17 @@ public class CategorizationHistoryBackfillJobService : ICategorizationHistoryBac
 
         foreach (var userId in userIds)
         {
+            ct.ThrowIfCancellationRequested();
+
             try
             {
                 // Load categorized transactions (up to 2000 per user — covers typical history)
                 var transactions = (await transactionRepo.GetCategorizedTransactionsAsync(userId, 2000, ct)).ToList();
 
-                // Group by normalized description + category
+                // Group by normalized description only. For descriptions that were
+                // re-categorized over time, pick the newest category (transactions
+                // arrive in descending CreatedAt order, so First() is the newest).
+                // Count reflects all occurrences regardless of category.
                 var groups = transactions
                     .Where(t => t.CategoryId.HasValue)
                     .Select(t => new
@@ -58,16 +63,28 @@ public class CategorizationHistoryBackfillJobService : ICategorizationHistoryBac
                         CategoryId = t.CategoryId!.Value
                     })
                     .Where(g => !string.IsNullOrWhiteSpace(g.Normalized))
-                    .GroupBy(g => new { g.Normalized, g.CategoryId })
+                    .GroupBy(g => g.Normalized)
+                    .Select(g =>
+                    {
+                        var newest = g.First(); // descending CreatedAt → first is newest
+                        return new
+                        {
+                            Normalized = g.Key,
+                            newest.Description,
+                            newest.CategoryId,
+                            Count = g.Count()
+                        };
+                    })
                     .ToList();
 
                 foreach (var group in groups)
                 {
-                    await historyRepo.UpsertAsync(
+                    await historyRepo.UpsertWithAbsoluteCountAsync(
                         userId,
-                        group.Key.Normalized,
-                        group.First().Description,
-                        group.Key.CategoryId,
+                        group.Normalized,
+                        group.Description,
+                        group.CategoryId,
+                        group.Count,
                         CategorizationHistorySource.Backfill,
                         ct);
                     totalEntries++;
@@ -80,6 +97,10 @@ public class CategorizationHistoryBackfillJobService : ICategorizationHistoryBac
                 _logger.LogDebug(
                     "Backfilled {EntryCount} history entries for user {UserId}",
                     groups.Count, userId);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception ex)
             {

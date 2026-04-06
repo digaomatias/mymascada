@@ -33,20 +33,30 @@ public class SimilarityMatchingService : ISimilarityMatchingService
         var exactMatch = await _historyRepository.FindByNormalizedDescriptionAsync(userId, normalizedDescription, ct);
         if (exactMatch != null)
         {
-            var confidence = CalculateConfidence(exactMatch.MatchCount);
+            // Skip if the category was soft-deleted (navigation will be null due to query filter)
+            if (exactMatch.Category == null)
+            {
+                _logger.LogDebug(
+                    "Exact match found for category {CategoryId} but category is missing (soft-deleted?), skipping",
+                    exactMatch.CategoryId);
+            }
+            else
+            {
+                var confidence = CalculateConfidence(exactMatch.MatchCount);
 
-            _logger.LogDebug(
-                "Exact match found for '{Description}': category {CategoryId} ({CategoryName}), " +
-                "matchCount={MatchCount}, confidence={Confidence:F2}",
-                normalizedDescription, exactMatch.CategoryId, exactMatch.Category?.Name,
-                exactMatch.MatchCount, confidence);
+                _logger.LogDebug(
+                    "Exact match found for category {CategoryId} ({CategoryName}), " +
+                    "matchCount={MatchCount}, confidence={Confidence:F2}",
+                    exactMatch.CategoryId, exactMatch.Category.Name,
+                    exactMatch.MatchCount, confidence);
 
-            return new SimilarityMatch(
-                exactMatch.CategoryId,
-                exactMatch.Category?.Name ?? "Unknown",
-                confidence,
-                "Exact",
-                exactMatch.NormalizedDescription);
+                return new SimilarityMatch(
+                    exactMatch.CategoryId,
+                    exactMatch.Category.Name,
+                    confidence,
+                    "Exact",
+                    exactMatch.NormalizedDescription);
+            }
         }
 
         // Tier 2: Token-overlap fuzzy matching
@@ -54,11 +64,12 @@ public class SimilarityMatchingService : ISimilarityMatchingService
         if (inputTokens.Count == 0)
             return null;
 
-        // Fetch and cache pre-tokenized history for this user
+        // Fetch and cache pre-tokenized history for this user (exclude soft-deleted categories)
         if (_lastUserId != userId || _cachedHistory == null)
         {
             var history = await _historyRepository.GetAllForUserAsync(userId, ct);
             _cachedHistory = history
+                .Where(h => h.Category != null)
                 .Select(h => (Entry: h, Tokens: (IReadOnlyList<string>)DescriptionNormalizer.ExtractTokens(h.NormalizedDescription)))
                 .Where(x => x.Tokens.Count > 0)
                 .ToList();
@@ -88,7 +99,7 @@ public class SimilarityMatchingService : ISimilarityMatchingService
             {
                 bestMatch = new SimilarityMatch(
                     entry.CategoryId,
-                    entry.Category?.Name ?? "Unknown",
+                    entry.Category!.Name,
                     finalConfidence,
                     "Fuzzy",
                     entry.NormalizedDescription);
@@ -98,10 +109,8 @@ public class SimilarityMatchingService : ISimilarityMatchingService
         if (bestMatch != null)
         {
             _logger.LogDebug(
-                "Fuzzy match found for '{Description}': category {CategoryId} ({CategoryName}), " +
-                "matched='{MatchedDesc}', confidence={Confidence:F2}",
-                normalizedDescription, bestMatch.CategoryId, bestMatch.CategoryName,
-                bestMatch.MatchedDescription, bestMatch.Confidence);
+                "Fuzzy match found: category {CategoryId} ({CategoryName}), confidence={Confidence:F2}",
+                bestMatch.CategoryId, bestMatch.CategoryName, bestMatch.Confidence);
         }
 
         return bestMatch;
