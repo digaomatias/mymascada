@@ -54,6 +54,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<UserSubscription> UserSubscriptions => Set<UserSubscription>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
+    public DbSet<CategorizationHistory> CategorizationHistories => Set<CategorizationHistory>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -992,6 +993,33 @@ public class ApplicationDbContext : DbContext
 
             // One preference record per user
             entity.HasIndex(e => e.UserId).IsUnique();
+
+            entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
+        // CategorizationHistory configuration
+        modelBuilder.Entity<CategorizationHistory>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.NormalizedDescription).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.OriginalDescription).HasMaxLength(500);
+            entity.Property(e => e.CategoryId).IsRequired();
+            entity.Property(e => e.MatchCount).IsRequired().HasDefaultValue(1);
+            entity.Property(e => e.LastUsedAt).IsRequired();
+            entity.Property(e => e.Source).HasMaxLength(20).HasDefaultValue("Manual");
+
+            // Unique composite index: one mapping per user per normalized description
+            entity.HasIndex(e => new { e.UserId, e.NormalizedDescription }).IsUnique();
+
+            // Index for querying by user + category (used for conflict detection)
+            entity.HasIndex(e => new { e.UserId, e.CategoryId });
+
+            // Foreign key to Category
+            entity.HasOne(e => e.Category)
+                .WithMany()
+                .HasForeignKey(e => e.CategoryId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasQueryFilter(e => !e.IsDeleted);
         });

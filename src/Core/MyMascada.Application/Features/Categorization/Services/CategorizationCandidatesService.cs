@@ -11,15 +11,18 @@ public class CategorizationCandidatesService : ICategorizationCandidatesService
 {
     private readonly ICategorizationCandidatesRepository _candidatesRepository;
     private readonly ITransactionRepository _transactionRepository;
+    private readonly ICategorizationHistoryService _historyService;
     private readonly ILogger<CategorizationCandidatesService> _logger;
 
     public CategorizationCandidatesService(
         ICategorizationCandidatesRepository candidatesRepository,
         ITransactionRepository transactionRepository,
+        ICategorizationHistoryService historyService,
         ILogger<CategorizationCandidatesService> logger)
     {
         _candidatesRepository = candidatesRepository;
         _transactionRepository = transactionRepository;
+        _historyService = historyService;
         _logger = logger;
     }
 
@@ -133,8 +136,18 @@ public class CategorizationCandidatesService : ICategorizationCandidatesService
             candidate.MarkAsApplied(appliedBy);
             await _candidatesRepository.UpdateCandidateAsync(candidate, cancellationToken);
 
-            _logger.LogDebug("Successfully applied candidate {CandidateId} to transaction {TransactionId}", 
+            _logger.LogDebug("Successfully applied candidate {CandidateId} to transaction {TransactionId}",
                 candidateId, transaction.Id);
+
+            // Record categorization history
+            if (transaction.Account != null)
+            {
+                await _historyService.RecordCategorizationAsync(
+                    transaction.Account.UserId,
+                    transaction.Description,
+                    candidate.CategoryId,
+                    Domain.Entities.CategorizationHistorySource.CandidateApproved);
+            }
 
             return true;
         }

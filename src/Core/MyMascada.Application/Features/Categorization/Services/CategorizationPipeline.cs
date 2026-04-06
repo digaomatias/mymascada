@@ -28,6 +28,7 @@ public class CategorizationPipeline : ICategorizationPipeline
     private readonly MLHandler _mlHandler;
     private readonly LLMHandler _llmHandler;
     private readonly ICategorizationCandidatesService _candidatesService;
+    private readonly ICategorizationHistoryService _historyService;
     private readonly ITransactionRepository _transactionRepository;
     private readonly ILogger<CategorizationPipeline> _logger;
 
@@ -37,6 +38,7 @@ public class CategorizationPipeline : ICategorizationPipeline
         MLHandler mlHandler,
         LLMHandler llmHandler,
         ICategorizationCandidatesService candidatesService,
+        ICategorizationHistoryService historyService,
         ITransactionRepository transactionRepository,
         ILogger<CategorizationPipeline> logger)
     {
@@ -45,6 +47,7 @@ public class CategorizationPipeline : ICategorizationPipeline
         _mlHandler = mlHandler;
         _llmHandler = llmHandler;
         _candidatesService = candidatesService;
+        _historyService = historyService;
         _transactionRepository = transactionRepository;
         _logger = logger;
     }
@@ -278,6 +281,25 @@ public class CategorizationPipeline : ICategorizationPipeline
                 
                 await _transactionRepository.SaveChangesAsync();
                 _logger.LogInformation("Auto-applied {Count} high-confidence categorizations", result.AutoAppliedTransactions.Count);
+
+                // Record auto-applied categorizations into history
+                foreach (var categorized in result.AutoAppliedTransactions)
+                {
+                    var userId = categorized.Transaction.Account?.UserId;
+                    if (userId != null)
+                    {
+                        var source = categorized.ProcessedBy == "Rules"
+                            ? Domain.Entities.CategorizationHistorySource.RuleApplied
+                            : Domain.Entities.CategorizationHistorySource.Manual;
+
+                        await _historyService.RecordCategorizationAsync(
+                            userId.Value,
+                            categorized.Transaction.Description,
+                            categorized.CategoryId,
+                            source,
+                            cancellationToken);
+                    }
+                }
             }
         }
         catch (Exception ex)

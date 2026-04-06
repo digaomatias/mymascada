@@ -1,5 +1,7 @@
 using MyMascada.Application.Common.Configuration;
 using MyMascada.Application.Common.Interfaces;
+using MyMascada.Application.Features.Categorization.Services;
+using MyMascada.Infrastructure.BackgroundJobs;
 using MyMascada.Infrastructure.Repositories;
 using MyMascada.Infrastructure.Services;
 using MyMascada.Infrastructure.Services.AI;
@@ -46,6 +48,15 @@ public static class CategorizationServiceExtensions
         // Rule Auto-Categorization Service
         services.AddScoped<MyMascada.Application.Features.Categorization.Services.IRuleAutoCategorizationService,
             MyMascada.Application.Features.Categorization.Services.RuleAutoCategorizationService>();
+
+        // ML Handler — Similarity Matching Engine
+        services.AddScoped<ICategorizationHistoryRepository, CategorizationHistoryRepository>();
+        services.AddScoped<ISimilarityMatchingService, SimilarityMatchingService>();
+        services.AddScoped<ICategorizationHistoryService, CategorizationHistoryService>();
+
+        // Backfill job for populating history from existing categorized transactions
+        services.AddScoped<Application.BackgroundJobs.ICategorizationHistoryBackfillJobService,
+            CategorizationHistoryBackfillJobService>();
 
         return services;
     }

@@ -28,17 +28,20 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
     private readonly ICategoryRepository _categoryRepository;
     private readonly ITransferRepository _transferRepository;
     private readonly IAccountAccessService _accountAccessService;
+    private readonly Application.Features.Categorization.Services.ICategorizationHistoryService _historyService;
 
     public UpdateTransactionCommandHandler(
         ITransactionRepository transactionRepository,
         ICategoryRepository categoryRepository,
         ITransferRepository transferRepository,
-        IAccountAccessService accountAccessService)
+        IAccountAccessService accountAccessService,
+        Application.Features.Categorization.Services.ICategorizationHistoryService historyService)
     {
         _transactionRepository = transactionRepository;
         _categoryRepository = categoryRepository;
         _transferRepository = transferRepository;
         _accountAccessService = accountAccessService;
+        _historyService = historyService;
     }
 
     public async Task<TransactionDto> Handle(UpdateTransactionCommand request, CancellationToken cancellationToken)
@@ -152,6 +155,17 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
         }
 
         await _transactionRepository.SaveChangesAsync();
+
+        // Record categorization history when user manually sets a category
+        if (!isTransfer && request.CategoryId.HasValue)
+        {
+            await _historyService.RecordCategorizationAsync(
+                request.UserId,
+                transaction.Description,
+                request.CategoryId.Value,
+                MyMascada.Domain.Entities.CategorizationHistorySource.Manual,
+                cancellationToken);
+        }
 
         // Return updated DTO
         return TransactionMapper.ToDto(transaction);
