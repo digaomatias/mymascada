@@ -103,18 +103,25 @@ public class BulkAssignCategoryCommandHandler : IRequestHandler<BulkAssignCatego
 
         await _transactionRepository.SaveChangesAsync();
 
-        // Record categorization history only for transactions where category actually changed
-        var historyEvents = changedTransactions
-            .Select(t => new CategorizationHistoryEvent(
-                request.UserId,
-                t.Description,
-                request.CategoryId,
-                CategorizationHistorySource.Manual))
-            .ToList();
-
-        if (historyEvents.Count > 0)
+        // Record categorization history (best-effort — transaction updates already persisted above)
+        try
         {
-            await _historyService.RecordCategorizationBatchAsync(historyEvents, cancellationToken);
+            var historyEvents = changedTransactions
+                .Select(t => new CategorizationHistoryEvent(
+                    request.UserId,
+                    t.Description,
+                    request.CategoryId,
+                    CategorizationHistorySource.Manual))
+                .ToList();
+
+            if (historyEvents.Count > 0)
+            {
+                await _historyService.RecordCategorizationBatchAsync(historyEvents, cancellationToken);
+            }
+        }
+        catch (Exception)
+        {
+            // History recording is best-effort; transaction categorization was already saved
         }
 
         return new BulkAssignCategoryResponse

@@ -13,7 +13,7 @@ public class SimilarityMatchingService : ISimilarityMatchingService
 
     // Cache pre-tokenized history per user to avoid redundant DB queries and tokenization
     private Guid? _lastUserId;
-    private IReadOnlyList<(CategorizationHistory Entry, IReadOnlyList<string> Tokens)>? _cachedHistory;
+    private IReadOnlyList<(CategorizationHistory Entry, HashSet<string> TokenSet)>? _cachedHistory;
 
     public SimilarityMatchingService(
         ICategorizationHistoryRepository historyRepository,
@@ -70,8 +70,11 @@ public class SimilarityMatchingService : ISimilarityMatchingService
             var history = await _historyRepository.GetAllForUserAsync(userId, ct);
             _cachedHistory = history
                 .Where(h => h.Category != null)
-                .Select(h => (Entry: h, Tokens: (IReadOnlyList<string>)DescriptionNormalizer.ExtractTokens(h.NormalizedDescription)))
-                .Where(x => x.Tokens.Count > 0)
+                .Select(h => (
+                    Entry: h,
+                    TokenSet: DescriptionNormalizer.ExtractTokens(h.NormalizedDescription)
+                        .ToHashSet(StringComparer.OrdinalIgnoreCase)))
+                .Where(x => x.TokenSet.Count > 0)
                 .ToList();
             _lastUserId = userId;
         }
@@ -80,14 +83,15 @@ public class SimilarityMatchingService : ISimilarityMatchingService
             return null;
 
         SimilarityMatch? bestMatch = null;
+        var inputTokenSet = inputTokens.ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var (entry, entryTokens) in _cachedHistory)
+        foreach (var (entry, entryTokenSet) in _cachedHistory)
         {
-            var sharedTokens = inputTokens.Intersect(entryTokens, StringComparer.OrdinalIgnoreCase).Count();
+            var sharedTokens = inputTokenSet.Count(t => entryTokenSet.Contains(t));
             if (sharedTokens < 2)
                 continue;
 
-            var maxTokens = Math.Max(inputTokens.Count, entryTokens.Count);
+            var maxTokens = Math.Max(inputTokenSet.Count, entryTokenSet.Count);
             var tokenOverlap = (decimal)sharedTokens / maxTokens;
             var baseConfidence = CalculateConfidence(entry.MatchCount);
             var finalConfidence = tokenOverlap * baseConfidence;

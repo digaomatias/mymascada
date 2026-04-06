@@ -263,22 +263,31 @@ public class CategorizationCandidatesService : ICategorizationCandidatesService
                 // Mark all candidates as applied in a single bulk operation
                 await _candidatesRepository.BulkMarkCandidatesAsAppliedAsync(successfulCandidateIds, appliedBy, cancellationToken);
 
-                // Record categorization history for batch approvals
-                var historyEvents = candidates
-                    .Where(c => c.Transaction?.Account != null)
-                    .Select(c => new CategorizationHistoryEvent(
-                        c.Transaction!.Account!.UserId,
-                        c.Transaction.Description,
-                        c.CategoryId,
-                        Domain.Entities.CategorizationHistorySource.CandidateApproved))
-                    .ToList();
-
-                if (historyEvents.Count > 0)
-                {
-                    await _historyService.RecordCategorizationBatchAsync(historyEvents, cancellationToken);
-                }
-
                 result.SuccessfulCount = candidates.Count;
+
+                // Record categorization history (best-effort — updates already persisted above)
+                try
+                {
+                    var historyEvents = candidates
+                        .Where(c => c.Transaction?.Account != null)
+                        .Select(c => new CategorizationHistoryEvent(
+                            c.Transaction!.Account!.UserId,
+                            c.Transaction.Description,
+                            c.CategoryId,
+                            Domain.Entities.CategorizationHistorySource.CandidateApproved))
+                        .ToList();
+
+                    if (historyEvents.Count > 0)
+                    {
+                        await _historyService.RecordCategorizationBatchAsync(historyEvents, cancellationToken);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex,
+                        "Failed to record categorization history for {Count} batch-approved candidates (categorization was applied successfully)",
+                        candidates.Count);
+                }
                 _logger.LogDebug("Successfully bulk applied {Count} candidates", result.SuccessfulCount);
             }
             catch (Exception ex)

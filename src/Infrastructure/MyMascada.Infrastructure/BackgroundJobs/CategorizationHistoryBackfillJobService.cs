@@ -18,6 +18,12 @@ public class CategorizationHistoryBackfillJobService : ICategorizationHistoryBac
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ILogger<CategorizationHistoryBackfillJobService> _logger;
 
+    /// <summary>
+    /// Maximum categorized transactions to process per user during backfill.
+    /// Set high enough to cover full history for most users.
+    /// </summary>
+    private const int MaxTransactionsPerUser = 10_000;
+
     public CategorizationHistoryBackfillJobService(
         IServiceScopeFactory serviceScopeFactory,
         ILogger<CategorizationHistoryBackfillJobService> logger)
@@ -34,21 +40,28 @@ public class CategorizationHistoryBackfillJobService : ICategorizationHistoryBac
         var totalEntries = 0;
         var totalUsers = 0;
 
-        using var scope = _serviceScopeFactory.CreateScope();
-        var historyRepo = scope.ServiceProvider.GetRequiredService<ICategorizationHistoryRepository>();
-        var transactionRepo = scope.ServiceProvider.GetRequiredService<ITransactionRepository>();
+        // Use a separate scope to fetch user IDs, then dispose before per-user processing
+        IReadOnlyList<Guid> userIds;
+        using (var listScope = _serviceScopeFactory.CreateScope())
+        {
+            var historyRepo = listScope.ServiceProvider.GetRequiredService<ICategorizationHistoryRepository>();
+            userIds = await historyRepo.GetDistinctUserIdsWithCategorizedTransactionsAsync(ct);
+        }
 
-        var userIds = await historyRepo.GetDistinctUserIdsWithCategorizedTransactionsAsync(ct);
         _logger.LogInformation("Found {UserCount} users with categorized transactions to backfill", userIds.Count);
 
         foreach (var userId in userIds)
         {
             ct.ThrowIfCancellationRequested();
 
+            // Fresh scope per user — prevents DbContext entity accumulation and isolates failures
+            using var scope = _serviceScopeFactory.CreateScope();
+            var historyRepo = scope.ServiceProvider.GetRequiredService<ICategorizationHistoryRepository>();
+            var transactionRepo = scope.ServiceProvider.GetRequiredService<ITransactionRepository>();
+
             try
             {
-                // Load categorized transactions (up to 2000 per user — covers typical history)
-                var transactions = (await transactionRepo.GetCategorizedTransactionsAsync(userId, 2000, ct)).ToList();
+                var transactions = (await transactionRepo.GetCategorizedTransactionsAsync(userId, MaxTransactionsPerUser, ct)).ToList();
 
                 // Group by normalized description only. For descriptions that were
                 // re-categorized over time, pick the newest category (transactions
