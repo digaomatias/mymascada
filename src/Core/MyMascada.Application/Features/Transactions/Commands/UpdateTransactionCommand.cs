@@ -28,17 +28,20 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
     private readonly ICategoryRepository _categoryRepository;
     private readonly ITransferRepository _transferRepository;
     private readonly IAccountAccessService _accountAccessService;
+    private readonly Application.Features.Categorization.Services.ICategorizationHistoryService _historyService;
 
     public UpdateTransactionCommandHandler(
         ITransactionRepository transactionRepository,
         ICategoryRepository categoryRepository,
         ITransferRepository transferRepository,
-        IAccountAccessService accountAccessService)
+        IAccountAccessService accountAccessService,
+        Application.Features.Categorization.Services.ICategorizationHistoryService historyService)
     {
         _transactionRepository = transactionRepository;
         _categoryRepository = categoryRepository;
         _transferRepository = transferRepository;
         _accountAccessService = accountAccessService;
+        _historyService = historyService;
     }
 
     public async Task<TransactionDto> Handle(UpdateTransactionCommand request, CancellationToken cancellationToken)
@@ -98,9 +101,11 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
             }
         }
 
-        // Store original amount for transfer amount calculations
+        // Store originals before mutation
         var originalAmount = transaction.Amount;
         var amountChanged = Math.Abs(originalAmount - request.Amount) > 0.01m;
+        var originalCategoryId = transaction.CategoryId;
+        var originalDescription = transaction.Description;
 
         // Update transaction properties
         transaction.Amount = request.Amount;
@@ -152,6 +157,19 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
         }
 
         await _transactionRepository.SaveChangesAsync();
+
+        // Record categorization history only when the category or description actually changed
+        var categoryChanged = originalCategoryId != request.CategoryId;
+        var descriptionChanged = originalDescription != request.Description;
+        if (!isTransfer && request.CategoryId.HasValue && (categoryChanged || descriptionChanged))
+        {
+            await _historyService.RecordCategorizationAsync(
+                request.UserId,
+                transaction.Description,
+                request.CategoryId.Value,
+                MyMascada.Domain.Entities.CategorizationHistorySource.Manual,
+                cancellationToken);
+        }
 
         // Return updated DTO
         return TransactionMapper.ToDto(transaction);

@@ -20,4 +20,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="MyMascada.Tests.Unit" />
+  </ItemGroup>
+
 </Project>

@@ -1,6 +1,8 @@
 using MediatR;
 using MyMascada.Application.Common.Interfaces;
+using MyMascada.Application.Features.Categorization.Services;
 using MyMascada.Application.Features.Transactions.DTOs;
+using MyMascada.Domain.Entities;
 
 namespace MyMascada.Application.Features.Transactions.Commands;
 
@@ -16,15 +18,18 @@ public class BulkAssignCategoryCommandHandler : IRequestHandler<BulkAssignCatego
     private readonly ITransactionRepository _transactionRepository;
     private readonly ICategoryRepository _categoryRepository;
     private readonly IAccountAccessService _accountAccessService;
+    private readonly ICategorizationHistoryService _historyService;
 
     public BulkAssignCategoryCommandHandler(
         ITransactionRepository transactionRepository,
         ICategoryRepository categoryRepository,
-        IAccountAccessService accountAccessService)
+        IAccountAccessService accountAccessService,
+        ICategorizationHistoryService historyService)
     {
         _transactionRepository = transactionRepository;
         _categoryRepository = categoryRepository;
         _accountAccessService = accountAccessService;
+        _historyService = historyService;
     }
 
     public async Task<BulkAssignCategoryResponse> Handle(BulkAssignCategoryCommand request, CancellationToken cancellationToken)
@@ -73,6 +78,7 @@ public class BulkAssignCategoryCommandHandler : IRequestHandler<BulkAssignCatego
         }
 
         var updatedCount = 0;
+        var changedTransactions = new List<Domain.Entities.Transaction>();
         var now = DateTime.UtcNow;
 
         foreach (var transaction in transactions)
@@ -83,13 +89,40 @@ public class BulkAssignCategoryCommandHandler : IRequestHandler<BulkAssignCatego
                 continue;
             }
 
+            // Track whether the category actually changed for history recording
+            var categoryChanged = transaction.CategoryId != request.CategoryId;
+
             transaction.CategoryId = request.CategoryId;
             transaction.UpdatedAt = now;
             transaction.UpdatedBy = request.UserId.ToString();
             updatedCount++;
+
+            if (categoryChanged)
+                changedTransactions.Add(transaction);
         }
 
         await _transactionRepository.SaveChangesAsync();
+
+        // Record categorization history (best-effort — transaction updates already persisted above)
+        try
+        {
+            var historyEvents = changedTransactions
+                .Select(t => new CategorizationHistoryEvent(
+                    request.UserId,
+                    t.Description,
+                    request.CategoryId,
+                    CategorizationHistorySource.Manual))
+                .ToList();
+
+            if (historyEvents.Count > 0)
+            {
+                await _historyService.RecordCategorizationBatchAsync(historyEvents, cancellationToken);
+            }
+        }
+        catch (Exception)
+        {
+            // History recording is best-effort; transaction categorization was already saved
+        }
 
         return new BulkAssignCategoryResponse
         {

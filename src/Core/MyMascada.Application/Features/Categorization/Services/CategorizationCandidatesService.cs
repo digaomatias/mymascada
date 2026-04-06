@@ -11,15 +11,18 @@ public class CategorizationCandidatesService : ICategorizationCandidatesService
 {
     private readonly ICategorizationCandidatesRepository _candidatesRepository;
     private readonly ITransactionRepository _transactionRepository;
+    private readonly ICategorizationHistoryService _historyService;
     private readonly ILogger<CategorizationCandidatesService> _logger;
 
     public CategorizationCandidatesService(
         ICategorizationCandidatesRepository candidatesRepository,
         ITransactionRepository transactionRepository,
+        ICategorizationHistoryService historyService,
         ILogger<CategorizationCandidatesService> logger)
     {
         _candidatesRepository = candidatesRepository;
         _transactionRepository = transactionRepository;
+        _historyService = historyService;
         _logger = logger;
     }
 
@@ -133,8 +136,25 @@ public class CategorizationCandidatesService : ICategorizationCandidatesService
             candidate.MarkAsApplied(appliedBy);
             await _candidatesRepository.UpdateCandidateAsync(candidate, cancellationToken);
 
-            _logger.LogDebug("Successfully applied candidate {CandidateId} to transaction {TransactionId}", 
+            _logger.LogDebug("Successfully applied candidate {CandidateId} to transaction {TransactionId}",
                 candidateId, transaction.Id);
+
+            // Record categorization history
+            if (transaction.Account != null)
+            {
+                await _historyService.RecordCategorizationAsync(
+                    transaction.Account.UserId,
+                    transaction.Description,
+                    candidate.CategoryId,
+                    Domain.Entities.CategorizationHistorySource.CandidateApproved,
+                    cancellationToken);
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "Skipped categorization history for candidate {CandidateId} — transaction {TransactionId} has no Account loaded",
+                    candidateId, transaction.Id);
+            }
 
             return true;
         }
@@ -244,6 +264,30 @@ public class CategorizationCandidatesService : ICategorizationCandidatesService
                 await _candidatesRepository.BulkMarkCandidatesAsAppliedAsync(successfulCandidateIds, appliedBy, cancellationToken);
 
                 result.SuccessfulCount = candidates.Count;
+
+                // Record categorization history (best-effort — updates already persisted above)
+                try
+                {
+                    var historyEvents = candidates
+                        .Where(c => c.Transaction?.Account != null)
+                        .Select(c => new CategorizationHistoryEvent(
+                            c.Transaction!.Account!.UserId,
+                            c.Transaction.Description,
+                            c.CategoryId,
+                            Domain.Entities.CategorizationHistorySource.CandidateApproved))
+                        .ToList();
+
+                    if (historyEvents.Count > 0)
+                    {
+                        await _historyService.RecordCategorizationBatchAsync(historyEvents, cancellationToken);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex,
+                        "Failed to record categorization history for {Count} batch-approved candidates (categorization was applied successfully)",
+                        candidates.Count);
+                }
                 _logger.LogDebug("Successfully bulk applied {Count} candidates", result.SuccessfulCount);
             }
             catch (Exception ex)
