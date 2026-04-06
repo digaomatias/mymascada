@@ -1007,7 +1007,10 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.CategoryId).IsRequired();
             entity.Property(e => e.MatchCount).IsRequired().HasDefaultValue(1);
             entity.Property(e => e.LastUsedAt).IsRequired();
-            entity.Property(e => e.Source).HasMaxLength(20).HasDefaultValue("Manual");
+            entity.Property(e => e.Source)
+                .HasMaxLength(20)
+                .HasDefaultValue(CategorizationHistorySource.Manual)
+                .HasConversion<string>();
 
             // Unique composite index: one mapping per user per normalized description
             entity.HasIndex(e => new { e.UserId, e.NormalizedDescription }).IsUnique();
@@ -1015,11 +1018,11 @@ public class ApplicationDbContext : DbContext
             // Index for querying by user + category (used for conflict detection)
             entity.HasIndex(e => new { e.UserId, e.CategoryId });
 
-            // Foreign key to Category
+            // Foreign key to Category — Restrict to preserve history if category is deleted
             entity.HasOne(e => e.Category)
                 .WithMany()
                 .HasForeignKey(e => e.CategoryId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasQueryFilter(e => !e.IsDeleted);
         });

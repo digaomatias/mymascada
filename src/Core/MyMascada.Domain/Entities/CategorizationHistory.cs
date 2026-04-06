@@ -46,22 +46,22 @@ public class CategorizationHistory : BaseEntity
     public DateTime LastUsedAt { get; set; }
 
     /// <summary>
-    /// How this mapping was originally created: Manual, CandidateApproved, RuleApplied, Backfill.
+    /// How this mapping was originally created.
     /// </summary>
-    [MaxLength(20)]
-    public string Source { get; set; } = "Manual";
+    public CategorizationHistorySource Source { get; set; } = CategorizationHistorySource.Manual;
 
     // Navigation properties
     public Category Category { get; set; } = null!;
 }
 
 /// <summary>
-/// Constants for CategorizationHistory source values.
+/// Strongly-typed source values for CategorizationHistory.
 /// </summary>
-public static class CategorizationHistorySource
+public enum CategorizationHistorySource
 {
-    public const string Manual = "Manual";
-    public const string CandidateApproved = "CandidateApproved";
-    public const string RuleApplied = "RuleApplied";
-    public const string Backfill = "Backfill";
+    Manual,
+    CandidateApproved,
+    RuleApplied,
+    ModelAutoApplied,
+    Backfill
 }

@@ -288,9 +288,13 @@ public class CategorizationPipeline : ICategorizationPipeline
                     var userId = categorized.Transaction.Account?.UserId;
                     if (userId != null)
                     {
-                        var source = categorized.ProcessedBy == "Rules"
-                            ? Domain.Entities.CategorizationHistorySource.RuleApplied
-                            : Domain.Entities.CategorizationHistorySource.Manual;
+                        var source = categorized.ProcessedBy switch
+                        {
+                            "Rules" => Domain.Entities.CategorizationHistorySource.RuleApplied,
+                            "ML" => Domain.Entities.CategorizationHistorySource.ModelAutoApplied,
+                            "BankCategory" => Domain.Entities.CategorizationHistorySource.RuleApplied,
+                            _ => Domain.Entities.CategorizationHistorySource.Manual
+                        };
 
                         await _historyService.RecordCategorizationAsync(
                             userId.Value,

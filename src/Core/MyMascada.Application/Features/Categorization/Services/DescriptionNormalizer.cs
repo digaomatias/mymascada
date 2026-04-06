@@ -16,16 +16,16 @@ public static partial class DescriptionNormalizer
     [GeneratedRegex(@"\b\d{1,4}[/\-\.]\d{1,2}[/\-\.]\d{2,4}\b")]
     private static partial Regex DatePattern();
 
-    // Reference numbers: #REF-xxxxx, REF:xxxxx, #xxxxx
-    [GeneratedRegex(@"#?REF[:\-]?\w+", RegexOptions.IgnoreCase)]
+    // Reference numbers: #12345 or REF-12345 / REF:12345 (only when REF is a standalone prefix)
+    [GeneratedRegex(@"#\d+|\bREF[:\-]?\d+\b", RegexOptions.IgnoreCase)]
     private static partial Regex RefPattern();
 
     // Trailing numeric sequences (card numbers, amounts, IDs at end of string)
     [GeneratedRegex(@"\s+\d{3,}$")]
     private static partial Regex TrailingNumbersPattern();
 
-    // Special characters — keep only letters, digits, spaces, and hyphens
-    [GeneratedRegex(@"[^a-z0-9\s\-]")]
+    // Special characters — keep Unicode letters, digits, spaces, and hyphens
+    [GeneratedRegex(@"[^\p{L}\p{N}\s\-]")]
     private static partial Regex SpecialCharsPattern();
 
     // Collapse multiple spaces/hyphens to single space

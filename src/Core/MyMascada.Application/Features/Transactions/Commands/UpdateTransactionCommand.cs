@@ -101,9 +101,11 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
             }
         }
 
-        // Store original amount for transfer amount calculations
+        // Store originals before mutation
         var originalAmount = transaction.Amount;
         var amountChanged = Math.Abs(originalAmount - request.Amount) > 0.01m;
+        var originalCategoryId = transaction.CategoryId;
+        var originalDescription = transaction.Description;
 
         // Update transaction properties
         transaction.Amount = request.Amount;
@@ -156,8 +158,10 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
 
         await _transactionRepository.SaveChangesAsync();
 
-        // Record categorization history when user manually sets a category
-        if (!isTransfer && request.CategoryId.HasValue)
+        // Record categorization history only when the category or description actually changed
+        var categoryChanged = originalCategoryId != request.CategoryId;
+        var descriptionChanged = originalDescription != request.Description;
+        if (!isTransfer && request.CategoryId.HasValue && (categoryChanged || descriptionChanged))
         {
             await _historyService.RecordCategorizationAsync(
                 request.UserId,

@@ -463,6 +463,11 @@ recurringJobManager.AddOrUpdate<MyMascada.Application.BackgroundJobs.ITokenRevoc
     service => service.RetryPendingRevocationsAsync(),
     Hangfire.Cron.Daily(3, 45)); // Run daily at 3:45 AM
 
+recurringJobManager.AddOrUpdate<MyMascada.Application.BackgroundJobs.ICategorizationHistoryBackfillJobService>(
+    "categorization-history-backfill",
+    service => service.BackfillAllUsersAsync(CancellationToken.None),
+    Hangfire.Cron.Weekly(DayOfWeek.Sunday, 4, 0)); // Run weekly on Sunday at 4:00 AM
+
 // Map controllers
 app.MapControllers();
 

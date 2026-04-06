@@ -28,7 +28,20 @@ public interface ICategorizationHistoryRepository
         string normalizedDescription,
         string originalDescription,
         int categoryId,
-        string source,
+        CategorizationHistorySource source,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Inserts or updates a history entry with an absolute match count (for backfill).
+    /// Sets MatchCount = max(existing, count) to ensure idempotent reruns.
+    /// </summary>
+    Task<CategorizationHistory> UpsertWithAbsoluteCountAsync(
+        Guid userId,
+        string normalizedDescription,
+        string originalDescription,
+        int categoryId,
+        int count,
+        CategorizationHistorySource source,
         CancellationToken ct = default);
 
     /// <summary>
