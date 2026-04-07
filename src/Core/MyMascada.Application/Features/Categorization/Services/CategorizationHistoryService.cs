@@ -46,7 +46,7 @@ public class CategorizationHistoryService : ICategorizationHistoryService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex,
+            _logger.LogError(ex,
                 "Failed to record categorization history for '{DescriptionPreview}' → category {CategoryId}",
                 Sanitize(description), categoryId);
         }
@@ -78,7 +78,7 @@ public class CategorizationHistoryService : ICategorizationHistoryService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex,
+            _logger.LogError(ex,
                 "Failed to batch record {Count} categorization history entries",
                 eventList.Count);
         }
@@ -87,6 +87,9 @@ public class CategorizationHistoryService : ICategorizationHistoryService
     private static string Sanitize(string description)
     {
         if (string.IsNullOrEmpty(description)) return "[empty]";
-        return description.Length <= 10 ? description[..Math.Min(description.Length, 3)] + "***" : description[..8] + "...";
+        const int previewLength = 8;
+        return description.Length <= previewLength
+            ? "[redacted]"
+            : description[..previewLength] + "...";
     }
 }
