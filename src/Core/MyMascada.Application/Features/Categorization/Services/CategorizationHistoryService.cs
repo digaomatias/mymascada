@@ -61,6 +61,7 @@ public class CategorizationHistoryService : ICategorizationHistoryService
 
         try
         {
+            var processedCount = 0;
             foreach (var evt in eventList)
             {
                 var normalized = DescriptionNormalizer.Normalize(evt.Description);
@@ -68,10 +69,12 @@ public class CategorizationHistoryService : ICategorizationHistoryService
 
                 await _historyRepository.UpsertAsync(
                     evt.UserId, normalized, evt.Description, evt.CategoryId, evt.Source, ct);
+                processedCount++;
             }
 
             await _historyRepository.SaveChangesAsync(ct);
-            _logger.LogDebug("Batch recorded {Count} categorization history entries", eventList.Count);
+            _logger.LogDebug("Batch recorded {ProcessedCount}/{TotalCount} categorization history entries",
+                processedCount, eventList.Count);
         }
         catch (Exception ex)
         {

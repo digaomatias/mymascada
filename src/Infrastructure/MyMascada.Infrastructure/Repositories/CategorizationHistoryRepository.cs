@@ -24,6 +24,7 @@ public class CategorizationHistoryRepository : ICategorizationHistoryRepository
         Guid userId, string normalizedDescription, CancellationToken ct = default)
     {
         return await _context.CategorizationHistories
+            .AsNoTracking()
             .Include(h => h.Category)
             .FirstOrDefaultAsync(h => h.UserId == userId && h.NormalizedDescription == normalizedDescription, ct);
     }

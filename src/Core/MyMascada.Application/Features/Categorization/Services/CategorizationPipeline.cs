@@ -267,42 +267,40 @@ public class CategorizationPipeline : ICategorizationPipeline
                     var transaction = categorized.Transaction;
                     transaction.CategoryId = categorized.CategoryId;
                     transaction.MarkAsAutoCategorized(
-                        categorized.ProcessedBy switch 
+                        categorized.ProcessedBy switch
                         {
-                            "Rules" => "Rule",
-                            "ML" => "ML",
+                            "RulesHandler" => "Rule",
+                            "MLHandler" => "ML",
                             _ => categorized.ProcessedBy
                         },
                         categorized.ConfidenceScore,
                         categorized.ProcessedBy);
-                    
+
                     await _transactionRepository.UpdateAsync(transaction);
                 }
-                
+
                 await _transactionRepository.SaveChangesAsync();
                 _logger.LogInformation("Auto-applied {Count} high-confidence categorizations", result.AutoAppliedTransactions.Count);
 
-                // Record auto-applied categorizations into history
-                foreach (var categorized in result.AutoAppliedTransactions)
-                {
-                    var userId = categorized.Transaction.Account?.UserId;
-                    if (userId != null)
-                    {
-                        var source = categorized.ProcessedBy switch
+                // Record auto-applied categorizations into history (batch to avoid N+1 round-trips)
+                var historyEvents = result.AutoAppliedTransactions
+                    .Where(categorized => categorized.Transaction.Account?.UserId != null)
+                    .Select(categorized => new CategorizationHistoryEvent(
+                        categorized.Transaction.Account!.UserId,
+                        categorized.Transaction.Description,
+                        categorized.CategoryId,
+                        categorized.ProcessedBy switch
                         {
-                            "Rules" => Domain.Entities.CategorizationHistorySource.RuleApplied,
-                            "ML" => Domain.Entities.CategorizationHistorySource.ModelAutoApplied,
-                            "BankCategory" => Domain.Entities.CategorizationHistorySource.RuleApplied,
+                            "RulesHandler" => Domain.Entities.CategorizationHistorySource.RuleApplied,
+                            "MLHandler" => Domain.Entities.CategorizationHistorySource.ModelAutoApplied,
+                            "BankCategoryHandler" => Domain.Entities.CategorizationHistorySource.RuleApplied,
                             _ => Domain.Entities.CategorizationHistorySource.Manual
-                        };
+                        }))
+                    .ToList();
 
-                        await _historyService.RecordCategorizationAsync(
-                            userId.Value,
-                            categorized.Transaction.Description,
-                            categorized.CategoryId,
-                            source,
-                            cancellationToken);
-                    }
+                if (historyEvents.Count > 0)
+                {
+                    await _historyService.RecordCategorizationBatchAsync(historyEvents, cancellationToken);
                 }
             }
         }
