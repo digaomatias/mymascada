@@ -121,6 +121,12 @@ public class SubscriptionService : ISubscriptionService
         return Math.Max(0, ProRuleSuggestionQuotaPerMonth - usage.RuleSuggestionCount);
     }
 
+    /// <remarks>
+    /// The increment is not fully atomic under concurrent access — two requests reading the same
+    /// count can overwrite each other. Acceptable for self-hosted single-user; for SaaS production,
+    /// replace with ExecuteSqlRawAsync UPDATE ... SET "LlmCategorizationCount" = "LlmCategorizationCount" + @delta
+    /// or add an EF Core concurrency token (RowVersion).
+    /// </remarks>
     public async Task RecordLlmUsageAsync(Guid userId, int transactionCount, CancellationToken ct = default)
     {
         var usage = await GetOrCreateCurrentMonthUsageAsync(userId, ct);
@@ -133,6 +139,7 @@ public class SubscriptionService : ISubscriptionService
             userId, transactionCount, usage.LlmCategorizationCount);
     }
 
+    /// <inheritdoc cref="RecordLlmUsageAsync" />
     public async Task RecordRuleSuggestionUsageAsync(Guid userId, CancellationToken ct = default)
     {
         var usage = await GetOrCreateCurrentMonthUsageAsync(userId, ct);

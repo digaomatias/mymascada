@@ -73,7 +73,10 @@ public class RuleSuggestionService : IRuleSuggestionService
             MinConfidenceThreshold = minConfidence
         };
 
-        // Check subscription tier to determine if AI analysis is available
+        // Check subscription tier to determine if AI analysis is available.
+        // NOTE: This is a check-then-act pattern — concurrent calls can both pass the quota check
+        // before either records usage. Acceptable for self-hosted; for SaaS, replace with an
+        // atomic TryReserveAiQuotaAsync that checks and increments in a single operation.
         var canUseAi = (await _subscriptionService.CanUseAiRuleSuggestionsAsync(userId, cancellationToken)).IsAllowed;
 
         var config = new RuleAnalysisConfiguration

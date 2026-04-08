@@ -38,8 +38,9 @@ public class LLMHandler : CategorizationHandler
             return result;
 
         // Resolve userId from the Account navigation property on the first transaction.
-        // Account is a required relationship (non-nullable FK) so it's always loaded when
-        // the pipeline includes Account in the query. Fall back gracefully if not loaded.
+        // REQUIREMENT: The query that feeds the pipeline must .Include(t => t.Account).
+        // TransactionRepository.GetTransactionsByIdsAsync already does this.
+        // Fall back gracefully if not loaded (logs warning, returns empty result).
         var firstTransaction = transactionsList.First();
         var userId = firstTransaction.Account?.UserId;
         if (userId == null)
