@@ -1,5 +1,6 @@
 using MediatR;
 using MyMascada.Application.Common.Interfaces;
+using MyMascada.Application.Features.Categorization.Services;
 using MyMascada.Application.Features.Transactions.DTOs;
 using MyMascada.Application.Features.Transactions.Mappings;
 using MyMascada.Domain.Enums;
@@ -28,14 +29,14 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
     private readonly ICategoryRepository _categoryRepository;
     private readonly ITransferRepository _transferRepository;
     private readonly IAccountAccessService _accountAccessService;
-    private readonly Application.Features.Categorization.Services.ICategorizationHistoryService _historyService;
+    private readonly ICategorizationHistoryService _historyService;
 
     public UpdateTransactionCommandHandler(
         ITransactionRepository transactionRepository,
         ICategoryRepository categoryRepository,
         ITransferRepository transferRepository,
         IAccountAccessService accountAccessService,
-        Application.Features.Categorization.Services.ICategorizationHistoryService historyService)
+        ICategorizationHistoryService historyService)
     {
         _transactionRepository = transactionRepository;
         _categoryRepository = categoryRepository;

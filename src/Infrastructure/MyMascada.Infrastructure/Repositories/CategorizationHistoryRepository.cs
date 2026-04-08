@@ -36,6 +36,8 @@ public class CategorizationHistoryRepository : ICategorizationHistoryRepository
             .AsNoTracking()
             .Include(h => h.Category)
             .Where(h => h.UserId == userId)
+            .OrderByDescending(h => h.LastUsedAt)
+            .Take(1000)
             .ToListAsync(ct);
     }
 
@@ -90,6 +92,13 @@ public class CategorizationHistoryRepository : ICategorizationHistoryRepository
 
         if (existing != null)
         {
+            // Revive soft-deleted rows so they become visible to normal queries again
+            if (existing.IsDeleted)
+            {
+                existing.IsDeleted = false;
+                existing.DeletedAt = null;
+            }
+
             if (existing.CategoryId == categoryId)
             {
                 // Same category — reinforce the mapping
@@ -174,8 +183,26 @@ public class CategorizationHistoryRepository : ICategorizationHistoryRepository
 
         if (existing != null)
         {
-            // Idempotent: take the max to avoid inflation on reruns
-            existing.MatchCount = Math.Max(existing.MatchCount, count);
+            // Revive soft-deleted rows so they become visible to normal queries again
+            if (existing.IsDeleted)
+            {
+                existing.IsDeleted = false;
+                existing.DeletedAt = null;
+            }
+
+            if (existing.CategoryId != categoryId)
+            {
+                // Category changed — use the backfill count for the new category
+                existing.CategoryId = categoryId;
+                existing.MatchCount = count;
+                existing.Source = source;
+            }
+            else
+            {
+                // Same category — idempotent: take the max to avoid inflation on reruns
+                existing.MatchCount = Math.Max(existing.MatchCount, count);
+            }
+
             existing.LastUsedAt = DateTime.UtcNow;
             existing.UpdatedAt = DateTime.UtcNow;
         }
