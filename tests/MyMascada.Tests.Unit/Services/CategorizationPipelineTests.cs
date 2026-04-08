@@ -49,6 +49,7 @@ public class CategorizationPipelineTests
 
         _llmHandler = Substitute.For<LLMHandler>(
             Substitute.For<ISharedCategorizationService>(),
+            Substitute.For<ISubscriptionService>(),
             Substitute.For<ILogger<LLMHandler>>());
 
         _candidatesService = Substitute.For<ICategorizationCandidatesService>();

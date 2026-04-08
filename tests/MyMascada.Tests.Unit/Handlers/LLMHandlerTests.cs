@@ -14,6 +14,7 @@ namespace MyMascada.Tests.Unit.Handlers;
 public class LLMHandlerTests
 {
     private readonly ISharedCategorizationService _sharedCategorizationService;
+    private readonly ISubscriptionService _subscriptionService;
     private readonly ILogger<LLMHandler> _logger;
     private readonly LLMHandler _handler;
     private readonly Guid _userId = Guid.NewGuid();
@@ -21,20 +22,27 @@ public class LLMHandlerTests
     public LLMHandlerTests()
     {
         _sharedCategorizationService = Substitute.For<ISharedCategorizationService>();
+        _subscriptionService = Substitute.For<ISubscriptionService>();
         _logger = Substitute.For<ILogger<LLMHandler>>();
-        _handler = new LLMHandler(_sharedCategorizationService, _logger);
+
+        // Default: SelfHosted tier (unlimited) so existing tests pass unchanged
+        _subscriptionService.GetUserTierAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(SubscriptionTier.SelfHosted);
+        _subscriptionService.GetRemainingLlmQuotaAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(int.MaxValue);
+        _subscriptionService.CanUseLlmCategorizationAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(true);
+
+        _handler = new LLMHandler(_sharedCategorizationService, _subscriptionService, _logger);
     }
 
     [Fact]
     public async Task ProcessTransactionsAsync_NoTransactions_ReturnsEmptyResult()
     {
-        // Arrange
         var transactions = new List<Transaction>();
 
-        // Act
         var result = await _handler.HandleAsync(transactions, CancellationToken.None);
 
-        // Assert
         result.Should().NotBeNull();
         result.AutoAppliedTransactions.Should().BeEmpty();
         result.Candidates.Should().BeEmpty();
@@ -45,28 +53,23 @@ public class LLMHandlerTests
     [Fact]
     public async Task ProcessTransactionsAsync_NoUserIdInTransaction_SkipsProcessingAndReturnsInRemaining()
     {
-        // Arrange
         var transactions = new List<Transaction>
         {
             CreateTransaction(userId: null, description: "TEST TRANSACTION")
         };
 
-        // Act
         var result = await _handler.HandleAsync(transactions, CancellationToken.None);
 
-        // Assert
         result.Should().NotBeNull();
         result.AutoAppliedTransactions.Should().BeEmpty();
         result.Candidates.Should().BeEmpty();
         result.CategorizedTransactions.Should().BeEmpty();
-        // Transactions without userId cannot be processed and remain in RemainingTransactions
         result.RemainingTransactions.Should().HaveCount(1);
     }
 
     [Fact]
     public async Task ProcessTransactionsAsync_LLMServiceFails_ReturnsErrorResult()
     {
-        // Arrange
         var transactions = new List<Transaction>
         {
             CreateTransaction(userId: _userId, description: "UNKNOWN MERCHANT")
@@ -82,10 +85,8 @@ public class LLMHandlerTests
             Arg.Any<IEnumerable<Transaction>>(), _userId, Arg.Any<CancellationToken>())
             .Returns(llmResponse);
 
-        // Act
         var result = await _handler.HandleAsync(transactions, CancellationToken.None);
 
-        // Assert
         result.Should().NotBeNull();
         result.AutoAppliedTransactions.Should().BeEmpty();
         result.Candidates.Should().BeEmpty();
@@ -96,7 +97,6 @@ public class LLMHandlerTests
     [Fact]
     public async Task ProcessTransactionsAsync_LLMServiceSucceeds_CreatesCandidates()
     {
-        // Arrange
         var transactions = new List<Transaction>
         {
             CreateTransaction(userId: _userId, description: "UNKNOWN MERCHANT", id: 1),
@@ -141,21 +141,18 @@ public class LLMHandlerTests
             llmResponse, $"LLMHandler-{_userId}")
             .Returns(candidates);
 
-        // Act
         var result = await _handler.HandleAsync(transactions, CancellationToken.None);
 
-        // Assert
         result.Should().NotBeNull();
         result.AutoAppliedTransactions.Should().BeEmpty(); // LLM never auto-applies
         result.Candidates.Should().HaveCount(2);
         result.Metrics.ProcessedByLLM.Should().Be(2);
-        result.RemainingTransactions.Should().HaveCount(2); // Transactions remain for final processing
+        result.RemainingTransactions.Should().HaveCount(2);
     }
 
     [Fact]
     public async Task ProcessTransactionsAsync_ValidTransactions_UpdatesMetrics()
     {
-        // Arrange
         var transactions = new List<Transaction>
         {
             CreateTransaction(userId: _userId, description: "MERCHANT A"),
@@ -182,10 +179,8 @@ public class LLMHandlerTests
             llmResponse, $"LLMHandler-{_userId}")
             .Returns(candidates);
 
-        // Act
         var result = await _handler.HandleAsync(transactions, CancellationToken.None);
 
-        // Assert
         result.Should().NotBeNull();
         result.Metrics.ProcessedByLLM.Should().Be(2);
         result.Metrics.EstimatedCostSavings.Should().BeGreaterThan(0);
@@ -196,7 +191,6 @@ public class LLMHandlerTests
     [Fact]
     public async Task ProcessTransactionsAsync_ExceptionThrown_ReturnsErrorResult()
     {
-        // Arrange
         var transactions = new List<Transaction>
         {
             CreateTransaction(userId: _userId, description: "TEST TRANSACTION")
@@ -206,10 +200,8 @@ public class LLMHandlerTests
             Arg.Any<IEnumerable<Transaction>>(), _userId, Arg.Any<CancellationToken>())
             .Returns(Task.FromException<LlmCategorizationResponse>(new Exception("Network error")));
 
-        // Act
         var result = await _handler.HandleAsync(transactions, CancellationToken.None);
 
-        // Assert
         result.Should().NotBeNull();
         result.AutoAppliedTransactions.Should().BeEmpty();
         result.Candidates.Should().BeEmpty();
@@ -220,7 +212,6 @@ public class LLMHandlerTests
     [Fact]
     public async Task ProcessTransactionsAsync_EmptyLLMResponse_ReturnsEmptyResult()
     {
-        // Arrange
         var transactions = new List<Transaction>
         {
             CreateTransaction(userId: _userId, description: "TEST TRANSACTION")
@@ -242,15 +233,182 @@ public class LLMHandlerTests
             llmResponse, $"LLMHandler-{_userId}")
             .Returns(candidates);
 
-        // Act
         var result = await _handler.HandleAsync(transactions, CancellationToken.None);
 
-        // Assert
         result.Should().NotBeNull();
         result.AutoAppliedTransactions.Should().BeEmpty();
         result.Candidates.Should().BeEmpty();
         result.Metrics.ProcessedByLLM.Should().Be(0);
         result.RemainingTransactions.Should().HaveCount(1);
+    }
+
+    // --- Phase 3: Tier gating tests ---
+
+    [Fact]
+    public async Task ProcessTransactionsAsync_FreeUser_SkipsProcessing()
+    {
+        _subscriptionService.GetUserTierAsync(_userId, Arg.Any<CancellationToken>())
+            .Returns(SubscriptionTier.Free);
+
+        var transactions = new List<Transaction>
+        {
+            CreateTransaction(userId: _userId, description: "TEST TRANSACTION")
+        };
+
+        var result = await _handler.HandleAsync(transactions, CancellationToken.None);
+
+        result.Should().NotBeNull();
+        result.Candidates.Should().BeEmpty();
+        result.AutoAppliedTransactions.Should().BeEmpty();
+        result.Errors.Should().BeEmpty();
+
+        // LLM service should never be called for free users
+        await _sharedCategorizationService.DidNotReceive()
+            .GetCategorizationSuggestionsAsync(Arg.Any<IEnumerable<Transaction>>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ProcessTransactionsAsync_ProUserWithQuota_ProcessesNormally()
+    {
+        _subscriptionService.GetUserTierAsync(_userId, Arg.Any<CancellationToken>())
+            .Returns(SubscriptionTier.Pro);
+        _subscriptionService.GetRemainingLlmQuotaAsync(_userId, Arg.Any<CancellationToken>())
+            .Returns(100);
+
+        var transactions = new List<Transaction>
+        {
+            CreateTransaction(userId: _userId, description: "UNKNOWN MERCHANT", id: 1)
+        };
+
+        var llmResponse = new LlmCategorizationResponse
+        {
+            Success = true,
+            Categorizations = new List<TransactionCategorization>()
+        };
+
+        var candidates = new List<CategorizationCandidate>
+        {
+            CreateCandidate(transactionId: 1, categoryId: 123, confidence: 0.85m)
+        };
+
+        _sharedCategorizationService.GetCategorizationSuggestionsAsync(
+            Arg.Any<IEnumerable<Transaction>>(), _userId, Arg.Any<CancellationToken>())
+            .Returns(llmResponse);
+        _sharedCategorizationService.ConvertToCategorizationCandidates(
+            llmResponse, $"LLMHandler-{_userId}")
+            .Returns(candidates);
+
+        var result = await _handler.HandleAsync(transactions, CancellationToken.None);
+
+        result.Candidates.Should().HaveCount(1);
+        result.Metrics.ProcessedByLLM.Should().Be(1);
+
+        // Usage should be recorded
+        await _subscriptionService.Received(1)
+            .RecordLlmUsageAsync(_userId, 1, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ProcessTransactionsAsync_ProUserQuotaExceeded_SkipsWithWarning()
+    {
+        _subscriptionService.GetUserTierAsync(_userId, Arg.Any<CancellationToken>())
+            .Returns(SubscriptionTier.Pro);
+        _subscriptionService.GetRemainingLlmQuotaAsync(_userId, Arg.Any<CancellationToken>())
+            .Returns(0);
+
+        var transactions = new List<Transaction>
+        {
+            CreateTransaction(userId: _userId, description: "TEST TRANSACTION")
+        };
+
+        var result = await _handler.HandleAsync(transactions, CancellationToken.None);
+
+        result.Candidates.Should().BeEmpty();
+        result.Errors.Should().ContainSingle()
+            .Which.Should().Contain("quota exceeded");
+
+        await _sharedCategorizationService.DidNotReceive()
+            .GetCategorizationSuggestionsAsync(Arg.Any<IEnumerable<Transaction>>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ProcessTransactionsAsync_ProUserPartialQuota_CapsBatchSize()
+    {
+        _subscriptionService.GetUserTierAsync(_userId, Arg.Any<CancellationToken>())
+            .Returns(SubscriptionTier.Pro);
+        _subscriptionService.GetRemainingLlmQuotaAsync(_userId, Arg.Any<CancellationToken>())
+            .Returns(2); // Only 2 remaining
+
+        var transactions = new List<Transaction>
+        {
+            CreateTransaction(userId: _userId, description: "TX 1", id: 1),
+            CreateTransaction(userId: _userId, description: "TX 2", id: 2),
+            CreateTransaction(userId: _userId, description: "TX 3", id: 3),
+            CreateTransaction(userId: _userId, description: "TX 4", id: 4),
+            CreateTransaction(userId: _userId, description: "TX 5", id: 5)
+        };
+
+        var llmResponse = new LlmCategorizationResponse
+        {
+            Success = true,
+            Categorizations = new List<TransactionCategorization>()
+        };
+        var candidates = new List<CategorizationCandidate>();
+
+        _sharedCategorizationService.GetCategorizationSuggestionsAsync(
+            Arg.Any<IEnumerable<Transaction>>(), _userId, Arg.Any<CancellationToken>())
+            .Returns(llmResponse);
+        _sharedCategorizationService.ConvertToCategorizationCandidates(
+            llmResponse, Arg.Any<string>())
+            .Returns(candidates);
+
+        var result = await _handler.HandleAsync(transactions, CancellationToken.None);
+
+        // Verify only 2 transactions were sent to LLM (quota cap)
+        await _sharedCategorizationService.Received(1)
+            .GetCategorizationSuggestionsAsync(
+                Arg.Is<IEnumerable<Transaction>>(t => t.Count() == 2),
+                _userId,
+                Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ProcessTransactionsAsync_SelfHostedUser_ProcessesUnlimited()
+    {
+        _subscriptionService.GetUserTierAsync(_userId, Arg.Any<CancellationToken>())
+            .Returns(SubscriptionTier.SelfHosted);
+
+        var transactions = new List<Transaction>
+        {
+            CreateTransaction(userId: _userId, description: "MERCHANT A", id: 1),
+            CreateTransaction(userId: _userId, description: "MERCHANT B", id: 2)
+        };
+
+        var llmResponse = new LlmCategorizationResponse
+        {
+            Success = true,
+            Categorizations = new List<TransactionCategorization>()
+        };
+        var candidates = new List<CategorizationCandidate>
+        {
+            CreateCandidate(transactionId: 1, categoryId: 123, confidence: 0.85m),
+            CreateCandidate(transactionId: 2, categoryId: 456, confidence: 0.75m)
+        };
+
+        _sharedCategorizationService.GetCategorizationSuggestionsAsync(
+            Arg.Any<IEnumerable<Transaction>>(), _userId, Arg.Any<CancellationToken>())
+            .Returns(llmResponse);
+        _sharedCategorizationService.ConvertToCategorizationCandidates(
+            llmResponse, $"LLMHandler-{_userId}")
+            .Returns(candidates);
+
+        var result = await _handler.HandleAsync(transactions, CancellationToken.None);
+
+        result.Candidates.Should().HaveCount(2);
+
+        // No quota check needed for self-hosted
+        await _subscriptionService.DidNotReceive()
+            .GetRemainingLlmQuotaAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>());
     }
 
     private Transaction CreateTransaction(Guid? userId, string description, int id = 1, int accountId = 1)

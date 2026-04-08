@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyMascada.Application.Features.Transactions.Commands;
 using MyMascada.Application.Common.Interfaces;
+using MyMascada.Domain.Enums;
 
 namespace MyMascada.WebAPI.Controllers;
 
@@ -17,12 +18,18 @@ public class LlmCategorizationController : ControllerBase
     private readonly IMediator _mediator;
     private readonly ILogger<LlmCategorizationController> _logger;
     private readonly ICurrentUserService _currentUserService;
+    private readonly ISubscriptionService _subscriptionService;
 
-    public LlmCategorizationController(IMediator mediator, ILogger<LlmCategorizationController> logger, ICurrentUserService currentUserService)
+    public LlmCategorizationController(
+        IMediator mediator,
+        ILogger<LlmCategorizationController> logger,
+        ICurrentUserService currentUserService,
+        ISubscriptionService subscriptionService)
     {
         _mediator = mediator;
         _logger = logger;
         _currentUserService = currentUserService;
+        _subscriptionService = subscriptionService;
     }
 
     [HttpPost("batch-categorize")]
@@ -33,6 +40,18 @@ public class LlmCategorizationController : ControllerBase
         {
             var userId = _currentUserService.GetUserId();
 
+            // Tier check: free users cannot use LLM categorization
+            var canUse = await _subscriptionService.CanUseLlmCategorizationAsync(userId);
+            if (!canUse)
+            {
+                var tier = await _subscriptionService.GetUserTierAsync(userId);
+                if (tier == SubscriptionTier.Free)
+                {
+                    return StatusCode(403, new { error = "LLM categorization is not available on the Free plan. Upgrade to Pro for AI-powered categorization." });
+                }
+                return StatusCode(403, new { error = "Monthly LLM categorization quota exceeded. Quota resets at the start of next month." });
+            }
+
             var command = new BulkCategorizeWithLlmCommand
             {
                 UserId = userId,
@@ -41,10 +60,10 @@ public class LlmCategorizationController : ControllerBase
             };
 
             var result = await _mediator.Send(command);
-            
+
             if (!result.Success)
             {
-                _logger.LogWarning("Batch categorization failed for user {UserId}: {Errors}", 
+                _logger.LogWarning("Batch categorization failed for user {UserId}: {Errors}",
                     userId, string.Join(", ", result.Errors));
                 return BadRequest(new { errors = result.Errors });
             }
@@ -65,7 +84,7 @@ public class LlmCategorizationController : ControllerBase
         {
             var llmService = HttpContext.RequestServices.GetRequiredService<ILlmCategorizationService>();
             var isAvailable = await llmService.IsServiceAvailableAsync();
-            
+
             return Ok(new LlmServiceHealthResponse
             {
                 IsAvailable = isAvailable,

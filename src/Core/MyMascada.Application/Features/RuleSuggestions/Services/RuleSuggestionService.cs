@@ -20,6 +20,7 @@ public class RuleSuggestionService : IRuleSuggestionService
     private readonly IRuleSuggestionAnalyzerFactory _analyzerFactory;
     private readonly ICategorizationHistoryRepository _historyRepository;
     private readonly IFeatureFlags _featureFlags;
+    private readonly ISubscriptionService _subscriptionService;
 
     public RuleSuggestionService(
         IRuleSuggestionRepository ruleSuggestionRepository,
@@ -28,7 +29,8 @@ public class RuleSuggestionService : IRuleSuggestionService
         ICategoryRepository categoryRepository,
         IRuleSuggestionAnalyzerFactory analyzerFactory,
         ICategorizationHistoryRepository historyRepository,
-        IFeatureFlags featureFlags)
+        IFeatureFlags featureFlags,
+        ISubscriptionService subscriptionService)
     {
         _ruleSuggestionRepository = ruleSuggestionRepository;
         _transactionRepository = transactionRepository;
@@ -37,6 +39,7 @@ public class RuleSuggestionService : IRuleSuggestionService
         _analyzerFactory = analyzerFactory;
         _historyRepository = historyRepository;
         _featureFlags = featureFlags;
+        _subscriptionService = subscriptionService;
     }
 
     /// <summary>
@@ -70,12 +73,13 @@ public class RuleSuggestionService : IRuleSuggestionService
             MinConfidenceThreshold = minConfidence
         };
 
-        // Create analyzer based on default configuration
-        // The factory will handle configuration reading from the Infrastructure layer
+        // Check subscription tier to determine if AI analysis is available
+        var canUseAi = await _subscriptionService.CanUseAiRuleSuggestionsAsync(userId, cancellationToken);
+
         var config = new RuleAnalysisConfiguration
         {
             IsAIAnalysisEnabled = _featureFlags.AiCategorization,
-            UseAIForUser = true, // TODO: This should be based on user tier (free vs pro)
+            UseAIForUser = canUseAi,
             FallbackToBasicOnAIFailure = true,
             MaxAICallsPerUserPerDay = 5,
             MinTransactionsForAI = 50
@@ -105,6 +109,12 @@ public class RuleSuggestionService : IRuleSuggestionService
             {
                 // Duplicate detected at DB level (concurrent generation race) — skip
             }
+        }
+
+        // Record AI usage if AI-enhanced analyzer was used
+        if (canUseAi && analyzer.RequiresAI && savedSuggestions.Count > 0)
+        {
+            await _subscriptionService.RecordRuleSuggestionUsageAsync(userId, cancellationToken);
         }
 
         return savedSuggestions;

@@ -6,6 +6,7 @@ using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.RuleSuggestions.Commands;
 using MyMascada.Application.Features.RuleSuggestions.DTOs;
 using MyMascada.Application.Features.RuleSuggestions.Queries;
+using MyMascada.Domain.Enums;
 
 namespace MyMascada.WebAPI.Controllers;
 
@@ -18,11 +19,16 @@ public class RuleSuggestionsController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ICurrentUserService _currentUserService;
+    private readonly ISubscriptionService _subscriptionService;
 
-    public RuleSuggestionsController(IMediator mediator, ICurrentUserService currentUserService)
+    public RuleSuggestionsController(
+        IMediator mediator,
+        ICurrentUserService currentUserService,
+        ISubscriptionService subscriptionService)
     {
         _mediator = mediator;
         _currentUserService = currentUserService;
+        _subscriptionService = subscriptionService;
     }
 
     /// <summary>
@@ -55,7 +61,9 @@ public class RuleSuggestionsController : ControllerBase
     }
 
     /// <summary>
-    /// Generate new rule suggestions for the current user
+    /// Generate new rule suggestions for the current user.
+    /// AI-enhanced generation requires a Pro subscription or self-hosted deployment.
+    /// Free users still get basic (deterministic) suggestions.
     /// </summary>
     [HttpPost("generate")]
     public async Task<ActionResult<RuleSuggestionsResponse>> GenerateRuleSuggestions(
@@ -64,6 +72,19 @@ public class RuleSuggestionsController : ControllerBase
         try
         {
             var userId = _currentUserService.GetUserId();
+
+            // Tier check: free users cannot use AI-enhanced rule generation
+            var canUseAi = await _subscriptionService.CanUseAiRuleSuggestionsAsync(userId);
+            if (!canUseAi)
+            {
+                var tier = await _subscriptionService.GetUserTierAsync(userId);
+                if (tier == SubscriptionTier.Free)
+                {
+                    return StatusCode(403, new { error = "AI-enhanced rule suggestions are not available on the Free plan. Basic rule suggestions are generated automatically." });
+                }
+                return StatusCode(403, new { error = "Monthly AI rule suggestion quota exceeded. Quota resets at the start of next month." });
+            }
+
             var command = new GenerateRuleSuggestionsCommand
             {
                 UserId = userId,
