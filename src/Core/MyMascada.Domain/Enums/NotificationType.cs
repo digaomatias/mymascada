@@ -36,6 +36,7 @@ public enum NotificationType
     AiInsight = 50,
     ReceiptProcessed = 51,
     ReceiptProcessingFailed = 52,
+    RuleSuggestionsAvailable = 53,
 
     // System
     SystemMessage = 60,
