@@ -3,6 +3,7 @@ using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Categorization.Services;
 using MyMascada.Application.Features.Transactions.DTOs;
 using MyMascada.Application.Features.Transactions.Mappings;
+using MyMascada.Domain.Entities;
 using MyMascada.Domain.Enums;
 using MyMascada.Domain.Common;
 
@@ -170,7 +171,7 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
                     request.UserId,
                     transaction.Description,
                     request.CategoryId.Value,
-                    MyMascada.Domain.Entities.CategorizationHistorySource.Manual,
+                    CategorizationHistorySource.Manual,
                     cancellationToken);
             }
             catch (OperationCanceledException)

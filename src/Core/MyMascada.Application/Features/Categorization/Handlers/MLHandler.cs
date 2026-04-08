@@ -108,13 +108,6 @@ public class MLHandler : CategorizationHandler
                     };
 
                     result.Candidates.Add(candidate);
-                    result.CategorizedTransactions.Add(CreateCategorizedTransaction(
-                        transaction,
-                        match.CategoryId,
-                        match.CategoryName,
-                        match.Confidence,
-                        $"{match.MatchType} match candidate"));
-
                     processedCount++;
 
                     _logger.LogDebug(

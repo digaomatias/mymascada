@@ -146,7 +146,7 @@ public class CategorizationCandidatesService : ICategorizationCandidatesService
                     transaction.Account.UserId,
                     transaction.Description,
                     candidate.CategoryId,
-                    Domain.Entities.CategorizationHistorySource.CandidateApproved,
+                    CategorizationHistorySource.CandidateApproved,
                     cancellationToken);
             }
             else
@@ -274,7 +274,7 @@ public class CategorizationCandidatesService : ICategorizationCandidatesService
                             c.Transaction!.Account!.UserId,
                             c.Transaction.Description,
                             c.CategoryId,
-                            Domain.Entities.CategorizationHistorySource.CandidateApproved))
+                            CategorizationHistorySource.CandidateApproved))
                         .ToList();
 
                     if (historyEvents.Count > 0)

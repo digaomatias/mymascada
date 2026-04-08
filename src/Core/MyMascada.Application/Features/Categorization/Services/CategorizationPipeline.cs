@@ -291,11 +291,11 @@ public class CategorizationPipeline : ICategorizationPipeline
                         categorized.CategoryId,
                         categorized.ProcessedBy switch
                         {
-                            "Rules" => Domain.Entities.CategorizationHistorySource.RuleApplied,
-                            "ML" => Domain.Entities.CategorizationHistorySource.ModelAutoApplied,
-                            "BankCategory" => Domain.Entities.CategorizationHistorySource.RuleApplied,
-                            "LLM" => Domain.Entities.CategorizationHistorySource.ModelAutoApplied,
-                            _ => Domain.Entities.CategorizationHistorySource.Manual
+                            "Rules" => CategorizationHistorySource.RuleApplied,
+                            "ML" => CategorizationHistorySource.ModelAutoApplied,
+                            "BankCategory" => CategorizationHistorySource.RuleApplied,
+                            "LLM" => CategorizationHistorySource.ModelAutoApplied,
+                            _ => CategorizationHistorySource.Manual
                         }))
                     .ToList();
 

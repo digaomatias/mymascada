@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Domain.Entities;
 using MyMascada.Infrastructure.Data;
@@ -8,10 +9,15 @@ namespace MyMascada.Infrastructure.Repositories;
 public class CategorizationHistoryRepository : ICategorizationHistoryRepository
 {
     private readonly ApplicationDbContext _context;
+    private readonly ILogger<CategorizationHistoryRepository> _logger;
+    private const int MaxHistoryPerUser = 1000;
 
-    public CategorizationHistoryRepository(ApplicationDbContext context)
+    public CategorizationHistoryRepository(
+        ApplicationDbContext context,
+        ILogger<CategorizationHistoryRepository> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task<CategorizationHistory?> FindByNormalizedDescriptionAsync(
@@ -26,13 +32,23 @@ public class CategorizationHistoryRepository : ICategorizationHistoryRepository
     public async Task<IReadOnlyList<CategorizationHistory>> GetAllForUserAsync(
         Guid userId, CancellationToken ct = default)
     {
-        return await _context.CategorizationHistories
+        var results = await _context.CategorizationHistories
             .AsNoTracking()
             .Include(h => h.Category)
             .Where(h => h.UserId == userId)
             .OrderByDescending(h => h.LastUsedAt)
-            .Take(1000)
+            .Take(MaxHistoryPerUser)
             .ToListAsync(ct);
+
+        if (results.Count == MaxHistoryPerUser)
+        {
+            _logger.LogWarning(
+                "User {UserId} has {MaxHistory}+ categorization history entries; " +
+                "oldest entries are excluded from fuzzy matching",
+                userId, MaxHistoryPerUser);
+        }
+
+        return results;
     }
 
     /// <summary>
