@@ -269,8 +269,8 @@ public class CategorizationPipeline : ICategorizationPipeline
                     transaction.MarkAsAutoCategorized(
                         categorized.ProcessedBy switch
                         {
-                            "RulesHandler" => "Rule",
-                            "MLHandler" => "ML",
+                            "Rules" => "Rule",
+                            "ML" => "ML",
                             _ => categorized.ProcessedBy
                         },
                         categorized.ConfidenceScore,
@@ -291,9 +291,10 @@ public class CategorizationPipeline : ICategorizationPipeline
                         categorized.CategoryId,
                         categorized.ProcessedBy switch
                         {
-                            "RulesHandler" => Domain.Entities.CategorizationHistorySource.RuleApplied,
-                            "MLHandler" => Domain.Entities.CategorizationHistorySource.ModelAutoApplied,
-                            "BankCategoryHandler" => Domain.Entities.CategorizationHistorySource.RuleApplied,
+                            "Rules" => Domain.Entities.CategorizationHistorySource.RuleApplied,
+                            "ML" => Domain.Entities.CategorizationHistorySource.ModelAutoApplied,
+                            "BankCategory" => Domain.Entities.CategorizationHistorySource.RuleApplied,
+                            "LLM" => Domain.Entities.CategorizationHistorySource.ModelAutoApplied,
                             _ => Domain.Entities.CategorizationHistorySource.Manual
                         }))
                     .ToList();

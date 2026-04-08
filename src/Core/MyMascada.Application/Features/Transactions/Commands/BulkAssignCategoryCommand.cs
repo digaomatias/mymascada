@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Categorization.Services;
 using MyMascada.Application.Features.Transactions.DTOs;
@@ -19,17 +20,20 @@ public class BulkAssignCategoryCommandHandler : IRequestHandler<BulkAssignCatego
     private readonly ICategoryRepository _categoryRepository;
     private readonly IAccountAccessService _accountAccessService;
     private readonly ICategorizationHistoryService _historyService;
+    private readonly ILogger<BulkAssignCategoryCommandHandler> _logger;
 
     public BulkAssignCategoryCommandHandler(
         ITransactionRepository transactionRepository,
         ICategoryRepository categoryRepository,
         IAccountAccessService accountAccessService,
-        ICategorizationHistoryService historyService)
+        ICategorizationHistoryService historyService,
+        ILogger<BulkAssignCategoryCommandHandler> logger)
     {
         _transactionRepository = transactionRepository;
         _categoryRepository = categoryRepository;
         _accountAccessService = accountAccessService;
         _historyService = historyService;
+        _logger = logger;
     }
 
     public async Task<BulkAssignCategoryResponse> Handle(BulkAssignCategoryCommand request, CancellationToken cancellationToken)
@@ -119,9 +123,15 @@ public class BulkAssignCategoryCommandHandler : IRequestHandler<BulkAssignCatego
                 await _historyService.RecordCategorizationBatchAsync(historyEvents, cancellationToken);
             }
         }
-        catch (Exception)
+        catch (OperationCanceledException)
         {
-            // History recording is best-effort; transaction categorization was already saved
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Failed to record categorization history for bulk assign of {Count} transactions to category {CategoryId} (categorization was applied successfully)",
+                changedTransactions.Count, request.CategoryId);
         }
 
         return new BulkAssignCategoryResponse

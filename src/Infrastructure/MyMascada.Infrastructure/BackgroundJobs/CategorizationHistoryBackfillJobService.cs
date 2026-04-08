@@ -66,7 +66,8 @@ public class CategorizationHistoryBackfillJobService : ICategorizationHistoryBac
                 // Group by normalized description only. For descriptions that were
                 // re-categorized over time, pick the newest category (transactions
                 // arrive in descending CreatedAt order, so First() is the newest).
-                // Count reflects all occurrences regardless of category.
+                // Count only includes transactions matching the winning category to
+                // avoid inflating confidence for re-categorized descriptions.
                 var groups = transactions
                     .Where(t => t.CategoryId.HasValue)
                     .Select(t => new
@@ -85,7 +86,7 @@ public class CategorizationHistoryBackfillJobService : ICategorizationHistoryBac
                             Normalized = g.Key,
                             newest.Description,
                             newest.CategoryId,
-                            Count = g.Count()
+                            Count = g.Count(x => x.CategoryId == newest.CategoryId)
                         };
                     })
                     .ToList();
