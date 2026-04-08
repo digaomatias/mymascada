@@ -13,6 +13,7 @@ public class CategorizationCandidatesServiceTests
 {
     private readonly ICategorizationCandidatesRepository _candidatesRepository;
     private readonly ITransactionRepository _transactionRepository;
+    private readonly ICategorizationHistoryService _historyService;
     private readonly ILogger<CategorizationCandidatesService> _logger;
     private readonly CategorizationCandidatesService _service;
     private readonly Guid _userId = Guid.NewGuid();
@@ -21,8 +22,9 @@ public class CategorizationCandidatesServiceTests
     {
         _candidatesRepository = Substitute.For<ICategorizationCandidatesRepository>();
         _transactionRepository = Substitute.For<ITransactionRepository>();
+        _historyService = Substitute.For<ICategorizationHistoryService>();
         _logger = Substitute.For<ILogger<CategorizationCandidatesService>>();
-        _service = new CategorizationCandidatesService(_candidatesRepository, _transactionRepository, _logger);
+        _service = new CategorizationCandidatesService(_candidatesRepository, _transactionRepository, _historyService, _logger);
     }
 
     [Fact]

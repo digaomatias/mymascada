@@ -28,6 +28,7 @@ public class CategorizationPipeline : ICategorizationPipeline
     private readonly MLHandler _mlHandler;
     private readonly LLMHandler _llmHandler;
     private readonly ICategorizationCandidatesService _candidatesService;
+    private readonly ICategorizationHistoryService _historyService;
     private readonly ITransactionRepository _transactionRepository;
     private readonly ILogger<CategorizationPipeline> _logger;
 
@@ -37,6 +38,7 @@ public class CategorizationPipeline : ICategorizationPipeline
         MLHandler mlHandler,
         LLMHandler llmHandler,
         ICategorizationCandidatesService candidatesService,
+        ICategorizationHistoryService historyService,
         ITransactionRepository transactionRepository,
         ILogger<CategorizationPipeline> logger)
     {
@@ -45,6 +47,7 @@ public class CategorizationPipeline : ICategorizationPipeline
         _mlHandler = mlHandler;
         _llmHandler = llmHandler;
         _candidatesService = candidatesService;
+        _historyService = historyService;
         _transactionRepository = transactionRepository;
         _logger = logger;
     }
@@ -264,7 +267,7 @@ public class CategorizationPipeline : ICategorizationPipeline
                     var transaction = categorized.Transaction;
                     transaction.CategoryId = categorized.CategoryId;
                     transaction.MarkAsAutoCategorized(
-                        categorized.ProcessedBy switch 
+                        categorized.ProcessedBy switch
                         {
                             "Rules" => "Rule",
                             "ML" => "ML",
@@ -272,12 +275,34 @@ public class CategorizationPipeline : ICategorizationPipeline
                         },
                         categorized.ConfidenceScore,
                         categorized.ProcessedBy);
-                    
+
                     await _transactionRepository.UpdateAsync(transaction);
                 }
-                
+
                 await _transactionRepository.SaveChangesAsync();
                 _logger.LogInformation("Auto-applied {Count} high-confidence categorizations", result.AutoAppliedTransactions.Count);
+
+                // Record auto-applied categorizations into history (batch to avoid N+1 round-trips)
+                var historyEvents = result.AutoAppliedTransactions
+                    .Where(categorized => categorized.Transaction.Account?.UserId != null)
+                    .Select(categorized => new CategorizationHistoryEvent(
+                        categorized.Transaction.Account!.UserId,
+                        categorized.Transaction.Description,
+                        categorized.CategoryId,
+                        categorized.ProcessedBy switch
+                        {
+                            "Rules" => CategorizationHistorySource.RuleApplied,
+                            "ML" => CategorizationHistorySource.ModelAutoApplied,
+                            "BankCategory" => CategorizationHistorySource.RuleApplied,
+                            "LLM" => CategorizationHistorySource.ModelAutoApplied,
+                            _ => CategorizationHistorySource.Manual
+                        }))
+                    .ToList();
+
+                if (historyEvents.Count > 0)
+                {
+                    await _historyService.RecordCategorizationBatchAsync(historyEvents, cancellationToken);
+                }
             }
         }
         catch (Exception ex)

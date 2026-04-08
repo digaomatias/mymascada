@@ -463,6 +463,21 @@ recurringJobManager.AddOrUpdate<MyMascada.Application.BackgroundJobs.ITokenRevoc
     service => service.RetryPendingRevocationsAsync(),
     Hangfire.Cron.Daily(3, 45)); // Run daily at 3:45 AM
 
+// One-time backfill job to populate history from existing categorized transactions.
+// Only enqueue if the history table is empty and there are categorized transactions to backfill.
+using (var backfillScope = app.Services.CreateScope())
+{
+    var dbContext = backfillScope.ServiceProvider
+        .GetRequiredService<MyMascada.Infrastructure.Data.ApplicationDbContext>();
+    var hasHistory = await dbContext.CategorizationHistories.AnyAsync();
+
+    if (!hasHistory && await dbContext.Transactions.AnyAsync(t => t.CategoryId != null && !t.IsDeleted))
+    {
+        BackgroundJob.Enqueue<MyMascada.Application.BackgroundJobs.ICategorizationHistoryBackfillJobService>(
+            service => service.BackfillAllUsersAsync(CancellationToken.None));
+    }
+}
+
 // Map controllers
 app.MapControllers();
 
