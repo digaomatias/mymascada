@@ -49,6 +49,11 @@ public class SubscriptionService : ISubscriptionService
         return ResolveTier(subscription);
     }
 
+    /// <remarks>
+    /// NOTE: When called from LlmCategorizationController AND the pipeline's LLMHandler in the
+    /// same request, GetCurrentMonthUsageAsync hits the DB twice (subscription is cached, usage is not).
+    /// Acceptable overhead for now; consider caching usage per-request if this becomes a hot path.
+    /// </remarks>
     public async Task<AiFeatureAccessResult> CanUseLlmCategorizationAsync(Guid userId, CancellationToken ct = default)
     {
         if (!_featureFlags.StripeBilling)
@@ -172,12 +177,18 @@ public class SubscriptionService : ISubscriptionService
     /// <summary>
     /// Derives the subscription tier from subscription data without a DB call.
     /// </summary>
+    /// <remarks>
+    /// Expected Stripe subscription status values: "active", "trialing", "past_due",
+    /// "canceled", "unpaid", "incomplete", "incomplete_expired", "paused".
+    /// We also use "free" as a local convention for users without a paid plan.
+    /// Only "active" and "trialing" grant paid-tier access.
+    /// </remarks>
     private static SubscriptionTier ResolveTier(UserSubscription? subscription)
     {
         if (subscription == null || subscription.Status == "free")
             return SubscriptionTier.Free;
 
-        if (subscription.Status != "active")
+        if (subscription.Status is not ("active" or "trialing"))
             return SubscriptionTier.Free;
 
         var planName = subscription.Plan?.Name?.ToLowerInvariant() ?? "";
@@ -256,10 +267,12 @@ public class SubscriptionService : ISubscriptionService
             // This path only executes once per user per month when the record is first created.
             await _dbContext.SaveChangesAsync(ct);
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException ex) when (IsUniqueConstraintViolation(ex))
         {
             // Race condition: another request created the record concurrently.
             // Detach the failed entity and re-fetch the winner's record.
+            _logger.LogDebug(ex, "Concurrent insert race for AiCategorizationUsage ({UserId}, {Year}, {Month}) — retrying fetch",
+                userId, now.Year, now.Month);
             _dbContext.Entry(usage).State = EntityState.Detached;
             usage = await _dbContext.AiCategorizationUsages
                 .IgnoreQueryFilters()
@@ -267,5 +280,20 @@ public class SubscriptionService : ISubscriptionService
         }
 
         return usage;
+    }
+
+    /// <summary>
+    /// Checks whether a DbUpdateException is caused by a unique constraint violation.
+    /// PostgreSQL: SqlState "23505". Falls back to true for non-Postgres providers
+    /// (e.g. InMemory in tests) to preserve existing retry behavior.
+    /// </summary>
+    private static bool IsUniqueConstraintViolation(DbUpdateException ex)
+    {
+        // Npgsql wraps the PostgreSQL error as an inner exception
+        if (ex.InnerException is Npgsql.PostgresException pgEx)
+            return pgEx.SqlState == "23505"; // unique_violation
+
+        // InMemory provider or other providers — allow retry as before
+        return true;
     }
 }
