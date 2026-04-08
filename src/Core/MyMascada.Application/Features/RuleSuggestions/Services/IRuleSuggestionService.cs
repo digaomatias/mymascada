@@ -32,6 +32,12 @@ public interface IRuleSuggestionService
     /// Gets summary statistics for rule suggestions
     /// </summary>
     Task<RuleSuggestionsSummaryDto> GetSummaryAsync(Guid userId);
+
+    /// <summary>
+    /// Checks whether rule suggestion generation should be triggered for a user.
+    /// Returns true if the threshold is met: >= 10 manually categorized AND >= 3 uncovered patterns.
+    /// </summary>
+    Task<bool> ShouldGenerateRuleSuggestionsAsync(Guid userId, CancellationToken ct = default);
 }
 
 /// <summary>

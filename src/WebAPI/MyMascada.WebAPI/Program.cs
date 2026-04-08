@@ -463,6 +463,11 @@ recurringJobManager.AddOrUpdate<MyMascada.Application.BackgroundJobs.ITokenRevoc
     service => service.RetryPendingRevocationsAsync(),
     Hangfire.Cron.Daily(3, 45)); // Run daily at 3:45 AM
 
+recurringJobManager.AddOrUpdate<MyMascada.Application.BackgroundJobs.IRuleSuggestionGenerationJobService>(
+    "weekly-rule-suggestion-generation",
+    service => service.ProcessAllUsersAsync(CancellationToken.None),
+    Hangfire.Cron.Weekly(DayOfWeek.Sunday, 4, 0)); // Run weekly on Sunday at 4:00 AM
+
 // One-time backfill job to populate history from existing categorized transactions.
 // Only enqueue if the history table is empty and there are categorized transactions to backfill.
 using (var backfillScope = app.Services.CreateScope())

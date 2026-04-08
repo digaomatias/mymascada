@@ -65,6 +65,43 @@ public class NotificationTriggerService : INotificationTriggerService
         await Task.CompletedTask;
     }
 
+    public async Task NotifyRuleSuggestionsAvailableAsync(
+        Guid userId,
+        int suggestionCount,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (suggestionCount <= 0) return;
+
+            var groupKey = $"rule-suggestions-{DateTime.UtcNow:yyyy-MM-dd}";
+            var data = JsonSerializer.Serialize(new
+            {
+                href = "/rules/suggestions",
+                templateKey = "RuleSuggestionsAvailable",
+                count = suggestionCount
+            });
+
+            await _notificationService.CreateNotificationAsync(
+                userId,
+                NotificationType.RuleSuggestionsAvailable,
+                "RuleSuggestionsAvailable",
+                "RuleSuggestionsAvailable.body",
+                data,
+                NotificationPriority.Normal,
+                groupKey,
+                cancellationToken: cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending rule suggestions notification for user {UserId}", userId);
+        }
+    }
+
     public async Task NotifyTransactionReminderAsync(
         Guid userId,
         string merchantName,

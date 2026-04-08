@@ -66,6 +66,8 @@ public static class ApplicationServiceExtensions
             MyMascada.Application.Features.RuleSuggestions.Services.RuleSuggestionService>();
 
         // Rule Suggestion Analyzers
+        services.AddScoped<MyMascada.Application.Features.RuleSuggestions.Services.ICategorizationHistoryAnalyzer,
+            MyMascada.Application.Features.RuleSuggestions.Services.CategorizationHistoryAnalyzer>();
         services.AddScoped<MyMascada.Application.Features.RuleSuggestions.Services.BasicRuleSuggestionAnalyzer>();
         services.AddScoped<MyMascada.Application.Features.RuleSuggestions.Services.AIEnhancedRuleSuggestionAnalyzer>();
         services.AddScoped<MyMascada.Application.Features.RuleSuggestions.Services.IRuleSuggestionAnalyzerFactory,

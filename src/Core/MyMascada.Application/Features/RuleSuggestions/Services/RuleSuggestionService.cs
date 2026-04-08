@@ -10,11 +10,15 @@ namespace MyMascada.Application.Features.RuleSuggestions.Services;
 /// </summary>
 public class RuleSuggestionService : IRuleSuggestionService
 {
+    private const int MinManuallyCategorizedThreshold = 10;
+    private const int MinUncoveredPatternsThreshold = 3;
+
     private readonly IRuleSuggestionRepository _ruleSuggestionRepository;
     private readonly ITransactionRepository _transactionRepository;
     private readonly ICategorizationRuleRepository _categorizationRuleRepository;
     private readonly ICategoryRepository _categoryRepository;
     private readonly IRuleSuggestionAnalyzerFactory _analyzerFactory;
+    private readonly ICategorizationHistoryRepository _historyRepository;
     private readonly IFeatureFlags _featureFlags;
 
     public RuleSuggestionService(
@@ -23,6 +27,7 @@ public class RuleSuggestionService : IRuleSuggestionService
         ICategorizationRuleRepository categorizationRuleRepository,
         ICategoryRepository categoryRepository,
         IRuleSuggestionAnalyzerFactory analyzerFactory,
+        ICategorizationHistoryRepository historyRepository,
         IFeatureFlags featureFlags)
     {
         _ruleSuggestionRepository = ruleSuggestionRepository;
@@ -30,6 +35,7 @@ public class RuleSuggestionService : IRuleSuggestionService
         _categorizationRuleRepository = categorizationRuleRepository;
         _categoryRepository = categoryRepository;
         _analyzerFactory = analyzerFactory;
+        _historyRepository = historyRepository;
         _featureFlags = featureFlags;
     }
 
@@ -334,6 +340,57 @@ public class RuleSuggestionService : IRuleSuggestionService
                 rule.IsCaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase),
             RuleType.Regex => System.Text.RegularExpressions.Regex.IsMatch(transactionDescription, rule.Pattern, 
                 rule.IsCaseSensitive ? System.Text.RegularExpressions.RegexOptions.None : System.Text.RegularExpressions.RegexOptions.IgnoreCase),
+            _ => false
+        };
+    }
+
+    /// <summary>
+    /// Checks trigger conditions: user has enough history entries and enough uncovered patterns.
+    /// </summary>
+    public async Task<bool> ShouldGenerateRuleSuggestionsAsync(Guid userId, CancellationToken ct = default)
+    {
+        // Check minimum history entries (proxy for manually categorized transactions)
+        var allHistory = await _historyRepository.GetAllForUserAsync(userId, ct);
+        if (allHistory.Count < MinManuallyCategorizedThreshold)
+            return false;
+
+        // Count history entries not covered by existing rules
+        var existingRules = (await _categorizationRuleRepository.GetActiveRulesForUserAsync(userId)).ToList();
+        if (!existingRules.Any())
+            return allHistory.Count >= MinManuallyCategorizedThreshold; // No rules = definitely should generate
+
+        int uncoveredCount = 0;
+        foreach (var entry in allHistory)
+        {
+            bool covered = existingRules.Any(r =>
+                r.IsActive &&
+                r.CategoryId == entry.CategoryId &&
+                MatchesPattern(r, entry.OriginalDescription));
+
+            if (!covered)
+            {
+                uncoveredCount++;
+                if (uncoveredCount >= MinUncoveredPatternsThreshold)
+                    return true; // Early exit once threshold is met
+            }
+        }
+
+        return false;
+    }
+
+    private static bool MatchesPattern(CategorizationRule rule, string description)
+    {
+        if (string.IsNullOrWhiteSpace(description) || string.IsNullOrWhiteSpace(rule.Pattern))
+            return false;
+
+        var comparison = rule.IsCaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+
+        return rule.Type switch
+        {
+            RuleType.Contains => description.Contains(rule.Pattern, comparison),
+            RuleType.StartsWith => description.StartsWith(rule.Pattern, comparison),
+            RuleType.EndsWith => description.EndsWith(rule.Pattern, comparison),
+            RuleType.Equals => description.Equals(rule.Pattern, comparison),
             _ => false
         };
     }

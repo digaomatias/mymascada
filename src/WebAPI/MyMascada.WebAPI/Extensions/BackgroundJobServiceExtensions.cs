@@ -48,6 +48,10 @@ public static class BackgroundJobServiceExtensions
         services.AddScoped<MyMascada.Application.BackgroundJobs.ITokenRevocationRetryJobService,
             MyMascada.Infrastructure.BackgroundJobs.TokenRevocationRetryJobService>();
 
+        // Rule suggestion generation job service
+        services.AddScoped<MyMascada.Application.BackgroundJobs.IRuleSuggestionGenerationJobService,
+            MyMascada.Infrastructure.BackgroundJobs.RuleSuggestionGenerationJobService>();
+
         return services;
     }
 }
