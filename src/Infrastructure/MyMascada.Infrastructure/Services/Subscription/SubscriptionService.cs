@@ -122,26 +122,47 @@ public class SubscriptionService : ISubscriptionService
 
     public async Task RecordLlmUsageAsync(Guid userId, int transactionCount, CancellationToken ct = default)
     {
-        var usage = await GetOrCreateCurrentMonthUsageAsync(userId, ct);
-        usage.LlmCategorizationCount += transactionCount;
-        usage.UpdatedAt = DateTime.UtcNow;
-        await _dbContext.SaveChangesAsync(ct);
+        var now = DateTime.UtcNow;
+
+        // Atomic upsert: INSERT on first use of the month, UPDATE (increment) on conflict.
+        // Avoids race conditions and lost updates from concurrent requests.
+        var total = await _dbContext.Database.SqlQueryRaw<int>(
+            """
+            INSERT INTO "AiCategorizationUsages" ("UserId", "Year", "Month", "LlmCategorizationCount", "RuleSuggestionCount", "CreatedAt", "UpdatedAt", "IsDeleted")
+            VALUES ({0}, {1}, {2}, {3}, 0, {4}, {4}, FALSE)
+            ON CONFLICT ("UserId", "Year", "Month")
+            DO UPDATE SET "LlmCategorizationCount" = "AiCategorizationUsages"."LlmCategorizationCount" + {3},
+                         "UpdatedAt" = {4}
+            RETURNING "LlmCategorizationCount"
+            """,
+            userId, now.Year, now.Month, transactionCount, now)
+            .SingleAsync(ct);
 
         _logger.LogInformation(
             "Recorded LLM usage for user {UserId}: +{Count} transactions (total this month: {Total})",
-            userId, transactionCount, usage.LlmCategorizationCount);
+            userId, transactionCount, total);
     }
 
     public async Task RecordRuleSuggestionUsageAsync(Guid userId, CancellationToken ct = default)
     {
-        var usage = await GetOrCreateCurrentMonthUsageAsync(userId, ct);
-        usage.RuleSuggestionCount += 1;
-        usage.UpdatedAt = DateTime.UtcNow;
-        await _dbContext.SaveChangesAsync(ct);
+        var now = DateTime.UtcNow;
+
+        // Atomic upsert: INSERT on first use of the month, UPDATE (increment) on conflict.
+        var total = await _dbContext.Database.SqlQueryRaw<int>(
+            """
+            INSERT INTO "AiCategorizationUsages" ("UserId", "Year", "Month", "LlmCategorizationCount", "RuleSuggestionCount", "CreatedAt", "UpdatedAt", "IsDeleted")
+            VALUES ({0}, {1}, {2}, 0, 1, {3}, {3}, FALSE)
+            ON CONFLICT ("UserId", "Year", "Month")
+            DO UPDATE SET "RuleSuggestionCount" = "AiCategorizationUsages"."RuleSuggestionCount" + 1,
+                         "UpdatedAt" = {3}
+            RETURNING "RuleSuggestionCount"
+            """,
+            userId, now.Year, now.Month, now)
+            .SingleAsync(ct);
 
         _logger.LogInformation(
             "Recorded rule suggestion usage for user {UserId} (total this month: {Total})",
-            userId, usage.RuleSuggestionCount);
+            userId, total);
     }
 
     /// <summary>
@@ -197,42 +218,4 @@ public class SubscriptionService : ISubscriptionService
             : (0, 0);
     }
 
-    private async Task<AiCategorizationUsage> GetOrCreateCurrentMonthUsageAsync(
-        Guid userId, CancellationToken ct)
-    {
-        var now = DateTime.UtcNow;
-        var usage = await _dbContext.AiCategorizationUsages
-            .FirstOrDefaultAsync(u => u.UserId == userId && u.Year == now.Year && u.Month == now.Month, ct);
-
-        if (usage != null)
-            return usage;
-
-        usage = new AiCategorizationUsage
-        {
-            UserId = userId,
-            Year = now.Year,
-            Month = now.Month,
-            LlmCategorizationCount = 0,
-            RuleSuggestionCount = 0
-        };
-
-        _dbContext.AiCategorizationUsages.Add(usage);
-
-        try
-        {
-            // Save immediately to detect unique constraint violations from concurrent requests.
-            // This is the only path that creates new records (once per user per month).
-            await _dbContext.SaveChangesAsync(ct);
-        }
-        catch (DbUpdateException)
-        {
-            // Race condition: another request created the record concurrently.
-            // Detach the failed entity and re-fetch the winner's record.
-            _dbContext.Entry(usage).State = EntityState.Detached;
-            usage = await _dbContext.AiCategorizationUsages
-                .FirstAsync(u => u.UserId == userId && u.Year == now.Year && u.Month == now.Month, ct);
-        }
-
-        return usage;
-    }
 }

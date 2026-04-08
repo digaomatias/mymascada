@@ -6,7 +6,6 @@ using MyMascada.Infrastructure.Repositories;
 using MyMascada.Infrastructure.Services;
 using MyMascada.Infrastructure.Services.AI;
 using MyMascada.Infrastructure.Services.Security;
-using MyMascada.Infrastructure.Services.Subscription;
 
 namespace MyMascada.WebAPI.Extensions;
 
@@ -58,9 +57,6 @@ public static class CategorizationServiceExtensions
         // Backfill job for populating history from existing categorized transactions
         services.AddScoped<Application.BackgroundJobs.ICategorizationHistoryBackfillJobService,
             CategorizationHistoryBackfillJobService>();
-
-        // Subscription / tier gating service
-        services.AddScoped<ISubscriptionService, SubscriptionService>();
 
         return services;
     }

@@ -37,11 +37,14 @@ public class LLMHandler : CategorizationHandler
         if (!transactionsList.Any())
             return result;
 
-        // Get user ID from first transaction
-        var userId = transactionsList.First().Account?.UserId;
+        // Resolve userId from the Account navigation property on the first transaction.
+        // Account is a required relationship (non-nullable FK) so it's always loaded when
+        // the pipeline includes Account in the query. Fall back gracefully if not loaded.
+        var firstTransaction = transactionsList.First();
+        var userId = firstTransaction.Account?.UserId;
         if (userId == null)
         {
-            _logger.LogWarning("Cannot process LLM categorization - no user ID found");
+            _logger.LogWarning("Cannot process LLM categorization - Account not loaded on transaction {TransactionId}", firstTransaction.Id);
             return result;
         }
 
@@ -54,6 +57,9 @@ public class LLMHandler : CategorizationHandler
                 userId.Value, transactionsList.Count);
             return result;
         }
+
+        // Determine the batch to send to the LLM (may be capped by quota)
+        var llmBatch = transactionsList;
 
         // Quota check for paid tiers
         if (tier is SubscriptionTier.Pro or SubscriptionTier.Family)
@@ -68,24 +74,24 @@ public class LLMHandler : CategorizationHandler
                 return result;
             }
 
-            // Cap the batch to remaining quota
+            // Cap the batch to remaining quota without mutating the original list
             if (transactionsList.Count > remaining)
             {
                 _logger.LogInformation(
                     "LLM Handler capping batch from {Requested} to {Remaining} transactions (quota limit) for user {UserId}",
                     transactionsList.Count, remaining, userId.Value);
-                transactionsList = transactionsList.Take(remaining).ToList();
+                llmBatch = transactionsList.Take(remaining).ToList();
             }
         }
 
         _logger.LogInformation("LLM Handler processing {TransactionCount} transactions - this will incur AI costs",
-            transactionsList.Count);
+            llmBatch.Count);
 
         try
         {
             // Use shared categorization service to get LLM suggestions
             var llmResponse = await _sharedCategorizationService.GetCategorizationSuggestionsAsync(
-                transactionsList, userId.Value, cancellationToken);
+                llmBatch, userId.Value, cancellationToken);
 
             if (!llmResponse.Success)
             {
@@ -101,16 +107,15 @@ public class LLMHandler : CategorizationHandler
             // Add all LLM suggestions to candidates list (no auto-apply for LLM)
             result.Candidates.AddRange(candidates);
 
-            // For LLM handler, we don't auto-apply any categorizations
-            // All suggestions go to the candidates system for user review
+            // Keep original transactionsList intact for downstream state
             result.RemainingTransactions = transactionsList;
             result.Metrics.ProcessedByLLM = candidates.Count();
             result.Metrics.EstimatedCostSavings = CalculateCostSavings(candidates.Count());
 
-            // Record usage for quota tracking
-            if (candidates.Any())
+            // Record usage based on how many transactions were sent to the LLM
+            if (llmBatch.Count > 0)
             {
-                await _subscriptionService.RecordLlmUsageAsync(userId.Value, candidates.Count(), cancellationToken);
+                await _subscriptionService.RecordLlmUsageAsync(userId.Value, llmBatch.Count, cancellationToken);
             }
 
             // Update category distribution metrics for reporting

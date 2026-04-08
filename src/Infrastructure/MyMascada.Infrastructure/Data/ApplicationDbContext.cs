@@ -1041,6 +1041,13 @@ public class ApplicationDbContext : DbContext
             // One row per user per month
             entity.HasIndex(e => new { e.UserId, e.Year, e.Month }).IsUnique();
 
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_AiCategorizationUsage_Month", "\"Month\" BETWEEN 1 AND 12");
+                t.HasCheckConstraint("CK_AiCategorizationUsage_LlmCategorizationCount", "\"LlmCategorizationCount\" >= 0");
+                t.HasCheckConstraint("CK_AiCategorizationUsage_RuleSuggestionCount", "\"RuleSuggestionCount\" >= 0");
+            });
+
             entity.HasQueryFilter(e => !e.IsDeleted);
         });
     }

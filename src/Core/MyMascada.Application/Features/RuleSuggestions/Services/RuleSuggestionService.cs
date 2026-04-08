@@ -111,8 +111,9 @@ public class RuleSuggestionService : IRuleSuggestionService
             }
         }
 
-        // Record AI usage if AI-enhanced analyzer was used
-        if (canUseAi && analyzer.RequiresAI && savedSuggestions.Count > 0)
+        // Record AI usage whenever the AI analyzer ran (even if no suggestions were saved,
+        // the costly AI work was still performed and should count toward the quota)
+        if (canUseAi && analyzer.RequiresAI)
         {
             await _subscriptionService.RecordRuleSuggestionUsageAsync(userId, cancellationToken);
         }

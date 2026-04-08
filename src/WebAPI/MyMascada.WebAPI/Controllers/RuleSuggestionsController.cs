@@ -18,16 +18,13 @@ public class RuleSuggestionsController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ICurrentUserService _currentUserService;
-    private readonly ISubscriptionService _subscriptionService;
 
     public RuleSuggestionsController(
         IMediator mediator,
-        ICurrentUserService currentUserService,
-        ISubscriptionService subscriptionService)
+        ICurrentUserService currentUserService)
     {
         _mediator = mediator;
         _currentUserService = currentUserService;
-        _subscriptionService = subscriptionService;
     }
 
     /// <summary>
@@ -72,13 +69,8 @@ public class RuleSuggestionsController : ControllerBase
         {
             var userId = _currentUserService.GetUserId();
 
-            // Tier check: free users cannot use AI-enhanced rule generation
-            var accessResult = await _subscriptionService.CanUseAiRuleSuggestionsAsync(userId);
-            if (!accessResult.IsAllowed)
-            {
-                return StatusCode(403, new { error = accessResult.DenialReason });
-            }
-
+            // No 403 gate here — RuleSuggestionService checks the tier internally
+            // and falls back to deterministic (basic) suggestions when AI is unavailable.
             var command = new GenerateRuleSuggestionsCommand
             {
                 UserId = userId,
