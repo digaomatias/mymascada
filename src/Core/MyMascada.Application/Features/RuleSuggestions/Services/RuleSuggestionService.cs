@@ -42,7 +42,7 @@ public class RuleSuggestionService : IRuleSuggestionService
     /// <summary>
     /// Generates new rule suggestions for a user based on their transaction patterns
     /// </summary>
-    public async Task<List<RuleSuggestion>> GenerateSuggestionsAsync(Guid userId, int maxSuggestions = 10, double minConfidence = 0.7)
+    public async Task<List<RuleSuggestion>> GenerateSuggestionsAsync(Guid userId, int maxSuggestions = 10, double minConfidence = 0.7, CancellationToken cancellationToken = default)
     {
         // Get required data for analysis
         var recentTransactions = await _transactionRepository.GetRecentTransactionsAsync(userId, 500);
@@ -213,7 +213,7 @@ public class RuleSuggestionService : IRuleSuggestionService
                 Name = GenerateRuleName(pattern.Pattern, pattern.SuggestedCategoryName),
                 Description = pattern.Reasoning ?? $"Found multiple transactions that appear to be from {pattern.SuggestedCategoryName.ToLower()}",
                 Pattern = pattern.Pattern,
-                Type = RuleType.Contains,
+                Type = pattern.SuggestedRuleType,
                 IsCaseSensitive = false,
                 ConfidenceScore = pattern.ConfidenceScore,
                 MatchCount = pattern.MatchingTransactions.Count,
@@ -321,28 +321,11 @@ public class RuleSuggestionService : IRuleSuggestionService
     }
 
     /// <summary>
-    /// Tests if a rule would match a transaction description
+    /// Tests if a rule would match a transaction description.
+    /// Delegates to RulePatternMatcher — single source of truth for all rule types including Regex.
     /// </summary>
-    private bool DoesRuleMatchTransaction(CategorizationRule rule, string transactionDescription)
-    {
-        if (string.IsNullOrWhiteSpace(transactionDescription) || string.IsNullOrWhiteSpace(rule.Pattern))
-            return false;
-
-        return rule.Type switch
-        {
-            RuleType.Contains => transactionDescription.Contains(rule.Pattern, 
-                rule.IsCaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase),
-            RuleType.StartsWith => transactionDescription.StartsWith(rule.Pattern, 
-                rule.IsCaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase),
-            RuleType.EndsWith => transactionDescription.EndsWith(rule.Pattern, 
-                rule.IsCaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase),
-            RuleType.Equals => transactionDescription.Equals(rule.Pattern, 
-                rule.IsCaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase),
-            RuleType.Regex => System.Text.RegularExpressions.Regex.IsMatch(transactionDescription, rule.Pattern, 
-                rule.IsCaseSensitive ? System.Text.RegularExpressions.RegexOptions.None : System.Text.RegularExpressions.RegexOptions.IgnoreCase),
-            _ => false
-        };
-    }
+    private static bool DoesRuleMatchTransaction(CategorizationRule rule, string transactionDescription)
+        => RulePatternMatcher.Matches(rule, transactionDescription);
 
     /// <summary>
     /// Checks trigger conditions: user has enough history entries and enough uncovered patterns.
@@ -365,7 +348,7 @@ public class RuleSuggestionService : IRuleSuggestionService
             bool covered = existingRules.Any(r =>
                 r.IsActive &&
                 r.CategoryId == entry.CategoryId &&
-                MatchesPattern(r, entry.OriginalDescription));
+                RulePatternMatcher.Matches(r, entry.OriginalDescription));
 
             if (!covered)
             {
@@ -376,23 +359,6 @@ public class RuleSuggestionService : IRuleSuggestionService
         }
 
         return false;
-    }
-
-    private static bool MatchesPattern(CategorizationRule rule, string description)
-    {
-        if (string.IsNullOrWhiteSpace(description) || string.IsNullOrWhiteSpace(rule.Pattern))
-            return false;
-
-        var comparison = rule.IsCaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-
-        return rule.Type switch
-        {
-            RuleType.Contains => description.Contains(rule.Pattern, comparison),
-            RuleType.StartsWith => description.StartsWith(rule.Pattern, comparison),
-            RuleType.EndsWith => description.EndsWith(rule.Pattern, comparison),
-            RuleType.Equals => description.Equals(rule.Pattern, comparison),
-            _ => false
-        };
     }
 
     /// <summary>

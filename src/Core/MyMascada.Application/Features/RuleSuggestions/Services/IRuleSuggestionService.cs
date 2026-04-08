@@ -1,5 +1,6 @@
 using MyMascada.Application.Features.RuleSuggestions.DTOs;
 using MyMascada.Domain.Entities;
+using MyMascada.Domain.Enums;
 
 namespace MyMascada.Application.Features.RuleSuggestions.Services;
 
@@ -11,7 +12,7 @@ public interface IRuleSuggestionService
     /// <summary>
     /// Generates rule suggestions for a user based on their transaction patterns
     /// </summary>
-    Task<List<RuleSuggestion>> GenerateSuggestionsAsync(Guid userId, int maxSuggestions = 10, double minConfidence = 0.7);
+    Task<List<RuleSuggestion>> GenerateSuggestionsAsync(Guid userId, int maxSuggestions = 10, double minConfidence = 0.7, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets existing rule suggestions for a user
@@ -65,6 +66,7 @@ public class PatternSuggestion
     public int SuggestedCategoryId { get; set; }
     public string SuggestedCategoryName { get; set; } = string.Empty;
     public double ConfidenceScore { get; set; }
+    public RuleType SuggestedRuleType { get; set; } = RuleType.Contains;
     public List<Transaction> MatchingTransactions { get; set; } = new();
     public string DetectionMethod { get; set; } = string.Empty;
     public string? Reasoning { get; set; }

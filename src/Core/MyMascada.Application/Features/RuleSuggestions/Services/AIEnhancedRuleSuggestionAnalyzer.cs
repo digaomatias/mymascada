@@ -1,5 +1,7 @@
+using Microsoft.Extensions.Logging;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Domain.Entities;
+using MyMascada.Domain.Enums;
 using System.Text.Json;
 
 namespace MyMascada.Application.Features.RuleSuggestions.Services;
@@ -14,6 +16,10 @@ public class AIEnhancedRuleSuggestionAnalyzer : IRuleSuggestionAnalyzer
     private readonly ICategorizationHistoryAnalyzer _historyAnalyzer;
     private readonly ILlmCategorizationService _llmService;
     private readonly IAIUsageTracker _usageTracker;
+    private readonly ILogger<AIEnhancedRuleSuggestionAnalyzer> _logger;
+
+    private const int MaxAiClustersToProcess = 5;
+    private const double MinAiSuggestionConfidence = 0.80;
 
     public string AnalysisMethod => "AI-Enhanced History Analysis";
     public bool RequiresAI => true;
@@ -22,12 +28,14 @@ public class AIEnhancedRuleSuggestionAnalyzer : IRuleSuggestionAnalyzer
         BasicRuleSuggestionAnalyzer basicAnalyzer,
         ICategorizationHistoryAnalyzer historyAnalyzer,
         ILlmCategorizationService llmService,
-        IAIUsageTracker usageTracker)
+        IAIUsageTracker usageTracker,
+        ILogger<AIEnhancedRuleSuggestionAnalyzer> logger)
     {
         _basicAnalyzer = basicAnalyzer;
         _historyAnalyzer = historyAnalyzer;
         _llmService = llmService;
         _usageTracker = usageTracker;
+        _logger = logger;
     }
 
     public async Task<List<PatternSuggestion>> AnalyzePatternsAsync(RuleAnalysisInput input, CancellationToken cancellationToken = default)
@@ -53,14 +61,12 @@ public class AIEnhancedRuleSuggestionAnalyzer : IRuleSuggestionAnalyzer
                     var aiSuggestions = await AnalyzeAmbiguousClustersAsync(
                         historyResult.AmbiguousClusters, input, cancellationToken);
                     allSuggestions.AddRange(aiSuggestions);
-
-                    await _usageTracker.RecordAIUsageAsync(input.UserId, "rule_suggestions_history", cancellationToken);
                 }
             }
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"AI-enhanced analysis failed: {ex.Message}");
+            _logger.LogWarning(ex, "AI-enhanced analysis failed, falling back to basic suggestions");
         }
 
         return FilterAndCombineSuggestions(allSuggestions, input.MaxSuggestions, input.MinConfidenceThreshold);
@@ -76,18 +82,19 @@ public class AIEnhancedRuleSuggestionAnalyzer : IRuleSuggestionAnalyzer
     {
         var suggestions = new List<PatternSuggestion>();
 
-        foreach (var cluster in clusters.Take(5)) // Limit AI calls per generation
+        foreach (var cluster in clusters.Take(MaxAiClustersToProcess))
         {
             try
             {
                 var prompt = CreateClusterPrompt(cluster);
                 var aiResponse = await _llmService.SendPromptAsync(prompt, cancellationToken);
+                await _usageTracker.RecordAIUsageAsync(input.UserId, "rule_suggestions_history", cancellationToken);
                 var clusterSuggestions = ParseClusterResponse(aiResponse, cluster, input);
                 suggestions.AddRange(clusterSuggestions);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"AI cluster analysis failed for category '{cluster.CategoryName}': {ex.Message}");
+                _logger.LogWarning(ex, "AI cluster analysis failed for category '{CategoryName}'", cluster.CategoryName);
             }
         }
 
@@ -122,7 +129,7 @@ RESPONSE FORMAT (JSON):
 RULES:
 - Pattern must be a single keyword or short phrase (not a regex)
 - ruleType must be one of: Contains, StartsWith, EndsWith, Equals
-- Only suggest if confidence > 0.80
+- Only suggest if confidence > {MinAiSuggestionConfidence}
 - Focus on the most distinctive shared element";
     }
 
@@ -155,6 +162,7 @@ RULES:
                         SuggestedCategoryId = cluster.CategoryId,
                         SuggestedCategoryName = cluster.CategoryName,
                         ConfidenceScore = response.Confidence,
+                        SuggestedRuleType = ParseRuleType(response.RuleType),
                         MatchingTransactions = new List<Transaction>(),
                         DetectionMethod = "AI Cluster Analysis",
                         Reasoning = response.Reasoning
@@ -176,13 +184,25 @@ RULES:
         if (string.IsNullOrWhiteSpace(suggestion.Pattern) || suggestion.Pattern.Length < 2)
             return false;
 
-        if (suggestion.Confidence < 0.80 || suggestion.Confidence > 1.0)
+        if (suggestion.Confidence < MinAiSuggestionConfidence || suggestion.Confidence > 1.0)
             return false;
 
         // Check the pattern doesn't already exist as a rule
         return !input.ExistingRules.Any(r =>
             r.Pattern.Equals(suggestion.Pattern, StringComparison.OrdinalIgnoreCase) &&
             r.CategoryId == cluster.CategoryId);
+    }
+
+    private static RuleType ParseRuleType(string ruleType)
+    {
+        return ruleType?.ToLowerInvariant() switch
+        {
+            "contains" => RuleType.Contains,
+            "startswith" => RuleType.StartsWith,
+            "endswith" => RuleType.EndsWith,
+            "equals" => RuleType.Equals,
+            _ => RuleType.Contains
+        };
     }
 
     private static List<PatternSuggestion> FilterAndCombineSuggestions(

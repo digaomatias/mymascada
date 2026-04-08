@@ -463,9 +463,10 @@ recurringJobManager.AddOrUpdate<MyMascada.Application.BackgroundJobs.ITokenRevoc
     service => service.RetryPendingRevocationsAsync(),
     Hangfire.Cron.Daily(3, 45)); // Run daily at 3:45 AM
 
+// Hangfire automatically replaces CancellationToken parameters with its shutdown token at runtime
 recurringJobManager.AddOrUpdate<MyMascada.Application.BackgroundJobs.IRuleSuggestionGenerationJobService>(
     "weekly-rule-suggestion-generation",
-    service => service.ProcessAllUsersAsync(CancellationToken.None),
+    service => service.ProcessAllUsersAsync(default),
     Hangfire.Cron.Weekly(DayOfWeek.Sunday, 4, 0)); // Run weekly on Sunday at 4:00 AM
 
 // One-time backfill job to populate history from existing categorized transactions.

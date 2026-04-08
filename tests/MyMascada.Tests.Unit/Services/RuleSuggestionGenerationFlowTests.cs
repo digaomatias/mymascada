@@ -40,7 +40,7 @@ public class RuleSuggestionGenerationFlowTests
             new() { Name = "PAK N SAVE Rule", Pattern = "pak n save", SuggestedCategoryId = 1, ConfidenceScore = 0.85 },
             new() { Name = "UBER Rule", Pattern = "uber", SuggestedCategoryId = 3, ConfidenceScore = 0.90 }
         };
-        ruleSuggestionService.GenerateSuggestionsAsync(_userId, Arg.Any<int>(), Arg.Any<double>())
+        ruleSuggestionService.GenerateSuggestionsAsync(_userId, Arg.Any<int>(), Arg.Any<double>(), Arg.Any<CancellationToken>())
             .Returns(generatedSuggestions);
 
         // Build service provider for scoped resolution
@@ -63,7 +63,7 @@ public class RuleSuggestionGenerationFlowTests
 
         // Assert: suggestions were generated
         await ruleSuggestionService.Received(1)
-            .GenerateSuggestionsAsync(_userId, Arg.Any<int>(), Arg.Any<double>());
+            .GenerateSuggestionsAsync(_userId, Arg.Any<int>(), Arg.Any<double>(), Arg.Any<CancellationToken>());
 
         // Assert: notification was sent with correct count
         await notificationService.Received(1)
@@ -100,7 +100,7 @@ public class RuleSuggestionGenerationFlowTests
         await ruleSuggestionService.Received(1)
             .ShouldGenerateRuleSuggestionsAsync(_userId, Arg.Any<CancellationToken>());
         await ruleSuggestionService.DidNotReceive()
-            .GenerateSuggestionsAsync(Arg.Any<Guid>(), Arg.Any<int>(), Arg.Any<double>());
+            .GenerateSuggestionsAsync(Arg.Any<Guid>(), Arg.Any<int>(), Arg.Any<double>(), Arg.Any<CancellationToken>());
         await notificationService.DidNotReceive()
             .NotifyRuleSuggestionsAvailableAsync(Arg.Any<Guid>(), Arg.Any<int>(), Arg.Any<CancellationToken>());
     }
@@ -117,7 +117,7 @@ public class RuleSuggestionGenerationFlowTests
 
         ruleSuggestionService.ShouldGenerateRuleSuggestionsAsync(_userId, Arg.Any<CancellationToken>())
             .Returns(true);
-        ruleSuggestionService.GenerateSuggestionsAsync(_userId, Arg.Any<int>(), Arg.Any<double>())
+        ruleSuggestionService.GenerateSuggestionsAsync(_userId, Arg.Any<int>(), Arg.Any<double>(), Arg.Any<CancellationToken>())
             .Returns(new List<RuleSuggestion>()); // Empty list
 
         var services = new ServiceCollection();
@@ -156,7 +156,7 @@ public class RuleSuggestionGenerationFlowTests
         // Second user succeeds
         ruleSuggestionService.ShouldGenerateRuleSuggestionsAsync(userId2, Arg.Any<CancellationToken>())
             .Returns(true);
-        ruleSuggestionService.GenerateSuggestionsAsync(userId2, Arg.Any<int>(), Arg.Any<double>())
+        ruleSuggestionService.GenerateSuggestionsAsync(userId2, Arg.Any<int>(), Arg.Any<double>(), Arg.Any<CancellationToken>())
             .Returns(new List<RuleSuggestion> { new() { Name = "Test", Pattern = "test", SuggestedCategoryId = 1 } });
 
         var services = new ServiceCollection();

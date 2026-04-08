@@ -18,6 +18,7 @@ public class CategorizationHistoryAnalyzer : ICategorizationHistoryAnalyzer
     private const double MinPrecision = 0.90;
     private const double MinRecall = 0.60;
     private const double DeterministicConfidence = 0.85;
+    private const double ClusterCoverageThreshold = 0.80;
 
     private readonly ICategorizationHistoryRepository _historyRepository;
     private readonly ICategorizationRuleRepository _ruleRepository;
@@ -240,7 +241,7 @@ public class CategorizationHistoryAnalyzer : ICategorizationHistoryAnalyzer
             }
         }
 
-        return (double)coveredCount / cluster.Count >= 0.80;
+        return (double)coveredCount / cluster.Count >= ClusterCoverageThreshold;
     }
 
     /// <summary>

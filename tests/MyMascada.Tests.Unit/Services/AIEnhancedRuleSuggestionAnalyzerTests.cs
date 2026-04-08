@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.RuleSuggestions.Services;
 using MyMascada.Domain.Entities;
@@ -30,7 +31,8 @@ public class AIEnhancedRuleSuggestionAnalyzerTests
         _usageTracker = Substitute.For<IAIUsageTracker>();
 
         _analyzer = new AIEnhancedRuleSuggestionAnalyzer(
-            _basicAnalyzer, _historyAnalyzer, _llmService, _usageTracker);
+            _basicAnalyzer, _historyAnalyzer, _llmService, _usageTracker,
+            Substitute.For<ILogger<AIEnhancedRuleSuggestionAnalyzer>>());
     }
 
     [Fact]

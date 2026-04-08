@@ -3592,7 +3592,9 @@
       "CategorizationReminder": "Transações para categorizar",
       "CategorizationReminder.body": "{count, plural, one {Você tem 1 transação sem categoria} other {Você tem # transações sem categoria}}",
       "TransactionReminder": "Transação próxima",
-      "TransactionReminder.body": "{merchantName} — {amount} vence em {date}"
+      "TransactionReminder.body": "{merchantName} — {amount} vence em {date}",
+      "RuleSuggestionsAvailable": "Novas sugestões de regras",
+      "RuleSuggestionsAvailable.body": "{count, plural, one {1 nova sugestão de regra de categorização disponível} other {# novas sugestões de regras de categorização disponíveis}}"
     }
   }
 }

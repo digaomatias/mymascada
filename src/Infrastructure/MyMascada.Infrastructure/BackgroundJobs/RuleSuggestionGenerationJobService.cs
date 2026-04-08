@@ -30,7 +30,7 @@ public class RuleSuggestionGenerationJobService : IRuleSuggestionGenerationJobSe
     {
         _logger.LogInformation("Starting weekly rule suggestion generation job");
         var startTime = DateTime.UtcNow;
-        var usersProcessed = 0;
+        var usersWithSuggestions = 0;
         var totalSuggestions = 0;
 
         IReadOnlyList<Guid> userIds;
@@ -54,7 +54,7 @@ public class RuleSuggestionGenerationJobService : IRuleSuggestionGenerationJobSe
                 if (suggestionsGenerated > 0)
                 {
                     totalSuggestions += suggestionsGenerated;
-                    usersProcessed++;
+                    usersWithSuggestions++;
                 }
             }
             catch (OperationCanceledException)
@@ -70,8 +70,8 @@ public class RuleSuggestionGenerationJobService : IRuleSuggestionGenerationJobSe
         var elapsed = DateTime.UtcNow - startTime;
         _logger.LogInformation(
             "Weekly rule suggestion job completed in {Elapsed}. " +
-            "Users processed: {UsersProcessed}/{TotalUsers}, suggestions generated: {TotalSuggestions}",
-            elapsed, usersProcessed, userIds.Count, totalSuggestions);
+            "Users with suggestions: {UsersWithSuggestions}/{TotalUsers}, suggestions generated: {TotalSuggestions}",
+            elapsed, usersWithSuggestions, userIds.Count, totalSuggestions);
     }
 
     private async Task<int> ProcessUserAsync(Guid userId, CancellationToken ct)
@@ -87,7 +87,7 @@ public class RuleSuggestionGenerationJobService : IRuleSuggestionGenerationJobSe
             return 0;
 
         // Generate suggestions
-        var suggestions = await suggestionService.GenerateSuggestionsAsync(userId);
+        var suggestions = await suggestionService.GenerateSuggestionsAsync(userId, cancellationToken: ct);
 
         if (suggestions.Count > 0)
         {
