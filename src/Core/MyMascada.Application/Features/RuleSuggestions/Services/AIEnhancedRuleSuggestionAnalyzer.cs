@@ -172,9 +172,9 @@ RULES:
                 }
             }
         }
-        catch (JsonException)
+        catch (JsonException ex)
         {
-            // Ignore parsing failures for individual clusters
+            _logger.LogDebug(ex, "Failed to parse AI response for cluster '{CategoryName}'", cluster.CategoryName);
         }
 
         return suggestions;
@@ -234,20 +234,3 @@ public class AIClusterSuggestion
     public string Reasoning { get; set; } = string.Empty;
 }
 
-/// <summary>
-/// AI response structure for JSON parsing (kept for backward compatibility).
-/// </summary>
-public class AIRuleSuggestionResponse
-{
-    public List<AISuggestionItem> Suggestions { get; set; } = new();
-}
-
-public class AISuggestionItem
-{
-    public string Pattern { get; set; } = string.Empty;
-    public int CategoryId { get; set; }
-    public string CategoryName { get; set; } = string.Empty;
-    public double Confidence { get; set; }
-    public string Reasoning { get; set; } = string.Empty;
-    public List<string> MatchingDescriptions { get; set; } = new();
-}

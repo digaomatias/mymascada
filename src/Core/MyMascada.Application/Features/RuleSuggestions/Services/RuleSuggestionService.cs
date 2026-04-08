@@ -92,13 +92,22 @@ public class RuleSuggestionService : IRuleSuggestionService
         // Filter out duplicates and overlapping suggestions
         var filteredSuggestions = await FilterAndDeduplicateSuggestions(ruleSuggestions, userId, minConfidence);
 
-        // Save suggestions to database
+        // Save suggestions to database, skipping any that fail due to duplicate constraints
+        var savedSuggestions = new List<RuleSuggestion>();
         foreach (var suggestion in filteredSuggestions)
         {
-            await _ruleSuggestionRepository.CreateSuggestionAsync(suggestion);
+            try
+            {
+                await _ruleSuggestionRepository.CreateSuggestionAsync(suggestion);
+                savedSuggestions.Add(suggestion);
+            }
+            catch (InvalidOperationException)
+            {
+                // Duplicate detected at DB level (concurrent generation race) — skip
+            }
         }
 
-        return filteredSuggestions;
+        return savedSuggestions;
     }
 
     /// <summary>
@@ -340,7 +349,7 @@ public class RuleSuggestionService : IRuleSuggestionService
         // Count history entries not covered by existing rules
         var existingRules = (await _categorizationRuleRepository.GetActiveRulesForUserAsync(userId)).ToList();
         if (!existingRules.Any())
-            return allHistory.Count >= MinManuallyCategorizedThreshold; // No rules = definitely should generate
+            return true; // No rules and enough history (checked above) = definitely should generate
 
         int uncoveredCount = 0;
         foreach (var entry in allHistory)

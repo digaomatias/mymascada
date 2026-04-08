@@ -32,6 +32,7 @@ public class RuleSuggestionGenerationJobService : IRuleSuggestionGenerationJobSe
         var startTime = DateTime.UtcNow;
         var usersWithSuggestions = 0;
         var totalSuggestions = 0;
+        var errors = new List<Exception>();
 
         IReadOnlyList<Guid> userIds;
 
@@ -64,14 +65,21 @@ public class RuleSuggestionGenerationJobService : IRuleSuggestionGenerationJobSe
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing rule suggestions for user {UserId}", userId);
+                errors.Add(ex);
             }
         }
 
         var elapsed = DateTime.UtcNow - startTime;
         _logger.LogInformation(
             "Weekly rule suggestion job completed in {Elapsed}. " +
-            "Users with suggestions: {UsersWithSuggestions}/{TotalUsers}, suggestions generated: {TotalSuggestions}",
-            elapsed, usersWithSuggestions, userIds.Count, totalSuggestions);
+            "Users with suggestions: {UsersWithSuggestions}/{TotalUsers}, suggestions generated: {TotalSuggestions}, errors: {ErrorCount}",
+            elapsed, usersWithSuggestions, userIds.Count, totalSuggestions, errors.Count);
+
+        if (errors.Count > 0)
+        {
+            throw new AggregateException(
+                $"Rule suggestion generation failed for {errors.Count}/{userIds.Count} users", errors);
+        }
     }
 
     private async Task<int> ProcessUserAsync(Guid userId, CancellationToken ct)

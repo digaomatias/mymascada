@@ -2,7 +2,6 @@ using Microsoft.Extensions.Logging;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Categorization.Services;
 using MyMascada.Domain.Entities;
-using MyMascada.Domain.Enums;
 
 namespace MyMascada.Application.Features.RuleSuggestions.Services;
 
@@ -139,13 +138,15 @@ public class CategorizationHistoryAnalyzer : ICategorizationHistoryAnalyzer
     {
         if (entries.Count == 0) return new List<List<CategorizationHistory>>();
 
-        // Extract tokens for each entry
+        // Extract significant tokens for each entry (filter by MinTokenLength to avoid
+        // spurious short-token matches that create oversized clusters)
         var entryTokens = entries
             .Select(e => new
             {
                 Entry = e,
                 Tokens = new HashSet<string>(
-                    DescriptionNormalizer.ExtractTokens(e.NormalizedDescription),
+                    DescriptionNormalizer.ExtractTokens(e.NormalizedDescription)
+                        .Where(t => t.Length >= MinTokenLength),
                     StringComparer.OrdinalIgnoreCase)
             })
             .ToList();
@@ -236,7 +237,7 @@ public class CategorizationHistoryAnalyzer : ICategorizationHistoryAnalyzer
         {
             foreach (var rule in existingRules.Where(r => r.IsActive && r.CategoryId == entry.CategoryId))
             {
-                if (DoesPatternMatch(rule, entry.OriginalDescription))
+                if (RulePatternMatcher.Matches(rule, entry.OriginalDescription))
                 {
                     coveredCount++;
                     break;
@@ -285,37 +286,4 @@ public class CategorizationHistoryAnalyzer : ICategorizationHistoryAnalyzer
         return isValid;
     }
 
-    private static bool DoesPatternMatch(CategorizationRule rule, string description)
-    {
-        if (string.IsNullOrWhiteSpace(description) || string.IsNullOrWhiteSpace(rule.Pattern))
-            return false;
-
-        var comparison = rule.IsCaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-
-        return rule.Type switch
-        {
-            RuleType.Contains => description.Contains(rule.Pattern, comparison),
-            RuleType.StartsWith => description.StartsWith(rule.Pattern, comparison),
-            RuleType.EndsWith => description.EndsWith(rule.Pattern, comparison),
-            RuleType.Equals => description.Equals(rule.Pattern, comparison),
-            RuleType.Regex => SafeRegexMatch(description, rule.Pattern, rule.IsCaseSensitive),
-            _ => false
-        };
-    }
-
-    private static bool SafeRegexMatch(string input, string pattern, bool caseSensitive)
-    {
-        try
-        {
-            var options = caseSensitive
-                ? System.Text.RegularExpressions.RegexOptions.None
-                : System.Text.RegularExpressions.RegexOptions.IgnoreCase;
-            return System.Text.RegularExpressions.Regex.IsMatch(input, pattern, options,
-                TimeSpan.FromMilliseconds(100));
-        }
-        catch
-        {
-            return false;
-        }
-    }
 }

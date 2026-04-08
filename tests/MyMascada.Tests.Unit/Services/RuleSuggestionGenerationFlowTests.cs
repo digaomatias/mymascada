@@ -169,11 +169,12 @@ public class RuleSuggestionGenerationFlowTests
             serviceProvider.GetRequiredService<IServiceScopeFactory>(),
             Substitute.For<ILogger<RuleSuggestionGenerationJobService>>());
 
-        // Should not throw — errors are caught per-user
+        // Should throw AggregateException after processing all users
         var act = () => job.ProcessAllUsersAsync();
-        await act.Should().NotThrowAsync();
+        await act.Should().ThrowAsync<AggregateException>()
+            .WithMessage("*failed for 1*");
 
-        // Second user still processed
+        // Second user was still processed despite the first user's failure
         await ruleSuggestionService.Received(1)
             .ShouldGenerateRuleSuggestionsAsync(userId2, Arg.Any<CancellationToken>());
         await notificationService.Received(1)
