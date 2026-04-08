@@ -22,10 +22,4 @@ public interface ISimilarityMatchingService
     /// </summary>
     Task<SimilarityMatch?> FindBestMatchAsync(
         Guid userId, string normalizedDescription, CancellationToken ct = default);
-
-    /// <summary>
-    /// Clears the in-memory token cache so the next call to FindBestMatchAsync re-fetches history.
-    /// Call after recording new categorization history within the same scoped request.
-    /// </summary>
-    void InvalidateCache();
 }

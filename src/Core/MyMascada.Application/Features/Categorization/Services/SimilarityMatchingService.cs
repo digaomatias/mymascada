@@ -124,12 +124,6 @@ public class SimilarityMatchingService : ISimilarityMatchingService
     /// Confidence scaling based on how many times the mapping has been confirmed:
     ///   1st = 0.70, 2nd = 0.80, 3rd = 0.85, 5+ = 0.90, 10+ = 0.95
     /// </summary>
-    public void InvalidateCache()
-    {
-        _lastUserId = null;
-        _cachedHistory = null;
-    }
-
     internal static decimal CalculateConfidence(int matchCount) => matchCount switch
     {
         <= 0 => 0.70m,

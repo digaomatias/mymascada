@@ -78,7 +78,7 @@ public static partial class DescriptionNormalizer
 
         return normalizedDescription
             .Split(' ', StringSplitOptions.RemoveEmptyEntries)
-            .Where(t => t.Length > 3 && !StopWords.Contains(t))
+            .Where(t => t.Length > 2 && !StopWords.Contains(t))
             .Distinct()
             .ToList();
     }

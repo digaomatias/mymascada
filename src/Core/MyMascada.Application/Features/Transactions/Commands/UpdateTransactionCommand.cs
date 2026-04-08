@@ -159,17 +159,29 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
 
         await _transactionRepository.SaveChangesAsync();
 
-        // Record categorization history only when the category or description actually changed
+        // Record categorization history (best-effort — transaction update already persisted above)
         var categoryChanged = originalCategoryId != request.CategoryId;
         var descriptionChanged = originalDescription != request.Description;
         if (!isTransfer && request.CategoryId.HasValue && (categoryChanged || descriptionChanged))
         {
-            await _historyService.RecordCategorizationAsync(
-                request.UserId,
-                transaction.Description,
-                request.CategoryId.Value,
-                MyMascada.Domain.Entities.CategorizationHistorySource.Manual,
-                cancellationToken);
+            try
+            {
+                await _historyService.RecordCategorizationAsync(
+                    request.UserId,
+                    transaction.Description,
+                    request.CategoryId.Value,
+                    MyMascada.Domain.Entities.CategorizationHistorySource.Manual,
+                    cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch
+            {
+                // History service already logs internally; swallow to avoid failing
+                // the user's transaction update which was already saved.
+            }
         }
 
         // Return updated DTO

@@ -93,7 +93,7 @@ public class DescriptionNormalizerTests
         var tokens = DescriptionNormalizer.ExtractTokens("pak n save petone");
         tokens.Should().Contain("save");
         tokens.Should().Contain("petone");
-        tokens.Should().NotContain("pak");  // 3 chars, not > 3
+        tokens.Should().Contain("pak");     // 3 chars, included (> 2)
         tokens.Should().NotContain("n");    // 1 char
     }
 
