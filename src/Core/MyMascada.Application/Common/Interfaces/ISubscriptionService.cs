@@ -3,9 +3,10 @@ using MyMascada.Domain.Enums;
 namespace MyMascada.Application.Common.Interfaces;
 
 /// <summary>
-/// Result of an AI feature access check, including the user's tier and denial reason if blocked.
+/// Result of an AI feature access check, including the user's tier, denial reason, and remaining quota.
+/// RemainingQuota is int.MaxValue for unlimited tiers, 0 when denied, or the actual remaining count.
 /// </summary>
-public record AiFeatureAccessResult(bool IsAllowed, SubscriptionTier Tier, string? DenialReason = null);
+public record AiFeatureAccessResult(bool IsAllowed, SubscriptionTier Tier, string? DenialReason = null, int RemainingQuota = 0);
 
 /// <summary>
 /// Service for checking subscription tier and AI feature quotas.

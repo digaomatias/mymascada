@@ -168,7 +168,7 @@ public class SubscriptionServiceTests : IDisposable
 
         result.IsAllowed.Should().BeFalse();
         result.Tier.Should().Be(SubscriptionTier.Free);
-        result.DenialReason.Should().Contain("Free plan");
+        result.DenialReason.Should().Be("Subscription.LlmDeniedFreeTier");
     }
 
     [Fact]
@@ -196,7 +196,7 @@ public class SubscriptionServiceTests : IDisposable
 
         result.IsAllowed.Should().BeFalse();
         result.Tier.Should().Be(SubscriptionTier.Pro);
-        result.DenialReason.Should().Contain("quota exceeded");
+        result.DenialReason.Should().Be("Subscription.LlmQuotaExhausted");
     }
 
     [Fact]
@@ -209,7 +209,7 @@ public class SubscriptionServiceTests : IDisposable
 
         result.IsAllowed.Should().BeFalse();
         result.Tier.Should().Be(SubscriptionTier.Free);
-        result.DenialReason.Should().Contain("Free plan");
+        result.DenialReason.Should().Be("Subscription.AiRulesDeniedFreeTier");
     }
 
     [Fact]
@@ -237,7 +237,7 @@ public class SubscriptionServiceTests : IDisposable
 
         result.IsAllowed.Should().BeFalse();
         result.Tier.Should().Be(SubscriptionTier.Pro);
-        result.DenialReason.Should().Contain("quota exceeded");
+        result.DenialReason.Should().Be("Subscription.AiRulesQuotaExhausted");
     }
 
     [Fact]
@@ -265,7 +265,7 @@ public class SubscriptionServiceTests : IDisposable
 
         result.IsAllowed.Should().BeFalse();
         result.Tier.Should().Be(SubscriptionTier.Family);
-        result.DenialReason.Should().Contain("quota exceeded");
+        result.DenialReason.Should().Be("Subscription.LlmQuotaExhausted");
     }
 
     [Fact]
@@ -305,7 +305,7 @@ public class SubscriptionServiceTests : IDisposable
 
         result.IsAllowed.Should().BeFalse();
         result.Tier.Should().Be(SubscriptionTier.Family);
-        result.DenialReason.Should().Contain("quota exceeded");
+        result.DenialReason.Should().Be("Subscription.AiRulesQuotaExhausted");
     }
 
     // --- Remaining quota ---
@@ -346,9 +346,52 @@ public class SubscriptionServiceTests : IDisposable
     }
 
     // --- Usage recording ---
-    // RecordLlmUsageAsync and RecordRuleSuggestionUsageAsync now use atomic PostgreSQL
-    // upserts (INSERT ... ON CONFLICT DO UPDATE) which require a real relational provider.
-    // These should be covered by integration tests against PostgreSQL.
+
+    [Fact]
+    public async Task RecordLlmUsageAsync_CreatesNewUsageRecord()
+    {
+        _featureFlags.StripeBilling.Returns(true);
+        var service = CreateService();
+
+        await service.RecordLlmUsageAsync(_userId, 5);
+
+        var now = DateTime.UtcNow;
+        var usage = await _dbContext.AiCategorizationUsages
+            .FirstOrDefaultAsync(u => u.UserId == _userId && u.Year == now.Year && u.Month == now.Month);
+        usage.Should().NotBeNull();
+        usage!.LlmCategorizationCount.Should().Be(5);
+    }
+
+    [Fact]
+    public async Task RecordLlmUsageAsync_IncrementExistingUsageRecord()
+    {
+        _featureFlags.StripeBilling.Returns(true);
+        await SeedUsage(_userId, llmCount: 10);
+        var service = CreateService();
+
+        await service.RecordLlmUsageAsync(_userId, 3);
+
+        var now = DateTime.UtcNow;
+        var usage = await _dbContext.AiCategorizationUsages
+            .FirstOrDefaultAsync(u => u.UserId == _userId && u.Year == now.Year && u.Month == now.Month);
+        usage.Should().NotBeNull();
+        usage!.LlmCategorizationCount.Should().Be(13);
+    }
+
+    [Fact]
+    public async Task RecordRuleSuggestionUsageAsync_IncrementsCount()
+    {
+        _featureFlags.StripeBilling.Returns(true);
+        var service = CreateService();
+
+        await service.RecordRuleSuggestionUsageAsync(_userId);
+
+        var now = DateTime.UtcNow;
+        var usage = await _dbContext.AiCategorizationUsages
+            .FirstOrDefaultAsync(u => u.UserId == _userId && u.Year == now.Year && u.Month == now.Month);
+        usage.Should().NotBeNull();
+        usage!.RuleSuggestionCount.Should().Be(1);
+    }
 
     // --- Helpers ---
 

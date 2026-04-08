@@ -48,40 +48,38 @@ public class LLMHandler : CategorizationHandler
             return result;
         }
 
-        // Tier gating: check if user can use LLM categorization
-        var tier = await _subscriptionService.GetUserTierAsync(userId.Value, cancellationToken);
-        if (tier == SubscriptionTier.Free)
-        {
-            _logger.LogInformation(
-                "LLM Handler skipped for free-tier user {UserId} — {Count} transactions left for remaining handlers",
-                userId.Value, transactionsList.Count);
-            return result;
-        }
+        // Single call: checks tier, quota, and returns remaining count
+        var accessResult = await _subscriptionService.CanUseLlmCategorizationAsync(userId.Value, cancellationToken);
 
-        // Determine the batch to send to the LLM (may be capped by quota)
-        var llmBatch = transactionsList;
-
-        // Quota check for paid tiers
-        if (tier is SubscriptionTier.Pro or SubscriptionTier.Family)
+        if (!accessResult.IsAllowed)
         {
-            var remaining = await _subscriptionService.GetRemainingLlmQuotaAsync(userId.Value, cancellationToken);
-            if (remaining <= 0)
+            if (accessResult.Tier == SubscriptionTier.Free)
+            {
+                _logger.LogInformation(
+                    "LLM Handler skipped for free-tier user {UserId} — {Count} transactions left for remaining handlers",
+                    userId.Value, transactionsList.Count);
+            }
+            else
             {
                 _logger.LogInformation(
                     "LLM Handler skipped for user {UserId} — monthly LLM quota exhausted",
                     userId.Value);
                 result.Errors.Add("Monthly LLM categorization quota exceeded. Transactions will be categorized by rules and ML matching.");
-                return result;
             }
+            return result;
+        }
 
-            // Cap the batch to remaining quota without mutating the original list
-            if (transactionsList.Count > remaining)
-            {
-                _logger.LogInformation(
-                    "LLM Handler capping batch from {Requested} to {Remaining} transactions (quota limit) for user {UserId}",
-                    transactionsList.Count, remaining, userId.Value);
-                llmBatch = transactionsList.Take(remaining).ToList();
-            }
+        // Determine the batch to send to the LLM (may be capped by quota)
+        var llmBatch = transactionsList;
+        var remaining = accessResult.RemainingQuota;
+
+        // Cap the batch to remaining quota without mutating the original list
+        if (remaining < int.MaxValue && transactionsList.Count > remaining)
+        {
+            _logger.LogInformation(
+                "LLM Handler capping batch from {Requested} to {Remaining} transactions (quota limit) for user {UserId}",
+                transactionsList.Count, remaining, userId.Value);
+            llmBatch = transactionsList.Take(remaining).ToList();
         }
 
         _logger.LogInformation("LLM Handler processing {TransactionCount} transactions - this will incur AI costs",

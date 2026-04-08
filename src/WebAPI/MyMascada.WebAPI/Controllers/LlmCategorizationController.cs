@@ -2,8 +2,10 @@ using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using MyMascada.Application.Features.Transactions.Commands;
 using MyMascada.Application.Common.Interfaces;
+using MyMascada.WebAPI.Business;
 
 namespace MyMascada.WebAPI.Controllers;
 
@@ -18,17 +20,20 @@ public class LlmCategorizationController : ControllerBase
     private readonly ILogger<LlmCategorizationController> _logger;
     private readonly ICurrentUserService _currentUserService;
     private readonly ISubscriptionService _subscriptionService;
+    private readonly IStringLocalizer<BusinessMessages> _localizer;
 
     public LlmCategorizationController(
         IMediator mediator,
         ILogger<LlmCategorizationController> logger,
         ICurrentUserService currentUserService,
-        ISubscriptionService subscriptionService)
+        ISubscriptionService subscriptionService,
+        IStringLocalizer<BusinessMessages> localizer)
     {
         _mediator = mediator;
         _logger = logger;
         _currentUserService = currentUserService;
         _subscriptionService = subscriptionService;
+        _localizer = localizer;
     }
 
     [HttpPost("batch-categorize")]
@@ -43,7 +48,8 @@ public class LlmCategorizationController : ControllerBase
             var accessResult = await _subscriptionService.CanUseLlmCategorizationAsync(userId);
             if (!accessResult.IsAllowed)
             {
-                return StatusCode(403, new { error = accessResult.DenialReason });
+                var message = _localizer[accessResult.DenialReason!].Value;
+                return StatusCode(403, new { error = message });
             }
 
             var command = new BulkCategorizeWithLlmCommand

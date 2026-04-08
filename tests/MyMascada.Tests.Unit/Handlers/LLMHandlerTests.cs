@@ -26,12 +26,8 @@ public class LLMHandlerTests
         _logger = Substitute.For<ILogger<LLMHandler>>();
 
         // Default: SelfHosted tier (unlimited) so existing tests pass unchanged
-        _subscriptionService.GetUserTierAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
-            .Returns(SubscriptionTier.SelfHosted);
-        _subscriptionService.GetRemainingLlmQuotaAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
-            .Returns(int.MaxValue);
         _subscriptionService.CanUseLlmCategorizationAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
-            .Returns(new AiFeatureAccessResult(true, SubscriptionTier.SelfHosted));
+            .Returns(new AiFeatureAccessResult(true, SubscriptionTier.SelfHosted, RemainingQuota: int.MaxValue));
 
         _handler = new LLMHandler(_sharedCategorizationService, _subscriptionService, _logger);
     }
@@ -247,8 +243,8 @@ public class LLMHandlerTests
     [Fact]
     public async Task ProcessTransactionsAsync_FreeUser_SkipsProcessing()
     {
-        _subscriptionService.GetUserTierAsync(_userId, Arg.Any<CancellationToken>())
-            .Returns(SubscriptionTier.Free);
+        _subscriptionService.CanUseLlmCategorizationAsync(_userId, Arg.Any<CancellationToken>())
+            .Returns(new AiFeatureAccessResult(false, SubscriptionTier.Free, "Free plan"));
 
         var transactions = new List<Transaction>
         {
@@ -270,10 +266,8 @@ public class LLMHandlerTests
     [Fact]
     public async Task ProcessTransactionsAsync_ProUserWithQuota_ProcessesNormally()
     {
-        _subscriptionService.GetUserTierAsync(_userId, Arg.Any<CancellationToken>())
-            .Returns(SubscriptionTier.Pro);
-        _subscriptionService.GetRemainingLlmQuotaAsync(_userId, Arg.Any<CancellationToken>())
-            .Returns(100);
+        _subscriptionService.CanUseLlmCategorizationAsync(_userId, Arg.Any<CancellationToken>())
+            .Returns(new AiFeatureAccessResult(true, SubscriptionTier.Pro, RemainingQuota: 100));
 
         var transactions = new List<Transaction>
         {
@@ -311,10 +305,8 @@ public class LLMHandlerTests
     [Fact]
     public async Task ProcessTransactionsAsync_ProUserQuotaExceeded_SkipsWithWarning()
     {
-        _subscriptionService.GetUserTierAsync(_userId, Arg.Any<CancellationToken>())
-            .Returns(SubscriptionTier.Pro);
-        _subscriptionService.GetRemainingLlmQuotaAsync(_userId, Arg.Any<CancellationToken>())
-            .Returns(0);
+        _subscriptionService.CanUseLlmCategorizationAsync(_userId, Arg.Any<CancellationToken>())
+            .Returns(new AiFeatureAccessResult(false, SubscriptionTier.Pro, "quota exceeded"));
 
         var transactions = new List<Transaction>
         {
@@ -334,10 +326,8 @@ public class LLMHandlerTests
     [Fact]
     public async Task ProcessTransactionsAsync_ProUserPartialQuota_CapsBatchSize()
     {
-        _subscriptionService.GetUserTierAsync(_userId, Arg.Any<CancellationToken>())
-            .Returns(SubscriptionTier.Pro);
-        _subscriptionService.GetRemainingLlmQuotaAsync(_userId, Arg.Any<CancellationToken>())
-            .Returns(2); // Only 2 remaining
+        _subscriptionService.CanUseLlmCategorizationAsync(_userId, Arg.Any<CancellationToken>())
+            .Returns(new AiFeatureAccessResult(true, SubscriptionTier.Pro, RemainingQuota: 2));
 
         var transactions = new List<Transaction>
         {
@@ -375,8 +365,7 @@ public class LLMHandlerTests
     [Fact]
     public async Task ProcessTransactionsAsync_SelfHostedUser_ProcessesUnlimited()
     {
-        _subscriptionService.GetUserTierAsync(_userId, Arg.Any<CancellationToken>())
-            .Returns(SubscriptionTier.SelfHosted);
+        // Default mock already returns SelfHosted with unlimited quota — no override needed
 
         var transactions = new List<Transaction>
         {
@@ -405,10 +394,6 @@ public class LLMHandlerTests
         var result = await _handler.HandleAsync(transactions, CancellationToken.None);
 
         result.Candidates.Should().HaveCount(2);
-
-        // No quota check needed for self-hosted
-        await _subscriptionService.DidNotReceive()
-            .GetRemainingLlmQuotaAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>());
     }
 
     private Transaction CreateTransaction(Guid? userId, string description, int id = 1, int accountId = 1)

@@ -20,6 +20,11 @@ public class SubscriptionService : ISubscriptionService
     private readonly IFeatureFlags _featureFlags;
     private readonly ILogger<SubscriptionService> _logger;
 
+    // Per-request cache: avoids redundant DB queries when multiple methods
+    // are called for the same user within a single scoped lifetime.
+    private Guid? _cachedUserId;
+    private UserSubscription? _cachedSubscription;
+
     public SubscriptionService(
         ApplicationDbContext dbContext,
         IFeatureFlags featureFlags,
@@ -47,46 +52,42 @@ public class SubscriptionService : ISubscriptionService
     public async Task<AiFeatureAccessResult> CanUseLlmCategorizationAsync(Guid userId, CancellationToken ct = default)
     {
         if (!_featureFlags.StripeBilling)
-            return new AiFeatureAccessResult(true, SubscriptionTier.SelfHosted);
+            return new AiFeatureAccessResult(true, SubscriptionTier.SelfHosted, RemainingQuota: int.MaxValue);
 
         var subscription = await GetUserSubscriptionAsync(userId, ct);
         var tier = ResolveTier(subscription);
 
         if (tier == SubscriptionTier.Free)
-            return new AiFeatureAccessResult(false, tier,
-                "LLM categorization is not available on the Free plan. Upgrade to Pro for AI-powered categorization.");
+            return new AiFeatureAccessResult(false, tier, "Subscription.LlmDeniedFreeTier");
 
         var quota = ResolvePlanLlmQuota(subscription);
         var usage = await GetCurrentMonthUsageAsync(userId, ct);
         var remaining = Math.Max(0, quota - usage.LlmCategorizationCount);
 
         if (remaining <= 0)
-            return new AiFeatureAccessResult(false, tier,
-                "Monthly LLM categorization quota exceeded. Quota resets at the start of next month.");
+            return new AiFeatureAccessResult(false, tier, "Subscription.LlmQuotaExhausted");
 
-        return new AiFeatureAccessResult(true, tier);
+        return new AiFeatureAccessResult(true, tier, RemainingQuota: remaining);
     }
 
     public async Task<AiFeatureAccessResult> CanUseAiRuleSuggestionsAsync(Guid userId, CancellationToken ct = default)
     {
         if (!_featureFlags.StripeBilling)
-            return new AiFeatureAccessResult(true, SubscriptionTier.SelfHosted);
+            return new AiFeatureAccessResult(true, SubscriptionTier.SelfHosted, RemainingQuota: int.MaxValue);
 
         var subscription = await GetUserSubscriptionAsync(userId, ct);
         var tier = ResolveTier(subscription);
 
         if (tier == SubscriptionTier.Free)
-            return new AiFeatureAccessResult(false, tier,
-                "AI-enhanced rule suggestions are not available on the Free plan. Basic rule suggestions are generated automatically.");
+            return new AiFeatureAccessResult(false, tier, "Subscription.AiRulesDeniedFreeTier");
 
         var usage = await GetCurrentMonthUsageAsync(userId, ct);
         var remaining = Math.Max(0, ProRuleSuggestionQuotaPerMonth - usage.RuleSuggestionCount);
 
         if (remaining <= 0)
-            return new AiFeatureAccessResult(false, tier,
-                "Monthly AI rule suggestion quota exceeded. Quota resets at the start of next month.");
+            return new AiFeatureAccessResult(false, tier, "Subscription.AiRulesQuotaExhausted");
 
-        return new AiFeatureAccessResult(true, tier);
+        return new AiFeatureAccessResult(true, tier, RemainingQuota: remaining);
     }
 
     public async Task<int> GetRemainingLlmQuotaAsync(Guid userId, CancellationToken ct = default)
@@ -122,58 +123,43 @@ public class SubscriptionService : ISubscriptionService
 
     public async Task RecordLlmUsageAsync(Guid userId, int transactionCount, CancellationToken ct = default)
     {
-        var now = DateTime.UtcNow;
-
-        // Atomic upsert: INSERT on first use of the month, UPDATE (increment) on conflict.
-        // Avoids race conditions and lost updates from concurrent requests.
-        var total = await _dbContext.Database.SqlQueryRaw<int>(
-            """
-            INSERT INTO "AiCategorizationUsages" ("UserId", "Year", "Month", "LlmCategorizationCount", "RuleSuggestionCount", "CreatedAt", "UpdatedAt", "IsDeleted")
-            VALUES ({0}, {1}, {2}, {3}, 0, {4}, {4}, FALSE)
-            ON CONFLICT ("UserId", "Year", "Month")
-            DO UPDATE SET "LlmCategorizationCount" = "AiCategorizationUsages"."LlmCategorizationCount" + {3},
-                         "UpdatedAt" = {4}
-            RETURNING "LlmCategorizationCount"
-            """,
-            userId, now.Year, now.Month, transactionCount, now)
-            .SingleAsync(ct);
+        var usage = await GetOrCreateCurrentMonthUsageAsync(userId, ct);
+        usage.LlmCategorizationCount += transactionCount;
+        usage.UpdatedAt = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync(ct);
 
         _logger.LogInformation(
             "Recorded LLM usage for user {UserId}: +{Count} transactions (total this month: {Total})",
-            userId, transactionCount, total);
+            userId, transactionCount, usage.LlmCategorizationCount);
     }
 
     public async Task RecordRuleSuggestionUsageAsync(Guid userId, CancellationToken ct = default)
     {
-        var now = DateTime.UtcNow;
-
-        // Atomic upsert: INSERT on first use of the month, UPDATE (increment) on conflict.
-        var total = await _dbContext.Database.SqlQueryRaw<int>(
-            """
-            INSERT INTO "AiCategorizationUsages" ("UserId", "Year", "Month", "LlmCategorizationCount", "RuleSuggestionCount", "CreatedAt", "UpdatedAt", "IsDeleted")
-            VALUES ({0}, {1}, {2}, 0, 1, {3}, {3}, FALSE)
-            ON CONFLICT ("UserId", "Year", "Month")
-            DO UPDATE SET "RuleSuggestionCount" = "AiCategorizationUsages"."RuleSuggestionCount" + 1,
-                         "UpdatedAt" = {3}
-            RETURNING "RuleSuggestionCount"
-            """,
-            userId, now.Year, now.Month, now)
-            .SingleAsync(ct);
+        var usage = await GetOrCreateCurrentMonthUsageAsync(userId, ct);
+        usage.RuleSuggestionCount += 1;
+        usage.UpdatedAt = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync(ct);
 
         _logger.LogInformation(
             "Recorded rule suggestion usage for user {UserId} (total this month: {Total})",
-            userId, total);
+            userId, usage.RuleSuggestionCount);
     }
 
     /// <summary>
-    /// Fetches the user's subscription with plan data (single DB round-trip).
+    /// Fetches the user's subscription with plan data, cached for the request scope.
     /// </summary>
-    private Task<UserSubscription?> GetUserSubscriptionAsync(Guid userId, CancellationToken ct)
+    private async Task<UserSubscription?> GetUserSubscriptionAsync(Guid userId, CancellationToken ct)
     {
-        return _dbContext.UserSubscriptions
+        if (_cachedUserId == userId)
+            return _cachedSubscription;
+
+        _cachedSubscription = await _dbContext.UserSubscriptions
             .AsNoTracking()
             .Include(s => s.Plan)
             .FirstOrDefaultAsync(s => s.UserId == userId, ct);
+        _cachedUserId = userId;
+
+        return _cachedSubscription;
     }
 
     /// <summary>
@@ -218,4 +204,61 @@ public class SubscriptionService : ISubscriptionService
             : (0, 0);
     }
 
+    /// <summary>
+    /// Finds or creates the usage record for the current month.
+    /// Uses IgnoreQueryFilters to handle soft-deleted rows (revives them if found).
+    /// Handles concurrent creation via try-catch on unique constraint violation.
+    /// </summary>
+    private async Task<AiCategorizationUsage> GetOrCreateCurrentMonthUsageAsync(
+        Guid userId, CancellationToken ct)
+    {
+        var now = DateTime.UtcNow;
+
+        // Bypass soft-delete filter so we find and revive soft-deleted rows
+        // instead of hitting a unique constraint violation.
+        var usage = await _dbContext.AiCategorizationUsages
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(u => u.UserId == userId && u.Year == now.Year && u.Month == now.Month, ct);
+
+        if (usage != null)
+        {
+            if (usage.IsDeleted)
+            {
+                usage.IsDeleted = false;
+                usage.DeletedAt = null;
+                usage.LlmCategorizationCount = 0;
+                usage.RuleSuggestionCount = 0;
+            }
+            return usage;
+        }
+
+        usage = new AiCategorizationUsage
+        {
+            UserId = userId,
+            Year = now.Year,
+            Month = now.Month,
+            LlmCategorizationCount = 0,
+            RuleSuggestionCount = 0
+        };
+
+        _dbContext.AiCategorizationUsages.Add(usage);
+
+        try
+        {
+            // Save immediately to detect unique constraint violations from concurrent requests.
+            // This path only executes once per user per month when the record is first created.
+            await _dbContext.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException)
+        {
+            // Race condition: another request created the record concurrently.
+            // Detach the failed entity and re-fetch the winner's record.
+            _dbContext.Entry(usage).State = EntityState.Detached;
+            usage = await _dbContext.AiCategorizationUsages
+                .IgnoreQueryFilters()
+                .FirstAsync(u => u.UserId == userId && u.Year == now.Year && u.Month == now.Month, ct);
+        }
+
+        return usage;
+    }
 }
