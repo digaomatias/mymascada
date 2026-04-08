@@ -111,10 +111,20 @@ public class LLMHandler : CategorizationHandler
             result.Metrics.ProcessedByLLM = candidates.Count();
             result.Metrics.EstimatedCostSavings = CalculateCostSavings(candidates.Count());
 
-            // Record usage based on how many transactions were sent to the LLM
+            // Record usage based on how many transactions were sent to the LLM.
+            // Wrapped in try-catch so a transient DB failure doesn't discard valid candidates.
             if (llmBatch.Count > 0)
             {
-                await _subscriptionService.RecordLlmUsageAsync(userId.Value, llmBatch.Count, cancellationToken);
+                try
+                {
+                    await _subscriptionService.RecordLlmUsageAsync(userId.Value, llmBatch.Count, cancellationToken);
+                }
+                catch (Exception usageEx)
+                {
+                    _logger.LogWarning(usageEx,
+                        "Failed to record LLM usage for user {UserId} ({Count} transactions) — candidates preserved",
+                        userId.Value, llmBatch.Count);
+                }
             }
 
             // Update category distribution metrics for reporting

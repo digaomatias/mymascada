@@ -38,14 +38,15 @@ public class LlmCategorizationController : ControllerBase
 
     [HttpPost("batch-categorize")]
     public async Task<ActionResult<BulkLlmCategorizationResult>> BatchCategorizeTransactions(
-        [FromBody] BatchCategorizationRequest request)
+        [FromBody] BatchCategorizationRequest request,
+        CancellationToken cancellationToken)
     {
         try
         {
             var userId = _currentUserService.GetUserId();
 
             // Tier check: free users cannot use LLM categorization
-            var accessResult = await _subscriptionService.CanUseLlmCategorizationAsync(userId);
+            var accessResult = await _subscriptionService.CanUseLlmCategorizationAsync(userId, cancellationToken);
             if (!accessResult.IsAllowed)
             {
                 var message = _localizer[accessResult.DenialReason!].Value;
@@ -59,7 +60,7 @@ public class LlmCategorizationController : ControllerBase
                 MaxBatchSize = Math.Min(request.MaxBatchSize ?? 50, 100) // Safety limit
             };
 
-            var result = await _mediator.Send(command);
+            var result = await _mediator.Send(command, cancellationToken);
 
             if (!result.Success)
             {

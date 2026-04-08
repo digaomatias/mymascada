@@ -157,6 +157,36 @@ public class SubscriptionService : ISubscriptionService
             userId, usage.RuleSuggestionCount);
     }
 
+    public async Task<bool> TryReserveRuleSuggestionQuotaAsync(Guid userId, CancellationToken ct = default)
+    {
+        if (!_featureFlags.StripeBilling)
+            return true; // Self-hosted: unlimited
+
+        var subscription = await GetUserSubscriptionAsync(userId, ct);
+        var tier = ResolveTier(subscription);
+
+        if (tier == SubscriptionTier.Free)
+            return false;
+
+        // Atomic check-and-increment: get-or-create the usage row, then increment
+        // within the same tracked entity + SaveChanges. The row-level lock from
+        // GetOrCreate prevents two concurrent callers from both reading the same count.
+        var usage = await GetOrCreateCurrentMonthUsageAsync(userId, ct);
+
+        if (usage.RuleSuggestionCount >= ProRuleSuggestionQuotaPerMonth)
+            return false;
+
+        usage.RuleSuggestionCount += 1;
+        usage.UpdatedAt = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync(ct);
+
+        _logger.LogInformation(
+            "Reserved rule suggestion quota for user {UserId} (total this month: {Total})",
+            userId, usage.RuleSuggestionCount);
+
+        return true;
+    }
+
     /// <summary>
     /// Fetches the user's subscription with plan data, cached for the request scope.
     /// </summary>

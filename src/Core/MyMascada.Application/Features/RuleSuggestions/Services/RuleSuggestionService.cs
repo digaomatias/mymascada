@@ -73,11 +73,10 @@ public class RuleSuggestionService : IRuleSuggestionService
             MinConfidenceThreshold = minConfidence
         };
 
-        // Check subscription tier to determine if AI analysis is available.
-        // NOTE: This is a check-then-act pattern — concurrent calls can both pass the quota check
-        // before either records usage. Acceptable for self-hosted; for SaaS, replace with an
-        // atomic TryReserveAiQuotaAsync that checks and increments in a single operation.
-        var canUseAi = (await _subscriptionService.CanUseAiRuleSuggestionsAsync(userId, cancellationToken)).IsAllowed;
+        // Atomically reserve AI quota before selecting the analyzer.
+        // TryReserveRuleSuggestionQuotaAsync checks and increments in one operation,
+        // preventing concurrent requests from both passing the quota check.
+        var canUseAi = await _subscriptionService.TryReserveRuleSuggestionQuotaAsync(userId, cancellationToken);
 
         var config = new RuleAnalysisConfiguration
         {
@@ -114,12 +113,8 @@ public class RuleSuggestionService : IRuleSuggestionService
             }
         }
 
-        // Record AI usage whenever the AI analyzer ran (even if no suggestions were saved,
-        // the costly AI work was still performed and should count toward the quota)
-        if (canUseAi && analyzer.RequiresAI)
-        {
-            await _subscriptionService.RecordRuleSuggestionUsageAsync(userId, cancellationToken);
-        }
+        // Usage was already reserved atomically via TryReserveRuleSuggestionQuotaAsync above.
+        // No separate RecordRuleSuggestionUsageAsync call needed.
 
         return savedSuggestions;
     }

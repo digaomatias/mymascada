@@ -360,6 +360,10 @@ public class LLMHandlerTests
                 Arg.Is<IEnumerable<Transaction>>(t => t.Count() == 2),
                 _userId,
                 Arg.Any<CancellationToken>());
+
+        // Verify usage recorded matches capped batch size, not original count
+        await _subscriptionService.Received(1)
+            .RecordLlmUsageAsync(_userId, 2, Arg.Any<CancellationToken>());
     }
 
     [Fact]

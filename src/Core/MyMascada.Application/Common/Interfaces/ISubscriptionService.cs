@@ -49,6 +49,13 @@ public interface ISubscriptionService
     Task RecordRuleSuggestionUsageAsync(Guid userId, CancellationToken ct = default);
 
     /// <summary>
+    /// Atomically checks whether the user can use AI rule suggestions and reserves one usage slot.
+    /// Returns true if the reservation succeeded (quota was available and has been decremented).
+    /// This prevents concurrent requests from both passing the quota check.
+    /// </summary>
+    Task<bool> TryReserveRuleSuggestionQuotaAsync(Guid userId, CancellationToken ct = default);
+
+    /// <summary>
     /// Gets the user's current subscription tier.
     /// </summary>
     Task<SubscriptionTier> GetUserTierAsync(Guid userId, CancellationToken ct = default);
