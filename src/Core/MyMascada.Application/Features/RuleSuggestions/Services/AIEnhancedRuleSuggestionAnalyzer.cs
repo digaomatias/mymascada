@@ -42,18 +42,18 @@ public class AIEnhancedRuleSuggestionAnalyzer : IRuleSuggestionAnalyzer
     {
         var allSuggestions = new List<PatternSuggestion>();
 
-        try
+        // 1. Run history-based cluster analysis (deterministic suggestions + ambiguous clusters)
+        var historyResult = await _historyAnalyzer.AnalyzeAsync(input.UserId, cancellationToken);
+        allSuggestions.AddRange(historyResult.DeterministicSuggestions);
+
+        // 2. Always include basic transaction-based analysis
+        var basicSuggestions = await _basicAnalyzer.AnalyzePatternsAsync(input, cancellationToken);
+        allSuggestions.AddRange(basicSuggestions);
+
+        // 3. Use AI for ambiguous clusters (if quota allows)
+        if (historyResult.AmbiguousClusters.Count > 0)
         {
-            // 1. Run history-based cluster analysis (deterministic suggestions + ambiguous clusters)
-            var historyResult = await _historyAnalyzer.AnalyzeAsync(input.UserId, cancellationToken);
-            allSuggestions.AddRange(historyResult.DeterministicSuggestions);
-
-            // 2. Always include basic transaction-based analysis as a fallback
-            var basicSuggestions = await _basicAnalyzer.AnalyzePatternsAsync(input, cancellationToken);
-            allSuggestions.AddRange(basicSuggestions);
-
-            // 3. Use AI for ambiguous clusters (if quota allows)
-            if (historyResult.AmbiguousClusters.Count > 0)
+            try
             {
                 var canUseAI = await _usageTracker.CanUseAIAsync(input.UserId, cancellationToken);
                 if (canUseAI)
@@ -63,10 +63,11 @@ public class AIEnhancedRuleSuggestionAnalyzer : IRuleSuggestionAnalyzer
                     allSuggestions.AddRange(aiSuggestions);
                 }
             }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "AI-enhanced analysis failed, falling back to basic suggestions");
+            catch (OperationCanceledException) { throw; }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "AI cluster analysis failed, returning deterministic + basic suggestions only");
+            }
         }
 
         return FilterAndCombineSuggestions(allSuggestions, input.MaxSuggestions, input.MinConfidenceThreshold);
@@ -92,6 +93,7 @@ public class AIEnhancedRuleSuggestionAnalyzer : IRuleSuggestionAnalyzer
                 var clusterSuggestions = ParseClusterResponse(aiResponse, cluster, input);
                 suggestions.AddRange(clusterSuggestions);
             }
+            catch (OperationCanceledException) { throw; }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "AI cluster analysis failed for category '{CategoryName}'", cluster.CategoryName);
@@ -187,10 +189,12 @@ RULES:
         if (suggestion.Confidence < MinAiSuggestionConfidence || suggestion.Confidence > 1.0)
             return false;
 
-        // Check the pattern doesn't already exist as a rule
+        // Check the pattern doesn't already exist as a rule with the same type
+        var parsedType = ParseRuleType(suggestion.RuleType);
         return !input.ExistingRules.Any(r =>
             r.Pattern.Equals(suggestion.Pattern, StringComparison.OrdinalIgnoreCase) &&
-            r.CategoryId == cluster.CategoryId);
+            r.CategoryId == cluster.CategoryId &&
+            r.Type == parsedType);
     }
 
     private static RuleType ParseRuleType(string ruleType)
@@ -209,7 +213,7 @@ RULES:
         List<PatternSuggestion> suggestions, int maxSuggestions, double minConfidence)
     {
         return suggestions
-            .GroupBy(s => new { Pattern = s.Pattern.ToLowerInvariant(), CategoryId = s.SuggestedCategoryId })
+            .GroupBy(s => new { Pattern = s.Pattern.ToLowerInvariant(), CategoryId = s.SuggestedCategoryId, s.SuggestedRuleType })
             .Select(group => group.OrderByDescending(s => s.ConfidenceScore).First())
             .Where(s => s.ConfidenceScore >= minConfidence)
             .OrderByDescending(s => s.ConfidenceScore)

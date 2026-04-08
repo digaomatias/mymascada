@@ -84,6 +84,7 @@ public class CategorizationHistoryAnalyzer : ICategorizationHistoryAnalyzer
 
                 // Try deterministic: find a common token shared by all descriptions
                 var commonToken = FindCommonToken(cluster);
+                var addedAsDeterministic = false;
 
                 if (commonToken != null)
                 {
@@ -100,11 +101,13 @@ public class CategorizationHistoryAnalyzer : ICategorizationHistoryAnalyzer
                             DetectionMethod = "History Pattern Analysis",
                             Reasoning = $"All {cluster.Count} categorization history entries for '{categoryName}' share the token '{commonToken}'"
                         });
+                        addedAsDeterministic = true;
                     }
                 }
-                else
+
+                // No common token, or validation failed — batch for AI analysis
+                if (!addedAsDeterministic)
                 {
-                    // No common token — batch for AI analysis
                     result.AmbiguousClusters.Add(new AmbiguousCluster
                     {
                         CategoryId = categoryId,

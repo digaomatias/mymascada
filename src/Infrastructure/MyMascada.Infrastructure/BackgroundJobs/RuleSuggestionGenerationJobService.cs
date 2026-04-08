@@ -46,7 +46,7 @@ public class RuleSuggestionGenerationJobService : IRuleSuggestionGenerationJobSe
 
         foreach (var userId in userIds)
         {
-            if (ct.IsCancellationRequested) break;
+            ct.ThrowIfCancellationRequested();
 
             try
             {
