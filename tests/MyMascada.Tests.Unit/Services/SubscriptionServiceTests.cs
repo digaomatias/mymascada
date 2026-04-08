@@ -147,29 +147,32 @@ public class SubscriptionServiceTests : IDisposable
     // --- Quota checks ---
 
     [Fact]
-    public async Task CanUseLlmCategorizationAsync_SelfHosted_ReturnsTrue()
+    public async Task CanUseLlmCategorizationAsync_SelfHosted_ReturnsAllowed()
     {
         _featureFlags.StripeBilling.Returns(false);
         var service = CreateService();
 
         var result = await service.CanUseLlmCategorizationAsync(_userId);
 
-        result.Should().BeTrue();
+        result.IsAllowed.Should().BeTrue();
+        result.Tier.Should().Be(SubscriptionTier.SelfHosted);
     }
 
     [Fact]
-    public async Task CanUseLlmCategorizationAsync_FreeUser_ReturnsFalse()
+    public async Task CanUseLlmCategorizationAsync_FreeUser_ReturnsDeniedWithReason()
     {
         _featureFlags.StripeBilling.Returns(true);
         var service = CreateService();
 
         var result = await service.CanUseLlmCategorizationAsync(_userId);
 
-        result.Should().BeFalse();
+        result.IsAllowed.Should().BeFalse();
+        result.Tier.Should().Be(SubscriptionTier.Free);
+        result.DenialReason.Should().Contain("Free plan");
     }
 
     [Fact]
-    public async Task CanUseLlmCategorizationAsync_ProUserWithQuota_ReturnsTrue()
+    public async Task CanUseLlmCategorizationAsync_ProUserWithQuota_ReturnsAllowed()
     {
         _featureFlags.StripeBilling.Returns(true);
         await SeedSubscription(_userId, "active", "Pro Plan", maxAiCalls: 200);
@@ -177,11 +180,12 @@ public class SubscriptionServiceTests : IDisposable
 
         var result = await service.CanUseLlmCategorizationAsync(_userId);
 
-        result.Should().BeTrue();
+        result.IsAllowed.Should().BeTrue();
+        result.Tier.Should().Be(SubscriptionTier.Pro);
     }
 
     [Fact]
-    public async Task CanUseLlmCategorizationAsync_ProUserQuotaExhausted_ReturnsFalse()
+    public async Task CanUseLlmCategorizationAsync_ProUserQuotaExhausted_ReturnsDeniedWithReason()
     {
         _featureFlags.StripeBilling.Returns(true);
         await SeedSubscription(_userId, "active", "Pro Plan", maxAiCalls: 10);
@@ -190,22 +194,26 @@ public class SubscriptionServiceTests : IDisposable
 
         var result = await service.CanUseLlmCategorizationAsync(_userId);
 
-        result.Should().BeFalse();
+        result.IsAllowed.Should().BeFalse();
+        result.Tier.Should().Be(SubscriptionTier.Pro);
+        result.DenialReason.Should().Contain("quota exceeded");
     }
 
     [Fact]
-    public async Task CanUseAiRuleSuggestionsAsync_FreeUser_ReturnsFalse()
+    public async Task CanUseAiRuleSuggestionsAsync_FreeUser_ReturnsDeniedWithReason()
     {
         _featureFlags.StripeBilling.Returns(true);
         var service = CreateService();
 
         var result = await service.CanUseAiRuleSuggestionsAsync(_userId);
 
-        result.Should().BeFalse();
+        result.IsAllowed.Should().BeFalse();
+        result.Tier.Should().Be(SubscriptionTier.Free);
+        result.DenialReason.Should().Contain("Free plan");
     }
 
     [Fact]
-    public async Task CanUseAiRuleSuggestionsAsync_ProUserWithQuota_ReturnsTrue()
+    public async Task CanUseAiRuleSuggestionsAsync_ProUserWithQuota_ReturnsAllowed()
     {
         _featureFlags.StripeBilling.Returns(true);
         await SeedSubscription(_userId, "active", "Pro Plan");
@@ -213,11 +221,12 @@ public class SubscriptionServiceTests : IDisposable
 
         var result = await service.CanUseAiRuleSuggestionsAsync(_userId);
 
-        result.Should().BeTrue();
+        result.IsAllowed.Should().BeTrue();
+        result.Tier.Should().Be(SubscriptionTier.Pro);
     }
 
     [Fact]
-    public async Task CanUseAiRuleSuggestionsAsync_ProUserQuotaExhausted_ReturnsFalse()
+    public async Task CanUseAiRuleSuggestionsAsync_ProUserQuotaExhausted_ReturnsDeniedWithReason()
     {
         _featureFlags.StripeBilling.Returns(true);
         await SeedSubscription(_userId, "active", "Pro Plan");
@@ -226,7 +235,9 @@ public class SubscriptionServiceTests : IDisposable
 
         var result = await service.CanUseAiRuleSuggestionsAsync(_userId);
 
-        result.Should().BeFalse();
+        result.IsAllowed.Should().BeFalse();
+        result.Tier.Should().Be(SubscriptionTier.Pro);
+        result.DenialReason.Should().Contain("quota exceeded");
     }
 
     // --- Remaining quota ---

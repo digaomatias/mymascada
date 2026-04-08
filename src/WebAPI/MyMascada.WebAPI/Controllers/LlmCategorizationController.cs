@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyMascada.Application.Features.Transactions.Commands;
 using MyMascada.Application.Common.Interfaces;
-using MyMascada.Domain.Enums;
 
 namespace MyMascada.WebAPI.Controllers;
 
@@ -41,15 +40,10 @@ public class LlmCategorizationController : ControllerBase
             var userId = _currentUserService.GetUserId();
 
             // Tier check: free users cannot use LLM categorization
-            var canUse = await _subscriptionService.CanUseLlmCategorizationAsync(userId);
-            if (!canUse)
+            var accessResult = await _subscriptionService.CanUseLlmCategorizationAsync(userId);
+            if (!accessResult.IsAllowed)
             {
-                var tier = await _subscriptionService.GetUserTierAsync(userId);
-                if (tier == SubscriptionTier.Free)
-                {
-                    return StatusCode(403, new { error = "LLM categorization is not available on the Free plan. Upgrade to Pro for AI-powered categorization." });
-                }
-                return StatusCode(403, new { error = "Monthly LLM categorization quota exceeded. Quota resets at the start of next month." });
+                return StatusCode(403, new { error = accessResult.DenialReason });
             }
 
             var command = new BulkCategorizeWithLlmCommand

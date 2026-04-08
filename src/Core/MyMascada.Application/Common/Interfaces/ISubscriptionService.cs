@@ -3,20 +3,27 @@ using MyMascada.Domain.Enums;
 namespace MyMascada.Application.Common.Interfaces;
 
 /// <summary>
+/// Result of an AI feature access check, including the user's tier and denial reason if blocked.
+/// </summary>
+public record AiFeatureAccessResult(bool IsAllowed, SubscriptionTier Tier, string? DenialReason = null);
+
+/// <summary>
 /// Service for checking subscription tier and AI feature quotas.
 /// Self-hosted deployments (IFeatureFlags.StripeBilling == false) get unlimited access.
 /// </summary>
 public interface ISubscriptionService
 {
     /// <summary>
-    /// Whether the user's tier allows LLM-based transaction categorization.
+    /// Checks whether the user's tier allows LLM-based transaction categorization.
+    /// Returns tier and denial reason to avoid redundant lookups.
     /// </summary>
-    Task<bool> CanUseLlmCategorizationAsync(Guid userId, CancellationToken ct = default);
+    Task<AiFeatureAccessResult> CanUseLlmCategorizationAsync(Guid userId, CancellationToken ct = default);
 
     /// <summary>
-    /// Whether the user's tier allows AI-enhanced rule suggestion generation.
+    /// Checks whether the user's tier allows AI-enhanced rule suggestion generation.
+    /// Returns tier and denial reason to avoid redundant lookups.
     /// </summary>
-    Task<bool> CanUseAiRuleSuggestionsAsync(Guid userId, CancellationToken ct = default);
+    Task<AiFeatureAccessResult> CanUseAiRuleSuggestionsAsync(Guid userId, CancellationToken ct = default);
 
     /// <summary>
     /// Remaining LLM categorization quota for the current month.

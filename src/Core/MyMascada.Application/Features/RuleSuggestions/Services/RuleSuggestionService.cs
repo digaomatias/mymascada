@@ -74,7 +74,7 @@ public class RuleSuggestionService : IRuleSuggestionService
         };
 
         // Check subscription tier to determine if AI analysis is available
-        var canUseAi = await _subscriptionService.CanUseAiRuleSuggestionsAsync(userId, cancellationToken);
+        var canUseAi = (await _subscriptionService.CanUseAiRuleSuggestionsAsync(userId, cancellationToken)).IsAllowed;
 
         var config = new RuleAnalysisConfiguration
         {

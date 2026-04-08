@@ -31,7 +31,7 @@ public class LLMHandlerTests
         _subscriptionService.GetRemainingLlmQuotaAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(int.MaxValue);
         _subscriptionService.CanUseLlmCategorizationAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
-            .Returns(true);
+            .Returns(new AiFeatureAccessResult(true, SubscriptionTier.SelfHosted));
 
         _handler = new LLMHandler(_sharedCategorizationService, _subscriptionService, _logger);
     }

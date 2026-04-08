@@ -6,7 +6,6 @@ using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.RuleSuggestions.Commands;
 using MyMascada.Application.Features.RuleSuggestions.DTOs;
 using MyMascada.Application.Features.RuleSuggestions.Queries;
-using MyMascada.Domain.Enums;
 
 namespace MyMascada.WebAPI.Controllers;
 
@@ -74,15 +73,10 @@ public class RuleSuggestionsController : ControllerBase
             var userId = _currentUserService.GetUserId();
 
             // Tier check: free users cannot use AI-enhanced rule generation
-            var canUseAi = await _subscriptionService.CanUseAiRuleSuggestionsAsync(userId);
-            if (!canUseAi)
+            var accessResult = await _subscriptionService.CanUseAiRuleSuggestionsAsync(userId);
+            if (!accessResult.IsAllowed)
             {
-                var tier = await _subscriptionService.GetUserTierAsync(userId);
-                if (tier == SubscriptionTier.Free)
-                {
-                    return StatusCode(403, new { error = "AI-enhanced rule suggestions are not available on the Free plan. Basic rule suggestions are generated automatically." });
-                }
-                return StatusCode(403, new { error = "Monthly AI rule suggestion quota exceeded. Quota resets at the start of next month." });
+                return StatusCode(403, new { error = accessResult.DenialReason });
             }
 
             var command = new GenerateRuleSuggestionsCommand

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MyMascada.Application.Common.Interfaces;
+using MyMascada.Domain.Entities;
 using MyMascada.Domain.Enums;
 using MyMascada.Infrastructure.Data;
 
@@ -39,66 +40,79 @@ public class SubscriptionService : ISubscriptionService
         if (!_featureFlags.StripeBilling)
             return SubscriptionTier.SelfHosted;
 
-        var subscription = await _dbContext.UserSubscriptions
-            .AsNoTracking()
-            .Include(s => s.Plan)
-            .FirstOrDefaultAsync(s => s.UserId == userId, ct);
-
-        if (subscription == null || subscription.Status == "free")
-            return SubscriptionTier.Free;
-
-        if (subscription.Status != "active")
-            return SubscriptionTier.Free;
-
-        // Derive tier from plan name (case-insensitive)
-        var planName = subscription.Plan?.Name?.ToLowerInvariant() ?? "";
-        if (planName.Contains("family"))
-            return SubscriptionTier.Family;
-
-        // Any active paid subscription = Pro
-        return SubscriptionTier.Pro;
+        var subscription = await GetUserSubscriptionAsync(userId, ct);
+        return ResolveTier(subscription);
     }
 
-    public async Task<bool> CanUseLlmCategorizationAsync(Guid userId, CancellationToken ct = default)
+    public async Task<AiFeatureAccessResult> CanUseLlmCategorizationAsync(Guid userId, CancellationToken ct = default)
     {
-        var tier = await GetUserTierAsync(userId, ct);
-        return tier switch
-        {
-            SubscriptionTier.SelfHosted => true,
-            SubscriptionTier.Pro or SubscriptionTier.Family => await GetRemainingLlmQuotaAsync(userId, ct) > 0,
-            _ => false
-        };
+        if (!_featureFlags.StripeBilling)
+            return new AiFeatureAccessResult(true, SubscriptionTier.SelfHosted);
+
+        var subscription = await GetUserSubscriptionAsync(userId, ct);
+        var tier = ResolveTier(subscription);
+
+        if (tier == SubscriptionTier.Free)
+            return new AiFeatureAccessResult(false, tier,
+                "LLM categorization is not available on the Free plan. Upgrade to Pro for AI-powered categorization.");
+
+        var quota = ResolvePlanLlmQuota(subscription);
+        var usage = await GetCurrentMonthUsageAsync(userId, ct);
+        var remaining = Math.Max(0, quota - usage.LlmCategorizationCount);
+
+        if (remaining <= 0)
+            return new AiFeatureAccessResult(false, tier,
+                "Monthly LLM categorization quota exceeded. Quota resets at the start of next month.");
+
+        return new AiFeatureAccessResult(true, tier);
     }
 
-    public async Task<bool> CanUseAiRuleSuggestionsAsync(Guid userId, CancellationToken ct = default)
+    public async Task<AiFeatureAccessResult> CanUseAiRuleSuggestionsAsync(Guid userId, CancellationToken ct = default)
     {
-        var tier = await GetUserTierAsync(userId, ct);
-        return tier switch
-        {
-            SubscriptionTier.SelfHosted => true,
-            SubscriptionTier.Pro or SubscriptionTier.Family => await GetRemainingRuleSuggestionQuotaAsync(userId, ct) > 0,
-            _ => false
-        };
+        if (!_featureFlags.StripeBilling)
+            return new AiFeatureAccessResult(true, SubscriptionTier.SelfHosted);
+
+        var subscription = await GetUserSubscriptionAsync(userId, ct);
+        var tier = ResolveTier(subscription);
+
+        if (tier == SubscriptionTier.Free)
+            return new AiFeatureAccessResult(false, tier,
+                "AI-enhanced rule suggestions are not available on the Free plan. Basic rule suggestions are generated automatically.");
+
+        var usage = await GetCurrentMonthUsageAsync(userId, ct);
+        var remaining = Math.Max(0, ProRuleSuggestionQuotaPerMonth - usage.RuleSuggestionCount);
+
+        if (remaining <= 0)
+            return new AiFeatureAccessResult(false, tier,
+                "Monthly AI rule suggestion quota exceeded. Quota resets at the start of next month.");
+
+        return new AiFeatureAccessResult(true, tier);
     }
 
     public async Task<int> GetRemainingLlmQuotaAsync(Guid userId, CancellationToken ct = default)
     {
-        var tier = await GetUserTierAsync(userId, ct);
-        if (tier == SubscriptionTier.SelfHosted)
+        if (!_featureFlags.StripeBilling)
             return int.MaxValue;
+
+        var subscription = await GetUserSubscriptionAsync(userId, ct);
+        var tier = ResolveTier(subscription);
+
         if (tier == SubscriptionTier.Free)
             return 0;
 
-        var quota = await GetPlanLlmQuotaAsync(userId, ct);
+        var quota = ResolvePlanLlmQuota(subscription);
         var usage = await GetCurrentMonthUsageAsync(userId, ct);
         return Math.Max(0, quota - usage.LlmCategorizationCount);
     }
 
     public async Task<int> GetRemainingRuleSuggestionQuotaAsync(Guid userId, CancellationToken ct = default)
     {
-        var tier = await GetUserTierAsync(userId, ct);
-        if (tier == SubscriptionTier.SelfHosted)
+        if (!_featureFlags.StripeBilling)
             return int.MaxValue;
+
+        var subscription = await GetUserSubscriptionAsync(userId, ct);
+        var tier = ResolveTier(subscription);
+
         if (tier == SubscriptionTier.Free)
             return 0;
 
@@ -131,15 +145,39 @@ public class SubscriptionService : ISubscriptionService
     }
 
     /// <summary>
-    /// Gets the LLM quota from the user's billing plan, falling back to ProLlmQuotaPerMonth.
+    /// Fetches the user's subscription with plan data (single DB round-trip).
     /// </summary>
-    private async Task<int> GetPlanLlmQuotaAsync(Guid userId, CancellationToken ct)
+    private Task<UserSubscription?> GetUserSubscriptionAsync(Guid userId, CancellationToken ct)
     {
-        var subscription = await _dbContext.UserSubscriptions
+        return _dbContext.UserSubscriptions
             .AsNoTracking()
             .Include(s => s.Plan)
             .FirstOrDefaultAsync(s => s.UserId == userId, ct);
+    }
 
+    /// <summary>
+    /// Derives the subscription tier from subscription data without a DB call.
+    /// </summary>
+    private static SubscriptionTier ResolveTier(UserSubscription? subscription)
+    {
+        if (subscription == null || subscription.Status == "free")
+            return SubscriptionTier.Free;
+
+        if (subscription.Status != "active")
+            return SubscriptionTier.Free;
+
+        var planName = subscription.Plan?.Name?.ToLowerInvariant() ?? "";
+        if (planName.Contains("family"))
+            return SubscriptionTier.Family;
+
+        return SubscriptionTier.Pro;
+    }
+
+    /// <summary>
+    /// Resolves the LLM quota from a subscription's plan without a DB call.
+    /// </summary>
+    private static int ResolvePlanLlmQuota(UserSubscription? subscription)
+    {
         if (subscription?.Plan?.MaxAiCallsPerMonth > 0)
             return subscription.Plan.MaxAiCallsPerMonth;
 
@@ -159,7 +197,7 @@ public class SubscriptionService : ISubscriptionService
             : (0, 0);
     }
 
-    private async Task<Domain.Entities.AiCategorizationUsage> GetOrCreateCurrentMonthUsageAsync(
+    private async Task<AiCategorizationUsage> GetOrCreateCurrentMonthUsageAsync(
         Guid userId, CancellationToken ct)
     {
         var now = DateTime.UtcNow;
@@ -169,7 +207,7 @@ public class SubscriptionService : ISubscriptionService
         if (usage != null)
             return usage;
 
-        usage = new Domain.Entities.AiCategorizationUsage
+        usage = new AiCategorizationUsage
         {
             UserId = userId,
             Year = now.Year,
@@ -179,7 +217,22 @@ public class SubscriptionService : ISubscriptionService
         };
 
         _dbContext.AiCategorizationUsages.Add(usage);
-        await _dbContext.SaveChangesAsync(ct);
+
+        try
+        {
+            // Save immediately to detect unique constraint violations from concurrent requests.
+            // This is the only path that creates new records (once per user per month).
+            await _dbContext.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException)
+        {
+            // Race condition: another request created the record concurrently.
+            // Detach the failed entity and re-fetch the winner's record.
+            _dbContext.Entry(usage).State = EntityState.Detached;
+            usage = await _dbContext.AiCategorizationUsages
+                .FirstAsync(u => u.UserId == userId && u.Year == now.Year && u.Month == now.Month, ct);
+        }
+
         return usage;
     }
 }
