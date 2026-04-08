@@ -44,6 +44,7 @@ public class CategorizationHistoryService : ICategorizationHistoryService
                 "matchCount={MatchCount}, source={Source}",
                 categoryId, entry.MatchCount, source);
         }
+        catch (OperationCanceledException) { throw; }
         catch (Exception ex)
         {
             _logger.LogError(ex,
@@ -76,6 +77,7 @@ public class CategorizationHistoryService : ICategorizationHistoryService
             _logger.LogDebug("Batch recorded {ProcessedCount}/{TotalCount} categorization history entries",
                 processedCount, eventList.Count);
         }
+        catch (OperationCanceledException) { throw; }
         catch (Exception ex)
         {
             _logger.LogError(ex,

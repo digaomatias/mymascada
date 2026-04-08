@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Domain.Entities;
 using MyMascada.Infrastructure.Data;
@@ -9,15 +8,10 @@ namespace MyMascada.Infrastructure.Repositories;
 public class CategorizationHistoryRepository : ICategorizationHistoryRepository
 {
     private readonly ApplicationDbContext _context;
-    private readonly ILogger<CategorizationHistoryRepository> _logger;
-    private const int MaxRetries = 3;
 
-    public CategorizationHistoryRepository(
-        ApplicationDbContext context,
-        ILogger<CategorizationHistoryRepository> logger)
+    public CategorizationHistoryRepository(ApplicationDbContext context)
     {
         _context = context;
-        _logger = logger;
     }
 
     public async Task<CategorizationHistory?> FindByNormalizedDescriptionAsync(
@@ -41,6 +35,12 @@ public class CategorizationHistoryRepository : ICategorizationHistoryRepository
             .ToListAsync(ct);
     }
 
+    /// <summary>
+    /// Upserts a categorization history entry. Does NOT call SaveChangesAsync — the caller
+    /// is responsible for flushing changes, enabling batching of multiple upserts.
+    /// Concurrent unique-constraint violations are handled by the caller's error handling
+    /// (history recording is best-effort and non-critical).
+    /// </summary>
     public async Task<CategorizationHistory> UpsertAsync(
         Guid userId,
         string normalizedDescription,
@@ -48,39 +48,6 @@ public class CategorizationHistoryRepository : ICategorizationHistoryRepository
         int categoryId,
         CategorizationHistorySource source,
         CancellationToken ct = default)
-    {
-        for (var attempt = 0; attempt < MaxRetries; attempt++)
-        {
-            try
-            {
-                return await UpsertCore(userId, normalizedDescription, originalDescription, categoryId, source, ct);
-            }
-            catch (DbUpdateException) when (attempt < MaxRetries - 1)
-            {
-                // Unique constraint violation from concurrent insert — reload and retry
-                _logger.LogDebug(
-                    "Unique constraint conflict on upsert (attempt {Attempt}), retrying",
-                    attempt + 1);
-
-                // Detach the conflicting tracked entity so we can re-query
-                var tracked = _context.CategorizationHistories.Local
-                    .FirstOrDefault(h => h.UserId == userId && h.NormalizedDescription == normalizedDescription);
-                if (tracked != null)
-                    _context.Entry(tracked).State = EntityState.Detached;
-            }
-        }
-
-        // Should not reach here, but satisfy the compiler
-        throw new InvalidOperationException("Upsert failed after maximum retries");
-    }
-
-    private async Task<CategorizationHistory> UpsertCore(
-        Guid userId,
-        string normalizedDescription,
-        string originalDescription,
-        int categoryId,
-        CategorizationHistorySource source,
-        CancellationToken ct)
     {
         // Check Local (in-memory tracked entities) first to avoid duplicate tracking within a batch.
         // Use IgnoreQueryFilters to include soft-deleted rows — the unique index covers all rows.
@@ -133,6 +100,9 @@ public class CategorizationHistoryRepository : ICategorizationHistoryRepository
         return existing;
     }
 
+    /// <summary>
+    /// Upserts with an absolute count (used by backfill). Does NOT call SaveChangesAsync.
+    /// </summary>
     public async Task<CategorizationHistory> UpsertWithAbsoluteCountAsync(
         Guid userId,
         string normalizedDescription,
@@ -141,38 +111,6 @@ public class CategorizationHistoryRepository : ICategorizationHistoryRepository
         int count,
         CategorizationHistorySource source,
         CancellationToken ct = default)
-    {
-        for (var attempt = 0; attempt < MaxRetries; attempt++)
-        {
-            try
-            {
-                return await UpsertWithAbsoluteCountCore(
-                    userId, normalizedDescription, originalDescription, categoryId, count, source, ct);
-            }
-            catch (DbUpdateException) when (attempt < MaxRetries - 1)
-            {
-                _logger.LogDebug(
-                    "Unique constraint conflict on absolute-count upsert (attempt {Attempt}), retrying",
-                    attempt + 1);
-
-                var tracked = _context.CategorizationHistories.Local
-                    .FirstOrDefault(h => h.UserId == userId && h.NormalizedDescription == normalizedDescription);
-                if (tracked != null)
-                    _context.Entry(tracked).State = EntityState.Detached;
-            }
-        }
-
-        throw new InvalidOperationException("UpsertWithAbsoluteCount failed after maximum retries");
-    }
-
-    private async Task<CategorizationHistory> UpsertWithAbsoluteCountCore(
-        Guid userId,
-        string normalizedDescription,
-        string originalDescription,
-        int categoryId,
-        int count,
-        CategorizationHistorySource source,
-        CancellationToken ct)
     {
         // Check Local first, then DB with IgnoreQueryFilters to include soft-deleted rows
         var existing = _context.CategorizationHistories.Local

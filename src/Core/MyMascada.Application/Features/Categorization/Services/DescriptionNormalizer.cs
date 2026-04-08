@@ -69,7 +69,7 @@ public static partial class DescriptionNormalizer
 
     /// <summary>
     /// Extracts significant tokens from a normalized description for fuzzy matching.
-    /// Returns words longer than 3 chars that are not stop words.
+    /// Returns words longer than 2 chars that are not stop words.
     /// </summary>
     public static IReadOnlyList<string> ExtractTokens(string normalizedDescription)
     {
