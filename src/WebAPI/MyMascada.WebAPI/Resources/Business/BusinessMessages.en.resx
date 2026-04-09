@@ -174,4 +174,18 @@
     <value>The calculated balance does not match the expected balance</value>
   </data>
 
+  <!-- Subscription / AI Quota -->
+  <data name="Subscription.LlmDeniedFreeTier" xml:space="preserve">
+    <value>LLM categorization is not available on the Free plan. Upgrade to Pro for AI-powered categorization.</value>
+  </data>
+  <data name="Subscription.LlmQuotaExhausted" xml:space="preserve">
+    <value>Monthly LLM categorization quota exceeded. Quota resets at the start of next month.</value>
+  </data>
+  <data name="Subscription.AiRulesDeniedFreeTier" xml:space="preserve">
+    <value>AI-enhanced rule suggestions are not available on the Free plan. Basic rule suggestions are generated automatically.</value>
+  </data>
+  <data name="Subscription.AiRulesQuotaExhausted" xml:space="preserve">
+    <value>Monthly AI rule suggestion quota exceeded. Quota resets at the start of next month.</value>
+  </data>
+
 </root>

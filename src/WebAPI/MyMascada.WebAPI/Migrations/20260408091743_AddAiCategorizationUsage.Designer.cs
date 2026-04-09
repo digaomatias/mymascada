@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MyMascada.Infrastructure.Data;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MyMascada.WebAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260408091743_AddAiCategorizationUsage")]
+    partial class AddAiCategorizationUsage
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -209,14 +212,7 @@ namespace MyMascada.WebAPI.Migrations
                     b.HasIndex("UserId", "Year", "Month")
                         .IsUnique();
 
-                    b.ToTable("AiCategorizationUsages", t =>
-                        {
-                            t.HasCheckConstraint("CK_AiCategorizationUsage_LlmCategorizationCount", "\"LlmCategorizationCount\" >= 0");
-
-                            t.HasCheckConstraint("CK_AiCategorizationUsage_Month", "\"Month\" BETWEEN 1 AND 12");
-
-                            t.HasCheckConstraint("CK_AiCategorizationUsage_RuleSuggestionCount", "\"RuleSuggestionCount\" >= 0");
-                        });
+                    b.ToTable("AiCategorizationUsages");
                 });
 
             modelBuilder.Entity("MyMascada.Domain.Entities.AiTokenUsage", b =>

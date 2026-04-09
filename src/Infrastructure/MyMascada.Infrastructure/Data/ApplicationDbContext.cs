@@ -55,6 +55,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
     public DbSet<CategorizationHistory> CategorizationHistories => Set<CategorizationHistory>();
+    public DbSet<AiCategorizationUsage> AiCategorizationUsages => Set<AiCategorizationUsage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -1023,6 +1024,29 @@ public class ApplicationDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
+        // AiCategorizationUsage configuration
+        modelBuilder.Entity<AiCategorizationUsage>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.Year).IsRequired();
+            entity.Property(e => e.Month).IsRequired();
+            entity.Property(e => e.LlmCategorizationCount).IsRequired().HasDefaultValue(0);
+            entity.Property(e => e.RuleSuggestionCount).IsRequired().HasDefaultValue(0);
+
+            // One row per user per month
+            entity.HasIndex(e => new { e.UserId, e.Year, e.Month }).IsUnique();
+
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_AiCategorizationUsage_Month", "\"Month\" BETWEEN 1 AND 12");
+                t.HasCheckConstraint("CK_AiCategorizationUsage_LlmCategorizationCount", "\"LlmCategorizationCount\" >= 0");
+                t.HasCheckConstraint("CK_AiCategorizationUsage_RuleSuggestionCount", "\"RuleSuggestionCount\" >= 0");
+            });
 
             entity.HasQueryFilter(e => !e.IsDeleted);
         });

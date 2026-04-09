@@ -6,6 +6,7 @@ using MyMascada.Application.Features.RuleSuggestions.Services;
 using MyMascada.Domain.Entities;
 using MyMascada.Domain.Enums;
 using MyMascada.Infrastructure.BackgroundJobs;
+using NSubstitute;
 
 namespace MyMascada.Tests.Unit.Services;
 
@@ -217,7 +218,8 @@ public class RuleSuggestionGenerationFlowTests
             categoryRepo,
             analyzerFactory,
             historyRepo,
-            featureFlags);
+            featureFlags,
+            Substitute.For<ISubscriptionService>());
 
         var result = await service.ShouldGenerateRuleSuggestionsAsync(_userId);
 
@@ -250,7 +252,8 @@ public class RuleSuggestionGenerationFlowTests
             Substitute.For<ICategoryRepository>(),
             Substitute.For<IRuleSuggestionAnalyzerFactory>(),
             historyRepo,
-            Substitute.For<IFeatureFlags>());
+            Substitute.For<IFeatureFlags>(),
+            Substitute.For<ISubscriptionService>());
 
         var result = await service.ShouldGenerateRuleSuggestionsAsync(_userId);
 
@@ -291,7 +294,8 @@ public class RuleSuggestionGenerationFlowTests
             Substitute.For<ICategoryRepository>(),
             Substitute.For<IRuleSuggestionAnalyzerFactory>(),
             historyRepo,
-            Substitute.For<IFeatureFlags>());
+            Substitute.For<IFeatureFlags>(),
+            Substitute.For<ISubscriptionService>());
 
         var result = await service.ShouldGenerateRuleSuggestionsAsync(_userId);
 

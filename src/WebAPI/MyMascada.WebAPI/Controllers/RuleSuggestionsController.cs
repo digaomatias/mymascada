@@ -19,7 +19,9 @@ public class RuleSuggestionsController : ControllerBase
     private readonly IMediator _mediator;
     private readonly ICurrentUserService _currentUserService;
 
-    public RuleSuggestionsController(IMediator mediator, ICurrentUserService currentUserService)
+    public RuleSuggestionsController(
+        IMediator mediator,
+        ICurrentUserService currentUserService)
     {
         _mediator = mediator;
         _currentUserService = currentUserService;
@@ -55,7 +57,9 @@ public class RuleSuggestionsController : ControllerBase
     }
 
     /// <summary>
-    /// Generate new rule suggestions for the current user
+    /// Generate new rule suggestions for the current user.
+    /// AI-enhanced generation requires a Pro subscription or self-hosted deployment.
+    /// Free users still get basic (deterministic) suggestions.
     /// </summary>
     [HttpPost("generate")]
     public async Task<ActionResult<RuleSuggestionsResponse>> GenerateRuleSuggestions(
@@ -64,6 +68,9 @@ public class RuleSuggestionsController : ControllerBase
         try
         {
             var userId = _currentUserService.GetUserId();
+
+            // No 403 gate here — RuleSuggestionService checks the tier internally
+            // and falls back to deterministic (basic) suggestions when AI is unavailable.
             var command = new GenerateRuleSuggestionsCommand
             {
                 UserId = userId,

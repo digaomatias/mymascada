@@ -4,6 +4,7 @@ using MyMascada.Application.Common.Behaviours;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Infrastructure.Services;
 using MyMascada.Infrastructure.Services.Logging;
+using MyMascada.Infrastructure.Services.Subscription;
 using MyMascada.Infrastructure.Services.UserData;
 
 namespace MyMascada.WebAPI.Extensions;
@@ -58,6 +59,10 @@ public static class ApplicationServiceExtensions
             MyMascada.Infrastructure.Services.Reconciliation.TransactionMatchingService>();
         services.AddScoped<MyMascada.Application.Features.Reconciliation.Services.IMatchConfidenceCalculator,
             MyMascada.Application.Features.Reconciliation.Services.MatchConfidenceCalculator>();
+
+        // Subscription / tier gating — registered here alongside its consumers
+        // (RuleSuggestionService, RuleSuggestionAnalyzerFactory, LLMHandler)
+        services.AddScoped<ISubscriptionService, SubscriptionService>();
 
         // Rules services
         services.AddScoped<MyMascada.Application.Features.Rules.Services.IRuleSuggestionsService,

@@ -3,29 +3,32 @@ using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Categorization.Models;
 using MyMascada.Application.Features.Categorization.Services;
 using MyMascada.Domain.Entities;
+using MyMascada.Domain.Enums;
 
 namespace MyMascada.Application.Features.Categorization.Handlers;
 
 /// <summary>
-/// Final handler in the chain - applies LLM categorization for complex transactions
-/// Slow processing with high cost - used only for novel/complex cases
-/// Uses existing LLM service
+/// Final handler in the chain - applies LLM categorization for complex transactions.
+/// Gated by subscription tier: Free users are skipped, Pro users check quota, SelfHosted unlimited.
 /// </summary>
 public class LLMHandler : CategorizationHandler
 {
     private readonly ISharedCategorizationService _sharedCategorizationService;
+    private readonly ISubscriptionService _subscriptionService;
 
     public LLMHandler(
         ISharedCategorizationService sharedCategorizationService,
+        ISubscriptionService subscriptionService,
         ILogger<LLMHandler> logger) : base(logger)
     {
         _sharedCategorizationService = sharedCategorizationService;
+        _subscriptionService = subscriptionService;
     }
 
     public override string HandlerType => "LLM";
 
     protected override async Task<CategorizationResult> ProcessTransactionsAsync(
-        IEnumerable<Transaction> transactions, 
+        IEnumerable<Transaction> transactions,
         CancellationToken cancellationToken)
     {
         var result = new CategorizationResult();
@@ -34,22 +37,60 @@ public class LLMHandler : CategorizationHandler
         if (!transactionsList.Any())
             return result;
 
+        // Resolve userId from the Account navigation property on the first transaction.
+        // REQUIREMENT: The query that feeds the pipeline must .Include(t => t.Account).
+        // TransactionRepository.GetTransactionsByIdsAsync already does this.
+        // Fall back gracefully if not loaded (logs warning, returns empty result).
+        var firstTransaction = transactionsList.First();
+        var userId = firstTransaction.Account?.UserId;
+        if (userId == null)
+        {
+            _logger.LogWarning("Cannot process LLM categorization - Account not loaded on transaction {TransactionId}", firstTransaction.Id);
+            return result;
+        }
+
+        // Single call: checks tier, quota, and returns remaining count
+        var accessResult = await _subscriptionService.CanUseLlmCategorizationAsync(userId.Value, cancellationToken);
+
+        if (!accessResult.IsAllowed)
+        {
+            if (accessResult.Tier == SubscriptionTier.Free)
+            {
+                _logger.LogInformation(
+                    "LLM Handler skipped for free-tier user {UserId} — {Count} transactions left for remaining handlers",
+                    userId.Value, transactionsList.Count);
+            }
+            else
+            {
+                _logger.LogInformation(
+                    "LLM Handler skipped for user {UserId} — monthly LLM quota exhausted",
+                    userId.Value);
+                result.Errors.Add("Monthly LLM categorization quota exceeded. Transactions will be categorized by rules and ML matching.");
+            }
+            return result;
+        }
+
+        // Determine the batch to send to the LLM (may be capped by quota)
+        var llmBatch = transactionsList;
+        var remaining = accessResult.RemainingQuota;
+
+        // Cap the batch to remaining quota without mutating the original list
+        if (remaining < int.MaxValue && transactionsList.Count > remaining)
+        {
+            _logger.LogInformation(
+                "LLM Handler capping batch from {Requested} to {Remaining} transactions (quota limit) for user {UserId}",
+                transactionsList.Count, remaining, userId.Value);
+            llmBatch = transactionsList.Take(remaining).ToList();
+        }
+
         _logger.LogInformation("LLM Handler processing {TransactionCount} transactions - this will incur AI costs",
-            transactionsList.Count);
+            llmBatch.Count);
 
         try
         {
-            // Get user ID from first transaction
-            var userId = transactionsList.First().Account?.UserId;
-            if (userId == null)
-            {
-                _logger.LogWarning("Cannot process LLM categorization - no user ID found");
-                return result;
-            }
-
             // Use shared categorization service to get LLM suggestions
             var llmResponse = await _sharedCategorizationService.GetCategorizationSuggestionsAsync(
-                transactionsList, userId.Value, cancellationToken);
+                llmBatch, userId.Value, cancellationToken);
 
             if (!llmResponse.Success)
             {
@@ -64,25 +105,40 @@ public class LLMHandler : CategorizationHandler
 
             // Add all LLM suggestions to candidates list (no auto-apply for LLM)
             result.Candidates.AddRange(candidates);
-            
-            // For LLM handler, we don't auto-apply any categorizations
-            // All suggestions go to the candidates system for user review
+
+            // Keep original transactionsList intact for downstream state
             result.RemainingTransactions = transactionsList;
             result.Metrics.ProcessedByLLM = candidates.Count();
             result.Metrics.EstimatedCostSavings = CalculateCostSavings(candidates.Count());
+
+            // Record usage based on how many transactions were sent to the LLM.
+            // Wrapped in try-catch so a transient DB failure doesn't discard valid candidates.
+            if (llmBatch.Count > 0)
+            {
+                try
+                {
+                    await _subscriptionService.RecordLlmUsageAsync(userId.Value, llmBatch.Count, cancellationToken);
+                }
+                catch (Exception usageEx)
+                {
+                    _logger.LogWarning(usageEx,
+                        "Failed to record LLM usage for user {UserId} ({Count} transactions) — candidates preserved",
+                        userId.Value, llmBatch.Count);
+                }
+            }
 
             // Update category distribution metrics for reporting
             foreach (var candidate in candidates.GroupBy(c => c.Category?.Name ?? "Unknown"))
             {
                 result.Metrics.CategoryDistribution[candidate.Key] = candidate.Count();
-                
+
                 var avgConfidence = candidate.Average(c => c.ConfidenceScore);
                 var confidenceRange = GetConfidenceRange(avgConfidence);
-                result.Metrics.ConfidenceDistribution[confidenceRange] = 
+                result.Metrics.ConfidenceDistribution[confidenceRange] =
                     result.Metrics.ConfidenceDistribution.GetValueOrDefault(confidenceRange, 0) + candidate.Count();
             }
 
-            _logger.LogInformation("LLM Handler created {CandidateCount} candidates for user approval", 
+            _logger.LogInformation("LLM Handler created {CandidateCount} candidates for user approval",
                 candidates.Count());
 
             return result;
@@ -97,9 +153,7 @@ public class LLMHandler : CategorizationHandler
 
     private static decimal CalculateCostSavings(int candidateCount)
     {
-        // Estimate cost savings by avoiding immediate LLM processing for every transaction
-        // This is rough - actual savings would be calculated based on real LLM costs
-        return candidateCount * 0.01m; // $0.01 per transaction
+        return candidateCount * 0.01m;
     }
 
     private static string GetConfidenceRange(decimal confidence)
