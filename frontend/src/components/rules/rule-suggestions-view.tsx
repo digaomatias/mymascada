@@ -99,8 +99,13 @@ export function RuleSuggestionsView() {
 
   const bulkAcceptHighConfidence = async () => {
     if (!suggestions) return;
+    // Skip anything the user already dismissed in-session — otherwise the
+    // button count and the actual bulk action drift apart and dismissed rows
+    // get silently re-accepted.
     const candidates = suggestions.suggestions.filter(
-      (s) => s.confidenceScore >= HIGH_CONFIDENCE_THRESHOLD,
+      (s, index) =>
+        !dismissedSuggestions.has(index) &&
+        s.confidenceScore >= HIGH_CONFIDENCE_THRESHOLD,
     );
     if (candidates.length === 0) {
       toast.info(tSuggestions('bulkAcceptEmpty'));
@@ -109,18 +114,24 @@ export function RuleSuggestionsView() {
 
     try {
       setBulkAccepting(true);
-      // Accept all candidates in parallel. `Promise.allSettled` ensures that
-      // even if some requests fail, we can still process the successful ones
-      // and surface partial failures to the user.
-      const results = await Promise.allSettled(
-        candidates.map((s) =>
-          apiClient.acceptRuleSuggestion(s.id, {
-            customName: s.name,
-            customDescription: s.description,
-            priority: 0,
-          }),
-        ),
-      );
+      // Process candidates in bounded batches rather than firing every
+      // request at once. Unbounded parallel writes can trip rate limits or
+      // connection-pool limits when a user has many high-confidence rules.
+      const BATCH_SIZE = 5;
+      const results: PromiseSettledResult<unknown>[] = [];
+      for (let i = 0; i < candidates.length; i += BATCH_SIZE) {
+        const batch = candidates.slice(i, i + BATCH_SIZE);
+        const batchResults = await Promise.allSettled(
+          batch.map((s) =>
+            apiClient.acceptRuleSuggestion(s.id, {
+              customName: s.name,
+              customDescription: s.description,
+              priority: 0,
+            }),
+          ),
+        );
+        results.push(...batchResults);
+      }
       const succeeded = results.filter((r) => r.status === 'fulfilled').length;
       const failed = results.length - succeeded;
 
@@ -207,8 +218,13 @@ export function RuleSuggestionsView() {
     !dismissedSuggestions.has(index)
   );
 
+  // Count only *visible* (non-dismissed) high-confidence suggestions so the
+  // "Accept all {count}" button stays in sync with `bulkAcceptHighConfidence`,
+  // which also skips dismissed rows.
   const highConfidenceCount = suggestions.suggestions.filter(
-    (s) => s.confidenceScore >= HIGH_CONFIDENCE_THRESHOLD,
+    (s, index) =>
+      !dismissedSuggestions.has(index) &&
+      s.confidenceScore >= HIGH_CONFIDENCE_THRESHOLD,
   ).length;
 
   return (

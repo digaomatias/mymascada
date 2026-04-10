@@ -34,10 +34,13 @@ interface CategoryOption {
 export default function QuickCategorizePage() {
   const router = useRouter();
   const t = useTranslations('transactions.quickCategorize');
+  const tCommon = useTranslations('common');
   const { isAuthenticated, isLoading: authLoading, user } = useAuth();
   const userCurrency = user?.currency ?? 'USD';
 
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [reloadTick, setReloadTick] = useState(0);
   const [groups, setGroups] = useState<UncategorizedGroupDto[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [categories, setCategories] = useState<CategoryOption[]>([]);
@@ -55,6 +58,7 @@ export default function QuickCategorizePage() {
     const load = async () => {
       try {
         setLoading(true);
+        setLoadError(false);
         const [groupsRes, categoriesRes] = await Promise.all([
           apiClient.getUncategorizedGroups({ maxGroups: 20, minGroupSize: 1 }),
           apiClient.getCategories() as Promise<CategoryOption[]>,
@@ -67,6 +71,9 @@ export default function QuickCategorizePage() {
         );
       } catch (err) {
         console.error('Failed to load quick-categorize data:', err);
+        // Track the failure so the render path can show retry UI instead of
+        // silently falling through to the "nothing to categorize" empty state.
+        setLoadError(true);
         toast.error(t('loadError'));
       } finally {
         setLoading(false);
@@ -75,7 +82,7 @@ export default function QuickCategorizePage() {
     if (isAuthenticated) {
       load();
     }
-  }, [isAuthenticated, t]);
+  }, [isAuthenticated, t, reloadTick]);
 
   const currentGroup = useMemo<UncategorizedGroupDto | null>(
     () => groups[currentIndex] ?? null,
@@ -112,9 +119,30 @@ export default function QuickCategorizePage() {
         normalizedDescription: currentGroup.normalizedDescription,
       });
 
-      toast.success(t('success', { count: res.transactionsUpdated }));
-      setTotalCompleted((prev) => prev + res.transactionsUpdated);
-      goNext();
+      // The backend can return HTTP 200 with success=false when some (or all)
+      // transactions in the group were skipped (e.g. transfers, missing ids).
+      // Only advance the wizard when everything in the group was applied —
+      // otherwise surface the partial/failed result so the user can decide
+      // whether to retry or move on manually.
+      if (res.success) {
+        toast.success(t('success', { count: res.transactionsUpdated }));
+        setTotalCompleted((prev) => prev + res.transactionsUpdated);
+        goNext();
+      } else if (res.transactionsUpdated > 0) {
+        // Partial success: count what was saved, surface the errors, but keep
+        // the user on the current group so the skipped rows stay visible.
+        setTotalCompleted((prev) => prev + res.transactionsUpdated);
+        toast.warning(
+          t('partial', {
+            success: res.transactionsUpdated,
+            failed: res.errors?.length ?? 0,
+          }),
+        );
+      } else {
+        // Nothing was saved — fall through to the generic error toast, using
+        // the first backend error message when available.
+        toast.error(res.errors?.[0] ?? res.message ?? t('error'));
+      }
     } catch (err) {
       console.error('Quick-categorize failed:', err);
       toast.error(t('error'));
@@ -133,6 +161,33 @@ export default function QuickCategorizePage() {
         <BackButton href="/transactions" label={t('backToTransactions')} />
         <div className="mt-6 rounded-2xl border border-ink-200 bg-white/90 p-12 text-center text-ink-500">
           {t('loading')}
+        </div>
+      </AppLayout>
+    );
+  }
+
+  // Distinct error state: the initial fetch failed. Without this branch the
+  // component would fall through to the "nothing to categorize" empty UI and
+  // hide the failure from the user.
+  if (loadError) {
+    return (
+      <AppLayout>
+        <BackButton href="/transactions" label={t('backToTransactions')} />
+        <div
+          className="mt-6 rounded-2xl border border-ink-200 bg-white/90 p-12 text-center shadow-lg"
+          data-testid="quick-categorize-load-error"
+        >
+          <h2 className="font-[var(--font-dash-sans)] text-xl font-semibold text-ink-900">
+            {t('loadError')}
+          </h2>
+          <p className="mt-2 text-ink-500">{t('loadErrorDescription')}</p>
+          <Button
+            className="mt-6"
+            onClick={() => setReloadTick((n) => n + 1)}
+            data-testid="quick-categorize-load-error-retry"
+          >
+            {tCommon('retry')}
+          </Button>
         </div>
       </AppLayout>
     );
