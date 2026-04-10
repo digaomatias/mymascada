@@ -387,9 +387,7 @@ export function RuleSuggestionsView() {
                 <div className="rounded-2xl border border-primary-200 bg-primary-50/60 p-3 text-sm text-primary-900 flex items-start gap-2">
                   <BoltIcon className="h-4 w-4 shrink-0 mt-0.5 text-primary-500" />
                   <span data-testid="suggestion-impact-preview">
-                    {suggestion.matchCount > 0
-                      ? tSuggestions('impactPreview', { count: suggestion.matchCount })
-                      : tSuggestions('impactPreviewZero')}
+                    {tSuggestions('impactPreview', { count: suggestion.matchCount })}
                   </span>
                 </div>
 

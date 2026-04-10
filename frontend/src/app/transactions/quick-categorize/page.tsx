@@ -111,37 +111,65 @@ export default function QuickCategorizePage() {
     const categoryId = Number.parseInt(selectedCategoryId, 10);
     if (Number.isNaN(categoryId)) return;
 
+    // The backend caps each bulk-categorize-group request at 500 ids
+    // (`CategorizationController.BulkCategorizeGroup`). A user whose
+    // frequent-merchant group exceeds that limit would otherwise see a
+    // hard 400 and be unable to categorize the group at all. Chunk the
+    // request here and aggregate the partial results into a single
+    // wizard step.
+    const BATCH_SIZE = 500;
+    const allIds = currentGroup.transactionIds;
+    const batches: number[][] = [];
+    for (let i = 0; i < allIds.length; i += BATCH_SIZE) {
+      batches.push(allIds.slice(i, i + BATCH_SIZE));
+    }
+
     try {
       setSaving(true);
-      const res = await apiClient.bulkCategorizeGroup({
-        transactionIds: currentGroup.transactionIds,
-        categoryId,
-        normalizedDescription: currentGroup.normalizedDescription,
-      });
+      let totalUpdated = 0;
+      const aggregatedErrors: string[] = [];
+      let anySuccessFalse = false;
+      let lastMessage: string | undefined;
+
+      for (const batch of batches) {
+        const res = await apiClient.bulkCategorizeGroup({
+          transactionIds: batch,
+          categoryId,
+          normalizedDescription: currentGroup.normalizedDescription,
+        });
+        totalUpdated += res.transactionsUpdated;
+        if (res.errors?.length) {
+          aggregatedErrors.push(...res.errors);
+        }
+        if (!res.success) {
+          anySuccessFalse = true;
+          lastMessage = res.message ?? lastMessage;
+        }
+      }
 
       // The backend can return HTTP 200 with success=false when some (or all)
       // transactions in the group were skipped (e.g. transfers, missing ids).
-      // Only advance the wizard when everything in the group was applied —
-      // otherwise surface the partial/failed result so the user can decide
-      // whether to retry or move on manually.
-      if (res.success) {
-        toast.success(t('success', { count: res.transactionsUpdated }));
-        setTotalCompleted((prev) => prev + res.transactionsUpdated);
+      // Only advance the wizard when every chunk applied cleanly — otherwise
+      // surface the partial/failed result so the user can decide whether to
+      // retry or move on manually.
+      if (!anySuccessFalse) {
+        toast.success(t('success', { count: totalUpdated }));
+        setTotalCompleted((prev) => prev + totalUpdated);
         goNext();
-      } else if (res.transactionsUpdated > 0) {
+      } else if (totalUpdated > 0) {
         // Partial success: count what was saved, surface the errors, but keep
         // the user on the current group so the skipped rows stay visible.
-        setTotalCompleted((prev) => prev + res.transactionsUpdated);
+        setTotalCompleted((prev) => prev + totalUpdated);
         toast.warning(
           t('partial', {
-            success: res.transactionsUpdated,
-            failed: res.errors?.length ?? 0,
+            success: totalUpdated,
+            failed: aggregatedErrors.length,
           }),
         );
       } else {
         // Nothing was saved — fall through to the generic error toast, using
         // the first backend error message when available.
-        toast.error(res.errors?.[0] ?? res.message ?? t('error'));
+        toast.error(aggregatedErrors[0] ?? lastMessage ?? t('error'));
       }
     } catch (err) {
       console.error('Quick-categorize failed:', err);
@@ -288,9 +316,7 @@ export default function QuickCategorizePage() {
                   {currentGroup.sampleDescription}
                 </h2>
                 <p className="mt-1 text-sm text-ink-500">
-                  {currentGroup.transactionCount === 1
-                    ? t('groupCountOne')
-                    : t('groupCount', { count: currentGroup.transactionCount })}
+                  {t('groupCount', { count: currentGroup.transactionCount })}
                   {' · '}
                   {t('totalAmount', {
                     amount: currentGroup.totalAmount.toLocaleString(undefined, {
@@ -391,9 +417,7 @@ export default function QuickCategorizePage() {
               >
                 {saving
                   ? t('saving')
-                  : currentGroup.transactionCount === 1
-                    ? t('categorizeGroupOne')
-                    : t('categorizeGroup', { count: currentGroup.transactionCount })}
+                  : t('categorizeGroup', { count: currentGroup.transactionCount })}
                 {!saving && <ArrowRightIcon className="ml-2 h-4 w-4" />}
               </Button>
             </div>

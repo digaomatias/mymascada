@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/contexts/auth-context';
 import { SparklesIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 type UpsellContext = 'uncategorizedBacklog' | 'ruleSuggestions' | 'postImport';
@@ -17,7 +17,7 @@ interface CategorizationUpsellBannerProps {
    * of uncategorized transactions. Drives the banner description.
    */
   count?: number;
-  /** Destination for the CTA. Defaults to /settings?tab=billing. */
+  /** Destination for the CTA. Defaults to the billing page. */
   upgradeHref?: string;
   className?: string;
   /** When true, the banner becomes dismissible with a close button. */
@@ -37,7 +37,10 @@ interface CategorizationUpsellBannerProps {
 export function CategorizationUpsellBanner({
   context,
   count,
-  upgradeHref = '/settings?tab=billing',
+  // Billing lives at /settings/billing (confirmed by the existing
+  // frontend/src/app/settings/billing/ route) — the older
+  // `/settings?tab=billing` form doesn't resolve to the purchase flow.
+  upgradeHref = '/settings/billing',
   className,
   dismissible = false,
 }: CategorizationUpsellBannerProps) {
@@ -74,10 +77,21 @@ export function CategorizationUpsellBanner({
             : t(`${sectionKey}.description`)}
         </p>
         <div className="mt-3">
-          <Link href={upgradeHref}>
-            <Button size="sm" className="bg-primary-600 hover:bg-primary-700 text-white">
-              {t(`${sectionKey}.cta`)}
-            </Button>
+          {/*
+            Render the CTA as a styled anchor rather than wrapping a <Button>
+            inside a <Link>. Wrapping would emit <a><button></button></a> which
+            nests interactive elements, is invalid HTML, and breaks
+            accessibility tooling. We reuse `buttonVariants` so the styling
+            stays in sync with the rest of the design system.
+          */}
+          <Link
+            href={upgradeHref}
+            className={cn(
+              buttonVariants({ variant: 'primary', size: 'sm' }),
+              'bg-primary-600 hover:bg-primary-700 text-white inline-flex items-center',
+            )}
+          >
+            {t(`${sectionKey}.cta`)}
           </Link>
         </div>
       </div>

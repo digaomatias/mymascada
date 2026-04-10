@@ -87,6 +87,11 @@ public class AuthController : ControllerBase
 
         if (result.IsSuccess)
         {
+            // Enrich with subscription tier + self-hosted flag so the frontend
+            // doesn't flash the Free-tier upsell after register until /auth/me
+            // resolves.
+            await EnrichSubscriptionFieldsAsync(result.User);
+
             // If email verification is required, don't set any cookies
             if (result.RequiresEmailVerification)
             {
@@ -124,6 +129,23 @@ public class AuthController : ControllerBase
         return BadRequest(result);
     }
 
+    /// <summary>
+    /// Populates SubscriptionTier + IsSelfHosted on a UserDto. Every endpoint
+    /// that returns a UserDto as part of an auth flow (login, register,
+    /// refresh, google) must call this; without it those responses default to
+    /// "Free" and paid users see upsell banners flash until the next /auth/me.
+    /// </summary>
+    private async Task EnrichSubscriptionFieldsAsync(UserDto? user)
+    {
+        if (user == null || user.Id == Guid.Empty)
+        {
+            return;
+        }
+
+        user.SubscriptionTier = (await _subscriptionService.GetUserTierAsync(user.Id)).ToString();
+        user.IsSelfHosted = await _subscriptionService.IsSelfHostedAsync();
+    }
+
     [HttpPost("login")]
     [EnableRateLimiting(RateLimitingServiceExtensions.Policies.Authentication)]
     public async Task<ActionResult<AuthenticationResponse>> Login([FromBody] LoginRequest request)
@@ -136,6 +158,12 @@ public class AuthController : ControllerBase
         };
 
         var result = await _mediator.Send(query);
+
+        // Enrich with SubscriptionTier + IsSelfHosted — LoginQueryHandler
+        // doesn't know about the subscription service, and without this the
+        // login response defaults to "Free" and flashes the upsell for
+        // Pro/Family users until /auth/me overwrites the cached user.
+        await EnrichSubscriptionFieldsAsync(result.User);
 
         // If email verification is required, return 200 OK with verification flag
         if (result.RequiresEmailVerification)
@@ -302,6 +330,7 @@ public class AuthController : ControllerBase
             Locale = user.Locale ?? "en",
             AiDescriptionCleaning = user.AiDescriptionCleaning
         };
+        await EnrichSubscriptionFieldsAsync(userDto);
 
         return Ok(userDto);
     }
@@ -338,6 +367,7 @@ public class AuthController : ControllerBase
             Locale = user.Locale ?? "en",
             AiDescriptionCleaning = user.AiDescriptionCleaning
         };
+        await EnrichSubscriptionFieldsAsync(userDto);
 
         return Ok(userDto);
     }
@@ -373,7 +403,9 @@ public class AuthController : ControllerBase
             }
 
             // Enrich User with fields the TokenService doesn't populate
-            // (IsOnboardingComplete, HasAiConfigured, Locale) to match /me response
+            // (IsOnboardingComplete, HasAiConfigured, Locale, SubscriptionTier)
+            // to match /me response — without SubscriptionTier/IsSelfHosted,
+            // paid users flash the Free-tier upsell banners on every refresh.
             if (result.User != null)
             {
                 var userId = result.User.Id;
@@ -385,6 +417,8 @@ public class AuthController : ControllerBase
                 var financialProfile = await _financialProfileRepository.GetByUserIdAsync(userId);
                 var hasAccounts = (await _accountRepository.GetByUserIdAsync(userId)).Any();
                 result.User.IsOnboardingComplete = (financialProfile != null && financialProfile.OnboardingCompleted) || hasAccounts;
+
+                await EnrichSubscriptionFieldsAsync(result.User);
             }
 
             // Return response without refresh token (it's in cookie)
@@ -788,6 +822,12 @@ public class AuthController : ControllerBase
                 {
                     SetRefreshTokenCookie(authResult.RefreshToken, authResult.RefreshTokenExpiresAt ?? DateTime.UtcNow.AddDays(30));
                 }
+
+                // Enrich with SubscriptionTier — the Google auth path builds
+                // UserDto in AuthenticationService which doesn't know about
+                // the subscription service, so the response would otherwise
+                // default to "Free" for paid users.
+                await EnrichSubscriptionFieldsAsync(authResult.User);
 
                 // Return response without refresh token (it's in cookie)
                 var response = new AuthenticationResponse

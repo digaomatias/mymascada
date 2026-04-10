@@ -105,7 +105,10 @@ public class GetUncategorizedGroupsQueryHandlerTests
     {
         var txns = new List<Transaction>
         {
-            MakeTransaction(1, "123", 10m), // strips to empty after normalization — keep
+            // Whitespace-only description normalizes to empty string and must be
+            // dropped from the grouping — otherwise it would surface as a ghost
+            // group in the wizard with no meaningful label.
+            MakeTransaction(1, "   ", 10m),
             MakeTransaction(2, "NETFLIX.COM", -14.99m),
             MakeTransaction(3, "NETFLIX.COM", -14.99m),
         };
@@ -117,10 +120,11 @@ public class GetUncategorizedGroupsQueryHandlerTests
 
         var result = await _handler.Handle(new GetUncategorizedGroupsQuery { UserId = _userId }, CancellationToken.None);
 
-        // Only the netflix group should appear — the numeric-only description normalizes
-        // to a stable token that produces its own group, so allow either 1 or 2 groups
-        // depending on normalizer behavior, but Netflix must always be present and have 2 items.
-        var netflix = result.Groups.Should().Contain(g => g.NormalizedDescription.Contains("netflix")).Which;
-        netflix.TransactionCount.Should().Be(2);
+        // Exactly one group — only netflix. The whitespace-only row is dropped by
+        // the `IsNullOrWhiteSpace` filter in the handler.
+        result.Groups.Should().HaveCount(1);
+        result.Groups[0].NormalizedDescription.Should().Contain("netflix");
+        result.Groups[0].TransactionCount.Should().Be(2);
+        result.Groups[0].TransactionIds.Should().BeEquivalentTo(new[] { 2, 3 });
     }
 }

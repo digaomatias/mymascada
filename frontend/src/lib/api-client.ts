@@ -1566,7 +1566,11 @@ class ApiClient {
     const params = new URLSearchParams();
     if (options?.maxGroups !== undefined) params.set('maxGroups', options.maxGroups.toString());
     if (options?.minGroupSize !== undefined) params.set('minGroupSize', options.minGroupSize.toString());
-    const url = `/api/latest/Categorization/uncategorized-groups${params.toString() ? '?' + params.toString() : ''}`;
+    // `request()` rewrites `/api/…` → `/api/latest/…` automatically, so
+    // the endpoints passed in here must start with `/api/` (not
+    // `/api/latest/`) — otherwise the URL becomes `/api/latest/latest/…`
+    // and every call 404s.
+    const url = `/api/Categorization/uncategorized-groups${params.toString() ? '?' + params.toString() : ''}`;
     const response = await this.request(url);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return response as any;
@@ -1577,7 +1581,7 @@ class ApiClient {
     categoryId: number;
     normalizedDescription?: string;
   }): Promise<BulkCategorizeGroupResponse> {
-    const response = await this.request('/api/latest/Categorization/bulk-categorize-group', {
+    const response = await this.request('/api/Categorization/bulk-categorize-group', {
       method: 'POST',
       body: JSON.stringify(request),
     });
@@ -1586,7 +1590,7 @@ class ApiClient {
   }
 
   async getCategorizationStats(): Promise<CategorizationStatsResponse> {
-    const response = await this.request('/api/latest/Categorization/stats');
+    const response = await this.request('/api/Categorization/stats');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return response as any;
   }

@@ -698,11 +698,18 @@ public class TransactionRepository : ITransactionRepository
     public async Task<int> CountUncategorizedTransactionsAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
+        // Mirror the filter applied by GetUncategorizedTransactionsAsync so the
+        // dashboard stats card and the quick-categorize wizard agree on which
+        // rows "need review". Without excluding transfers, users whose only
+        // uncategorized rows are transfer components see a non-zero count
+        // linking into a wizard with nothing to do.
         return await _context.Transactions
             .CountAsync(t => accessibleIds.Contains(t.AccountId) &&
                              !t.CategoryId.HasValue &&
                              !t.IsDeleted &&
-                             !t.Account.IsDeleted,
+                             !t.Account.IsDeleted &&
+                             !t.TransferId.HasValue &&
+                             t.Type != TransactionType.TransferComponent,
                         cancellationToken);
     }
 

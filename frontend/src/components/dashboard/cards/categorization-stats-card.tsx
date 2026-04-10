@@ -74,9 +74,7 @@ export function CategorizationStatsCard() {
                 className="text-sm font-semibold text-ink-800"
                 data-testid="categorization-stats-auto"
               >
-                {stats.autoCategorizedThisMonth === 0
-                  ? t('autoThisMonthZero')
-                  : t('autoThisMonth', { count: stats.autoCategorizedThisMonth })}
+                {t('autoThisMonth', { count: stats.autoCategorizedThisMonth })}
               </p>
             </div>
             {stats.autoCategorizedThisMonth > 0 && (
@@ -99,9 +97,7 @@ export function CategorizationStatsCard() {
               <TagIcon className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-ink-800">
-                  {stats.needsReview === 1
-                    ? t('needsReviewOne')
-                    : t('needsReview', { count: stats.needsReview })}
+                  {t('needsReview', { count: stats.needsReview })}
                 </p>
                 <p className="mt-0.5 text-xs text-amber-700">
                   {t('quickCategorize')}
@@ -121,9 +117,7 @@ export function CategorizationStatsCard() {
               <LightBulbIcon className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-ink-800">
-                  {stats.pendingSuggestions === 1
-                    ? t('pendingSuggestionsOne')
-                    : t('pendingSuggestions', { count: stats.pendingSuggestions })}
+                  {t('pendingSuggestions', { count: stats.pendingSuggestions })}
                 </p>
                 <p className="mt-0.5 text-xs text-emerald-700">{t('viewSuggestions')}</p>
               </div>
