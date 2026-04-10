@@ -34,7 +34,8 @@ interface CategoryOption {
 export default function QuickCategorizePage() {
   const router = useRouter();
   const t = useTranslations('transactions.quickCategorize');
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
+  const userCurrency = user?.currency ?? 'USD';
 
   const [loading, setLoading] = useState(true);
   const [groups, setGroups] = useState<UncategorizedGroupDto[]>([]);
@@ -239,7 +240,7 @@ export default function QuickCategorizePage() {
                   {t('totalAmount', {
                     amount: currentGroup.totalAmount.toLocaleString(undefined, {
                       style: 'currency',
-                      currency: 'USD',
+                      currency: userCurrency,
                     }),
                   })}
                 </p>
@@ -275,7 +276,7 @@ export default function QuickCategorizePage() {
                       >
                         {sample.amount.toLocaleString(undefined, {
                           style: 'currency',
-                          currency: 'USD',
+                          currency: userCurrency,
                         })}
                       </span>
                     </li>

@@ -109,8 +109,9 @@ export function RuleSuggestionsView() {
 
     try {
       setBulkAccepting(true);
-      // Accept sequentially — small batches only, avoids overwhelming the API
-      // and makes partial failures visible to the user.
+      // Accept all candidates in parallel. `Promise.allSettled` ensures that
+      // even if some requests fail, we can still process the successful ones
+      // and surface partial failures to the user.
       const results = await Promise.allSettled(
         candidates.map((s) =>
           apiClient.acceptRuleSuggestion(s.id, {

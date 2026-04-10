@@ -140,13 +140,33 @@ public class BulkCategorizeGroupCommandHandler
         // auto-apply the same category to future matching transactions.
         try
         {
-            var historyEvents = changedTransactions
-                .Select(t => new CategorizationHistoryEvent(
-                    request.UserId,
-                    t.Description,
-                    request.CategoryId,
-                    CategorizationHistorySource.Manual))
-                .ToList();
+            List<CategorizationHistoryEvent> historyEvents;
+
+            if (!string.IsNullOrWhiteSpace(request.NormalizedDescription) && changedTransactions.Count > 0)
+            {
+                // When the caller supplies the normalized group key, record a
+                // single history entry for the group. This produces a stronger
+                // ML signal than N per-transaction entries and avoids inflating
+                // MatchCount beyond what the user actually confirmed.
+                historyEvents = new List<CategorizationHistoryEvent>
+                {
+                    new CategorizationHistoryEvent(
+                        request.UserId,
+                        request.NormalizedDescription,
+                        request.CategoryId,
+                        CategorizationHistorySource.Manual),
+                };
+            }
+            else
+            {
+                historyEvents = changedTransactions
+                    .Select(t => new CategorizationHistoryEvent(
+                        request.UserId,
+                        t.Description,
+                        request.CategoryId,
+                        CategorizationHistorySource.Manual))
+                    .ToList();
+            }
 
             if (historyEvents.Count > 0)
             {
