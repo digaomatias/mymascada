@@ -385,9 +385,16 @@ export default function QuickCategorizePage() {
                 id="quick-categorize-category"
                 value={selectedCategoryId}
                 onChange={(e) => setSelectedCategoryId(e.target.value)}
-                placeholder={t('selectCategory')}
                 data-testid="quick-categorize-category-select"
               >
+                {/*
+                  Explicit empty option (instead of the shared Select's
+                  `placeholder` prop, which renders a disabled row) so the
+                  user can clear their choice after picking a category. The
+                  submit button is already disabled when selectedCategoryId
+                  is falsy, so re-selecting the empty row is a valid "undo".
+                */}
+                <option value="">{t('selectCategory')}</option>
                 {categories.map((category) => (
                   <option key={category.id} value={category.id}>
                     {category.fullPath || category.name}
