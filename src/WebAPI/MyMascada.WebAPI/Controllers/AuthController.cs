@@ -32,6 +32,7 @@ public class AuthController : ControllerBase
     private readonly IConfiguration _configuration;
     private readonly IUserFinancialProfileRepository _financialProfileRepository;
     private readonly IAccountRepository _accountRepository;
+    private readonly ISubscriptionService _subscriptionService;
 
     public AuthController(
         IMediator mediator,
@@ -43,7 +44,8 @@ public class AuthController : ControllerBase
         IUserAiSettingsRepository aiSettingsRepository,
         IConfiguration configuration,
         IUserFinancialProfileRepository financialProfileRepository,
-        IAccountRepository accountRepository)
+        IAccountRepository accountRepository,
+        ISubscriptionService subscriptionService)
     {
         _mediator = mediator;
         _authService = authService;
@@ -55,6 +57,7 @@ public class AuthController : ControllerBase
         _configuration = configuration;
         _financialProfileRepository = financialProfileRepository;
         _accountRepository = accountRepository;
+        _subscriptionService = subscriptionService;
     }
 
     [HttpPost("register")]
@@ -234,6 +237,11 @@ public class AuthController : ControllerBase
         var hasAccounts = (await _accountRepository.GetByUserIdAsync(userId)).Any();
         var isOnboardingComplete = (financialProfile != null && financialProfile.OnboardingCompleted) || hasAccounts;
 
+        // Subscription tier — drives premium upsells in the frontend.
+        // Self-hosted deployments always appear as SelfHosted (unlimited).
+        var subscriptionTier = await _subscriptionService.GetUserTierAsync(userId);
+        var isSelfHosted = await _subscriptionService.IsSelfHostedAsync();
+
         var userDto = new UserDto
         {
             Id = user.Id,
@@ -247,7 +255,9 @@ public class AuthController : ControllerBase
             Locale = user.Locale ?? "en",
             AiDescriptionCleaning = user.AiDescriptionCleaning,
             HasAiConfigured = hasAiConfigured,
-            IsOnboardingComplete = isOnboardingComplete
+            IsOnboardingComplete = isOnboardingComplete,
+            SubscriptionTier = subscriptionTier.ToString(),
+            IsSelfHosted = isSelfHosted
         };
 
         return Ok(userDto);

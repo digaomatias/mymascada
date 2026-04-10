@@ -5,6 +5,7 @@ import { FinancialRunwayCard } from '@/components/dashboard/cards/financial-runw
 import { GoalSpotlightCard } from '@/components/dashboard/cards/goal-spotlight-card';
 import { CashflowChartCard } from '@/components/dashboard/cards/cashflow-chart-card';
 import { AttentionItemsCard } from '@/components/dashboard/cards/attention-items-card';
+import { CategorizationStatsCard } from '@/components/dashboard/cards/categorization-stats-card';
 import { RecentTransactionsCard } from '@/components/dashboard/cards/recent-transactions-card';
 import { BudgetHealthCard } from '@/components/dashboard/cards/budget-health-card';
 import { WalletSummaryCard } from '@/components/dashboard/cards/wallet-summary-card';
@@ -43,13 +44,18 @@ export function EducationTemplate() {
         <RecentTransactionsCard />
       </section>
 
-      {/* Row 4: Budget Health */}
+      {/* Row 4: Categorization Stats */}
       <section className="animate-card-entrance" style={stagger(3)}>
+        <CategorizationStatsCard />
+      </section>
+
+      {/* Row 5: Budget Health */}
+      <section className="animate-card-entrance" style={stagger(4)}>
         <BudgetHealthCard />
       </section>
 
-      {/* Row 5: Wallet Pots */}
-      <section className="animate-card-entrance" style={stagger(4)}>
+      {/* Row 6: Wallet Pots */}
+      <section className="animate-card-entrance" style={stagger(5)}>
         <WalletSummaryCard />
       </section>
     </div>

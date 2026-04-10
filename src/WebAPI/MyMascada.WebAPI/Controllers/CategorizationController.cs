@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Common.Models;
+using MyMascada.Application.Features.Categorization.Commands;
+using MyMascada.Application.Features.Categorization.Queries;
 using MyMascada.Application.Features.Categorization.Services;
 using MyMascada.Application.Features.Transactions.Commands;
 using MyMascada.Domain.Entities;
@@ -465,6 +467,94 @@ public class CategorizationController : ControllerBase
         {
             return StatusCode(500, "Error getting metrics");
         }
+    }
+
+    /// <summary>
+    /// Returns uncategorized transactions grouped by normalized description,
+    /// ordered by frequency. Powers the quick-categorize onboarding wizard.
+    /// </summary>
+    [HttpGet("uncategorized-groups")]
+    public async Task<IActionResult> GetUncategorizedGroups(
+        [FromQuery] int maxGroups = 20,
+        [FromQuery] int minGroupSize = 1,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = GetCurrentUserId();
+
+        var result = await _mediator.Send(
+            new GetUncategorizedGroupsQuery
+            {
+                UserId = userId,
+                MaxGroups = Math.Clamp(maxGroups, 1, 100),
+                MinGroupSize = Math.Max(1, minGroupSize)
+            },
+            cancellationToken);
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Categorizes every transaction in a quick-categorize group in one shot
+    /// and records CategorizationHistory so the ML handler learns the pattern.
+    /// </summary>
+    [HttpPost("bulk-categorize-group")]
+    public async Task<IActionResult> BulkCategorizeGroup(
+        [FromBody] BulkCategorizeGroupRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (request == null || request.TransactionIds == null || request.TransactionIds.Count == 0)
+        {
+            return BadRequest("Transaction IDs are required");
+        }
+
+        if (request.TransactionIds.Count > 500)
+        {
+            return BadRequest("Maximum 500 transactions can be categorized per group");
+        }
+
+        var userId = GetCurrentUserId();
+
+        try
+        {
+            var result = await _mediator.Send(
+                new BulkCategorizeGroupCommand
+                {
+                    UserId = userId,
+                    TransactionIds = request.TransactionIds,
+                    CategoryId = request.CategoryId,
+                    NormalizedDescription = request.NormalizedDescription
+                },
+                cancellationToken);
+
+            if (!result.Success && result.TransactionsUpdated == 0)
+            {
+                return BadRequest(new { errors = result.Errors, message = result.Message });
+            }
+
+            return Ok(new
+            {
+                success = result.Success,
+                transactionsUpdated = result.TransactionsUpdated,
+                message = result.Message,
+                errors = result.Errors
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+    }
+
+    /// <summary>
+    /// Monthly categorization stats for the dashboard card — auto-applied counts
+    /// broken down by method, review-queue size, and pending rule suggestion count.
+    /// </summary>
+    [HttpGet("stats")]
+    public async Task<IActionResult> GetCategorizationStats(CancellationToken cancellationToken = default)
+    {
+        var userId = GetCurrentUserId();
+        var result = await _mediator.Send(new GetCategorizationStatsQuery { UserId = userId }, cancellationToken);
+        return Ok(result);
     }
 
     // ===== CANDIDATE MANAGEMENT ENDPOINTS =====
@@ -1138,4 +1228,20 @@ public class ApplySelectedRuleMatchesRequest
     /// Rule matches selected by user for application
     /// </summary>
     public List<RuleMatchDetail> SelectedMatches { get; set; } = new();
+}
+
+/// <summary>
+/// Request for bulk categorizing a group of uncategorized transactions in the quick-categorize wizard.
+/// </summary>
+public class BulkCategorizeGroupRequest
+{
+    public List<int> TransactionIds { get; set; } = new();
+    public int CategoryId { get; set; }
+
+    /// <summary>
+    /// Optional — the normalized description of the group being categorized
+    /// (sent back as supplied by GET /uncategorized-groups so history recording
+    /// can reference the exact group key).
+    /// </summary>
+    public string? NormalizedDescription { get; set; }
 }

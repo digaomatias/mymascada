@@ -42,4 +42,16 @@ public class UserDto
     public bool AiDescriptionCleaning { get; set; }
     public bool HasAiConfigured { get; set; }
     public bool IsOnboardingComplete { get; set; }
+
+    /// <summary>
+    /// Current subscription tier ("Free", "Pro", "Family", "SelfHosted").
+    /// Used by the frontend to show/hide upsell banners and gated features.
+    /// </summary>
+    public string SubscriptionTier { get; set; } = "Free";
+
+    /// <summary>
+    /// True when the deployment is self-hosted (IFeatureFlags.StripeBilling == false).
+    /// Self-hosted users never see upsell banners — they already have unlimited access.
+    /// </summary>
+    public bool IsSelfHosted { get; set; }
 }

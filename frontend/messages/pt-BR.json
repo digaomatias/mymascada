@@ -498,6 +498,24 @@
         "totalAllocated": "Total Alocado",
         "viewAll": "Ver todas as carteiras",
         "loadError": "Falha ao carregar carteiras"
+      },
+      "categorization": {
+        "title": "Categorização Automática",
+        "subtitle": "Como suas transações estão sendo categorizadas este mês",
+        "autoThisMonth": "{count} transações categorizadas automaticamente este mês",
+        "autoThisMonthZero": "Nenhuma transação categorizada automaticamente ainda este mês",
+        "byRules": "por regras",
+        "byMl": "por aprendizado",
+        "byLlm": "por IA",
+        "needsReview": "{count} transações precisam de revisão",
+        "needsReviewOne": "1 transação precisa de revisão",
+        "reviewNow": "Revisar",
+        "pendingSuggestions": "{count} novas sugestões de regras disponíveis",
+        "pendingSuggestionsOne": "1 nova sugestão de regra disponível",
+        "viewSuggestions": "Ver",
+        "allCaughtUp": "Você está em dia.",
+        "quickCategorize": "Categorização rápida",
+        "loadError": "Falha ao carregar estatísticas de categorização"
       }
     }
   },
@@ -891,7 +909,36 @@
     "exportCsv": "Exportar CSV",
     "exportingCsv": "Exportando...",
     "exportCsvSuccess": "Transações exportadas com sucesso",
-    "exportCsvError": "Falha ao exportar transações"
+    "exportCsvError": "Falha ao exportar transações",
+    "quickCategorize": {
+      "title": "Categorização Rápida",
+      "subtitle": "Ensine por exemplo — categorize um grupo uma vez e capturaremos todas as transações futuras iguais",
+      "backToTransactions": "Voltar para Transações",
+      "loading": "Carregando grupos não categorizados...",
+      "loadError": "Falha ao carregar transações não categorizadas",
+      "emptyTitle": "Nada para categorizar",
+      "emptyDescription": "Todas as suas transações já estão categorizadas. Novos grupos aparecerão aqui conforme chegarem.",
+      "emptyBack": "Voltar ao painel",
+      "groupCount": "{count} transações neste grupo",
+      "groupCountOne": "1 transação neste grupo",
+      "totalAmount": "Total {amount}",
+      "remaining": "{count} grupos restantes",
+      "progress": "{done} de {total} grupos categorizados",
+      "selectCategory": "Selecione uma categoria",
+      "categorizeGroup": "Categorizar {count} transações",
+      "categorizeGroupOne": "Categorizar 1 transação",
+      "skip": "Pular",
+      "saving": "Salvando...",
+      "success": "Categorizadas {count} transações",
+      "error": "Falha ao categorizar grupo",
+      "allDoneTitle": "Tudo pronto",
+      "allDoneDescription": "Você passou pelos principais grupos. A partir de agora, categorizaremos automaticamente as transações correspondentes.",
+      "allDoneBack": "Voltar ao painel",
+      "samples": "Transações de exemplo",
+      "stepLabel": "Grupo {current} de {total}",
+      "moreSamples": "e mais {count}",
+      "hint": "Depois que você categorizar um grupo, aprendemos o padrão e aplicamos automaticamente a transações correspondentes daqui para frente."
+    }
   },
   "accounts": {
     "title": "Contas",
@@ -1736,6 +1783,15 @@
       "matchCount": "{count} transações",
       "sampleTransactions": "Transações de Exemplo",
       "unknown": "Desconhecido",
+      "acceptAllHighConfidence": "Aceitar todas de alta confiança",
+      "acceptAllHighConfidenceCount": "Aceitar todas as {count} de alta confiança",
+      "acceptingAll": "Aceitando...",
+      "bulkAcceptSuccess": "Criadas {count} regras a partir de sugestões de alta confiança",
+      "bulkAcceptPartial": "Criadas {success} regras ({failed} falharam)",
+      "bulkAcceptEmpty": "Nenhuma sugestão com 90%+ de confiança para aceitar",
+      "bulkAcceptFailed": "Falha ao aceitar sugestões de alta confiança",
+      "impactPreview": "Categorizaria automaticamente {count} transações não categorizadas existentes",
+      "impactPreviewZero": "Nenhuma transação não categorizada existente corresponde a esta regra ainda",
       "empty": {
         "title": "Nenhuma Sugestão Disponível",
         "description": "Precisamos de mais dados de transações para gerar sugestões de regras significativas.",
@@ -3595,6 +3651,26 @@
       "TransactionReminder.body": "{merchantName} — {amount} vence em {date}",
       "RuleSuggestionsAvailable": "Novas sugestões de regras",
       "RuleSuggestionsAvailable.body": "{count, plural, one {1 nova sugestão de regra de categorização disponível} other {# novas sugestões de regras de categorização disponíveis}}"
+    }
+  },
+  "upsell": {
+    "categorization": {
+      "uncategorizedBacklog": {
+        "title": "Deixe a IA cuidar do seu acúmulo",
+        "description": "Você tem {count} transações não categorizadas. Atualize para Pro e tenha categorização com IA em um clique.",
+        "cta": "Atualizar para Pro"
+      },
+      "ruleSuggestions": {
+        "title": "Desbloqueie sugestões de regras aprimoradas por IA",
+        "description": "Usuários Pro recebem sugestões de regras mais inteligentes que aprendem seus padrões de gasto e cobrem dezenas de lojas de uma só vez.",
+        "cta": "Atualizar para Pro"
+      },
+      "postImport": {
+        "title": "Automatize da próxima vez",
+        "description": "Usuários Pro podem usar IA para categorizar todas as transações importadas em um clique — sem revisão manual.",
+        "cta": "Atualizar para Pro"
+      },
+      "dismiss": "Dispensar"
     }
   }
 }

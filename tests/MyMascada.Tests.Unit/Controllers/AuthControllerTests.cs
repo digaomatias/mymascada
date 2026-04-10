@@ -30,6 +30,7 @@ public class AuthControllerTests
     private readonly IConfiguration _configuration;
     private readonly IUserFinancialProfileRepository _financialProfileRepository;
     private readonly IAccountRepository _accountRepository;
+    private readonly ISubscriptionService _subscriptionService;
     private readonly AuthController _controller;
 
     public AuthControllerTests()
@@ -45,7 +46,8 @@ public class AuthControllerTests
         _configuration = Substitute.For<IConfiguration>();
         _financialProfileRepository = Substitute.For<IUserFinancialProfileRepository>();
         _accountRepository = Substitute.For<IAccountRepository>();
-        _controller = new AuthController(_mediator, _authService, _dataProtectionProvider, _userRepository, _appOptions, _environment, _aiSettingsRepository, _configuration, _financialProfileRepository, _accountRepository);
+        _subscriptionService = Substitute.For<ISubscriptionService>();
+        _controller = new AuthController(_mediator, _authService, _dataProtectionProvider, _userRepository, _appOptions, _environment, _aiSettingsRepository, _configuration, _financialProfileRepository, _accountRepository, _subscriptionService);
 
         // Provide a default HttpContext so methods that access Request.Headers don't throw
         _controller.ControllerContext = new ControllerContext

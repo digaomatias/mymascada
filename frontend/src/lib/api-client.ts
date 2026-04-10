@@ -1558,6 +1558,39 @@ class ApiClient {
     return response as any;
   }
 
+  // Quick-categorize wizard & dashboard stats (Phase 4 UX)
+  async getUncategorizedGroups(options?: {
+    maxGroups?: number;
+    minGroupSize?: number;
+  }): Promise<UncategorizedGroupsResponse> {
+    const params = new URLSearchParams();
+    if (options?.maxGroups !== undefined) params.set('maxGroups', options.maxGroups.toString());
+    if (options?.minGroupSize !== undefined) params.set('minGroupSize', options.minGroupSize.toString());
+    const url = `/api/latest/Categorization/uncategorized-groups${params.toString() ? '?' + params.toString() : ''}`;
+    const response = await this.request(url);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return response as any;
+  }
+
+  async bulkCategorizeGroup(request: {
+    transactionIds: number[];
+    categoryId: number;
+    normalizedDescription?: string;
+  }): Promise<BulkCategorizeGroupResponse> {
+    const response = await this.request('/api/latest/Categorization/bulk-categorize-group', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return response as any;
+  }
+
+  async getCategorizationStats(): Promise<CategorizationStatsResponse> {
+    const response = await this.request('/api/latest/Categorization/stats');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return response as any;
+  }
+
   // Bank Connections methods
   async getBankConnections(): Promise<BankConnection[]> {
     return this.request('/api/BankConnections');
@@ -2294,6 +2327,51 @@ export interface RuleSuggestionsSummary {
   lastGeneratedDate?: string;
   generationMethod: string;
   categoryDistribution: Record<string, number>;
+}
+
+// Quick-categorize wizard & dashboard stats (Phase 4 UX)
+export interface UncategorizedGroupSample {
+  id: number;
+  description: string;
+  amount: number;
+  transactionDate: string;
+  accountName: string;
+}
+
+export interface UncategorizedGroupDto {
+  normalizedDescription: string;
+  sampleDescription: string;
+  transactionCount: number;
+  totalAmount: number;
+  transactionIds: number[];
+  samples: UncategorizedGroupSample[];
+}
+
+export interface UncategorizedGroupsResponse {
+  groups: UncategorizedGroupDto[];
+  totalUncategorized: number;
+  groupedTransactions: number;
+}
+
+export interface BulkCategorizeGroupResponse {
+  success: boolean;
+  transactionsUpdated: number;
+  message: string;
+  errors: string[];
+}
+
+export interface CategorizationStatsResponse {
+  autoCategorizedThisMonth: number;
+  processedByRules: number;
+  processedByML: number;
+  processedByLLM: number;
+  rulesPercentage: number;
+  mlPercentage: number;
+  llmPercentage: number;
+  needsReview: number;
+  pendingSuggestions: number;
+  periodStart: string;
+  periodEnd: string;
 }
 
 // Bank Category Mapping Types

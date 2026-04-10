@@ -12,11 +12,16 @@ import {
   LightBulbIcon,
   ArrowRightIcon,
   ClockIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  BoltIcon,
 } from '@heroicons/react/24/outline';
 import { apiClient, RuleSuggestion, RuleSuggestionsSummary } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
+import { CategorizationUpsellBanner } from '@/components/categorization/categorization-upsell-banner';
+
+/** Threshold for the "accept all high-confidence" bulk action. */
+const HIGH_CONFIDENCE_THRESHOLD = 0.9;
 
 interface RuleSuggestionsResponse {
   suggestions: RuleSuggestion[];
@@ -25,10 +30,12 @@ interface RuleSuggestionsResponse {
 
 export function RuleSuggestionsView() {
   const t = useTranslations('rules');
+  const tSuggestions = useTranslations('rules.suggestions');
   const [suggestions, setSuggestions] = useState<RuleSuggestionsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [creatingRules, setCreatingRules] = useState<Set<number>>(new Set());
   const [dismissedSuggestions, setDismissedSuggestions] = useState<Set<number>>(new Set());
+  const [bulkAccepting, setBulkAccepting] = useState(false);
 
   useEffect(() => {
     loadSuggestions();
@@ -87,6 +94,48 @@ export function RuleSuggestionsView() {
     } catch (error) {
       console.error('Failed to dismiss suggestion:', error);
       toast.error(t('toasts.suggestionDismissFailed'));
+    }
+  };
+
+  const bulkAcceptHighConfidence = async () => {
+    if (!suggestions) return;
+    const candidates = suggestions.suggestions.filter(
+      (s) => s.confidenceScore >= HIGH_CONFIDENCE_THRESHOLD,
+    );
+    if (candidates.length === 0) {
+      toast.info(tSuggestions('bulkAcceptEmpty'));
+      return;
+    }
+
+    try {
+      setBulkAccepting(true);
+      // Accept sequentially — small batches only, avoids overwhelming the API
+      // and makes partial failures visible to the user.
+      const results = await Promise.allSettled(
+        candidates.map((s) =>
+          apiClient.acceptRuleSuggestion(s.id, {
+            customName: s.name,
+            customDescription: s.description,
+            priority: 0,
+          }),
+        ),
+      );
+      const succeeded = results.filter((r) => r.status === 'fulfilled').length;
+      const failed = results.length - succeeded;
+
+      if (failed === 0) {
+        toast.success(tSuggestions('bulkAcceptSuccess', { count: succeeded }));
+      } else {
+        toast.warning(tSuggestions('bulkAcceptPartial', { success: succeeded, failed }));
+      }
+
+      await loadSuggestions();
+      setDismissedSuggestions(new Set());
+    } catch (error) {
+      console.error('Bulk accept failed:', error);
+      toast.error(tSuggestions('bulkAcceptFailed'));
+    } finally {
+      setBulkAccepting(false);
     }
   };
 
@@ -157,8 +206,15 @@ export function RuleSuggestionsView() {
     !dismissedSuggestions.has(index)
   );
 
+  const highConfidenceCount = suggestions.suggestions.filter(
+    (s) => s.confidenceScore >= HIGH_CONFIDENCE_THRESHOLD,
+  ).length;
+
   return (
     <div className="space-y-5">
+      {/* Upsell banner — free-tier users only; self-hosted hidden */}
+      <CategorizationUpsellBanner context="ruleSuggestions" dismissible />
+
       {/* Header Stats */}
       <section className="rounded-[26px] border border-ink-200 bg-white/90 p-6 shadow-lg shadow-primary-200/20 backdrop-blur-xs">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
@@ -231,15 +287,35 @@ export function RuleSuggestionsView() {
 
       {/* Suggestions List */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-[var(--font-dash-sans)] text-lg font-semibold text-ink-900">
             {t('suggestions.suggestedRules')}
           </h2>
-          {visibleSuggestions.length < suggestions.suggestions.length && (
-            <p className="text-sm text-ink-500">
-              {t('suggestions.showingCount', { visible: visibleSuggestions.length, total: suggestions.suggestions.length })}
-            </p>
-          )}
+          <div className="flex items-center gap-3">
+            {visibleSuggestions.length < suggestions.suggestions.length && (
+              <p className="text-sm text-ink-500">
+                {t('suggestions.showingCount', { visible: visibleSuggestions.length, total: suggestions.suggestions.length })}
+              </p>
+            )}
+            {highConfidenceCount > 0 && (
+              <Button
+                size="sm"
+                onClick={bulkAcceptHighConfidence}
+                disabled={bulkAccepting}
+                className="bg-primary-600 hover:bg-primary-700 text-white flex items-center gap-1.5"
+                data-testid="bulk-accept-high-confidence"
+              >
+                {bulkAccepting ? (
+                  <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                ) : (
+                  <BoltIcon className="h-4 w-4" />
+                )}
+                {bulkAccepting
+                  ? tSuggestions('acceptingAll')
+                  : tSuggestions('acceptAllHighConfidenceCount', { count: highConfidenceCount })}
+              </Button>
+            )}
+          </div>
         </div>
 
         {visibleSuggestions.map((suggestion, index) => (
@@ -290,6 +366,16 @@ export function RuleSuggestionsView() {
 
             <div className="p-5">
               <div className="space-y-4">
+                {/* Impact preview — how many transactions this rule would categorize */}
+                <div className="rounded-2xl border border-primary-200 bg-primary-50/60 p-3 text-sm text-primary-900 flex items-start gap-2">
+                  <BoltIcon className="h-4 w-4 shrink-0 mt-0.5 text-primary-500" />
+                  <span data-testid="suggestion-impact-preview">
+                    {suggestion.matchCount > 0
+                      ? tSuggestions('impactPreview', { count: suggestion.matchCount })
+                      : tSuggestions('impactPreviewZero')}
+                  </span>
+                </div>
+
                 {/* Rule Details */}
                 <div className="bg-ink-50 p-4 rounded-2xl">
                   <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-400 mb-3">

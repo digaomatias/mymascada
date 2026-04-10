@@ -706,6 +706,27 @@ public class TransactionRepository : ITransactionRepository
                         cancellationToken);
     }
 
+    public async Task<Dictionary<string, int>> GetAutoCategorizationCountsByMethodAsync(
+        Guid userId, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default)
+    {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
+
+        var counts = await _context.Transactions
+            .AsNoTracking()
+            .Where(t => accessibleIds.Contains(t.AccountId) &&
+                        !t.IsDeleted &&
+                        t.IsAutoCategorized &&
+                        t.AutoCategorizationMethod != null &&
+                        t.AutoCategorizedAt.HasValue &&
+                        t.AutoCategorizedAt.Value >= startUtc &&
+                        t.AutoCategorizedAt.Value < endUtc)
+            .GroupBy(t => t.AutoCategorizationMethod!)
+            .Select(g => new { Method = g.Key, Count = g.Count() })
+            .ToListAsync(cancellationToken);
+
+        return counts.ToDictionary(c => c.Method, c => c.Count);
+    }
+
     public async Task<HashSet<int>> GetCategorizedTransactionIdsAsync(IEnumerable<int> transactionIds)
     {
         var ids = transactionIds.ToList();
