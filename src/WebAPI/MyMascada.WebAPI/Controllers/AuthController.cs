@@ -293,11 +293,6 @@ public class AuthController : ControllerBase
         var hasAccounts = (await _accountRepository.GetByUserIdAsync(userId)).Any();
         var isOnboardingComplete = (financialProfile != null && financialProfile.OnboardingCompleted) || hasAccounts;
 
-        // Subscription tier — drives premium upsells in the frontend.
-        // Self-hosted deployments always appear as SelfHosted (unlimited).
-        var subscriptionTier = await _subscriptionService.GetUserTierAsync(userId);
-        var isSelfHosted = await _subscriptionService.IsSelfHostedAsync();
-
         var userDto = new UserDto
         {
             Id = user.Id,
@@ -311,10 +306,15 @@ public class AuthController : ControllerBase
             Locale = user.Locale ?? "en",
             AiDescriptionCleaning = user.AiDescriptionCleaning,
             HasAiConfigured = hasAiConfigured,
-            IsOnboardingComplete = isOnboardingComplete,
-            SubscriptionTier = subscriptionTier.ToString(),
-            IsSelfHosted = isSelfHosted
+            IsOnboardingComplete = isOnboardingComplete
         };
+
+        // Subscription tier — drives premium upsells in the frontend. Routed
+        // through the shared helper so a subscription-service outage (Stripe
+        // blip, DB hiccup) doesn't 500 /auth/me and break user bootstrap.
+        // SubscriptionTier is left null on failure; the frontend treats that
+        // as "unknown → hide upsell" until the next refresh.
+        await EnrichSubscriptionFieldsAsync(userDto);
 
         return Ok(userDto);
     }

@@ -84,11 +84,14 @@ const MOCK_CATEGORIES = [
 ];
 
 async function setupMocks(page: Page) {
-  // Pre-seed auth token so the frontend skips the login redirect
+  // Pre-seed auth token so the frontend skips the login redirect.
+  // The key MUST be `auth_token` — that is the canonical storage key used by
+  // `ApiClient.getToken()` in `frontend/src/lib/api-client.ts`. Seeding
+  // `token`/`authToken` instead leaves `isAuthenticated` false and the page
+  // redirects to /login before the wizard ever mounts.
   await page.addInitScript((token) => {
     try {
-      window.localStorage.setItem('token', token);
-      window.localStorage.setItem('authToken', token);
+      window.localStorage.setItem('auth_token', token);
     } catch {
       // ignore — test still works without pre-seed
     }

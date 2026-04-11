@@ -540,4 +540,64 @@ public class AuthControllerTests
         // Assert
         result.Result.Should().BeOfType<NotFoundResult>();
     }
+
+    [Fact]
+    public async Task GetCurrentUser_WhenSubscriptionServiceThrows_ShouldReturnOkWithNullTier()
+    {
+        // Arrange — reproduces a Stripe outage / transient DB blip where the
+        // subscription lookup fails. /auth/me MUST still succeed so the user
+        // bootstrap (and everything downstream) doesn't break for the entire
+        // duration of the outage. The frontend treats a null tier as
+        // "unknown → hide upsell", which is the intended graceful-degradation
+        // behavior shared across all auth endpoints via EnrichSubscriptionFieldsAsync.
+        var userId = Guid.NewGuid();
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, userId.ToString()),
+            new(ClaimTypes.Email, "test@example.com"),
+            new(ClaimTypes.Name, "testuser")
+        };
+
+        var identity = new ClaimsIdentity(claims, "Test");
+        var principal = new ClaimsPrincipal(identity);
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = principal
+            }
+        };
+
+        var user = new User
+        {
+            Id = userId,
+            Email = "test@example.com",
+            UserName = "testuser",
+            FirstName = "Test",
+            LastName = "User",
+            Currency = "USD",
+            TimeZone = "UTC",
+            Locale = "en"
+        };
+        _userRepository.GetByIdAsync(userId).Returns(user);
+
+        // Simulate the subscription service failing (e.g. Stripe API down).
+        _subscriptionService
+            .GetUserTierAsync(userId, Arg.Any<CancellationToken>())
+            .Returns<Task<MyMascada.Domain.Enums.SubscriptionTier>>(_ =>
+                throw new InvalidOperationException("Stripe is unreachable"));
+
+        // Act
+        var result = await _controller.GetCurrentUser();
+
+        // Assert — endpoint still returns 200 OK; tier left null so the
+        // frontend hides the upsell until the next auth refresh resolves.
+        var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        var userDto = okResult.Value.Should().BeOfType<UserDto>().Subject;
+
+        userDto.Id.Should().Be(userId);
+        userDto.Email.Should().Be("test@example.com");
+        userDto.SubscriptionTier.Should().BeNull();
+    }
 }
