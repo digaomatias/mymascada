@@ -522,7 +522,11 @@ public class CategorizationController : ControllerBase
                     UserId = userId,
                     TransactionIds = request.TransactionIds,
                     CategoryId = request.CategoryId,
-                    NormalizedDescription = request.NormalizedDescription
+                    // Clients chunking a >500-id group pass RecordHistory=true
+                    // only on the first chunk so the ML signal is recorded
+                    // exactly once per user confirmation. Defaults to true
+                    // for non-chunked callers.
+                    RecordHistory = request.RecordHistory ?? true
                 },
                 cancellationToken);
 
@@ -1239,9 +1243,11 @@ public class BulkCategorizeGroupRequest
     public int CategoryId { get; set; }
 
     /// <summary>
-    /// Optional — the normalized description of the group being categorized
-    /// (sent back as supplied by GET /uncategorized-groups so history recording
-    /// can reference the exact group key).
+    /// Optional — when a client chunks a single logical group across multiple
+    /// requests (the wizard splits groups over 500 ids into batches), set this
+    /// to `true` on the first chunk only so CategorizationHistory.MatchCount
+    /// is incremented exactly once per user confirmation. Omitting the field
+    /// or sending `null` defaults to `true` for non-chunked callers.
     /// </summary>
-    public string? NormalizedDescription { get; set; }
+    public bool? RecordHistory { get; set; }
 }

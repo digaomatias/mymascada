@@ -54,12 +54,15 @@ public class BulkCategorizeGroupCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WithNormalizedDescription_RecordsSingleHistoryEntryForGroup()
+    public async Task Handle_HomogeneousGroup_RecordsSingleAggregatedHistoryEntry()
     {
+        // Every transaction in the group normalizes to the same key — the
+        // handler should aggregate them into a single history entry so the
+        // ML handler gets one strong signal for the user's confirmation.
         var transactions = new List<Transaction>
         {
             new() { Id = 1, AccountId = 10, Description = "NETFLIX.COM", CategoryId = null },
-            new() { Id = 2, AccountId = 10, Description = "NETFLIX.COM FEB", CategoryId = null }
+            new() { Id = 2, AccountId = 10, Description = "NETFLIX.COM", CategoryId = null }
         };
 
         _categoryRepo.ExistsAsync(5, _userId).Returns(true);
@@ -72,8 +75,7 @@ public class BulkCategorizeGroupCommandHandlerTests
         {
             UserId = _userId,
             CategoryId = 5,
-            TransactionIds = new() { 1, 2 },
-            NormalizedDescription = "netflix com"
+            TransactionIds = new() { 1, 2 }
         };
 
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -86,9 +88,8 @@ public class BulkCategorizeGroupCommandHandlerTests
         transactions[1].IsReviewed.Should().BeTrue();
 
         await _transactionRepo.Received(1).SaveChangesAsync();
-        // With NormalizedDescription supplied, exactly one history entry is
-        // recorded using the group key — not one per transaction — so the ML
-        // handler sees a single confirmed signal for the whole group.
+        // Server-derived normalized key — not any client-supplied value — is
+        // used for the aggregated entry.
         await _historyService.Received(1).RecordCategorizationBatchAsync(
             Arg.Is<IEnumerable<CategorizationHistoryEvent>>(
                 events => events.Count() == 1
@@ -98,12 +99,15 @@ public class BulkCategorizeGroupCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WithoutNormalizedDescription_RecordsHistoryPerTransaction()
+    public async Task Handle_HeterogeneousGroup_FallsBackToPerTransactionHistory()
     {
+        // Transactions normalize to different keys — fall back to one
+        // history entry per raw transaction so the ML handler still sees
+        // every distinct description.
         var transactions = new List<Transaction>
         {
             new() { Id = 1, AccountId = 10, Description = "NETFLIX.COM", CategoryId = null },
-            new() { Id = 2, AccountId = 10, Description = "NETFLIX.COM FEB", CategoryId = null }
+            new() { Id = 2, AccountId = 10, Description = "SPOTIFY PREMIUM", CategoryId = null }
         };
 
         _categoryRepo.ExistsAsync(5, _userId).Returns(true);
@@ -124,11 +128,46 @@ public class BulkCategorizeGroupCommandHandlerTests
         result.Success.Should().BeTrue();
         result.TransactionsUpdated.Should().Be(2);
 
-        // Without a normalized group key, fall back to recording per-transaction
-        // so the ML handler still learns from the raw descriptions.
         await _historyService.Received(1).RecordCategorizationBatchAsync(
             Arg.Is<IEnumerable<CategorizationHistoryEvent>>(
                 events => events.Count() == 2 && events.All(e => e.CategoryId == 5)),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_RecordHistoryFalse_SkipsHistoryRecording()
+    {
+        // Subsequent chunks of a chunked group request opt out of history
+        // recording so the same user action doesn't increment MatchCount
+        // once per chunk.
+        var transactions = new List<Transaction>
+        {
+            new() { Id = 1, AccountId = 10, Description = "NETFLIX.COM", CategoryId = null },
+            new() { Id = 2, AccountId = 10, Description = "NETFLIX.COM", CategoryId = null }
+        };
+
+        _categoryRepo.ExistsAsync(5, _userId).Returns(true);
+        _transactionRepo.GetTransactionsByIdsAsync(
+            Arg.Any<IEnumerable<int>>(), _userId, Arg.Any<CancellationToken>())
+            .Returns(transactions);
+        _accountAccess.CanModifyAccountAsync(_userId, 10).Returns(true);
+
+        var command = new BulkCategorizeGroupCommand
+        {
+            UserId = _userId,
+            CategoryId = 5,
+            TransactionIds = new() { 1, 2 },
+            RecordHistory = false
+        };
+
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        result.Success.Should().BeTrue();
+        result.TransactionsUpdated.Should().Be(2);
+
+        // Categorization still applied, but no history entries written.
+        await _historyService.DidNotReceive().RecordCategorizationBatchAsync(
+            Arg.Any<IEnumerable<CategorizationHistoryEvent>>(),
             Arg.Any<CancellationToken>());
     }
 

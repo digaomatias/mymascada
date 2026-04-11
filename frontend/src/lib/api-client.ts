@@ -1579,7 +1579,13 @@ class ApiClient {
   async bulkCategorizeGroup(request: {
     transactionIds: number[];
     categoryId: number;
-    normalizedDescription?: string;
+    /**
+     * Optional — set to `false` on every chunk but the first when splitting a
+     * logical group across multiple requests, so the server only increments
+     * CategorizationHistory.MatchCount once per user confirmation. Defaults to
+     * `true` when omitted.
+     */
+    recordHistory?: boolean;
   }): Promise<BulkCategorizeGroupResponse> {
     const response = await this.request('/api/Categorization/bulk-categorize-group', {
       method: 'POST',

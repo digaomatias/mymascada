@@ -133,11 +133,16 @@ export default function QuickCategorizePage() {
       let anySuccessFalse = false;
       let lastMessage: string | undefined;
 
-      for (const batch of batches) {
+      for (let i = 0; i < batches.length; i++) {
+        const batch = batches[i];
         const res = await apiClient.bulkCategorizeGroup({
           transactionIds: batch,
           categoryId,
-          normalizedDescription: currentGroup.normalizedDescription,
+          // Only the first chunk records CategorizationHistory — subsequent
+          // chunks share the same user confirmation, so letting each one
+          // record would increment MatchCount N times for a single action
+          // and skew ML/suggestion strength vs smaller groups.
+          recordHistory: i === 0,
         });
         totalUpdated += res.transactionsUpdated;
         if (res.errors?.length) {
@@ -168,6 +173,13 @@ export default function QuickCategorizePage() {
             failed: aggregatedErrors.length,
           }),
         );
+        // Also show the first backend error/message so users understand *why*
+        // some rows were skipped (transfers, missing ids, etc.), not just
+        // that something failed. Without this toast they only see counts.
+        const firstError = aggregatedErrors[0] ?? lastMessage;
+        if (firstError) {
+          toast.error(firstError);
+        }
       } else {
         // Nothing was saved — fall through to the generic error toast, using
         // the first backend error message when available.

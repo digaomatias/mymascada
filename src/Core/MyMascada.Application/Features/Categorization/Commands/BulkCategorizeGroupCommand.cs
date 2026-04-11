@@ -18,12 +18,15 @@ public class BulkCategorizeGroupCommand : IRequest<BulkCategorizeGroupResult>
     public int CategoryId { get; set; }
 
     /// <summary>
-    /// Optional — the normalized description of the group being categorized.
-    /// When supplied, a single history entry is recorded for the group key
-    /// (instead of one per transaction) which is more efficient and avoids
-    /// inflating the MatchCount beyond what the user actually confirmed.
+    /// When true (the default), the handler records a CategorizationHistory
+    /// entry for the group so the ML handler learns from the user's action.
+    /// Clients that chunk a single logical group across multiple requests
+    /// (e.g. the quick-categorize wizard splitting a >500-id group into
+    /// batches) should set this to true only for the first chunk — otherwise
+    /// each chunk increments MatchCount for the same user action and skews
+    /// downstream ML/suggestion signals.
     /// </summary>
-    public string? NormalizedDescription { get; set; }
+    public bool RecordHistory { get; set; } = true;
 }
 
 public class BulkCategorizeGroupResult
@@ -138,50 +141,75 @@ public class BulkCategorizeGroupCommandHandler
         // Record categorization history — best-effort (the category update is
         // already committed above). The ML handler reads from this table to
         // auto-apply the same category to future matching transactions.
-        try
+        //
+        // Skip entirely when:
+        //   - The caller opted out (`RecordHistory == false`) because this is
+        //     a subsequent chunk of a chunked group request. Recording here
+        //     would increment MatchCount once per chunk for the same user
+        //     action and bias downstream signals.
+        //   - Nothing actually changed (all transactions were already in the
+        //     target category or were skipped as transfers).
+        if (request.RecordHistory && changedTransactions.Count > 0)
         {
-            List<CategorizationHistoryEvent> historyEvents;
-
-            if (!string.IsNullOrWhiteSpace(request.NormalizedDescription) && changedTransactions.Count > 0)
+            try
             {
-                // When the caller supplies the normalized group key, record a
-                // single history entry for the group. This produces a stronger
-                // ML signal than N per-transaction entries and avoids inflating
-                // MatchCount beyond what the user actually confirmed.
-                historyEvents = new List<CategorizationHistoryEvent>
-                {
-                    new CategorizationHistoryEvent(
-                        request.UserId,
-                        request.NormalizedDescription,
-                        request.CategoryId,
-                        CategorizationHistorySource.Manual),
-                };
-            }
-            else
-            {
-                historyEvents = changedTransactions
-                    .Select(t => new CategorizationHistoryEvent(
-                        request.UserId,
-                        t.Description,
-                        request.CategoryId,
-                        CategorizationHistorySource.Manual))
+                // Compute the group key server-side from the actual
+                // transactions rather than trusting a client-supplied value.
+                // A crafted request could otherwise write an arbitrary
+                // (normalized key → category) mapping and poison future
+                // ML/suggestion strength for unrelated descriptions.
+                var normalizedGroups = changedTransactions
+                    .Select(t => DescriptionNormalizer.Normalize(t.Description))
+                    .Where(key => !string.IsNullOrWhiteSpace(key))
+                    .GroupBy(key => key)
                     .ToList();
-            }
 
-            if (historyEvents.Count > 0)
-            {
-                await _historyService.RecordCategorizationBatchAsync(historyEvents, cancellationToken);
+                List<CategorizationHistoryEvent> historyEvents;
+
+                if (normalizedGroups.Count == 1)
+                {
+                    // Homogeneous group — every changed transaction shares the
+                    // same normalized key. Record a single aggregated history
+                    // entry so the ML handler sees one strong "user confirmed
+                    // this key" signal instead of N duplicate ones.
+                    historyEvents = new List<CategorizationHistoryEvent>
+                    {
+                        new CategorizationHistoryEvent(
+                            request.UserId,
+                            normalizedGroups[0].Key,
+                            request.CategoryId,
+                            CategorizationHistorySource.Manual),
+                    };
+                }
+                else
+                {
+                    // Heterogeneous or empty-after-normalization group — fall
+                    // back to per-transaction history so raw descriptions
+                    // still feed the ML handler.
+                    historyEvents = changedTransactions
+                        .Select(t => new CategorizationHistoryEvent(
+                            request.UserId,
+                            t.Description,
+                            request.CategoryId,
+                            CategorizationHistorySource.Manual))
+                        .ToList();
+                }
+
+                if (historyEvents.Count > 0)
+                {
+                    await _historyService.RecordCategorizationBatchAsync(historyEvents, cancellationToken);
+                }
             }
-        }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Failed to record categorization history for bulk group categorize of {Count} transactions to category {CategoryId} (categorization was applied successfully)",
-                changedTransactions.Count, request.CategoryId);
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Failed to record categorization history for bulk group categorize of {Count} transactions to category {CategoryId} (categorization was applied successfully)",
+                    changedTransactions.Count, request.CategoryId);
+            }
         }
 
         return new BulkCategorizeGroupResult
