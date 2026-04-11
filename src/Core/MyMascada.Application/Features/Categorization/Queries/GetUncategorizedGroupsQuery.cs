@@ -30,8 +30,39 @@ public class GetUncategorizedGroupsQuery : IRequest<UncategorizedGroupsResult>
 
 public class UncategorizedGroupsResult
 {
+    /// <summary>
+    /// The groups returned to the frontend, capped at
+    /// <see cref="GetUncategorizedGroupsQuery.MaxGroups"/> and filtered to
+    /// groups with at least <see cref="GetUncategorizedGroupsQuery.MinGroupSize"/>
+    /// members.
+    /// </summary>
     public List<UncategorizedGroupDto> Groups { get; set; } = new();
+
+    /// <summary>
+    /// Total count of uncategorized transactions for the user, straight from
+    /// <c>CountUncategorizedTransactionsAsync</c>. This is the ground-truth
+    /// "needs review" figure surfaced in the dashboard badge.
+    ///
+    /// <b>IMPORTANT:</b> this value commonly diverges from
+    /// <see cref="GroupedTransactions"/> — they answer different questions:
+    /// <list type="bullet">
+    ///   <item><description><c>TotalUncategorized</c>: how many rows need review in total.</description></item>
+    ///   <item><description><c>GroupedTransactions</c>: how many rows ended up in the groups we're returning *right now* (subject to <c>MinGroupSize</c> and <c>MaxGroups</c>).</description></item>
+    /// </list>
+    /// Singleton-merchant rows (filtered out by <c>MinGroupSize</c>) and rows
+    /// beyond the top <c>MaxGroups</c> cluster are counted by
+    /// <c>TotalUncategorized</c> but not by <c>GroupedTransactions</c>, so
+    /// <c>TotalUncategorized &gt;= GroupedTransactions</c> is the normal
+    /// relationship.
+    /// </summary>
     public int TotalUncategorized { get; set; }
+
+    /// <summary>
+    /// Sum of <see cref="UncategorizedGroupDto.TransactionCount"/> across the
+    /// returned <see cref="Groups"/>. See <see cref="TotalUncategorized"/>
+    /// for the ground-truth "rows needing review" count and why these two
+    /// values routinely differ.
+    /// </summary>
     public int GroupedTransactions { get; set; }
 }
 
@@ -93,9 +124,23 @@ public class GetUncategorizedGroupsQueryHandler
         GetUncategorizedGroupsQuery request,
         CancellationToken cancellationToken)
     {
-        // Pull a larger batch so the normalization/grouping step has enough
-        // data to find meaningful clusters. The wizard caps UI display
-        // server-side, not by over-fetching.
+        // CLAUDE.md "Database-Level Filtering" exception: grouping and
+        // normalization must happen in memory because
+        // `DescriptionNormalizer.Normalize` is a C# method that strips
+        // dates, reference numbers, and special chars using regex passes
+        // EF Core cannot translate into SQL. A DB-level equivalent would
+        // require either a persisted normalized_description column (costly
+        // migration + write-path rewrite across every transaction
+        // insert/update) or a stored procedure duplicating the normalizer
+        // logic (fragile and easy to drift out of sync with the C# version).
+        //
+        // Mitigations: the fetch is capped at 1000 rows (`maxCount`), which
+        // bounds memory use to ~100KB of Transaction rows for the largest
+        // realistic user — the same budget we already accept in the
+        // categorization pipeline and SimilarityMatchingService. The wizard
+        // caps UI display server-side via `request.MaxGroups`, not by
+        // over-fetching, so returning more transactions here never inflates
+        // the response size.
         var transactions = (await _transactionRepository.GetUncategorizedTransactionsAsync(
             request.UserId, maxCount: 1000, cancellationToken)).ToList();
 

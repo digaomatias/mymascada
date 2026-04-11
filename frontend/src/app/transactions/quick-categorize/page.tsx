@@ -246,10 +246,18 @@ export default function QuickCategorizePage() {
             return next;
           });
           setSelectedCategoryId('');
+          // `failed` is the number of rows we tried to update but that
+          // didn't come back in `updatedTransactionIds` — NOT the length of
+          // `aggregatedErrors`. The backend collapses many skipped rows
+          // into a single error string (e.g. "Transactions not found or
+          // access denied: 1, 2, 3" is one entry for three ids), so
+          // counting error strings under-reports failures. Using the id
+          // delta gives the user an accurate count regardless of how the
+          // backend framed the errors.
           toast.warning(
             t('partial', {
               success: totalUpdated,
-              failed: aggregatedErrors.length,
+              failed: remainingIds.length,
             }),
           );
         }
