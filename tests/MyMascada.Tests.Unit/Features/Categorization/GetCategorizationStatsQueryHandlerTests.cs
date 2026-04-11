@@ -121,6 +121,33 @@ public class GetCategorizationStatsQueryHandlerTests
     }
 
     [Fact]
+    public async Task Handle_PercentagesAlwaysSumToExactly100_UsingLargestRemainder()
+    {
+        // Three equal buckets (1/1/1) would naively round to 33/33/33 = 99.
+        // The largest-remainder (Hamilton) apportionment must allocate the
+        // extra point so the row adds up to 100.
+        _transactionRepo.GetAutoCategorizationCountsByMethodAsync(
+                _userId, Arg.Any<DateTime>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<string, int>
+            {
+                ["Rule"] = 1,
+                ["ML"] = 1,
+                ["LLM"] = 1
+            });
+        _transactionRepo.CountUncategorizedTransactionsAsync(_userId, Arg.Any<CancellationToken>())
+            .Returns(0);
+        _ruleSuggestionRepo.CountPendingSuggestionsAsync(_userId, Arg.Any<CancellationToken>())
+            .Returns(0);
+
+        var result = await _handler.Handle(new GetCategorizationStatsQuery { UserId = _userId }, CancellationToken.None);
+
+        result.AutoCategorizedThisMonth.Should().Be(3);
+        var sum = result.RulesPercentage + result.MLPercentage
+            + result.LLMPercentage + result.BankCategoryPercentage;
+        sum.Should().Be(100);
+    }
+
+    [Fact]
     public async Task Handle_UsesCountPendingSuggestionsAsync_NotMaterializedQuery()
     {
         // Regression: PendingSuggestions used to call GetPendingSuggestionsAsync

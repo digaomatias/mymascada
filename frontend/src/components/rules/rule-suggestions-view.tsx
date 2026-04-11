@@ -23,6 +23,18 @@ import { CategorizationUpsellBanner } from '@/components/categorization/categori
 /** Threshold for the "accept all high-confidence" bulk action. */
 const HIGH_CONFIDENCE_THRESHOLD = 0.9;
 
+/**
+ * Notify the sidebar that the pending rule-suggestions count may have
+ * changed. `navigation.tsx` listens for this and refetches
+ * `/RuleSuggestions/summary` so the badge stays in sync after accepts /
+ * dismisses / bulk-accepts. No-op during SSR.
+ */
+function notifySuggestionsChanged() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('mymascada:rule-suggestions-changed'));
+  }
+}
+
 interface RuleSuggestionsResponse {
   suggestions: RuleSuggestion[];
   summary: RuleSuggestionsSummary;
@@ -34,6 +46,9 @@ export function RuleSuggestionsView() {
   const [suggestions, setSuggestions] = useState<RuleSuggestionsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [creatingRules, setCreatingRules] = useState<Set<number>>(new Set());
+  // Id-keyed (not index-keyed) so in-session dismissals stay bound to the
+  // correct suggestion even if `loadSuggestions()` reloads and reorders the
+  // list. Index keys would shadow a different row after a reorder.
   const [dismissedSuggestions, setDismissedSuggestions] = useState<Set<number>>(new Set());
   const [bulkAccepting, setBulkAccepting] = useState(false);
 
@@ -72,6 +87,10 @@ export function RuleSuggestionsView() {
 
       // Clear dismissed suggestions since we have fresh data
       setDismissedSuggestions(new Set());
+
+      // Tell the sidebar to refetch its pending-count badge — the suggestion
+      // we just accepted and any siblings the backend auto-cleared are gone.
+      notifySuggestionsChanged();
     } catch (error) {
       console.error('Failed to create rule:', error);
       toast.error(t('toasts.suggestionAcceptFailed'));
@@ -84,13 +103,18 @@ export function RuleSuggestionsView() {
     }
   };
 
-  const dismissSuggestion = async (suggestionId: number, index: number) => {
+  const dismissSuggestion = async (suggestionId: number) => {
     try {
       await apiClient.rejectRuleSuggestion(suggestionId);
 
-      // Remove from local state after successful API call
-      setDismissedSuggestions(prev => new Set([...prev, index]));
+      // Track dismissal by suggestion id so a subsequent `loadSuggestions()`
+      // reorder can't shadow a different row.
+      setDismissedSuggestions(prev => new Set([...prev, suggestionId]));
       toast.success(t('toasts.suggestionDismissed'));
+
+      // Sidebar badge should drop by one — the backend already persisted
+      // the rejection, so a refetch reflects reality.
+      notifySuggestionsChanged();
     } catch (error) {
       console.error('Failed to dismiss suggestion:', error);
       toast.error(t('toasts.suggestionDismissFailed'));
@@ -101,10 +125,11 @@ export function RuleSuggestionsView() {
     if (!suggestions) return;
     // Skip anything the user already dismissed in-session — otherwise the
     // button count and the actual bulk action drift apart and dismissed rows
-    // get silently re-accepted.
+    // get silently re-accepted. Dismissal set is id-keyed so this stays
+    // correct even after a reload that reorders the list.
     const candidates = suggestions.suggestions.filter(
-      (s, index) =>
-        !dismissedSuggestions.has(index) &&
+      (s) =>
+        !dismissedSuggestions.has(s.id) &&
         s.confidenceScore >= HIGH_CONFIDENCE_THRESHOLD,
     );
     if (candidates.length === 0) {
@@ -143,6 +168,10 @@ export function RuleSuggestionsView() {
 
       await loadSuggestions();
       setDismissedSuggestions(new Set());
+
+      // Sidebar badge needs to drop — this is the most visible stale-data
+      // path in the whole rule-suggestions flow.
+      notifySuggestionsChanged();
     } catch (error) {
       console.error('Bulk accept failed:', error);
       toast.error(tSuggestions('bulkAcceptFailed'));
@@ -214,16 +243,16 @@ export function RuleSuggestionsView() {
     );
   }
 
-  const visibleSuggestions = suggestions.suggestions.filter((_, index) =>
-    !dismissedSuggestions.has(index)
+  const visibleSuggestions = suggestions.suggestions.filter(
+    (s) => !dismissedSuggestions.has(s.id),
   );
 
   // Count only *visible* (non-dismissed) high-confidence suggestions so the
   // "Accept all {count}" button stays in sync with `bulkAcceptHighConfidence`,
   // which also skips dismissed rows.
   const highConfidenceCount = suggestions.suggestions.filter(
-    (s, index) =>
-      !dismissedSuggestions.has(index) &&
+    (s) =>
+      !dismissedSuggestions.has(s.id) &&
       s.confidenceScore >= HIGH_CONFIDENCE_THRESHOLD,
   ).length;
 
@@ -372,7 +401,7 @@ export function RuleSuggestionsView() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => dismissSuggestion(suggestion.id, index)}
+                    onClick={() => dismissSuggestion(suggestion.id)}
                     className="text-ink-400 hover:text-ink-600"
                   >
                     <XMarkIcon className="h-4 w-4" />

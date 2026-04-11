@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/auth-context';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   ChartBarIcon,
@@ -45,6 +45,16 @@ export default function Navigation() {
   // Pending rule suggestion count — drives the badge on the sidebar "Rules"
   // link. Best-effort: silently ignore failures so a broken endpoint does
   // not break navigation rendering.
+  const refetchRuleSuggestionBadge = useCallback(async () => {
+    if (!isAuthenticated) return;
+    try {
+      const summary = await apiClient.getRuleSuggestionsSummary();
+      setRuleSuggestionBadge(summary?.totalSuggestions ?? 0);
+    } catch {
+      // ignore — nav should still render without a badge
+    }
+  }, [isAuthenticated]);
+
   useEffect(() => {
     if (!isAuthenticated) return;
     let cancelled = false;
@@ -62,6 +72,21 @@ export default function Navigation() {
       cancelled = true;
     };
   }, [isAuthenticated]);
+
+  // Refetch when another component (e.g. the rule-suggestions page after a
+  // bulk-accept / accept / dismiss) signals that the pending count changed.
+  // Without this the sidebar badge would stay stale until the next full
+  // reload, which is the headline action for this PR.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const handler = () => {
+      refetchRuleSuggestionBadge();
+    };
+    window.addEventListener('mymascada:rule-suggestions-changed', handler);
+    return () => {
+      window.removeEventListener('mymascada:rule-suggestions-changed', handler);
+    };
+  }, [isAuthenticated, refetchRuleSuggestionBadge]);
 
   if (!isAuthenticated) {
     return null;

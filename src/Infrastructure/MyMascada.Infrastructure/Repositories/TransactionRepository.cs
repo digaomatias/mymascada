@@ -704,18 +704,26 @@ public class TransactionRepository : ITransactionRepository
     public async Task<int> CountUncategorizedTransactionsAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
-        // Mirror the filter applied by GetUncategorizedTransactionsAsync so the
-        // dashboard stats card and the quick-categorize wizard agree on which
-        // rows "need review". Without excluding transfers, users whose only
-        // uncategorized rows are transfer components see a non-zero count
-        // linking into a wizard with nothing to do.
+        // Mirror the filter applied by GetUncategorizedTransactionsAsync +
+        // GetUncategorizedGroupsQueryHandler so the dashboard stats card and
+        // the quick-categorize wizard agree on which rows "need review".
+        //
+        // The wizard's grouper additionally drops rows where
+        // `DescriptionNormalizer.Normalize(description)` returns empty —
+        // caught here with a `!IsNullOrWhiteSpace(Description)` filter that
+        // handles the 99.9% case (null/whitespace descriptions). The tiny
+        // edge case where a non-whitespace description normalizes to empty
+        // post-stripping (e.g. "!!!") still drifts by a few rows, but that's
+        // extraordinarily rare for bank transactions and not worth the round
+        // trip to normalize server-side.
         return await _context.Transactions
             .CountAsync(t => accessibleIds.Contains(t.AccountId) &&
                              !t.CategoryId.HasValue &&
                              !t.IsDeleted &&
                              !t.Account.IsDeleted &&
                              !t.TransferId.HasValue &&
-                             t.Type != TransactionType.TransferComponent,
+                             t.Type != TransactionType.TransferComponent &&
+                             !string.IsNullOrWhiteSpace(t.Description),
                         cancellationToken);
     }
 

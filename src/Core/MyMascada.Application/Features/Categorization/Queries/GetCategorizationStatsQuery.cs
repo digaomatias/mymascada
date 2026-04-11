@@ -123,6 +123,13 @@ public class GetCategorizationStatsQueryHandler
         var pendingSuggestions = await _ruleSuggestionRepository.CountPendingSuggestionsAsync(
             request.UserId, cancellationToken);
 
+        // Use largest-remainder (Hamilton) apportionment so the four
+        // per-method percentages always sum to exactly 100 when total > 0.
+        // Rounding each share independently with Math.Round produces
+        // cosmetic drift — three ~33% buckets would otherwise render as
+        // "33% · 33% · 33%" (= 99) and confuse users scanning the card.
+        var pcts = ApportionPercentages(new[] { byRules, byMl, byLlm, byBankCategory });
+
         return new CategorizationStatsResult
         {
             AutoCategorizedThisMonth = total,
@@ -130,14 +137,67 @@ public class GetCategorizationStatsQueryHandler
             ProcessedByML = byMl,
             ProcessedByLLM = byLlm,
             ProcessedByBankCategory = byBankCategory,
-            RulesPercentage = total > 0 ? (int)Math.Round(byRules * 100.0 / total) : 0,
-            MLPercentage = total > 0 ? (int)Math.Round(byMl * 100.0 / total) : 0,
-            LLMPercentage = total > 0 ? (int)Math.Round(byLlm * 100.0 / total) : 0,
-            BankCategoryPercentage = total > 0 ? (int)Math.Round(byBankCategory * 100.0 / total) : 0,
+            RulesPercentage = pcts[0],
+            MLPercentage = pcts[1],
+            LLMPercentage = pcts[2],
+            BankCategoryPercentage = pcts[3],
             NeedsReview = needsReview,
             PendingSuggestions = pendingSuggestions,
             PeriodStart = periodStart,
             PeriodEnd = periodEnd
         };
+    }
+
+    /// <summary>
+    /// Apportions 100 points across the input counts using the largest-
+    /// remainder (Hamilton) method. The returned array preserves input
+    /// order, every value is in [0, 100], and the sum equals exactly 100
+    /// whenever the input total is greater than zero (all zeros in the
+    /// input map to all zeros in the output). Ties on remainder are broken
+    /// by the lower original index for stable output.
+    /// </summary>
+    private static int[] ApportionPercentages(int[] counts)
+    {
+        var n = counts.Length;
+        var result = new int[n];
+        var total = 0L;
+        for (var i = 0; i < n; i++)
+        {
+            total += counts[i];
+        }
+        if (total == 0)
+        {
+            return result;
+        }
+
+        var remainders = new (int Index, double Remainder)[n];
+        var floorSum = 0;
+        for (var i = 0; i < n; i++)
+        {
+            var exact = counts[i] * 100.0 / total;
+            var floor = (int)Math.Floor(exact);
+            result[i] = floor;
+            remainders[i] = (i, exact - floor);
+            floorSum += floor;
+        }
+
+        var seatsRemaining = 100 - floorSum;
+        if (seatsRemaining <= 0)
+        {
+            return result;
+        }
+
+        // Distribute the leftover points to the buckets with the largest
+        // fractional remainders first. Stable tie-break on original index
+        // keeps the output deterministic.
+        var ordered = remainders
+            .OrderByDescending(r => r.Remainder)
+            .ThenBy(r => r.Index)
+            .ToArray();
+        for (var i = 0; i < seatsRemaining && i < n; i++)
+        {
+            result[ordered[i].Index]++;
+        }
+        return result;
     }
 }

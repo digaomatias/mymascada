@@ -93,7 +93,7 @@ public class AuthController : ControllerBase
             // Enrich with subscription tier + self-hosted flag so the frontend
             // doesn't flash the Free-tier upsell after register until /auth/me
             // resolves.
-            await EnrichSubscriptionFieldsAsync(result.User);
+            await EnrichSubscriptionFieldsAsync(result.User, HttpContext.RequestAborted);
 
             // If email verification is required, don't set any cookies
             if (result.RequiresEmailVerification)
@@ -150,7 +150,7 @@ public class AuthController : ControllerBase
     /// the duration of the outage — a much bigger blast radius than the
     /// upsell-flash bug this helper was introduced to fix.
     /// </remarks>
-    private async Task EnrichSubscriptionFieldsAsync(UserDto? user)
+    private async Task EnrichSubscriptionFieldsAsync(UserDto? user, CancellationToken cancellationToken = default)
     {
         if (user == null || user.Id == Guid.Empty)
         {
@@ -159,8 +159,8 @@ public class AuthController : ControllerBase
 
         try
         {
-            user.SubscriptionTier = (await _subscriptionService.GetUserTierAsync(user.Id)).ToString();
-            user.IsSelfHosted = await _subscriptionService.IsSelfHostedAsync();
+            user.SubscriptionTier = (await _subscriptionService.GetUserTierAsync(user.Id, cancellationToken)).ToString();
+            user.IsSelfHosted = await _subscriptionService.IsSelfHostedAsync(cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -191,7 +191,7 @@ public class AuthController : ControllerBase
         // doesn't know about the subscription service, and without this the
         // login response defaults to "Free" and flashes the upsell for
         // Pro/Family users until /auth/me overwrites the cached user.
-        await EnrichSubscriptionFieldsAsync(result.User);
+        await EnrichSubscriptionFieldsAsync(result.User, HttpContext.RequestAborted);
 
         // If email verification is required, return 200 OK with verification flag
         if (result.RequiresEmailVerification)
@@ -314,7 +314,7 @@ public class AuthController : ControllerBase
         // blip, DB hiccup) doesn't 500 /auth/me and break user bootstrap.
         // SubscriptionTier is left null on failure; the frontend treats that
         // as "unknown → hide upsell" until the next refresh.
-        await EnrichSubscriptionFieldsAsync(userDto);
+        await EnrichSubscriptionFieldsAsync(userDto, HttpContext.RequestAborted);
 
         return Ok(userDto);
     }
@@ -358,7 +358,7 @@ public class AuthController : ControllerBase
             Locale = user.Locale ?? "en",
             AiDescriptionCleaning = user.AiDescriptionCleaning
         };
-        await EnrichSubscriptionFieldsAsync(userDto);
+        await EnrichSubscriptionFieldsAsync(userDto, HttpContext.RequestAborted);
 
         return Ok(userDto);
     }
@@ -395,7 +395,7 @@ public class AuthController : ControllerBase
             Locale = user.Locale ?? "en",
             AiDescriptionCleaning = user.AiDescriptionCleaning
         };
-        await EnrichSubscriptionFieldsAsync(userDto);
+        await EnrichSubscriptionFieldsAsync(userDto, HttpContext.RequestAborted);
 
         return Ok(userDto);
     }
@@ -446,7 +446,7 @@ public class AuthController : ControllerBase
                 var hasAccounts = (await _accountRepository.GetByUserIdAsync(userId)).Any();
                 result.User.IsOnboardingComplete = (financialProfile != null && financialProfile.OnboardingCompleted) || hasAccounts;
 
-                await EnrichSubscriptionFieldsAsync(result.User);
+                await EnrichSubscriptionFieldsAsync(result.User, HttpContext.RequestAborted);
             }
 
             // Return response without refresh token (it's in cookie)
@@ -855,7 +855,7 @@ public class AuthController : ControllerBase
                 // UserDto in AuthenticationService which doesn't know about
                 // the subscription service, so the response would otherwise
                 // default to "Free" for paid users.
-                await EnrichSubscriptionFieldsAsync(authResult.User);
+                await EnrichSubscriptionFieldsAsync(authResult.User, HttpContext.RequestAborted);
 
                 // Return response without refresh token (it's in cookie)
                 var response = new AuthenticationResponse
