@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MyMascada.Application.Common.Configuration;
 using MyMascada.Application.Common.Interfaces;
@@ -47,7 +48,8 @@ public class AuthControllerTests
         _financialProfileRepository = Substitute.For<IUserFinancialProfileRepository>();
         _accountRepository = Substitute.For<IAccountRepository>();
         _subscriptionService = Substitute.For<ISubscriptionService>();
-        _controller = new AuthController(_mediator, _authService, _dataProtectionProvider, _userRepository, _appOptions, _environment, _aiSettingsRepository, _configuration, _financialProfileRepository, _accountRepository, _subscriptionService);
+        var logger = Substitute.For<ILogger<AuthController>>();
+        _controller = new AuthController(_mediator, _authService, _dataProtectionProvider, _userRepository, _appOptions, _environment, _aiSettingsRepository, _configuration, _financialProfileRepository, _accountRepository, _subscriptionService, logger);
 
         // Provide a default HttpContext so methods that access Request.Headers don't throw
         _controller.ControllerContext = new ControllerContext

@@ -180,13 +180,3 @@ public class RuleSuggestionsController : ControllerBase
         }
     }
 }
-
-/// <summary>
-/// Lightweight response for the sidebar badge — only the count, no
-/// suggestion graph. Named distinctly from `RuleSuggestionsSummaryDto` so
-/// the full-summary shape used by the main listing endpoint stays intact.
-/// </summary>
-public class RuleSuggestionsCountSummary
-{
-    public int TotalSuggestions { get; set; }
-}

@@ -118,8 +118,12 @@ async function setupMocks(page: Page) {
     }),
   );
 
-  // Categories for the picker
-  await page.route('**/api/categories*', (route) => {
+  // Categories for the picker. `ApiClient.request()` rewrites `/api/...`
+  // → `/api/latest/...`, so the actual URL contains `api/latest/categories`.
+  // `**/api/categories*` would require the two segments to be adjacent and
+  // would not match — use `**/api/**/categories*` so the glob survives the
+  // version rewrite.
+  await page.route('**/api/**/categories*', (route) => {
     if (route.request().method() === 'GET') {
       route.fulfill({
         status: 200,
@@ -157,16 +161,15 @@ async function setupMocks(page: Page) {
     });
   });
 
-  // Rule suggestions summary (for the sidebar badge fetch)
-  await page.route('**/api/RuleSuggestions/summary', (route) =>
+  // Rule suggestions summary (for the sidebar badge fetch). Same version-
+  // rewrite gotcha as the categories mock — use `**/api/**/...` so the
+  // rewritten `/api/latest/RuleSuggestions/summary` URL still matches.
+  await page.route('**/api/**/RuleSuggestions/summary', (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
         totalSuggestions: 0,
-        averageConfidencePercentage: 0,
-        generationMethod: 'Basic',
-        categoryDistribution: {},
       }),
     }),
   );
@@ -201,11 +204,17 @@ test.describe('Quick-Categorize Wizard (mocked)', () => {
     await page.getByTestId('quick-categorize-submit').click();
     const firstRequest = await bulkCall;
 
-    // Verify the bulk-categorize call includes the expected transaction IDs
+    // Verify the bulk-categorize call includes the expected transaction IDs.
+    // The wizard no longer sends `normalizedDescription` — the backend now
+    // derives the normalized key server-side from the transactions (see the
+    // crafted-request security fix in BulkCategorizeGroupCommand.cs). The
+    // `recordHistory` flag is set on the first chunk of a batch so the ML
+    // handler only gets one history event per user action.
     const firstPayload = JSON.parse(firstRequest.postData() || '{}');
     expect(firstPayload.transactionIds).toEqual([101, 102, 103, 104, 105]);
     expect(firstPayload.categoryId).toBe(1);
-    expect(firstPayload.normalizedDescription).toBe('netflix com');
+    expect(firstPayload.recordHistory).toBe(true);
+    expect(firstPayload.normalizedDescription).toBeUndefined();
 
     // Second group now visible
     await expect(page.getByTestId('quick-categorize-group-description')).toHaveText(

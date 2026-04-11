@@ -33,6 +33,7 @@ public class AuthController : ControllerBase
     private readonly IUserFinancialProfileRepository _financialProfileRepository;
     private readonly IAccountRepository _accountRepository;
     private readonly ISubscriptionService _subscriptionService;
+    private readonly ILogger<AuthController> _logger;
 
     public AuthController(
         IMediator mediator,
@@ -45,7 +46,8 @@ public class AuthController : ControllerBase
         IConfiguration configuration,
         IUserFinancialProfileRepository financialProfileRepository,
         IAccountRepository accountRepository,
-        ISubscriptionService subscriptionService)
+        ISubscriptionService subscriptionService,
+        ILogger<AuthController> logger)
     {
         _mediator = mediator;
         _authService = authService;
@@ -58,6 +60,7 @@ public class AuthController : ControllerBase
         _financialProfileRepository = financialProfileRepository;
         _accountRepository = accountRepository;
         _subscriptionService = subscriptionService;
+        _logger = logger;
     }
 
     [HttpPost("register")]
@@ -132,9 +135,21 @@ public class AuthController : ControllerBase
     /// <summary>
     /// Populates SubscriptionTier + IsSelfHosted on a UserDto. Every endpoint
     /// that returns a UserDto as part of an auth flow (login, register,
-    /// refresh, google) must call this; without it those responses default to
-    /// "Free" and paid users see upsell banners flash until the next /auth/me.
+    /// refresh, google) must call this; without it those responses leave
+    /// SubscriptionTier null and the frontend treats that as "unknown → hide
+    /// upsell" until the next /auth/me.
     /// </summary>
+    /// <remarks>
+    /// Failures from the subscription service (Stripe outage, DB blip, etc.)
+    /// are logged and swallowed — the DTO is left with `SubscriptionTier = null`
+    /// so auth flows keep working. Since the frontend treats a null tier as
+    /// "unknown → hide upsell", this degrades gracefully: paid users won't
+    /// see upsell banners flashed at them, and when the next request resolves
+    /// successfully the tier is refreshed. A hard failure here would otherwise
+    /// break every auth endpoint (login, register, refresh, /me, etc.) for
+    /// the duration of the outage — a much bigger blast radius than the
+    /// upsell-flash bug this helper was introduced to fix.
+    /// </remarks>
     private async Task EnrichSubscriptionFieldsAsync(UserDto? user)
     {
         if (user == null || user.Id == Guid.Empty)
@@ -142,8 +157,21 @@ public class AuthController : ControllerBase
             return;
         }
 
-        user.SubscriptionTier = (await _subscriptionService.GetUserTierAsync(user.Id)).ToString();
-        user.IsSelfHosted = await _subscriptionService.IsSelfHostedAsync();
+        try
+        {
+            user.SubscriptionTier = (await _subscriptionService.GetUserTierAsync(user.Id)).ToString();
+            user.IsSelfHosted = await _subscriptionService.IsSelfHostedAsync();
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex,
+                "Failed to resolve subscription tier for user {UserId}; leaving SubscriptionTier null so the frontend hides upsell banners until the next auth refresh",
+                user.Id);
+        }
     }
 
     [HttpPost("login")]
