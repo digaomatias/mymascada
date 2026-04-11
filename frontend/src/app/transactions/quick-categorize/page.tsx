@@ -164,8 +164,12 @@ export default function QuickCategorizePage() {
         setTotalCompleted((prev) => prev + totalUpdated);
         goNext();
       } else if (totalUpdated > 0) {
-        // Partial success: count what was saved, surface the errors, but keep
-        // the user on the current group so the skipped rows stay visible.
+        // Partial success: count what was saved, surface the counts in a
+        // localized toast, but keep the user on the current group so the
+        // skipped rows stay visible. Backend error strings are English-only
+        // (e.g. "Transaction {id} is part of a transfer...") and violate the
+        // "all user-facing strings must be localized" rule, so they're
+        // logged to the console for debugging instead of shown as a toast.
         setTotalCompleted((prev) => prev + totalUpdated);
         toast.warning(
           t('partial', {
@@ -173,17 +177,27 @@ export default function QuickCategorizePage() {
             failed: aggregatedErrors.length,
           }),
         );
-        // Also show the first backend error/message so users understand *why*
-        // some rows were skipped (transfers, missing ids, etc.), not just
-        // that something failed. Without this toast they only see counts.
-        const firstError = aggregatedErrors[0] ?? lastMessage;
-        if (firstError) {
-          toast.error(firstError);
+        if (aggregatedErrors.length > 0 || lastMessage) {
+          console.warn(
+            'Quick-categorize partial success. Backend errors:',
+            aggregatedErrors,
+            'Last message:',
+            lastMessage,
+          );
         }
       } else {
-        // Nothing was saved — fall through to the generic error toast, using
-        // the first backend error message when available.
-        toast.error(aggregatedErrors[0] ?? lastMessage ?? t('error'));
+        // Nothing was saved — show the generic localized error toast. The
+        // backend's English error details are logged to the console so we
+        // can debug them without leaking untranslated strings into the UI.
+        if (aggregatedErrors.length > 0 || lastMessage) {
+          console.warn(
+            'Quick-categorize failed. Backend errors:',
+            aggregatedErrors,
+            'Last message:',
+            lastMessage,
+          );
+        }
+        toast.error(t('error'));
       }
     } catch (err) {
       console.error('Quick-categorize failed:', err);

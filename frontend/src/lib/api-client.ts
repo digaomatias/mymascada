@@ -1552,7 +1552,11 @@ class ApiClient {
     });
   }
 
-  async getRuleSuggestionsSummary(): Promise<RuleSuggestionsSummary> {
+  async getRuleSuggestionsSummary(): Promise<RuleSuggestionsCountSummary> {
+    // Hits the lightweight `GET /RuleSuggestions/summary` endpoint which
+    // only issues a `SELECT COUNT(*)` — the main listing endpoint would
+    // materialize the full suggestion graph (category + sample transactions)
+    // for every nav render, which is wasteful when we only want the badge.
     const response = await this.request('/api/RuleSuggestions/summary');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return response as any;
@@ -2337,6 +2341,15 @@ export interface RuleSuggestionsSummary {
   lastGeneratedDate?: string;
   generationMethod: string;
   categoryDistribution: Record<string, number>;
+}
+
+/**
+ * Lightweight response for the sidebar badge — only the pending-suggestions
+ * count. Returned by `GET /RuleSuggestions/summary` so the nav doesn't load
+ * the full suggestion graph just to drive a numeric badge.
+ */
+export interface RuleSuggestionsCountSummary {
+  totalSuggestions: number;
 }
 
 // Quick-categorize wizard & dashboard stats (Phase 4 UX)

@@ -688,6 +688,12 @@ public class TransactionRepository : ITransactionRepository
             .Where(t => accessibleIds.Contains(t.AccountId) &&
                        !t.CategoryId.HasValue &&
                        !t.IsDeleted &&
+                       // Match the filter applied by CountUncategorizedTransactionsAsync —
+                       // without this, the wizard surfaces rows on soft-deleted
+                       // accounts that the dashboard count excludes, producing an
+                       // off-by-one between the "needs review" badge and the
+                       // wizard contents.
+                       !t.Account.IsDeleted &&
                        !t.TransferId.HasValue &&
                        t.Type != TransactionType.TransferComponent)
             .OrderByDescending(t => t.CreatedAt)

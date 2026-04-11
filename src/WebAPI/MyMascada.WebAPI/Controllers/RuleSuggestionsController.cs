@@ -18,13 +18,36 @@ public class RuleSuggestionsController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IRuleSuggestionRepository _ruleSuggestionRepository;
 
     public RuleSuggestionsController(
         IMediator mediator,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        IRuleSuggestionRepository ruleSuggestionRepository)
     {
         _mediator = mediator;
         _currentUserService = currentUserService;
+        _ruleSuggestionRepository = ruleSuggestionRepository;
+    }
+
+    /// <summary>
+    /// Returns a lightweight count of pending rule suggestions for the
+    /// current user. Used by the sidebar "Rules" link to drive the badge
+    /// without materializing the full suggestion graph (SampleTransactions,
+    /// SuggestedCategory, etc.) that the main listing endpoint loads.
+    /// </summary>
+    [HttpGet("summary")]
+    public async Task<ActionResult<RuleSuggestionsCountSummary>> GetRuleSuggestionsSummary(
+        CancellationToken cancellationToken = default)
+    {
+        var userId = _currentUserService.GetUserId();
+        var totalSuggestions = await _ruleSuggestionRepository
+            .CountPendingSuggestionsAsync(userId, cancellationToken);
+
+        return Ok(new RuleSuggestionsCountSummary
+        {
+            TotalSuggestions = totalSuggestions
+        });
     }
 
     /// <summary>
@@ -156,4 +179,14 @@ public class RuleSuggestionsController : ControllerBase
             return StatusCode(500, new { error = "Failed to reject rule suggestion" });
         }
     }
+}
+
+/// <summary>
+/// Lightweight response for the sidebar badge — only the count, no
+/// suggestion graph. Named distinctly from `RuleSuggestionsSummaryDto` so
+/// the full-summary shape used by the main listing endpoint stays intact.
+/// </summary>
+public class RuleSuggestionsCountSummary
+{
+    public int TotalSuggestions { get; set; }
 }

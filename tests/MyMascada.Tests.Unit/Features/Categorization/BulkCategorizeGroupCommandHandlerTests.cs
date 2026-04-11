@@ -99,11 +99,13 @@ public class BulkCategorizeGroupCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_HeterogeneousGroup_FallsBackToPerTransactionHistory()
+    public async Task Handle_HeterogeneousGroup_SkipsHistoryRecording()
     {
-        // Transactions normalize to different keys — fall back to one
-        // history entry per raw transaction so the ML handler still sees
-        // every distinct description.
+        // Transactions normalize to different keys — the quick-categorize
+        // wizard only ever sends homogeneous groups, so hitting this branch
+        // means either a bug upstream or a crafted request. Skip history
+        // recording entirely rather than inflating N raw-description events
+        // the user never confirmed as a coherent group.
         var transactions = new List<Transaction>
         {
             new() { Id = 1, AccountId = 10, Description = "NETFLIX.COM", CategoryId = null },
@@ -125,12 +127,16 @@ public class BulkCategorizeGroupCommandHandlerTests
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
+        // Categorization still applied...
         result.Success.Should().BeTrue();
         result.TransactionsUpdated.Should().Be(2);
+        transactions[0].CategoryId.Should().Be(5);
+        transactions[1].CategoryId.Should().Be(5);
 
-        await _historyService.Received(1).RecordCategorizationBatchAsync(
-            Arg.Is<IEnumerable<CategorizationHistoryEvent>>(
-                events => events.Count() == 2 && events.All(e => e.CategoryId == 5)),
+        // ...but no history entries written, so ML signals don't get
+        // inflated by a heterogeneous batch.
+        await _historyService.DidNotReceive().RecordCategorizationBatchAsync(
+            Arg.Any<IEnumerable<CategorizationHistoryEvent>>(),
             Arg.Any<CancellationToken>());
     }
 

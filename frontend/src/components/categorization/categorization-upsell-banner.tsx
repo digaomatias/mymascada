@@ -48,10 +48,14 @@ export function CategorizationUpsellBanner({
   const t = useTranslations('upsell.categorization');
   const [dismissed, setDismissed] = useState(false);
 
-  // Hide for non-free tiers and for self-hosted deployments
+  // Hide for non-free tiers and for self-hosted deployments. When the tier
+  // is unknown (null/undefined — e.g. the DTO hasn't been enriched yet, or
+  // an auth endpoint neglected to populate it), hide the banner as a safe
+  // default. Otherwise paid users would see upsell banners flash at them
+  // on any auth path that forgets to set SubscriptionTier.
   if (!user) return null;
   if (user.isSelfHosted) return null;
-  if (user.subscriptionTier && user.subscriptionTier !== 'Free') return null;
+  if (user.subscriptionTier !== 'Free') return null;
   if (dismissed) return null;
 
   const sectionKey = context;

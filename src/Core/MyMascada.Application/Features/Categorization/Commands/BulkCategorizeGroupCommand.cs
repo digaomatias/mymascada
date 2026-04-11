@@ -164,15 +164,13 @@ public class BulkCategorizeGroupCommandHandler
                     .GroupBy(key => key)
                     .ToList();
 
-                List<CategorizationHistoryEvent> historyEvents;
-
                 if (normalizedGroups.Count == 1)
                 {
                     // Homogeneous group — every changed transaction shares the
                     // same normalized key. Record a single aggregated history
                     // entry so the ML handler sees one strong "user confirmed
                     // this key" signal instead of N duplicate ones.
-                    historyEvents = new List<CategorizationHistoryEvent>
+                    var historyEvents = new List<CategorizationHistoryEvent>
                     {
                         new CategorizationHistoryEvent(
                             request.UserId,
@@ -180,24 +178,22 @@ public class BulkCategorizeGroupCommandHandler
                             request.CategoryId,
                             CategorizationHistorySource.Manual),
                     };
+
+                    await _historyService.RecordCategorizationBatchAsync(historyEvents, cancellationToken);
                 }
                 else
                 {
-                    // Heterogeneous or empty-after-normalization group — fall
-                    // back to per-transaction history so raw descriptions
-                    // still feed the ML handler.
-                    historyEvents = changedTransactions
-                        .Select(t => new CategorizationHistoryEvent(
-                            request.UserId,
-                            t.Description,
-                            request.CategoryId,
-                            CategorizationHistorySource.Manual))
-                        .ToList();
-                }
-
-                if (historyEvents.Count > 0)
-                {
-                    await _historyService.RecordCategorizationBatchAsync(historyEvents, cancellationToken);
+                    // Heterogeneous group (or every description normalized to
+                    // empty). The quick-categorize wizard only ever sends
+                    // homogeneous groups, so hitting this branch means either
+                    // a bug upstream or a crafted request. Skip history
+                    // recording entirely rather than inflating N raw-
+                    // description events that would bias ML signals without
+                    // the user ever confirming those descriptions as a
+                    // coherent group.
+                    _logger.LogDebug(
+                        "Skipped categorization history for bulk group categorize of {Count} transactions to category {CategoryId} — descriptions normalize to {KeyCount} distinct keys",
+                        changedTransactions.Count, request.CategoryId, normalizedGroups.Count);
                 }
             }
             catch (OperationCanceledException)
