@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
@@ -49,6 +49,14 @@ export default function QuickCategorizePage() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const [saving, setSaving] = useState(false);
   const [totalCompleted, setTotalCompleted] = useState(0);
+
+  // Session-scoped set of `{normalizedKey}::{categoryId}` pairs that already
+  // had CategorizationHistory recorded during this wizard session. Needed so
+  // a retry after partial success (where the user clicks "Categorize" again
+  // on the narrowed remainingIds with the same category) doesn't re-record
+  // history and over-boost MatchCount for a single user intent. A useRef is
+  // sufficient — mutations don't need to trigger a re-render.
+  const historyRecordedKeysRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -126,6 +134,17 @@ export default function QuickCategorizePage() {
       batches.push(allIds.slice(i, i + BATCH_SIZE));
     }
 
+    // Suppress history recording for retries of the same group/category pair
+    // that already recorded history earlier in this wizard session (e.g.
+    // after a partial success the user hits "Categorize" again on the
+    // narrowed remaining ids). Without this the backend would write a second
+    // CategorizationHistory event for the same user intent and over-boost
+    // MatchCount by 1 per retry. Keyed on normalizedDescription + categoryId
+    // so switching the retry to a DIFFERENT category still records — that's
+    // a distinct user intent.
+    const historyKey = `${currentGroup.normalizedDescription}::${categoryId}`;
+    const alreadyRecorded = historyRecordedKeysRef.current.has(historyKey);
+
     try {
       setSaving(true);
       let totalUpdated = 0;
@@ -139,7 +158,10 @@ export default function QuickCategorizePage() {
       // otherwise a failing chunk 0 followed by successful chunks 1..N would
       // leave the ML handler with zero signal because chunk 0 asked for
       // history but committed nothing, and chunks 1..N opted out.
-      let historyRecorded = false;
+      //
+      // Pre-seed with `alreadyRecorded` so retries of the same
+      // `{normalizedKey, categoryId}` pair skip history across every chunk.
+      let historyRecorded = alreadyRecorded;
 
       for (let i = 0; i < batches.length; i++) {
         const batch = batches[i];
@@ -172,6 +194,7 @@ export default function QuickCategorizePage() {
         // recorded on this chunk".
         if (shouldRecordHistory && res.transactionsUpdated > 0) {
           historyRecorded = true;
+          historyRecordedKeysRef.current.add(historyKey);
         }
       }
 
