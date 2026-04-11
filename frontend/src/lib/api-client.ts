@@ -2379,6 +2379,13 @@ export interface UncategorizedGroupsResponse {
 export interface BulkCategorizeGroupResponse {
   success: boolean;
   transactionsUpdated: number;
+  /**
+   * IDs of transactions whose category actually changed. The quick-categorize
+   * wizard narrows the current group's id set on partial success so a
+   * follow-up retry (with a different category) can't silently re-categorize
+   * rows that were already committed in the previous attempt.
+   */
+  updatedTransactionIds: number[];
   message: string;
   errors: string[];
 }

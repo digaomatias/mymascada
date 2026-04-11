@@ -539,6 +539,11 @@ public class CategorizationController : ControllerBase
             {
                 success = result.Success,
                 transactionsUpdated = result.TransactionsUpdated,
+                // IDs that actually changed — the wizard narrows its current
+                // group's id set on partial success so a follow-up retry with
+                // a different category cannot silently re-categorize already-
+                // committed rows.
+                updatedTransactionIds = result.UpdatedTransactionIds,
                 message = result.Message,
                 errors = result.Errors
             });

@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/auth-context';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   ChartBarIcon,
@@ -43,50 +43,40 @@ export default function Navigation() {
   }, [pathname]);
 
   // Pending rule suggestion count — drives the badge on the sidebar "Rules"
-  // link. Best-effort: silently ignore failures so a broken endpoint does
-  // not break navigation rendering.
-  const refetchRuleSuggestionBadge = useCallback(async () => {
-    if (!isAuthenticated) return;
-    try {
-      const summary = await apiClient.getRuleSuggestionsSummary();
-      setRuleSuggestionBadge(summary?.totalSuggestions ?? 0);
-    } catch {
-      // ignore — nav should still render without a badge
-    }
-  }, [isAuthenticated]);
-
+  // link. One effect, one fetch function: both the mount-time fetch and the
+  // event-driven refetch funnel through the local `fetchBadge` helper so the
+  // two code paths can't drift apart. Best-effort throughout — a broken
+  // endpoint must not break navigation rendering.
   useEffect(() => {
     if (!isAuthenticated) return;
     let cancelled = false;
-    apiClient
-      .getRuleSuggestionsSummary()
-      .then((summary) => {
+
+    const fetchBadge = async () => {
+      try {
+        const summary = await apiClient.getRuleSuggestionsSummary();
         if (!cancelled) {
           setRuleSuggestionBadge(summary?.totalSuggestions ?? 0);
         }
-      })
-      .catch(() => {
+      } catch {
         // ignore — nav should still render without a badge
-      });
-    return () => {
-      cancelled = true;
+      }
     };
-  }, [isAuthenticated]);
 
-  // Refetch when another component (e.g. the rule-suggestions page after a
-  // bulk-accept / accept / dismiss) signals that the pending count changed.
-  // Without this the sidebar badge would stay stale until the next full
-  // reload, which is the headline action for this PR.
-  useEffect(() => {
-    if (!isAuthenticated) return;
+    fetchBadge();
+
+    // Refetch when another component (e.g. the rule-suggestions page after a
+    // bulk-accept / accept / dismiss) signals that the pending count changed.
+    // Without this the sidebar badge would stay stale until the next full
+    // reload, which is the headline action for this PR.
     const handler = () => {
-      refetchRuleSuggestionBadge();
+      fetchBadge();
     };
     window.addEventListener('mymascada:rule-suggestions-changed', handler);
     return () => {
+      cancelled = true;
       window.removeEventListener('mymascada:rule-suggestions-changed', handler);
     };
-  }, [isAuthenticated, refetchRuleSuggestionBadge]);
+  }, [isAuthenticated]);
 
   if (!isAuthenticated) {
     return null;

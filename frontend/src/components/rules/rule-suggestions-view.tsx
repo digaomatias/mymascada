@@ -20,8 +20,23 @@ import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { CategorizationUpsellBanner } from '@/components/categorization/categorization-upsell-banner';
 
-/** Threshold for the "accept all high-confidence" bulk action. */
-const HIGH_CONFIDENCE_THRESHOLD = 0.9;
+/**
+ * Threshold for the "accept all high-confidence" bulk action, expressed as a
+ * whole-number percentage so it stays consistent with the rounded value the
+ * UI badge actually displays. A raw score of 0.895 rounds to "90%" in the
+ * badge, so the user sees a 90%-confidence suggestion — the bulk action must
+ * include that row too, otherwise the button and the UI drift apart.
+ */
+const HIGH_CONFIDENCE_PERCENT = 90;
+
+/**
+ * Normalize a raw confidence score (0..1) to the same rounded percentage the
+ * badge renders. Callers comparing against `HIGH_CONFIDENCE_PERCENT` MUST go
+ * through this helper so the gating logic tracks the displayed value.
+ */
+function toDisplayedConfidencePercent(score: number): number {
+  return Math.round(score * 100);
+}
 
 /**
  * Notify the sidebar that the pending rule-suggestions count may have
@@ -130,7 +145,7 @@ export function RuleSuggestionsView() {
     const candidates = suggestions.suggestions.filter(
       (s) =>
         !dismissedSuggestions.has(s.id) &&
-        s.confidenceScore >= HIGH_CONFIDENCE_THRESHOLD,
+        toDisplayedConfidencePercent(s.confidenceScore) >= HIGH_CONFIDENCE_PERCENT,
     );
     if (candidates.length === 0) {
       toast.info(tSuggestions('bulkAcceptEmpty'));
@@ -253,7 +268,7 @@ export function RuleSuggestionsView() {
   const highConfidenceCount = suggestions.suggestions.filter(
     (s) =>
       !dismissedSuggestions.has(s.id) &&
-      s.confidenceScore >= HIGH_CONFIDENCE_THRESHOLD,
+      toDisplayedConfidencePercent(s.confidenceScore) >= HIGH_CONFIDENCE_PERCENT,
   ).length;
 
   return (
@@ -379,7 +394,7 @@ export function RuleSuggestionsView() {
                       {suggestion.name}
                     </h3>
                     <Badge className={cn('text-[10px] font-medium', getConfidenceColor(suggestion.confidenceScore * 100))}>
-                      {t('suggestions.confidence', { score: Math.round(suggestion.confidenceScore * 100) })}
+                      {t('suggestions.confidence', { score: toDisplayedConfidencePercent(suggestion.confidenceScore) })}
                     </Badge>
                   </div>
                   <p className="text-sm text-ink-500 mt-1">{suggestion.description}</p>

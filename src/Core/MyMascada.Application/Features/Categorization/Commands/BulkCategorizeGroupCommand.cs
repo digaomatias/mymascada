@@ -35,6 +35,16 @@ public class BulkCategorizeGroupResult
     public string Message { get; set; } = string.Empty;
     public int TransactionsUpdated { get; set; }
     public List<string> Errors { get; set; } = new();
+
+    /// <summary>
+    /// IDs of transactions whose category actually changed as a result of
+    /// this request. Rows that were already in the target category (no-ops)
+    /// and rows that were skipped (transfers, access errors) are excluded.
+    /// The quick-categorize wizard uses this to narrow the current group's
+    /// id set after a partial success so the user cannot accidentally
+    /// re-submit already-committed ids under a different category.
+    /// </summary>
+    public List<int> UpdatedTransactionIds { get; set; } = new();
 }
 
 public class BulkCategorizeGroupCommandHandler
@@ -109,8 +119,8 @@ public class BulkCategorizeGroupCommandHandler
             }
         }
 
-        var updatedCount = 0;
         var changedTransactions = new List<Transaction>();
+        var updatedIds = new List<int>();
         var now = DateTime.UtcNow;
 
         foreach (var transaction in transactions)
@@ -123,6 +133,17 @@ public class BulkCategorizeGroupCommandHandler
 
             var categoryChanged = transaction.CategoryId != request.CategoryId;
 
+            // Skip no-op writes when the transaction is already in the target
+            // category. Touching CategoryId/UpdatedAt/UpdatedBy/IsReviewed
+            // unconditionally dirties the EF entity for every row, causing an
+            // UPDATE per already-categorized transaction and inflating
+            // TransactionsUpdated (the wizard's toast would claim "Categorized
+            // N transactions" even when the real delta is zero).
+            if (!categoryChanged)
+            {
+                continue;
+            }
+
             transaction.CategoryId = request.CategoryId;
             transaction.UpdatedAt = now;
             transaction.UpdatedBy = request.UserId.ToString();
@@ -130,11 +151,11 @@ public class BulkCategorizeGroupCommandHandler
             // so the transactions do not reappear in the review queue.
             transaction.IsReviewed = true;
 
-            updatedCount++;
-
-            if (categoryChanged)
-                changedTransactions.Add(transaction);
+            changedTransactions.Add(transaction);
+            updatedIds.Add(transaction.Id);
         }
+
+        var updatedCount = changedTransactions.Count;
 
         await _transactionRepository.SaveChangesAsync();
 
@@ -215,6 +236,7 @@ public class BulkCategorizeGroupCommandHandler
                 ? $"Successfully categorized {updatedCount} transaction(s)"
                 : $"Categorized {updatedCount} transaction(s) with {errors.Count} issue(s)",
             TransactionsUpdated = updatedCount,
+            UpdatedTransactionIds = updatedIds,
             Errors = errors
         };
     }

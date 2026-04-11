@@ -148,17 +148,21 @@ async function setupMocks(page: Page) {
     }),
   );
 
-  // Bulk categorize — echo success with the requested count
+  // Bulk categorize — echo success with the requested count. The response
+  // mirrors the real backend shape, including `updatedTransactionIds` so the
+  // wizard's partial-success narrowing logic has the same contract in tests
+  // as it does in production.
   await page.route('**/bulk-categorize-group', async (route) => {
     const body = JSON.parse(route.request().postData() || '{}');
-    const count = (body.transactionIds || []).length;
+    const ids: number[] = body.transactionIds || [];
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
         success: true,
-        transactionsUpdated: count,
-        message: `Successfully categorized ${count} transaction(s)`,
+        transactionsUpdated: ids.length,
+        updatedTransactionIds: ids,
+        message: `Successfully categorized ${ids.length} transaction(s)`,
         errors: [],
       }),
     });

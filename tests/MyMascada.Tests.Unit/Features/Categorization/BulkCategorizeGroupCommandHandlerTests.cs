@@ -202,9 +202,111 @@ public class BulkCategorizeGroupCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         result.TransactionsUpdated.Should().Be(1);
+        result.UpdatedTransactionIds.Should().BeEquivalentTo(new[] { 1 });
         result.Errors.Should().HaveCount(1);
         transactions[0].CategoryId.Should().Be(5);
         transactions[1].CategoryId.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Handle_AlreadyInTargetCategory_DoesNotCountOrTouchRows()
+    {
+        // Regression: submitting a group where some rows already have the
+        // target category inflated TransactionsUpdated, dirtied EF entities
+        // with redundant UPDATEs, and returned every id in
+        // UpdatedTransactionIds — causing the wizard toast to lie
+        // ("Categorized N transactions" when the real delta was smaller) and
+        // leaving already-committed ids in the id-narrowing set.
+        var alreadyCategorized = new Transaction
+        {
+            Id = 1,
+            AccountId = 10,
+            Description = "NETFLIX.COM",
+            CategoryId = 5,
+            IsReviewed = true,
+            // UpdatedBy stays null to assert the handler doesn't touch it.
+            UpdatedBy = null,
+        };
+        var uncategorized = new Transaction
+        {
+            Id = 2,
+            AccountId = 10,
+            Description = "NETFLIX.COM",
+            CategoryId = null,
+            IsReviewed = false,
+            UpdatedBy = null,
+        };
+        var transactions = new List<Transaction> { alreadyCategorized, uncategorized };
+
+        _categoryRepo.ExistsAsync(5, _userId).Returns(true);
+        _transactionRepo.GetTransactionsByIdsAsync(
+            Arg.Any<IEnumerable<int>>(), _userId, Arg.Any<CancellationToken>())
+            .Returns(transactions);
+        _accountAccess.CanModifyAccountAsync(_userId, 10).Returns(true);
+
+        var command = new BulkCategorizeGroupCommand
+        {
+            UserId = _userId,
+            CategoryId = 5,
+            TransactionIds = new() { 1, 2 }
+        };
+
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        result.Success.Should().BeTrue();
+        // Only the previously-uncategorized row counts — the already-
+        // categorized row was a no-op.
+        result.TransactionsUpdated.Should().Be(1);
+        result.UpdatedTransactionIds.Should().BeEquivalentTo(new[] { 2 });
+
+        // Already-categorized row must be left untouched so EF doesn't emit
+        // a redundant UPDATE for it. UpdatedBy is `string?` (and starts null
+        // in this test), so it's a reliable witness that the handler skipped
+        // writing to the row. UpdatedAt is `DateTime` (non-nullable) and
+        // auto-initializes in the base entity, so it's not checkable here.
+        alreadyCategorized.UpdatedBy.Should().BeNull();
+        alreadyCategorized.IsReviewed.Should().BeTrue();
+
+        // The uncategorized row is updated as expected.
+        uncategorized.CategoryId.Should().Be(5);
+        uncategorized.IsReviewed.Should().BeTrue();
+        uncategorized.UpdatedBy.Should().Be(_userId.ToString());
+    }
+
+    [Fact]
+    public async Task Handle_AllRowsAlreadyInTargetCategory_RecordsNoHistoryAndReturnsZero()
+    {
+        // Re-submitting a group that's already fully categorized to the
+        // target category is a no-op — no rows change, no history recorded.
+        var transactions = new List<Transaction>
+        {
+            new() { Id = 1, AccountId = 10, Description = "NETFLIX.COM", CategoryId = 5 },
+            new() { Id = 2, AccountId = 10, Description = "NETFLIX.COM", CategoryId = 5 }
+        };
+
+        _categoryRepo.ExistsAsync(5, _userId).Returns(true);
+        _transactionRepo.GetTransactionsByIdsAsync(
+            Arg.Any<IEnumerable<int>>(), _userId, Arg.Any<CancellationToken>())
+            .Returns(transactions);
+        _accountAccess.CanModifyAccountAsync(_userId, 10).Returns(true);
+
+        var command = new BulkCategorizeGroupCommand
+        {
+            UserId = _userId,
+            CategoryId = 5,
+            TransactionIds = new() { 1, 2 }
+        };
+
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        result.Success.Should().BeTrue();
+        result.TransactionsUpdated.Should().Be(0);
+        result.UpdatedTransactionIds.Should().BeEmpty();
+
+        // No history recorded — the gate is `changedTransactions.Count > 0`.
+        await _historyService.DidNotReceive().RecordCategorizationBatchAsync(
+            Arg.Any<IEnumerable<CategorizationHistoryEvent>>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]

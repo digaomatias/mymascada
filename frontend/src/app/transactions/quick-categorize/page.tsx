@@ -130,27 +130,48 @@ export default function QuickCategorizePage() {
       setSaving(true);
       let totalUpdated = 0;
       const aggregatedErrors: string[] = [];
+      const committedIds: number[] = [];
       let anySuccessFalse = false;
       let lastMessage: string | undefined;
+      // Track whether CategorizationHistory has been successfully recorded for
+      // this user confirmation. We flip this when the FIRST chunk that
+      // actually commits rows comes back, not the first chunk we attempted —
+      // otherwise a failing chunk 0 followed by successful chunks 1..N would
+      // leave the ML handler with zero signal because chunk 0 asked for
+      // history but committed nothing, and chunks 1..N opted out.
+      let historyRecorded = false;
 
       for (let i = 0; i < batches.length; i++) {
         const batch = batches[i];
+        const shouldRecordHistory = !historyRecorded;
         const res = await apiClient.bulkCategorizeGroup({
           transactionIds: batch,
           categoryId,
-          // Only the first chunk records CategorizationHistory — subsequent
-          // chunks share the same user confirmation, so letting each one
-          // record would increment MatchCount N times for a single action
-          // and skew ML/suggestion strength vs smaller groups.
-          recordHistory: i === 0,
+          // Record CategorizationHistory on the first chunk that actually
+          // commits rows — subsequent chunks share the same user confirmation
+          // and must NOT record again, otherwise MatchCount is incremented
+          // once per chunk for a single action and ML/suggestion strength
+          // gets skewed vs smaller groups.
+          recordHistory: shouldRecordHistory,
         });
         totalUpdated += res.transactionsUpdated;
+        if (res.updatedTransactionIds?.length) {
+          committedIds.push(...res.updatedTransactionIds);
+        }
         if (res.errors?.length) {
           aggregatedErrors.push(...res.errors);
         }
         if (!res.success) {
           anySuccessFalse = true;
           lastMessage = res.message ?? lastMessage;
+        }
+        // Flip the history flag only when we actually asked the backend to
+        // record AND the chunk committed something — the backend writes
+        // history iff `RecordHistory && changedTransactions.Count > 0`, so
+        // `transactionsUpdated > 0` is a reliable proxy for "history was
+        // recorded on this chunk".
+        if (shouldRecordHistory && res.transactionsUpdated > 0) {
+          historyRecorded = true;
         }
       }
 
@@ -171,12 +192,44 @@ export default function QuickCategorizePage() {
         // "all user-facing strings must be localized" rule, so they're
         // logged to the console for debugging instead of shown as a toast.
         setTotalCompleted((prev) => prev + totalUpdated);
-        toast.warning(
-          t('partial', {
-            success: totalUpdated,
-            failed: aggregatedErrors.length,
-          }),
+
+        // Narrow the current group's id set to the transactions that
+        // were NOT committed in this attempt. Without this, the next
+        // submit (with a different category) would re-send every id,
+        // including ones already saved, and silently re-categorize them.
+        const committedSet = new Set(committedIds);
+        const remainingIds = currentGroup.transactionIds.filter(
+          (id) => !committedSet.has(id),
         );
+        if (remainingIds.length === 0) {
+          // The backend's errors don't map to ids in `transactionIds`
+          // (e.g. "access denied" with no ids to retry) — nothing left
+          // for the user to act on, so advance as if fully successful.
+          toast.success(t('success', { count: totalUpdated }));
+          goNext();
+        } else {
+          setGroups((prev) => {
+            const next = [...prev];
+            const current = next[currentIndex];
+            if (!current) return prev;
+            next[currentIndex] = {
+              ...current,
+              transactionIds: remainingIds,
+              // Keep the visible count in sync with what's actually left
+              // so the button label ("Categorize N transactions") and the
+              // group header don't lie to the user.
+              transactionCount: remainingIds.length,
+            };
+            return next;
+          });
+          setSelectedCategoryId('');
+          toast.warning(
+            t('partial', {
+              success: totalUpdated,
+              failed: aggregatedErrors.length,
+            }),
+          );
+        }
         if (aggregatedErrors.length > 0 || lastMessage) {
           console.warn(
             'Quick-categorize partial success. Backend errors:',
