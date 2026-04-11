@@ -506,6 +506,7 @@
         "byRules": "por regras",
         "byMl": "por aprendizado",
         "byLlm": "por IA",
+        "byBank": "pelo banco",
         "needsReview": "{count, plural, one {1 transação precisa de revisão} other {# transações precisam de revisão}}",
         "reviewNow": "Revisar",
         "pendingSuggestions": "{count, plural, one {1 nova sugestão de regra disponível} other {# novas sugestões de regras disponíveis}}",

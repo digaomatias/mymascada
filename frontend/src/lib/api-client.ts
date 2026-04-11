@@ -2369,9 +2369,11 @@ export interface CategorizationStatsResponse {
   processedByRules: number;
   processedByML: number;
   processedByLLM: number;
+  processedByBankCategory: number;
   rulesPercentage: number;
   mlPercentage: number;
   llmPercentage: number;
+  bankCategoryPercentage: number;
   needsReview: number;
   pendingSuggestions: number;
   periodStart: string;

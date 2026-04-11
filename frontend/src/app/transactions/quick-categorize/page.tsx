@@ -16,6 +16,7 @@ import { Select } from '@/components/ui/select';
 import { apiClient } from '@/lib/api-client';
 import type { UncategorizedGroupDto, UncategorizedGroupsResponse } from '@/lib/api-client';
 import { useAuth } from '@/contexts/auth-context';
+import { useLocale } from '@/contexts/locale-context';
 import { cn } from '@/lib/utils';
 
 interface CategoryOption {
@@ -36,6 +37,7 @@ export default function QuickCategorizePage() {
   const t = useTranslations('transactions.quickCategorize');
   const tCommon = useTranslations('common');
   const { isAuthenticated, isLoading: authLoading, user } = useAuth();
+  const { locale } = useLocale();
   const userCurrency = user?.currency ?? 'USD';
 
   const [loading, setLoading] = useState(true);
@@ -319,7 +321,7 @@ export default function QuickCategorizePage() {
                   {t('groupCount', { count: currentGroup.transactionCount })}
                   {' · '}
                   {t('totalAmount', {
-                    amount: currentGroup.totalAmount.toLocaleString(undefined, {
+                    amount: currentGroup.totalAmount.toLocaleString(locale, {
                       style: 'currency',
                       currency: userCurrency,
                     }),
@@ -346,7 +348,7 @@ export default function QuickCategorizePage() {
                         </p>
                         <p className="text-xs text-ink-500">
                           {sample.accountName} ·{' '}
-                          {new Date(sample.transactionDate).toLocaleDateString()}
+                          {new Date(sample.transactionDate).toLocaleDateString(locale)}
                         </p>
                       </div>
                       <span
@@ -355,7 +357,7 @@ export default function QuickCategorizePage() {
                           sample.amount >= 0 ? 'text-emerald-600' : 'text-red-600',
                         )}
                       >
-                        {sample.amount.toLocaleString(undefined, {
+                        {sample.amount.toLocaleString(locale, {
                           style: 'currency',
                           currency: userCurrency,
                         })}

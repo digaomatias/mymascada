@@ -506,6 +506,7 @@
         "byRules": "by rules",
         "byMl": "by learning",
         "byLlm": "by AI",
+        "byBank": "by bank",
         "needsReview": "{count, plural, one {1 transaction needs review} other {# transactions need review}}",
         "reviewNow": "Review",
         "pendingSuggestions": "{count, plural, one {1 new rule suggestion available} other {# new rule suggestions available}}",

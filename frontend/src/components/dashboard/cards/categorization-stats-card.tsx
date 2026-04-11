@@ -82,6 +82,9 @@ export function CategorizationStatsCard() {
                 {stats.rulesPercentage}% {t('byRules')}
                 {' · '}
                 {stats.mlPercentage}% {t('byMl')}
+                {stats.bankCategoryPercentage > 0
+                  ? ` · ${stats.bankCategoryPercentage}% ${t('byBank')}`
+                  : ''}
                 {stats.llmPercentage > 0 ? ` · ${stats.llmPercentage}% ${t('byLlm')}` : ''}
               </p>
             )}

@@ -36,6 +36,12 @@ public class CategorizationStatsResult
     public int ProcessedByLLM { get; set; }
 
     /// <summary>
+    /// Auto-categorized this month by the BankCategory handler (mapped from
+    /// the upstream bank provider's category, e.g. Akahu).
+    /// </summary>
+    public int ProcessedByBankCategory { get; set; }
+
+    /// <summary>
     /// Percentage processed by Rules (0-100).
     /// </summary>
     public int RulesPercentage { get; set; }
@@ -49,6 +55,11 @@ public class CategorizationStatsResult
     /// Percentage processed by LLM (0-100).
     /// </summary>
     public int LLMPercentage { get; set; }
+
+    /// <summary>
+    /// Percentage processed by BankCategory (0-100).
+    /// </summary>
+    public int BankCategoryPercentage { get; set; }
 
     /// <summary>
     /// Total transactions currently uncategorized / awaiting review.
@@ -100,13 +111,17 @@ public class GetCategorizationStatsQueryHandler
                       + countsByMethod.GetValueOrDefault("Rules", 0);
         var byMl = countsByMethod.GetValueOrDefault("ML", 0);
         var byLlm = countsByMethod.GetValueOrDefault("LLM", 0);
-        var total = byRules + byMl + byLlm;
+        // BankCategoryHandler tags its applied transactions with HandlerType
+        // "BankCategory". Without this branch, bank-mapped auto-categorizations
+        // were silently dropped from the monthly totals + percentages.
+        var byBankCategory = countsByMethod.GetValueOrDefault("BankCategory", 0);
+        var total = byRules + byMl + byLlm + byBankCategory;
 
         var needsReview = await _transactionRepository.CountUncategorizedTransactionsAsync(
             request.UserId, cancellationToken);
 
-        var pendingSuggestions = (await _ruleSuggestionRepository.GetPendingSuggestionsAsync(
-            request.UserId, cancellationToken)).Count();
+        var pendingSuggestions = await _ruleSuggestionRepository.CountPendingSuggestionsAsync(
+            request.UserId, cancellationToken);
 
         return new CategorizationStatsResult
         {
@@ -114,9 +129,11 @@ public class GetCategorizationStatsQueryHandler
             ProcessedByRules = byRules,
             ProcessedByML = byMl,
             ProcessedByLLM = byLlm,
+            ProcessedByBankCategory = byBankCategory,
             RulesPercentage = total > 0 ? (int)Math.Round(byRules * 100.0 / total) : 0,
             MLPercentage = total > 0 ? (int)Math.Round(byMl * 100.0 / total) : 0,
             LLMPercentage = total > 0 ? (int)Math.Round(byLlm * 100.0 / total) : 0,
+            BankCategoryPercentage = total > 0 ? (int)Math.Round(byBankCategory * 100.0 / total) : 0,
             NeedsReview = needsReview,
             PendingSuggestions = pendingSuggestions,
             PeriodStart = periodStart,
