@@ -22,6 +22,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { AppIcon } from '@/components/app-icon';
 import { NotificationBell } from '@/components/notifications/notification-bell';
+import { apiClient } from '@/lib/api-client';
 
 export default function Navigation() {
   const { user, logout, isAuthenticated } = useAuth();
@@ -29,6 +30,7 @@ export default function Navigation() {
   const pathname = usePathname();
   const t = useTranslations('nav');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [ruleSuggestionBadge, setRuleSuggestionBadge] = useState<number>(0);
 
   const handleLogout = () => {
     logout();
@@ -39,6 +41,42 @@ export default function Navigation() {
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [pathname]);
+
+  // Pending rule suggestion count — drives the badge on the sidebar "Rules"
+  // link. One effect, one fetch function: both the mount-time fetch and the
+  // event-driven refetch funnel through the local `fetchBadge` helper so the
+  // two code paths can't drift apart. Best-effort throughout — a broken
+  // endpoint must not break navigation rendering.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    let cancelled = false;
+
+    const fetchBadge = async () => {
+      try {
+        const summary = await apiClient.getRuleSuggestionsSummary();
+        if (!cancelled) {
+          setRuleSuggestionBadge(summary?.totalSuggestions ?? 0);
+        }
+      } catch {
+        // ignore — nav should still render without a badge
+      }
+    };
+
+    fetchBadge();
+
+    // Refetch when another component (e.g. the rule-suggestions page after a
+    // bulk-accept / accept / dismiss) signals that the pending count changed.
+    // Without this the sidebar badge would stay stale until the next full
+    // reload, which is the headline action for this PR.
+    const handler = () => {
+      fetchBadge();
+    };
+    window.addEventListener('mymascada:rule-suggestions-changed', handler);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('mymascada:rule-suggestions-changed', handler);
+    };
+  }, [isAuthenticated]);
 
   if (!isAuthenticated) {
     return null;
@@ -132,6 +170,7 @@ export default function Navigation() {
           {manageItems.map((item) => {
             const active = isActiveLink(item.href);
             const IconComponent = item.icon;
+            const showBadge = item.href === '/rules' && ruleSuggestionBadge > 0;
             return (
               <Link
                 key={item.href}
@@ -144,7 +183,15 @@ export default function Navigation() {
               >
                 <IconComponent className="w-[18px] h-[18px] shrink-0" />
                 <span className="flex-1">{t(item.labelKey)}</span>
-                {active && <ChevronRightIcon className="w-3.5 h-3.5 opacity-40" />}
+                {showBadge && (
+                  <span
+                    className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-primary-500 text-[10px] font-bold text-white"
+                    data-testid="rule-suggestions-badge"
+                  >
+                    {ruleSuggestionBadge > 99 ? '99+' : ruleSuggestionBadge}
+                  </span>
+                )}
+                {active && !showBadge && <ChevronRightIcon className="w-3.5 h-3.5 opacity-40" />}
               </Link>
             );
           })}

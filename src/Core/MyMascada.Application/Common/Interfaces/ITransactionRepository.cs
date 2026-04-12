@@ -44,6 +44,13 @@ public interface ITransactionRepository
     Task<IEnumerable<Transaction>> GetUncategorizedTransactionsAsync(Guid userId, int maxCount = 500, CancellationToken cancellationToken = default);
     Task<int> CountUncategorizedTransactionsAsync(Guid userId, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Returns auto-categorization counts grouped by method ("Rule", "ML", "LLM", "Manual")
+    /// for transactions whose CategorizedAt falls inside [start, end).
+    /// </summary>
+    Task<Dictionary<string, int>> GetAutoCategorizationCountsByMethodAsync(
+        Guid userId, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default);
+
     Task SaveChangesAsync();
     
     // Data integrity methods

@@ -32,6 +32,8 @@ public class AuthController : ControllerBase
     private readonly IConfiguration _configuration;
     private readonly IUserFinancialProfileRepository _financialProfileRepository;
     private readonly IAccountRepository _accountRepository;
+    private readonly ISubscriptionService _subscriptionService;
+    private readonly ILogger<AuthController> _logger;
 
     public AuthController(
         IMediator mediator,
@@ -43,7 +45,9 @@ public class AuthController : ControllerBase
         IUserAiSettingsRepository aiSettingsRepository,
         IConfiguration configuration,
         IUserFinancialProfileRepository financialProfileRepository,
-        IAccountRepository accountRepository)
+        IAccountRepository accountRepository,
+        ISubscriptionService subscriptionService,
+        ILogger<AuthController> logger)
     {
         _mediator = mediator;
         _authService = authService;
@@ -55,6 +59,8 @@ public class AuthController : ControllerBase
         _configuration = configuration;
         _financialProfileRepository = financialProfileRepository;
         _accountRepository = accountRepository;
+        _subscriptionService = subscriptionService;
+        _logger = logger;
     }
 
     [HttpPost("register")]
@@ -84,6 +90,11 @@ public class AuthController : ControllerBase
 
         if (result.IsSuccess)
         {
+            // Enrich with subscription tier + self-hosted flag so the frontend
+            // doesn't flash the Free-tier upsell after register until /auth/me
+            // resolves.
+            await EnrichSubscriptionFieldsAsync(result.User, HttpContext.RequestAborted);
+
             // If email verification is required, don't set any cookies
             if (result.RequiresEmailVerification)
             {
@@ -121,6 +132,48 @@ public class AuthController : ControllerBase
         return BadRequest(result);
     }
 
+    /// <summary>
+    /// Populates SubscriptionTier + IsSelfHosted on a UserDto. Every endpoint
+    /// that returns a UserDto as part of an auth flow (login, register,
+    /// refresh, google) must call this; without it those responses leave
+    /// SubscriptionTier null and the frontend treats that as "unknown → hide
+    /// upsell" until the next /auth/me.
+    /// </summary>
+    /// <remarks>
+    /// Failures from the subscription service (Stripe outage, DB blip, etc.)
+    /// are logged and swallowed — the DTO is left with `SubscriptionTier = null`
+    /// so auth flows keep working. Since the frontend treats a null tier as
+    /// "unknown → hide upsell", this degrades gracefully: paid users won't
+    /// see upsell banners flashed at them, and when the next request resolves
+    /// successfully the tier is refreshed. A hard failure here would otherwise
+    /// break every auth endpoint (login, register, refresh, /me, etc.) for
+    /// the duration of the outage — a much bigger blast radius than the
+    /// upsell-flash bug this helper was introduced to fix.
+    /// </remarks>
+    private async Task EnrichSubscriptionFieldsAsync(UserDto? user, CancellationToken cancellationToken = default)
+    {
+        if (user == null || user.Id == Guid.Empty)
+        {
+            return;
+        }
+
+        try
+        {
+            user.SubscriptionTier = (await _subscriptionService.GetUserTierAsync(user.Id, cancellationToken)).ToString();
+            user.IsSelfHosted = await _subscriptionService.IsSelfHostedAsync(cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex,
+                "Failed to resolve subscription tier for user {UserId}; leaving SubscriptionTier null so the frontend hides upsell banners until the next auth refresh",
+                user.Id);
+        }
+    }
+
     [HttpPost("login")]
     [EnableRateLimiting(RateLimitingServiceExtensions.Policies.Authentication)]
     public async Task<ActionResult<AuthenticationResponse>> Login([FromBody] LoginRequest request)
@@ -133,6 +186,12 @@ public class AuthController : ControllerBase
         };
 
         var result = await _mediator.Send(query);
+
+        // Enrich with SubscriptionTier + IsSelfHosted — LoginQueryHandler
+        // doesn't know about the subscription service, and without this the
+        // login response defaults to "Free" and flashes the upsell for
+        // Pro/Family users until /auth/me overwrites the cached user.
+        await EnrichSubscriptionFieldsAsync(result.User, HttpContext.RequestAborted);
 
         // If email verification is required, return 200 OK with verification flag
         if (result.RequiresEmailVerification)
@@ -250,6 +309,13 @@ public class AuthController : ControllerBase
             IsOnboardingComplete = isOnboardingComplete
         };
 
+        // Subscription tier — drives premium upsells in the frontend. Routed
+        // through the shared helper so a subscription-service outage (Stripe
+        // blip, DB hiccup) doesn't 500 /auth/me and break user bootstrap.
+        // SubscriptionTier is left null on failure; the frontend treats that
+        // as "unknown → hide upsell" until the next refresh.
+        await EnrichSubscriptionFieldsAsync(userDto, HttpContext.RequestAborted);
+
         return Ok(userDto);
     }
 
@@ -292,6 +358,7 @@ public class AuthController : ControllerBase
             Locale = user.Locale ?? "en",
             AiDescriptionCleaning = user.AiDescriptionCleaning
         };
+        await EnrichSubscriptionFieldsAsync(userDto, HttpContext.RequestAborted);
 
         return Ok(userDto);
     }
@@ -328,6 +395,7 @@ public class AuthController : ControllerBase
             Locale = user.Locale ?? "en",
             AiDescriptionCleaning = user.AiDescriptionCleaning
         };
+        await EnrichSubscriptionFieldsAsync(userDto, HttpContext.RequestAborted);
 
         return Ok(userDto);
     }
@@ -363,7 +431,9 @@ public class AuthController : ControllerBase
             }
 
             // Enrich User with fields the TokenService doesn't populate
-            // (IsOnboardingComplete, HasAiConfigured, Locale) to match /me response
+            // (IsOnboardingComplete, HasAiConfigured, Locale, SubscriptionTier)
+            // to match /me response — without SubscriptionTier/IsSelfHosted,
+            // paid users flash the Free-tier upsell banners on every refresh.
             if (result.User != null)
             {
                 var userId = result.User.Id;
@@ -375,6 +445,8 @@ public class AuthController : ControllerBase
                 var financialProfile = await _financialProfileRepository.GetByUserIdAsync(userId);
                 var hasAccounts = (await _accountRepository.GetByUserIdAsync(userId)).Any();
                 result.User.IsOnboardingComplete = (financialProfile != null && financialProfile.OnboardingCompleted) || hasAccounts;
+
+                await EnrichSubscriptionFieldsAsync(result.User, HttpContext.RequestAborted);
             }
 
             // Return response without refresh token (it's in cookie)
@@ -778,6 +850,12 @@ public class AuthController : ControllerBase
                 {
                     SetRefreshTokenCookie(authResult.RefreshToken, authResult.RefreshTokenExpiresAt ?? DateTime.UtcNow.AddDays(30));
                 }
+
+                // Enrich with SubscriptionTier — the Google auth path builds
+                // UserDto in AuthenticationService which doesn't know about
+                // the subscription service, so the response would otherwise
+                // default to "Free" for paid users.
+                await EnrichSubscriptionFieldsAsync(authResult.User, HttpContext.RequestAborted);
 
                 // Return response without refresh token (it's in cookie)
                 var response = new AuthenticationResponse

@@ -688,6 +688,12 @@ public class TransactionRepository : ITransactionRepository
             .Where(t => accessibleIds.Contains(t.AccountId) &&
                        !t.CategoryId.HasValue &&
                        !t.IsDeleted &&
+                       // Match the filter applied by CountUncategorizedTransactionsAsync —
+                       // without this, the wizard surfaces rows on soft-deleted
+                       // accounts that the dashboard count excludes, producing an
+                       // off-by-one between the "needs review" badge and the
+                       // wizard contents.
+                       !t.Account.IsDeleted &&
                        !t.TransferId.HasValue &&
                        t.Type != TransactionType.TransferComponent)
             .OrderByDescending(t => t.CreatedAt)
@@ -698,12 +704,48 @@ public class TransactionRepository : ITransactionRepository
     public async Task<int> CountUncategorizedTransactionsAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
+        // Mirror the filter applied by GetUncategorizedTransactionsAsync +
+        // GetUncategorizedGroupsQueryHandler so the dashboard stats card and
+        // the quick-categorize wizard agree on which rows "need review".
+        //
+        // The wizard's grouper additionally drops rows where
+        // `DescriptionNormalizer.Normalize(description)` returns empty —
+        // caught here with a `!IsNullOrWhiteSpace(Description)` filter that
+        // handles the 99.9% case (null/whitespace descriptions). The tiny
+        // edge case where a non-whitespace description normalizes to empty
+        // post-stripping (e.g. "!!!") still drifts by a few rows, but that's
+        // extraordinarily rare for bank transactions and not worth the round
+        // trip to normalize server-side.
         return await _context.Transactions
             .CountAsync(t => accessibleIds.Contains(t.AccountId) &&
                              !t.CategoryId.HasValue &&
                              !t.IsDeleted &&
-                             !t.Account.IsDeleted,
+                             !t.Account.IsDeleted &&
+                             !t.TransferId.HasValue &&
+                             t.Type != TransactionType.TransferComponent &&
+                             !string.IsNullOrWhiteSpace(t.Description),
                         cancellationToken);
+    }
+
+    public async Task<Dictionary<string, int>> GetAutoCategorizationCountsByMethodAsync(
+        Guid userId, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default)
+    {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
+
+        var counts = await _context.Transactions
+            .AsNoTracking()
+            .Where(t => accessibleIds.Contains(t.AccountId) &&
+                        !t.IsDeleted &&
+                        t.IsAutoCategorized &&
+                        t.AutoCategorizationMethod != null &&
+                        t.AutoCategorizedAt.HasValue &&
+                        t.AutoCategorizedAt.Value >= startUtc &&
+                        t.AutoCategorizedAt.Value < endUtc)
+            .GroupBy(t => t.AutoCategorizationMethod!)
+            .Select(g => new { Method = g.Key, Count = g.Count() })
+            .ToListAsync(cancellationToken);
+
+        return counts.ToDictionary(c => c.Method, c => c.Count);
     }
 
     public async Task<HashSet<int>> GetCategorizedTransactionIdsAsync(IEnumerable<int> transactionIds)

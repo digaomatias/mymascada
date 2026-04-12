@@ -1552,8 +1552,55 @@ class ApiClient {
     });
   }
 
-  async getRuleSuggestionsSummary(): Promise<RuleSuggestionsSummary> {
+  async getRuleSuggestionsSummary(): Promise<RuleSuggestionsCountSummary> {
+    // Hits the lightweight `GET /RuleSuggestions/summary` endpoint which
+    // only issues a `SELECT COUNT(*)` — the main listing endpoint would
+    // materialize the full suggestion graph (category + sample transactions)
+    // for every nav render, which is wasteful when we only want the badge.
     const response = await this.request('/api/RuleSuggestions/summary');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return response as any;
+  }
+
+  // Quick-categorize wizard & dashboard stats (Phase 4 UX)
+  async getUncategorizedGroups(options?: {
+    maxGroups?: number;
+    minGroupSize?: number;
+  }): Promise<UncategorizedGroupsResponse> {
+    const params = new URLSearchParams();
+    if (options?.maxGroups !== undefined) params.set('maxGroups', options.maxGroups.toString());
+    if (options?.minGroupSize !== undefined) params.set('minGroupSize', options.minGroupSize.toString());
+    // `request()` rewrites `/api/…` → `/api/latest/…` automatically, so
+    // the endpoints passed in here must start with `/api/` (not
+    // `/api/latest/`) — otherwise the URL becomes `/api/latest/latest/…`
+    // and every call 404s.
+    const url = `/api/Categorization/uncategorized-groups${params.toString() ? '?' + params.toString() : ''}`;
+    const response = await this.request(url);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return response as any;
+  }
+
+  async bulkCategorizeGroup(request: {
+    transactionIds: number[];
+    categoryId: number;
+    /**
+     * Optional — set to `false` on every chunk but the first when splitting a
+     * logical group across multiple requests, so the server only increments
+     * CategorizationHistory.MatchCount once per user confirmation. Defaults to
+     * `true` when omitted.
+     */
+    recordHistory?: boolean;
+  }): Promise<BulkCategorizeGroupResponse> {
+    const response = await this.request('/api/Categorization/bulk-categorize-group', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return response as any;
+  }
+
+  async getCategorizationStats(): Promise<CategorizationStatsResponse> {
+    const response = await this.request('/api/Categorization/stats');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return response as any;
   }
@@ -2294,6 +2341,69 @@ export interface RuleSuggestionsSummary {
   lastGeneratedDate?: string;
   generationMethod: string;
   categoryDistribution: Record<string, number>;
+}
+
+/**
+ * Lightweight response for the sidebar badge — only the pending-suggestions
+ * count. Returned by `GET /RuleSuggestions/summary` so the nav doesn't load
+ * the full suggestion graph just to drive a numeric badge.
+ */
+export interface RuleSuggestionsCountSummary {
+  totalSuggestions: number;
+}
+
+// Quick-categorize wizard & dashboard stats (Phase 4 UX)
+export interface UncategorizedGroupSample {
+  id: number;
+  description: string;
+  amount: number;
+  transactionDate: string;
+  accountName: string;
+}
+
+export interface UncategorizedGroupDto {
+  normalizedDescription: string;
+  sampleDescription: string;
+  transactionCount: number;
+  totalAmount: number;
+  transactionIds: number[];
+  samples: UncategorizedGroupSample[];
+}
+
+export interface UncategorizedGroupsResponse {
+  groups: UncategorizedGroupDto[];
+  totalUncategorized: number;
+  groupedTransactions: number;
+}
+
+export interface BulkCategorizeGroupResponse {
+  success: boolean;
+  transactionsUpdated: number;
+  /**
+   * IDs of transactions whose category actually changed. The quick-categorize
+   * wizard narrows the current group's id set on partial success so a
+   * follow-up retry (with a different category) can't silently re-categorize
+   * rows that were already committed in the previous attempt.
+   */
+  updatedTransactionIds: number[];
+  message: string;
+  errors: string[];
+}
+
+export interface CategorizationStatsResponse {
+  autoCategorizedThisMonth: number;
+  processedByRules: number;
+  processedByML: number;
+  processedByLLM: number;
+  processedByBankCategory: number;
+  rulesPercentage: number;
+  mlPercentage: number;
+  llmPercentage: number;
+  bankCategoryPercentage: number;
+  needsReview: number;
+  pendingSuggestions: number;
+  periodStart: string;
+  periodEnd: string;
 }
 
 // Bank Category Mapping Types

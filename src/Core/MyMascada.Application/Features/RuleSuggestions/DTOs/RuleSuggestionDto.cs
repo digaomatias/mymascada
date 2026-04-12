@@ -80,3 +80,17 @@ public class GenerateRuleSuggestionsRequest
     public double? MinConfidenceThreshold { get; set; } = 0.7;
     public bool ForceRegenerate { get; set; } = false;
 }
+
+/// <summary>
+/// Lightweight response for the sidebar badge — only the pending-suggestions
+/// count, no suggestion graph or sample transactions. Returned by
+/// `GET /RuleSuggestions/summary` so the nav doesn't materialize the full
+/// suggestion graph just to drive a numeric badge. Named distinctly from
+/// `RuleSuggestionsSummaryDto` (which includes confidence averages + category
+/// distribution) so the full-summary shape used by the main listing endpoint
+/// stays intact.
+/// </summary>
+public class RuleSuggestionsCountSummary
+{
+    public int TotalSuggestions { get; set; }
+}

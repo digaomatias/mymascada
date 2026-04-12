@@ -13,6 +13,12 @@ public interface IRuleSuggestionRepository
     Task<IEnumerable<RuleSuggestion>> GetPendingSuggestionsAsync(Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Counts pending rule suggestions for a user without materializing the related graphs.
+    /// Used by the dashboard stats query, which only needs the total count.
+    /// </summary>
+    Task<int> CountPendingSuggestionsAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets all rule suggestions for a user (including processed ones)
     /// </summary>
     Task<IEnumerable<RuleSuggestion>> GetAllSuggestionsAsync(Guid userId, bool includeProcessed = false, CancellationToken cancellationToken = default);
