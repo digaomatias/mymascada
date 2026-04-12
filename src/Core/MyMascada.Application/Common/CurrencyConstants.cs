@@ -1,13 +1,17 @@
+using System.Text.RegularExpressions;
+
 namespace MyMascada.Application.Common;
 
 /// <summary>
-/// Currencies accepted across the application. Must stay in sync with frontend/src/lib/countries.ts.
+/// Currency validation — accepts any syntactically valid 3-letter ISO 4217 code.
 /// </summary>
 public static class CurrencyConstants
 {
-    public static readonly HashSet<string> Supported = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "USD", "EUR", "GBP", "BRL", "NZD", "AUD", "CAD", "JPY",
-        "ARS", "CLP", "COP", "MXN"
-    };
+    private static readonly Regex Iso4217Pattern = new(@"^[A-Z]{3}$", RegexOptions.Compiled);
+
+    /// <summary>
+    /// Returns true when the value is exactly three uppercase ASCII letters.
+    /// </summary>
+    public static bool IsValid(string? code) =>
+        code is not null && Iso4217Pattern.IsMatch(code);
 }

@@ -90,8 +90,8 @@ public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
         RuleFor(x => x.Currency)
             .NotEmpty()
             .WithMessage("Currency is required")
-            .Must(c => CurrencyConstants.Supported.Contains(c))
-            .WithMessage($"Currency must be one of: {string.Join(", ", CurrencyConstants.Supported.Order())}");
+            .Must(c => CurrencyConstants.IsValid(c.Trim().ToUpperInvariant()))
+            .WithMessage("Currency must be a valid 3-letter ISO 4217 code (e.g., USD, EUR, BRL)");
 
         RuleFor(x => x.TimeZone)
             .NotEmpty()

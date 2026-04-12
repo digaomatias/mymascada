@@ -294,7 +294,7 @@ public class AuthController : ControllerBase
         }
 
         // Nothing to update — return current state without a DB write
-        if (request.Locale == null && request.Currency == null && request.TimeZone == null)
+        if (string.IsNullOrWhiteSpace(request.Locale) && string.IsNullOrWhiteSpace(request.Currency) && string.IsNullOrWhiteSpace(request.TimeZone))
         {
             return Ok(await BuildUserDtoAsync(user));
         }
@@ -310,13 +310,13 @@ public class AuthController : ControllerBase
             user.Locale = request.Locale;
         }
 
-        // Validate and update currency (ISO 4217 subset — must match countries.ts on the frontend)
+        // Validate and update currency (any valid 3-letter ISO 4217 code)
         if (!string.IsNullOrWhiteSpace(request.Currency))
         {
             var normalizedCurrency = request.Currency.Trim().ToUpperInvariant();
-            if (!CurrencyConstants.Supported.Contains(normalizedCurrency))
+            if (!CurrencyConstants.IsValid(normalizedCurrency))
             {
-                return BadRequest(new { Error = $"Unsupported currency. Supported: {string.Join(", ", CurrencyConstants.Supported.Order())}" });
+                return BadRequest(new { Error = "Currency must be a valid 3-letter ISO 4217 code (e.g., USD, EUR, BRL)" });
             }
             user.Currency = normalizedCurrency;
         }
