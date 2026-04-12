@@ -22,6 +22,12 @@ namespace MyMascada.WebAPI.Controllers;
 [Route("api/latest/[controller]")]
 public class AuthController : ControllerBase
 {
+    private static readonly HashSet<string> SupportedCurrencies = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "USD", "EUR", "GBP", "BRL", "NZD", "AUD", "CAD", "JPY",
+        "ARS", "CLP", "COP", "MXN"
+    };
+
     private readonly IMediator _mediator;
     private readonly IAuthenticationService _authService;
     private readonly IDataProtector _dataProtector;
@@ -273,7 +279,7 @@ public class AuthController : ControllerBase
             return NotFound();
         }
 
-        return Ok(await BuildUserDtoAsync(user, userId));
+        return Ok(await BuildUserDtoAsync(user));
     }
 
     [HttpPatch("locale")]
@@ -303,14 +309,13 @@ public class AuthController : ControllerBase
             user.Locale = request.Locale;
         }
 
-        // Validate and update currency (ISO 4217 subset)
+        // Validate and update currency (ISO 4217 subset — must match countries.ts on the frontend)
         if (!string.IsNullOrWhiteSpace(request.Currency))
         {
             var normalizedCurrency = request.Currency.Trim().ToUpperInvariant();
-            var supportedCurrencies = new[] { "USD", "EUR", "GBP", "BRL", "NZD", "AUD", "CAD", "JPY" };
-            if (!supportedCurrencies.Contains(normalizedCurrency))
+            if (!SupportedCurrencies.Contains(normalizedCurrency))
             {
-                return BadRequest(new { Error = $"Unsupported currency. Supported: {string.Join(", ", supportedCurrencies)}" });
+                return BadRequest(new { Error = $"Unsupported currency. Supported: {string.Join(", ", SupportedCurrencies.Order())}" });
             }
             user.Currency = normalizedCurrency;
         }
@@ -328,7 +333,7 @@ public class AuthController : ControllerBase
         }
         await _userRepository.UpdateAsync(user);
 
-        return Ok(await BuildUserDtoAsync(user, userId));
+        return Ok(await BuildUserDtoAsync(user));
     }
 
     [HttpPatch("ai-description-cleaning")]
@@ -350,7 +355,7 @@ public class AuthController : ControllerBase
         user.AiDescriptionCleaning = request.Enabled;
         await _userRepository.UpdateAsync(user);
 
-        return Ok(await BuildUserDtoAsync(user, userId));
+        return Ok(await BuildUserDtoAsync(user));
     }
 
     [HttpPost("refresh")]
@@ -847,9 +852,9 @@ public class AuthController : ControllerBase
         });
     }
 
-    private async Task<UserDto> BuildUserDtoAsync(Domain.Entities.User user, Guid userId)
+    private async Task<UserDto> BuildUserDtoAsync(Domain.Entities.User user)
     {
-        var (isOnboardingComplete, hasAiConfigured) = await _userStatusService.GetStatusAsync(userId);
+        var (isOnboardingComplete, hasAiConfigured) = await _userStatusService.GetStatusAsync(user.Id);
 
         var userDto = new UserDto
         {
