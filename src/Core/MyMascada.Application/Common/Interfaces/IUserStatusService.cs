@@ -6,5 +6,5 @@ namespace MyMascada.Application.Common.Interfaces;
 /// </summary>
 public interface IUserStatusService
 {
-    Task<(bool IsOnboardingComplete, bool HasAiConfigured)> GetStatusAsync(Guid userId);
+    Task<(bool IsOnboardingComplete, bool HasAiConfigured)> GetStatusAsync(Guid userId, CancellationToken ct = default);
 }

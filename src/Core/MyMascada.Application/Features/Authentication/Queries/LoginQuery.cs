@@ -151,7 +151,7 @@ public class LoginQueryHandler : IRequestHandler<LoginQuery, AuthenticationRespo
         response.RefreshToken = refreshTokenResult.RawToken;
         response.RefreshTokenExpiresAt = refreshTokenResult.ExpiresAt;
 
-        var (isOnboardingComplete, hasAiConfigured) = await _userStatusService.GetStatusAsync(user.Id);
+        var (isOnboardingComplete, hasAiConfigured) = await _userStatusService.GetStatusAsync(user.Id, cancellationToken);
 
         response.User = new UserDto
         {

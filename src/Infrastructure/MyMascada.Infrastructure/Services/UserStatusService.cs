@@ -21,10 +21,10 @@ public class UserStatusService : IUserStatusService
         _featureFlags = featureFlags;
     }
 
-    public async Task<(bool IsOnboardingComplete, bool HasAiConfigured)> GetStatusAsync(Guid userId)
+    public async Task<(bool IsOnboardingComplete, bool HasAiConfigured)> GetStatusAsync(Guid userId, CancellationToken ct = default)
     {
         // Sequential — all repositories share a scoped DbContext which is not thread-safe
-        var financialProfile = await _financialProfileRepository.GetByUserIdAsync(userId);
+        var financialProfile = await _financialProfileRepository.GetByUserIdAsync(userId, ct);
         var accounts = await _accountRepository.GetByUserIdAsync(userId);
         var aiSettings = await _aiSettingsRepository.GetByUserIdAsync(userId);
 

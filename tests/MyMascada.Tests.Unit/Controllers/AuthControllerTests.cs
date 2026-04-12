@@ -40,7 +40,7 @@ public class AuthControllerTests
         _environment = Substitute.For<IWebHostEnvironment>();
         _environment.EnvironmentName.Returns("Development");
         _userStatusService = Substitute.For<IUserStatusService>();
-        _userStatusService.GetStatusAsync(Arg.Any<Guid>()).Returns((false, false));
+        _userStatusService.GetStatusAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((false, false));
         _subscriptionService = Substitute.For<ISubscriptionService>();
         var logger = Substitute.For<ILogger<AuthController>>();
         _controller = new AuthController(_mediator, _authService, _dataProtectionProvider, _userRepository, _appOptions, _environment, _userStatusService, _subscriptionService, logger);

@@ -9,6 +9,7 @@ using System.Text.Json;
 using MyMascada.Application.Features.Authentication.Commands;
 using MyMascada.Application.Features.Authentication.DTOs;
 using MyMascada.Application.Features.Authentication.Queries;
+using MyMascada.Application.Common;
 using MyMascada.Application.Common.Interfaces;
 using Microsoft.AspNetCore.RateLimiting;
 using MyMascada.WebAPI.Constants;
@@ -22,12 +23,6 @@ namespace MyMascada.WebAPI.Controllers;
 [Route("api/latest/[controller]")]
 public class AuthController : ControllerBase
 {
-    private static readonly HashSet<string> SupportedCurrencies = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "USD", "EUR", "GBP", "BRL", "NZD", "AUD", "CAD", "JPY",
-        "ARS", "CLP", "COP", "MXN"
-    };
-
     private readonly IMediator _mediator;
     private readonly IAuthenticationService _authService;
     private readonly IDataProtector _dataProtector;
@@ -298,6 +293,12 @@ public class AuthController : ControllerBase
             return NotFound();
         }
 
+        // Nothing to update — return current state without a DB write
+        if (request.Locale == null && request.Currency == null && request.TimeZone == null)
+        {
+            return Ok(await BuildUserDtoAsync(user));
+        }
+
         // Validate and update locale (only if provided)
         if (!string.IsNullOrWhiteSpace(request.Locale))
         {
@@ -313,9 +314,9 @@ public class AuthController : ControllerBase
         if (!string.IsNullOrWhiteSpace(request.Currency))
         {
             var normalizedCurrency = request.Currency.Trim().ToUpperInvariant();
-            if (!SupportedCurrencies.Contains(normalizedCurrency))
+            if (!CurrencyConstants.Supported.Contains(normalizedCurrency))
             {
-                return BadRequest(new { Error = $"Unsupported currency. Supported: {string.Join(", ", SupportedCurrencies.Order())}" });
+                return BadRequest(new { Error = $"Unsupported currency. Supported: {string.Join(", ", CurrencyConstants.Supported.Order())}" });
             }
             user.Currency = normalizedCurrency;
         }
@@ -391,7 +392,7 @@ public class AuthController : ControllerBase
             // Enrich User with fields the TokenService doesn't populate
             if (result.User != null)
             {
-                var (isOnboardingComplete, hasAiConfigured) = await _userStatusService.GetStatusAsync(result.User.Id);
+                var (isOnboardingComplete, hasAiConfigured) = await _userStatusService.GetStatusAsync(result.User.Id, HttpContext.RequestAborted);
                 result.User.IsOnboardingComplete = isOnboardingComplete;
                 result.User.HasAiConfigured = hasAiConfigured;
 
@@ -854,7 +855,7 @@ public class AuthController : ControllerBase
 
     private async Task<UserDto> BuildUserDtoAsync(Domain.Entities.User user)
     {
-        var (isOnboardingComplete, hasAiConfigured) = await _userStatusService.GetStatusAsync(user.Id);
+        var (isOnboardingComplete, hasAiConfigured) = await _userStatusService.GetStatusAsync(user.Id, HttpContext.RequestAborted);
 
         var userDto = new UserDto
         {

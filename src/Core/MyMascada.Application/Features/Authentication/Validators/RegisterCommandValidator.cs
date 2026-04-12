@@ -1,4 +1,5 @@
 using FluentValidation;
+using MyMascada.Application.Common;
 using MyMascada.Application.Features.Authentication.Commands;
 using System.Text.RegularExpressions;
 
@@ -89,10 +90,8 @@ public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
         RuleFor(x => x.Currency)
             .NotEmpty()
             .WithMessage("Currency is required")
-            .Length(3)
-            .WithMessage("Currency must be a 3-letter ISO code (e.g., USD, EUR, GBP)")
-            .Matches(@"^[A-Z]{3}$")
-            .WithMessage("Currency must be uppercase letters only");
+            .Must(c => CurrencyConstants.Supported.Contains(c))
+            .WithMessage($"Currency must be one of: {string.Join(", ", CurrencyConstants.Supported.Order())}");
 
         RuleFor(x => x.TimeZone)
             .NotEmpty()
