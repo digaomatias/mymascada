@@ -22,10 +22,7 @@ public class LoginQueryHandler : IRequestHandler<LoginQuery, AuthenticationRespo
     private readonly IUserRepository _userRepository;
     private readonly IAuthenticationService _authenticationService;
     private readonly ITokenService _tokenService;
-    private readonly IUserFinancialProfileRepository _financialProfileRepository;
-    private readonly IUserAiSettingsRepository _aiSettingsRepository;
-    private readonly IAccountRepository _accountRepository;
-    private readonly IFeatureFlags _featureFlags;
+    private readonly IUserStatusService _userStatusService;
     private readonly LockoutOptions _lockoutOptions;
     private readonly ILogger<LoginQueryHandler> _logger;
 
@@ -33,20 +30,14 @@ public class LoginQueryHandler : IRequestHandler<LoginQuery, AuthenticationRespo
         IUserRepository userRepository,
         IAuthenticationService authenticationService,
         ITokenService tokenService,
-        IUserFinancialProfileRepository financialProfileRepository,
-        IUserAiSettingsRepository aiSettingsRepository,
-        IAccountRepository accountRepository,
-        IFeatureFlags featureFlags,
+        IUserStatusService userStatusService,
         IOptions<LockoutOptions> lockoutOptions,
         ILogger<LoginQueryHandler> logger)
     {
         _userRepository = userRepository;
         _authenticationService = authenticationService;
         _tokenService = tokenService;
-        _financialProfileRepository = financialProfileRepository;
-        _aiSettingsRepository = aiSettingsRepository;
-        _accountRepository = accountRepository;
-        _featureFlags = featureFlags;
+        _userStatusService = userStatusService;
         _lockoutOptions = lockoutOptions.Value;
         _logger = logger;
     }
@@ -159,15 +150,8 @@ public class LoginQueryHandler : IRequestHandler<LoginQuery, AuthenticationRespo
         response.ExpiresAt = expiresAt;
         response.RefreshToken = refreshTokenResult.RawToken;
         response.RefreshTokenExpiresAt = refreshTokenResult.ExpiresAt;
-        // Check if user has AI configured (own key or global key)
-        var aiSettings = await _aiSettingsRepository.GetByUserIdAsync(user.Id);
-        var hasAiConfigured = (aiSettings != null && !string.IsNullOrEmpty(aiSettings.EncryptedApiKey))
-            || _featureFlags.HasGlobalAiKey;
 
-        // Check onboarding status — also skip for users who already have accounts
-        var financialProfile = await _financialProfileRepository.GetByUserIdAsync(user.Id);
-        var hasAccounts = (await _accountRepository.GetByUserIdAsync(user.Id)).Any();
-        var isOnboardingComplete = (financialProfile != null && financialProfile.OnboardingCompleted) || hasAccounts;
+        var (isOnboardingComplete, hasAiConfigured) = await _userStatusService.GetStatusAsync(user.Id);
 
         response.User = new UserDto
         {

@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MyMascada.Application.Common.Configuration;
@@ -27,10 +26,7 @@ public class AuthControllerTests
     private readonly IUserRepository _userRepository;
     private readonly IOptions<AppOptions> _appOptions;
     private readonly IWebHostEnvironment _environment;
-    private readonly IUserAiSettingsRepository _aiSettingsRepository;
-    private readonly IConfiguration _configuration;
-    private readonly IUserFinancialProfileRepository _financialProfileRepository;
-    private readonly IAccountRepository _accountRepository;
+    private readonly IUserStatusService _userStatusService;
     private readonly ISubscriptionService _subscriptionService;
     private readonly AuthController _controller;
 
@@ -43,13 +39,11 @@ public class AuthControllerTests
         _appOptions = Options.Create(new AppOptions { FrontendUrl = "http://localhost:3000" });
         _environment = Substitute.For<IWebHostEnvironment>();
         _environment.EnvironmentName.Returns("Development");
-        _aiSettingsRepository = Substitute.For<IUserAiSettingsRepository>();
-        _configuration = Substitute.For<IConfiguration>();
-        _financialProfileRepository = Substitute.For<IUserFinancialProfileRepository>();
-        _accountRepository = Substitute.For<IAccountRepository>();
+        _userStatusService = Substitute.For<IUserStatusService>();
+        _userStatusService.GetStatusAsync(Arg.Any<Guid>()).Returns((false, false));
         _subscriptionService = Substitute.For<ISubscriptionService>();
         var logger = Substitute.For<ILogger<AuthController>>();
-        _controller = new AuthController(_mediator, _authService, _dataProtectionProvider, _userRepository, _appOptions, _environment, _aiSettingsRepository, _configuration, _financialProfileRepository, _accountRepository, _subscriptionService, logger);
+        _controller = new AuthController(_mediator, _authService, _dataProtectionProvider, _userRepository, _appOptions, _environment, _userStatusService, _subscriptionService, logger);
 
         // Provide a default HttpContext so methods that access Request.Headers don't throw
         _controller.ControllerContext = new ControllerContext

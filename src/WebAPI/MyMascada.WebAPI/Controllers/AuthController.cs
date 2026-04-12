@@ -28,10 +28,7 @@ public class AuthController : ControllerBase
     private readonly IUserRepository _userRepository;
     private readonly MyMascada.Application.Common.Configuration.AppOptions _appOptions;
     private readonly IWebHostEnvironment _environment;
-    private readonly IUserAiSettingsRepository _aiSettingsRepository;
-    private readonly IConfiguration _configuration;
-    private readonly IUserFinancialProfileRepository _financialProfileRepository;
-    private readonly IAccountRepository _accountRepository;
+    private readonly IUserStatusService _userStatusService;
     private readonly ISubscriptionService _subscriptionService;
     private readonly ILogger<AuthController> _logger;
 
@@ -42,10 +39,7 @@ public class AuthController : ControllerBase
         IUserRepository userRepository,
         Microsoft.Extensions.Options.IOptions<MyMascada.Application.Common.Configuration.AppOptions> appOptions,
         IWebHostEnvironment environment,
-        IUserAiSettingsRepository aiSettingsRepository,
-        IConfiguration configuration,
-        IUserFinancialProfileRepository financialProfileRepository,
-        IAccountRepository accountRepository,
+        IUserStatusService userStatusService,
         ISubscriptionService subscriptionService,
         ILogger<AuthController> logger)
     {
@@ -55,10 +49,7 @@ public class AuthController : ControllerBase
         _userRepository = userRepository;
         _appOptions = appOptions.Value;
         _environment = environment;
-        _aiSettingsRepository = aiSettingsRepository;
-        _configuration = configuration;
-        _financialProfileRepository = financialProfileRepository;
-        _accountRepository = accountRepository;
+        _userStatusService = userStatusService;
         _subscriptionService = subscriptionService;
         _logger = logger;
     }
@@ -282,41 +273,7 @@ public class AuthController : ControllerBase
             return NotFound();
         }
 
-        // Check if user has AI configured (own key or global key)
-        var aiSettings = await _aiSettingsRepository.GetByUserIdAsync(userId);
-        var globalApiKey = _configuration["LLM:OpenAI:ApiKey"];
-        var hasAiConfigured = (aiSettings != null && !string.IsNullOrEmpty(aiSettings.EncryptedApiKey))
-            || (!string.IsNullOrEmpty(globalApiKey) && globalApiKey != "YOUR_OPENAI_API_KEY");
-
-        // Check onboarding status — also skip for users who already have accounts
-        var financialProfile = await _financialProfileRepository.GetByUserIdAsync(userId);
-        var hasAccounts = (await _accountRepository.GetByUserIdAsync(userId)).Any();
-        var isOnboardingComplete = (financialProfile != null && financialProfile.OnboardingCompleted) || hasAccounts;
-
-        var userDto = new UserDto
-        {
-            Id = user.Id,
-            Email = user.Email ?? "",
-            UserName = user.UserName ?? "",
-            FirstName = user.FirstName ?? "",
-            LastName = user.LastName ?? "",
-            FullName = $"{user.FirstName} {user.LastName}".Trim(),
-            Currency = user.Currency ?? "NZD",
-            TimeZone = user.TimeZone ?? "UTC",
-            Locale = user.Locale ?? "en",
-            AiDescriptionCleaning = user.AiDescriptionCleaning,
-            HasAiConfigured = hasAiConfigured,
-            IsOnboardingComplete = isOnboardingComplete
-        };
-
-        // Subscription tier — drives premium upsells in the frontend. Routed
-        // through the shared helper so a subscription-service outage (Stripe
-        // blip, DB hiccup) doesn't 500 /auth/me and break user bootstrap.
-        // SubscriptionTier is left null on failure; the frontend treats that
-        // as "unknown → hide upsell" until the next refresh.
-        await EnrichSubscriptionFieldsAsync(userDto, HttpContext.RequestAborted);
-
-        return Ok(userDto);
+        return Ok(await BuildUserDtoAsync(user, userId));
     }
 
     [HttpPatch("locale")]
@@ -335,32 +292,43 @@ public class AuthController : ControllerBase
             return NotFound();
         }
 
-        // Validate the locale
-        var supportedLocales = new[] { "en", "pt-BR" };
-        if (!supportedLocales.Contains(request.Locale))
+        // Validate and update locale (only if provided)
+        if (!string.IsNullOrWhiteSpace(request.Locale))
         {
-            return BadRequest(new { Error = $"Unsupported locale. Supported locales: {string.Join(", ", supportedLocales)}" });
+            var supportedLocales = new[] { "en", "pt-BR" };
+            if (!supportedLocales.Contains(request.Locale))
+            {
+                return BadRequest(new { Error = $"Unsupported locale. Supported locales: {string.Join(", ", supportedLocales)}" });
+            }
+            user.Locale = request.Locale;
         }
 
-        user.Locale = request.Locale;
+        // Validate and update currency (ISO 4217 subset)
+        if (!string.IsNullOrWhiteSpace(request.Currency))
+        {
+            var normalizedCurrency = request.Currency.Trim().ToUpperInvariant();
+            var supportedCurrencies = new[] { "USD", "EUR", "GBP", "BRL", "NZD", "AUD", "CAD", "JPY" };
+            if (!supportedCurrencies.Contains(normalizedCurrency))
+            {
+                return BadRequest(new { Error = $"Unsupported currency. Supported: {string.Join(", ", supportedCurrencies)}" });
+            }
+            user.Currency = normalizedCurrency;
+        }
+
+        // Validate and update timezone (must be a recognized IANA/system timezone)
+        if (!string.IsNullOrWhiteSpace(request.TimeZone))
+        {
+            var normalizedTimeZone = request.TimeZone.Trim();
+            try { TimeZoneInfo.FindSystemTimeZoneById(normalizedTimeZone); }
+            catch (TimeZoneNotFoundException)
+            {
+                return BadRequest(new { Error = $"Unrecognized timezone: {normalizedTimeZone}" });
+            }
+            user.TimeZone = normalizedTimeZone;
+        }
         await _userRepository.UpdateAsync(user);
 
-        var userDto = new UserDto
-        {
-            Id = user.Id,
-            Email = user.Email ?? "",
-            UserName = user.UserName ?? "",
-            FirstName = user.FirstName ?? "",
-            LastName = user.LastName ?? "",
-            FullName = $"{user.FirstName} {user.LastName}".Trim(),
-            Currency = user.Currency ?? "NZD",
-            TimeZone = user.TimeZone ?? "UTC",
-            Locale = user.Locale ?? "en",
-            AiDescriptionCleaning = user.AiDescriptionCleaning
-        };
-        await EnrichSubscriptionFieldsAsync(userDto, HttpContext.RequestAborted);
-
-        return Ok(userDto);
+        return Ok(await BuildUserDtoAsync(user, userId));
     }
 
     [HttpPatch("ai-description-cleaning")]
@@ -382,22 +350,7 @@ public class AuthController : ControllerBase
         user.AiDescriptionCleaning = request.Enabled;
         await _userRepository.UpdateAsync(user);
 
-        var userDto = new UserDto
-        {
-            Id = user.Id,
-            Email = user.Email ?? "",
-            UserName = user.UserName ?? "",
-            FirstName = user.FirstName ?? "",
-            LastName = user.LastName ?? "",
-            FullName = $"{user.FirstName} {user.LastName}".Trim(),
-            Currency = user.Currency ?? "NZD",
-            TimeZone = user.TimeZone ?? "UTC",
-            Locale = user.Locale ?? "en",
-            AiDescriptionCleaning = user.AiDescriptionCleaning
-        };
-        await EnrichSubscriptionFieldsAsync(userDto, HttpContext.RequestAborted);
-
-        return Ok(userDto);
+        return Ok(await BuildUserDtoAsync(user, userId));
     }
 
     [HttpPost("refresh")]
@@ -431,20 +384,11 @@ public class AuthController : ControllerBase
             }
 
             // Enrich User with fields the TokenService doesn't populate
-            // (IsOnboardingComplete, HasAiConfigured, Locale, SubscriptionTier)
-            // to match /me response — without SubscriptionTier/IsSelfHosted,
-            // paid users flash the Free-tier upsell banners on every refresh.
             if (result.User != null)
             {
-                var userId = result.User.Id;
-                var aiSettings = await _aiSettingsRepository.GetByUserIdAsync(userId);
-                var globalApiKey = _configuration["LLM:OpenAI:ApiKey"];
-                result.User.HasAiConfigured = (aiSettings != null && !string.IsNullOrEmpty(aiSettings.EncryptedApiKey))
-                    || (!string.IsNullOrEmpty(globalApiKey) && globalApiKey != "YOUR_OPENAI_API_KEY");
-
-                var financialProfile = await _financialProfileRepository.GetByUserIdAsync(userId);
-                var hasAccounts = (await _accountRepository.GetByUserIdAsync(userId)).Any();
-                result.User.IsOnboardingComplete = (financialProfile != null && financialProfile.OnboardingCompleted) || hasAccounts;
+                var (isOnboardingComplete, hasAiConfigured) = await _userStatusService.GetStatusAsync(result.User.Id);
+                result.User.IsOnboardingComplete = isOnboardingComplete;
+                result.User.HasAiConfigured = hasAiConfigured;
 
                 await EnrichSubscriptionFieldsAsync(result.User, HttpContext.RequestAborted);
             }
@@ -903,6 +847,31 @@ public class AuthController : ControllerBase
         });
     }
 
+    private async Task<UserDto> BuildUserDtoAsync(Domain.Entities.User user, Guid userId)
+    {
+        var (isOnboardingComplete, hasAiConfigured) = await _userStatusService.GetStatusAsync(userId);
+
+        var userDto = new UserDto
+        {
+            Id = user.Id,
+            Email = user.Email ?? "",
+            UserName = user.UserName ?? "",
+            FirstName = user.FirstName ?? "",
+            LastName = user.LastName ?? "",
+            FullName = $"{user.FirstName} {user.LastName}".Trim(),
+            Currency = user.Currency ?? "NZD",
+            TimeZone = user.TimeZone ?? "UTC",
+            Locale = user.Locale ?? "en",
+            AiDescriptionCleaning = user.AiDescriptionCleaning,
+            HasAiConfigured = hasAiConfigured,
+            IsOnboardingComplete = isOnboardingComplete
+        };
+
+        await EnrichSubscriptionFieldsAsync(userDto, HttpContext.RequestAborted);
+
+        return userDto;
+    }
+
     private void SetRefreshTokenCookie(string refreshToken, DateTime expires)
     {
         var cookieOptions = new CookieOptions
@@ -1010,7 +979,9 @@ public class GoogleUserInfo
 
 public class UpdateLocaleRequest
 {
-    public string Locale { get; set; } = "en";
+    public string? Locale { get; set; }
+    public string? Currency { get; set; }
+    public string? TimeZone { get; set; }
 }
 
 public class ConfirmEmailRequest
