@@ -222,7 +222,7 @@ export function NotificationBell() {
   // (e.g. title="CategorizationReminder", body="CategorizationReminder.body").
   // Templates are nested objects: templates.CategorizationReminder.title / .body
   // so we map the backend key to the correct nested path.
-  const resolveText = (key: string, dataJson: string | null): string => {
+  const resolveText = (key: string, args: Record<string, string | number>): string => {
     try {
       let templateKey: string;
       if (key.endsWith('.body')) {
@@ -232,7 +232,7 @@ export function NotificationBell() {
       }
       const typedKey = templateKey as Parameters<typeof t>[0];
       if (t.has(typedKey)) {
-        return t(typedKey, parseDataArgs(dataJson));
+        return t(typedKey, args);
       }
       return key;
     } catch {
@@ -355,7 +355,9 @@ export function NotificationBell() {
               </div>
             ) : (
               <div>
-                {notifications.map((notification) => (
+                {notifications.map((notification) => {
+                  const dataArgs = parseDataArgs(notification.data);
+                  return (
                   <div
                     key={notification.id}
                     className={cn(
@@ -368,7 +370,7 @@ export function NotificationBell() {
                       type="button"
                       onClick={() => handleNotificationClick(notification)}
                       className="flex items-start gap-3 px-4 py-3 flex-1 min-w-0 text-left cursor-pointer"
-                      aria-label={resolveText(notification.title, notification.data)}
+                      aria-label={resolveText(notification.title, dataArgs)}
                     >
                       {/* Unread dot */}
                       <div className="pt-1.5 shrink-0">
@@ -385,10 +387,10 @@ export function NotificationBell() {
                       {/* Content */}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-ink-900 truncate">
-                          {resolveText(notification.title, notification.data)}
+                          {resolveText(notification.title, dataArgs)}
                         </p>
                         <p className="text-xs text-ink-500 mt-0.5 line-clamp-2">
-                          {resolveText(notification.body, notification.data)}
+                          {resolveText(notification.body, dataArgs)}
                         </p>
                         <p className="text-[11px] text-ink-400 mt-1">
                           {formatTime(notification.createdAt)}
@@ -420,7 +422,8 @@ export function NotificationBell() {
                       </button>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
