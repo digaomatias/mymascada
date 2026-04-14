@@ -218,14 +218,21 @@ export function NotificationBell() {
     setIsOpen(false);
   };
 
-  // Resolve notification title/body: the backend stores template keys (e.g. "CategorizationReminder").
-  // Try to look up a translation under notifications.templates.<key>; fall back to the raw string.
-  const resolveText = (key: string, dataJson: string | null): string => {
+  // Resolve notification title/body: the backend stores template keys
+  // (e.g. title="CategorizationReminder", body="CategorizationReminder.body").
+  // Templates are nested objects: templates.CategorizationReminder.title / .body
+  // so we map the backend key to the correct nested path.
+  const resolveText = (key: string, args: Record<string, string | number>): string => {
     try {
-      // next-intl returns the key itself when the message is missing; use t.has() to avoid that.
-      const templateKey = `templates.${key}` as Parameters<typeof t>[0];
-      if (t.has(templateKey)) {
-        return t(templateKey, parseDataArgs(dataJson));
+      let templateKey: string;
+      if (key.endsWith('.body')) {
+        templateKey = `templates.${key.slice(0, -5)}.body`;
+      } else {
+        templateKey = `templates.${key}.title`;
+      }
+      const typedKey = templateKey as Parameters<typeof t>[0];
+      if (t.has(typedKey)) {
+        return t(typedKey, args);
       }
       return key;
     } catch {
@@ -348,72 +355,75 @@ export function NotificationBell() {
               </div>
             ) : (
               <div>
-                {notifications.map((notification) => (
-                  <div
-                    key={notification.id}
-                    className={cn(
-                      'flex items-start border-b border-ink-50 transition-colors hover:bg-ink-50',
-                      !notification.isRead && 'bg-primary-50/50'
-                    )}
-                  >
-                    {/* Row button — keyboard-accessible, covers dot + content */}
-                    <button
-                      type="button"
-                      onClick={() => handleNotificationClick(notification)}
-                      className="flex items-start gap-3 px-4 py-3 flex-1 min-w-0 text-left cursor-pointer"
-                      aria-label={resolveText(notification.title, notification.data)}
-                    >
-                      {/* Unread dot */}
-                      <div className="pt-1.5 shrink-0">
-                        <div
-                          className={cn(
-                            'w-2 h-2 rounded-full',
-                            notification.isRead
-                              ? 'bg-transparent'
-                              : 'bg-primary-500'
-                          )}
-                        />
-                      </div>
-
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-ink-900 truncate">
-                          {resolveText(notification.title, notification.data)}
-                        </p>
-                        <p className="text-xs text-ink-500 mt-0.5 line-clamp-2">
-                          {resolveText(notification.body, notification.data)}
-                        </p>
-                        <p className="text-[11px] text-ink-400 mt-1">
-                          {formatTime(notification.createdAt)}
-                        </p>
-                      </div>
-                    </button>
-
-                    {/* Actions — sibling of row button to avoid nested interactive elements */}
-                    <div className="flex items-center gap-1 shrink-0 pt-4 pr-4">
-                      {!notification.isRead && (
-                        <button
-                          type="button"
-                          onClick={(e) => handleMarkAsRead(notification.id, e)}
-                          className="p-1 rounded-md hover:bg-ink-100 text-ink-400 hover:text-primary-600 cursor-pointer"
-                          aria-label={t('markRead')}
-                          title={t('markRead')}
-                        >
-                          <CheckIcon className="w-3.5 h-3.5" />
-                        </button>
+                {notifications.map((notification) => {
+                  const dataArgs = parseDataArgs(notification.data);
+                  return (
+                    <div
+                      key={notification.id}
+                      className={cn(
+                        'flex items-start border-b border-ink-50 transition-colors hover:bg-ink-50',
+                        !notification.isRead && 'bg-primary-50/50'
                       )}
+                    >
+                      {/* Row button — keyboard-accessible, covers dot + content */}
                       <button
                         type="button"
-                        onClick={(e) => handleDelete(notification.id, e)}
-                        className="p-1 rounded-md hover:bg-ink-100 text-ink-400 hover:text-danger cursor-pointer"
-                        aria-label={t('dismiss')}
-                        title={t('dismiss')}
+                        onClick={() => handleNotificationClick(notification)}
+                        className="flex items-start gap-3 px-4 py-3 flex-1 min-w-0 text-left cursor-pointer"
+                        aria-label={resolveText(notification.title, dataArgs)}
                       >
-                        <TrashIcon className="w-3.5 h-3.5" />
+                        {/* Unread dot */}
+                        <div className="pt-1.5 shrink-0">
+                          <div
+                            className={cn(
+                              'w-2 h-2 rounded-full',
+                              notification.isRead
+                                ? 'bg-transparent'
+                                : 'bg-primary-500'
+                            )}
+                          />
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-ink-900 truncate">
+                            {resolveText(notification.title, dataArgs)}
+                          </p>
+                          <p className="text-xs text-ink-500 mt-0.5 line-clamp-2">
+                            {resolveText(notification.body, dataArgs)}
+                          </p>
+                          <p className="text-[11px] text-ink-400 mt-1">
+                            {formatTime(notification.createdAt)}
+                          </p>
+                        </div>
                       </button>
+
+                      {/* Actions — sibling of row button to avoid nested interactive elements */}
+                      <div className="flex items-center gap-1 shrink-0 pt-4 pr-4">
+                        {!notification.isRead && (
+                          <button
+                            type="button"
+                            onClick={(e) => handleMarkAsRead(notification.id, e)}
+                            className="p-1 rounded-md hover:bg-ink-100 text-ink-400 hover:text-primary-600 cursor-pointer"
+                            aria-label={t('markRead')}
+                            title={t('markRead')}
+                          >
+                            <CheckIcon className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={(e) => handleDelete(notification.id, e)}
+                          className="p-1 rounded-md hover:bg-ink-100 text-ink-400 hover:text-danger cursor-pointer"
+                          aria-label={t('dismiss')}
+                          title={t('dismiss')}
+                        >
+                          <TrashIcon className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

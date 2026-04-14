@@ -3642,12 +3642,18 @@
     "hoursAgo": "{count, plural, one {1 hour ago} other {# hours ago}}",
     "daysAgo": "{count, plural, one {1 day ago} other {# days ago}}",
     "templates": {
-      "CategorizationReminder": "Transactions to categorize",
-      "CategorizationReminder.body": "{count, plural, one {You have 1 uncategorized transaction} other {You have # uncategorized transactions}}",
-      "TransactionReminder": "Upcoming transaction",
-      "TransactionReminder.body": "{merchantName} — {amount} due on {date}",
-      "RuleSuggestionsAvailable": "New rule suggestions",
-      "RuleSuggestionsAvailable.body": "{count, plural, one {1 new categorization rule suggestion is available} other {# new categorization rule suggestions are available}}"
+      "CategorizationReminder": {
+        "title": "Transactions to categorize",
+        "body": "{count, plural, one {You have 1 uncategorized transaction} other {You have # uncategorized transactions}}"
+      },
+      "TransactionReminder": {
+        "title": "Upcoming transaction",
+        "body": "{merchantName} — {amount} due on {date}"
+      },
+      "RuleSuggestionsAvailable": {
+        "title": "New rule suggestions",
+        "body": "{count, plural, one {1 new categorization rule suggestion is available} other {# new categorization rule suggestions are available}}"
+      }
     }
   },
   "upsell": {
