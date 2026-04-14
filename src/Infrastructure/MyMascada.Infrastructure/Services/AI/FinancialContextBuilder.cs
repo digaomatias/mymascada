@@ -119,9 +119,10 @@ public class FinancialContextBuilder : IFinancialContextBuilder
                     {
                         var name = categoryLookup?.GetValueOrDefault(x.CategoryId, "Other") ?? "Other";
                         return $"{name} ({x.Total:N0})";
-                    });
+                    })
+                    .ToList();
 
-                var topStr = topCategories.Any() ? string.Join(", ", topCategories) : "none";
+                var topStr = topCategories.Count > 0 ? string.Join(", ", topCategories) : "none";
                 sb.AppendLine($"    Last 30 days: {txnCount} transactions | Top spending: {topStr}");
             }
         }
