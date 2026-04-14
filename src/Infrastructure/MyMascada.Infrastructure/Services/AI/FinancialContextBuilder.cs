@@ -52,9 +52,14 @@ public class FinancialContextBuilder : IFinancialContextBuilder
             _transactionRepository.GetByDateRangeAsync(userId, twelveMonthsAgo, now));
         var goals = await SafeExecuteAsync(() => _goalRepository.GetActiveGoalsForUserAsync(userId));
 
+        // Last month transactions for per-account summaries
+        var oneMonthAgo = now.AddMonths(-1);
+        var lastMonthTransactions = await SafeExecuteAsync(() =>
+            _transactionRepository.GetByDateRangeAsync(userId, oneMonthAgo, now));
+
         var sb = new StringBuilder();
 
-        BuildAccountsSection(sb, accounts, balances);
+        BuildAccountsSection(sb, accounts, balances, lastMonthTransactions, categories);
         BuildMonthlySummarySection(sb, monthlyTransactions);
         BuildTopSpendingCategoriesSection(sb, monthlyTransactions, categories);
         BuildBudgetSection(sb, budget);
@@ -68,7 +73,9 @@ public class FinancialContextBuilder : IFinancialContextBuilder
     private static void BuildAccountsSection(
         StringBuilder sb,
         IEnumerable<Domain.Entities.Account>? accounts,
-        Dictionary<int, decimal>? balances)
+        Dictionary<int, decimal>? balances,
+        IEnumerable<Domain.Entities.Transaction>? recentMonthTransactions,
+        IEnumerable<Domain.Entities.Category>? categories)
     {
         sb.AppendLine("=== ACCOUNTS ===");
 
@@ -82,6 +89,14 @@ public class FinancialContextBuilder : IFinancialContextBuilder
         decimal total = 0;
         string? currency = null;
 
+        // Build per-account transaction lookup for last month summary
+        var accountTransactions = recentMonthTransactions?
+            .Where(t => !t.IsExcluded && !t.IsTransfer())
+            .GroupBy(t => t.AccountId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        var categoryLookup = categories?.ToDictionary(c => c.Id, c => c.Name);
+
         foreach (var account in accounts.Where(a => a.IsActive))
         {
             // Use calculated balance (initial + transactions) if available, otherwise fall back to CurrentBalance
@@ -89,6 +104,25 @@ public class FinancialContextBuilder : IFinancialContextBuilder
             sb.AppendLine($"  - {account.Name} ({account.Type}): {balance:N2} {account.Currency}");
             total += balance;
             currency ??= account.Currency;
+
+            // Per-account summary: recent transaction count and top spending categories
+            if (accountTransactions != null && accountTransactions.TryGetValue(account.Id, out var txns))
+            {
+                var txnCount = txns.Count;
+                var topCategories = txns
+                    .Where(t => t.Amount < 0 && t.CategoryId.HasValue)
+                    .GroupBy(t => t.CategoryId!.Value)
+                    .OrderByDescending(g => g.Sum(t => Math.Abs(t.Amount)))
+                    .Take(3)
+                    .Select(g =>
+                    {
+                        var name = categoryLookup?.GetValueOrDefault(g.Key, "Other") ?? "Other";
+                        return $"{name} ({g.Sum(t => Math.Abs(t.Amount)):N0})";
+                    });
+
+                var topStr = topCategories.Any() ? string.Join(", ", topCategories) : "none";
+                sb.AppendLine($"    Last month: {txnCount} transactions | Top spending: {topStr}");
+            }
         }
 
         sb.AppendLine($"  Total: {total:N2} {currency ?? "USD"}");

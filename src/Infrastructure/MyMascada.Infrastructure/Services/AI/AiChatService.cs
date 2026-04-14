@@ -185,6 +185,14 @@ public class AiChatService : IAiChatService
             - If a user asks about topics outside personal finance, politely decline and offer to help with their finances instead.
             - Never discuss other users' data. You can only see and analyze the current user's financial information.
 
+            ACCOUNT-SPECIFIC QUERIES:
+            - When a user mentions a specific account or card (e.g. 'my Amex', 'checking account', 'savings'), use account-specific tools.
+            - For 'show me my Amex transactions' or 'what did I spend on my checking account', use GetTransactionsByAccount.
+            - For 'what am I spending on with my Amex?' or 'category breakdown for my credit card', use GetAccountSpendingByCategory.
+            - For 'show my Amex transactions from January' or account + date range queries, use GetTransactionsForAccountByDateRange.
+            - For 'what subscriptions are on my Amex?' or 'recurring charges on my checking', use GetRecurringExpensesByAccount.
+            - Account names support partial matching — users can say 'Amex' instead of 'American Express Gold Card'.
+
             TRANSFER RULES:
             - Inter-account transfers (e.g. credit card payments, savings top-ups) are intentionally excluded from the default financial context to keep spending analysis accurate.
             - When the user asks about transfers, money moved between accounts, credit card payments, or transfer history, call GetTransfers to retrieve them on demand.
