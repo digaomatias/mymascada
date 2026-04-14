@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using Microsoft.SemanticKernel;
@@ -119,12 +120,12 @@ public class FinancialDataPlugin
     {
         try
         {
-            if (!DateTime.TryParse(startDate, out var start))
+            if (!DateTime.TryParseExact(startDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var start))
             {
                 return $"Invalid start date format: '{startDate}'. Please use YYYY-MM-DD format.";
             }
 
-            if (!DateTime.TryParse(endDate, out var end))
+            if (!DateTime.TryParseExact(endDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var end))
             {
                 return $"Invalid end date format: '{endDate}'. Please use YYYY-MM-DD format.";
             }
@@ -535,12 +536,12 @@ public class FinancialDataPlugin
             if (matchedAccount == null)
                 return error!;
 
-            if (!DateTime.TryParse(startDate, out var start))
+            if (!DateTime.TryParseExact(startDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var start))
             {
                 return $"Invalid start date format: '{startDate}'. Please use YYYY-MM-DD format.";
             }
 
-            if (!DateTime.TryParse(endDate, out var end))
+            if (!DateTime.TryParseExact(endDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var end))
             {
                 return $"Invalid end date format: '{endDate}'. Please use YYYY-MM-DD format.";
             }
@@ -945,13 +946,13 @@ public class FinancialDataPlugin
             DateTime? start = null, end = null;
             if (!string.IsNullOrWhiteSpace(startDate))
             {
-                if (!DateTime.TryParse(startDate, out var s))
+                if (!DateTime.TryParseExact(startDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var s))
                     return $"Invalid start date format: '{startDate}'. Please use YYYY-MM-DD.";
                 start = DateTimeProvider.ToUtc(s);
             }
             if (!string.IsNullOrWhiteSpace(endDate))
             {
-                if (!DateTime.TryParse(endDate, out var e))
+                if (!DateTime.TryParseExact(endDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var e))
                     return $"Invalid end date format: '{endDate}'. Please use YYYY-MM-DD.";
                 end = DateTimeProvider.ToUtc(e);
             }

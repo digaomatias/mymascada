@@ -122,7 +122,7 @@ public class FinancialContextBuilder : IFinancialContextBuilder
                     });
 
                 var topStr = topCategories.Any() ? string.Join(", ", topCategories) : "none";
-                sb.AppendLine($"    Last month: {txnCount} transactions | Top spending: {topStr}");
+                sb.AppendLine($"    Last 30 days: {txnCount} transactions | Top spending: {topStr}");
             }
         }
 
