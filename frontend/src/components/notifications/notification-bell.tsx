@@ -218,14 +218,21 @@ export function NotificationBell() {
     setIsOpen(false);
   };
 
-  // Resolve notification title/body: the backend stores template keys (e.g. "CategorizationReminder").
-  // Try to look up a translation under notifications.templates.<key>; fall back to the raw string.
+  // Resolve notification title/body: the backend stores template keys
+  // (e.g. title="CategorizationReminder", body="CategorizationReminder.body").
+  // Templates are nested objects: templates.CategorizationReminder.title / .body
+  // so we map the backend key to the correct nested path.
   const resolveText = (key: string, dataJson: string | null): string => {
     try {
-      // next-intl returns the key itself when the message is missing; use t.has() to avoid that.
-      const templateKey = `templates.${key}` as Parameters<typeof t>[0];
-      if (t.has(templateKey)) {
-        return t(templateKey, parseDataArgs(dataJson));
+      let templateKey: string;
+      if (key.endsWith('.body')) {
+        templateKey = `templates.${key.slice(0, -5)}.body`;
+      } else {
+        templateKey = `templates.${key}.title`;
+      }
+      const typedKey = templateKey as Parameters<typeof t>[0];
+      if (t.has(typedKey)) {
+        return t(typedKey, parseDataArgs(dataJson));
       }
       return key;
     } catch {
