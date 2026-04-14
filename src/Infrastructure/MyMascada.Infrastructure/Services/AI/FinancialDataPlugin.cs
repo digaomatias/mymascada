@@ -354,18 +354,12 @@ public class FinancialDataPlugin
     {
         try
         {
-            var accounts = await _accountRepository.GetByUserIdAsync(_userId);
-            var matchedAccount = accounts.FirstOrDefault(a =>
-                a.Name.Contains(accountName, StringComparison.OrdinalIgnoreCase));
-
+            var (matchedAccount, error) = await FindAccountByNameAsync(accountName);
             if (matchedAccount == null)
-            {
-                return $"No account found matching '{accountName}'. Available accounts: {string.Join(", ", accounts.Select(a => a.Name))}";
-            }
+                return error!;
 
-            // Calculate actual balance (initial balance + sum of transactions)
-            var balances = await _transactionRepository.GetAccountBalancesAsync(_userId);
-            var actualBalance = balances.GetValueOrDefault(matchedAccount.Id, matchedAccount.CurrentBalance);
+            // Calculate actual balance for this specific account
+            var actualBalance = await _transactionRepository.GetAccountBalanceAsync(matchedAccount.Id, _userId);
 
             var sb = new StringBuilder();
             sb.AppendLine($"Account: {matchedAccount.Name}");
@@ -408,66 +402,45 @@ public class FinancialDataPlugin
         {
             months = Math.Clamp(months, 1, 24);
 
-            var accounts = await _accountRepository.GetByUserIdAsync(_userId);
-            var matchedAccount = accounts.FirstOrDefault(a =>
-                a.Name.Contains(accountName, StringComparison.OrdinalIgnoreCase));
-
+            var (matchedAccount, error) = await FindAccountByNameAsync(accountName);
             if (matchedAccount == null)
-            {
-                return $"No account found matching '{accountName}'. Available accounts: {string.Join(", ", accounts.Select(a => a.Name))}";
-            }
+                return error!;
 
             var endDate = DateTimeProvider.UtcNow;
             var startDate = endDate.AddMonths(-months);
 
-            var query = new GetTransactionsQuery
-            {
-                UserId = _userId,
-                AccountId = matchedAccount.Id,
-                StartDate = startDate,
-                EndDate = endDate,
-                PageSize = 50,
-                Page = 1,
-                SortBy = "TransactionDate",
-                SortDirection = "desc"
-            };
+            // Fetch all transactions for accurate summary
+            var allTransactions = (await _transactionRepository.GetByDateRangeAsync(_userId, matchedAccount.Id, startDate, endDate)).ToList();
 
-            var (transactions, totalCount) = await _transactionRepository.GetFilteredAsync(query);
-            var transactionList = transactions.ToList();
-
-            if (!transactionList.Any())
+            if (!allTransactions.Any())
             {
                 return $"No transactions found for '{matchedAccount.Name}' in the last {months} months.";
             }
 
             var actualBalance = await _transactionRepository.GetAccountBalanceAsync(matchedAccount.Id, _userId);
 
+            // Compute summary from the full set
+            var income = allTransactions.Where(t => !t.IsExcluded && !t.IsTransfer() && t.Amount > 0).Sum(t => t.Amount);
+            var expenses = allTransactions.Where(t => !t.IsExcluded && !t.IsTransfer() && t.Amount < 0).Sum(t => Math.Abs(t.Amount));
+
             var sb = new StringBuilder();
             sb.AppendLine($"Account: {matchedAccount.Name} ({matchedAccount.Type}) | Balance: {actualBalance:N2} {matchedAccount.Currency}");
-            sb.AppendLine($"Transactions (last {months} months) - {totalCount} total:");
+            sb.AppendLine($"Transactions (last {months} months) - {allTransactions.Count} total:");
             sb.AppendLine();
 
-            var income = 0m;
-            var expenses = 0m;
-
-            foreach (var t in transactionList)
+            // Display up to 50 most recent
+            var displayLimit = 50;
+            foreach (var t in allTransactions.OrderByDescending(t => t.TransactionDate).Take(displayLimit))
             {
                 var categoryName = t.Category?.Name ?? "Uncategorized";
                 var marker = t.IsTransfer() ? " [Transfer]" : t.IsExcluded ? " [Excluded]" : "";
                 sb.AppendLine($"  {t.TransactionDate:yyyy-MM-dd} | {t.GetDisplayDescription()} | {t.Amount:N2} | {categoryName}{marker}");
-
-                if (!t.IsExcluded && !t.IsTransfer())
-                {
-                    if (t.Amount > 0)
-                        income += t.Amount;
-                    else
-                        expenses += Math.Abs(t.Amount);
-                }
             }
 
             sb.AppendLine();
             sb.AppendLine($"Summary (excluding transfers): Income {income:N2} | Expenses {expenses:N2} | Net {income - expenses:N2}");
-            sb.AppendLine($"Showing {transactionList.Count} of {totalCount} transactions.");
+            if (allTransactions.Count > displayLimit)
+                sb.AppendLine($"Showing {displayLimit} of {allTransactions.Count} transactions.");
 
             return sb.ToString();
         }
@@ -487,14 +460,9 @@ public class FinancialDataPlugin
         {
             months = Math.Clamp(months, 1, 24);
 
-            var accounts = await _accountRepository.GetByUserIdAsync(_userId);
-            var matchedAccount = accounts.FirstOrDefault(a =>
-                a.Name.Contains(accountName, StringComparison.OrdinalIgnoreCase));
-
+            var (matchedAccount, error) = await FindAccountByNameAsync(accountName);
             if (matchedAccount == null)
-            {
-                return $"No account found matching '{accountName}'. Available accounts: {string.Join(", ", accounts.Select(a => a.Name))}";
-            }
+                return error!;
 
             var endDate = DateTimeProvider.UtcNow;
             var startDate = endDate.AddMonths(-months);
@@ -563,14 +531,9 @@ public class FinancialDataPlugin
     {
         try
         {
-            var accounts = await _accountRepository.GetByUserIdAsync(_userId);
-            var matchedAccount = accounts.FirstOrDefault(a =>
-                a.Name.Contains(accountName, StringComparison.OrdinalIgnoreCase));
-
+            var (matchedAccount, error) = await FindAccountByNameAsync(accountName);
             if (matchedAccount == null)
-            {
-                return $"No account found matching '{accountName}'. Available accounts: {string.Join(", ", accounts.Select(a => a.Name))}";
-            }
+                return error!;
 
             if (!DateTime.TryParse(startDate, out var start))
             {
@@ -583,54 +546,41 @@ public class FinancialDataPlugin
             }
 
             start = DateTimeProvider.ToUtc(start);
+            // Normalize end date to end-of-day so date-only inputs include the full final day
             end = DateTimeProvider.ToUtc(end);
+            if (end.TimeOfDay == TimeSpan.Zero)
+                end = end.AddDays(1).AddTicks(-1);
 
-            var query = new GetTransactionsQuery
-            {
-                UserId = _userId,
-                AccountId = matchedAccount.Id,
-                StartDate = start,
-                EndDate = end,
-                PageSize = 100,
-                Page = 1,
-                SortBy = "TransactionDate",
-                SortDirection = "desc"
-            };
+            // Fetch all transactions for accurate summary
+            var allTransactions = (await _transactionRepository.GetByDateRangeAsync(_userId, matchedAccount.Id, start, end)).ToList();
 
-            var (transactions, totalCount) = await _transactionRepository.GetFilteredAsync(query);
-            var transactionList = transactions.ToList();
-
-            if (!transactionList.Any())
+            if (!allTransactions.Any())
             {
                 return $"No transactions found for '{matchedAccount.Name}' between {start:yyyy-MM-dd} and {end:yyyy-MM-dd}.";
             }
 
+            // Compute summary from the full set
+            var income = allTransactions.Where(t => !t.IsExcluded && !t.IsTransfer() && t.Amount > 0).Sum(t => t.Amount);
+            var expenses = allTransactions.Where(t => !t.IsExcluded && !t.IsTransfer() && t.Amount < 0).Sum(t => Math.Abs(t.Amount));
+
             var sb = new StringBuilder();
             sb.AppendLine($"Account: {matchedAccount.Name} ({matchedAccount.Type})");
-            sb.AppendLine($"Transactions from {start:yyyy-MM-dd} to {end:yyyy-MM-dd} ({totalCount} total):");
+            sb.AppendLine($"Transactions from {start:yyyy-MM-dd} to {end:yyyy-MM-dd} ({allTransactions.Count} total):");
             sb.AppendLine();
 
-            var income = 0m;
-            var expenses = 0m;
-
-            foreach (var t in transactionList)
+            // Display up to 100 most recent
+            var displayLimit = 100;
+            foreach (var t in allTransactions.OrderByDescending(t => t.TransactionDate).Take(displayLimit))
             {
                 var categoryName = t.Category?.Name ?? "Uncategorized";
                 var marker = t.IsTransfer() ? " [Transfer]" : t.IsExcluded ? " [Excluded]" : "";
                 sb.AppendLine($"  {t.TransactionDate:yyyy-MM-dd} | {t.GetDisplayDescription()} | {t.Amount:N2} | {categoryName}{marker}");
-
-                if (!t.IsExcluded && !t.IsTransfer())
-                {
-                    if (t.Amount > 0)
-                        income += t.Amount;
-                    else
-                        expenses += Math.Abs(t.Amount);
-                }
             }
 
             sb.AppendLine();
             sb.AppendLine($"Summary (excluding transfers): Income {income:N2} | Expenses {expenses:N2} | Net {income - expenses:N2}");
-            sb.AppendLine($"Showing {transactionList.Count} of {totalCount} transactions.");
+            if (allTransactions.Count > displayLimit)
+                sb.AppendLine($"Showing {displayLimit} of {allTransactions.Count} transactions.");
 
             return sb.ToString();
         }
@@ -647,14 +597,9 @@ public class FinancialDataPlugin
     {
         try
         {
-            var accounts = await _accountRepository.GetByUserIdAsync(_userId);
-            var matchedAccount = accounts.FirstOrDefault(a =>
-                a.Name.Contains(accountName, StringComparison.OrdinalIgnoreCase));
-
+            var (matchedAccount, error) = await FindAccountByNameAsync(accountName);
             if (matchedAccount == null)
-            {
-                return $"No account found matching '{accountName}'. Available accounts: {string.Join(", ", accounts.Select(a => a.Name))}";
-            }
+                return error!;
 
             var patterns = await _recurringPatternRepository.GetActiveAsync(_userId);
             var patternList = patterns.ToList();
@@ -664,8 +609,8 @@ public class FinancialDataPlugin
                 return $"No active recurring expenses detected for any account.";
             }
 
-            // Find which recurring patterns have transactions in this account
-            // by checking recent transactions for this account and matching merchant names
+            // Match recurring patterns to this account using NormalizedMerchantKey
+            // against transaction descriptions for more reliable matching
             var endDate = DateTimeProvider.UtcNow;
             var startDate = endDate.AddMonths(-6);
             var accountTransactions = await _transactionRepository.GetByDateRangeAsync(_userId, matchedAccount.Id, startDate, endDate);
@@ -677,9 +622,10 @@ public class FinancialDataPlugin
             var matchedPatterns = patternList
                 .Where(p =>
                 {
-                    var lowerMerchant = p.MerchantName?.ToLowerInvariant();
-                    return !string.IsNullOrEmpty(lowerMerchant) &&
-                           accountDescriptions.Any(d => d.Contains(lowerMerchant));
+                    var key = p.NormalizedMerchantKey;
+                    if (string.IsNullOrEmpty(key)) return false;
+                    // NormalizedMerchantKey is already lowered; require minimum length to avoid false positives
+                    return key.Length >= 3 && accountDescriptions.Any(d => d.Contains(key));
                 })
                 .ToList();
 
@@ -1438,6 +1384,20 @@ public class FinancialDataPlugin
         {
             return $"Error retrieving goal details: {ex.Message}";
         }
+    }
+
+    private async Task<(Domain.Entities.Account? account, string? error)> FindAccountByNameAsync(string accountName)
+    {
+        var accounts = await _accountRepository.GetByUserIdAsync(_userId);
+        var matches = accounts.Where(a =>
+            a.Name.Contains(accountName, StringComparison.OrdinalIgnoreCase)).ToList();
+
+        if (matches.Count == 0)
+            return (null, $"No account found matching '{accountName}'. Available accounts: {string.Join(", ", accounts.Select(a => a.Name))}");
+        if (matches.Count > 1)
+            return (null, $"Multiple accounts match '{accountName}': {string.Join(", ", matches.Select(a => a.Name))}. Please be more specific.");
+
+        return (matches[0], null);
     }
 
     private class CategorizationItem

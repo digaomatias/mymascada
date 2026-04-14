@@ -52,10 +52,10 @@ public class FinancialContextBuilder : IFinancialContextBuilder
             _transactionRepository.GetByDateRangeAsync(userId, twelveMonthsAgo, now));
         var goals = await SafeExecuteAsync(() => _goalRepository.GetActiveGoalsForUserAsync(userId));
 
-        // Last month transactions for per-account summaries
+        // Filter last-month transactions from the 12-month data (no extra DB query needed)
         var oneMonthAgo = now.AddMonths(-1);
-        var lastMonthTransactions = await SafeExecuteAsync(() =>
-            _transactionRepository.GetByDateRangeAsync(userId, oneMonthAgo, now));
+        var lastMonthTransactions = monthlyTransactions?
+            .Where(t => t.TransactionDate >= oneMonthAgo);
 
         var sb = new StringBuilder();
 
