@@ -402,10 +402,12 @@ public class FinancialDataPlugin
     [Description("Get transactions for a specific account. Use when user asks about transactions on a specific card or account like 'show me my Amex transactions' or 'what did I spend on my checking account'.")]
     public async Task<string> GetTransactionsByAccount(
         [Description("Account name to search for (partial match, e.g. 'Amex' for 'American Express Gold Card')")] string accountName,
-        [Description("Number of months to look back (default 3)")] int months = 3)
+        [Description("Number of months to look back (default 3, max 24)")] int months = 3)
     {
         try
         {
+            months = Math.Clamp(months, 1, 24);
+
             var accounts = await _accountRepository.GetByUserIdAsync(_userId);
             var matchedAccount = accounts.FirstOrDefault(a =>
                 a.Name.Contains(accountName, StringComparison.OrdinalIgnoreCase));
@@ -438,8 +440,7 @@ public class FinancialDataPlugin
                 return $"No transactions found for '{matchedAccount.Name}' in the last {months} months.";
             }
 
-            var balances = await _transactionRepository.GetAccountBalancesAsync(_userId);
-            var actualBalance = balances.GetValueOrDefault(matchedAccount.Id, matchedAccount.CurrentBalance);
+            var actualBalance = await _transactionRepository.GetAccountBalanceAsync(matchedAccount.Id, _userId);
 
             var sb = new StringBuilder();
             sb.AppendLine($"Account: {matchedAccount.Name} ({matchedAccount.Type}) | Balance: {actualBalance:N2} {matchedAccount.Currency}");
@@ -480,10 +481,12 @@ public class FinancialDataPlugin
     [Description("Get spending breakdown by category for a specific account. Use when user asks 'what am I spending on with my Amex?' or 'category breakdown for my checking account'.")]
     public async Task<string> GetAccountSpendingByCategory(
         [Description("Account name to search for (partial match)")] string accountName,
-        [Description("Number of months to look back (default 3)")] int months = 3)
+        [Description("Number of months to look back (default 3, max 24)")] int months = 3)
     {
         try
         {
+            months = Math.Clamp(months, 1, 24);
+
             var accounts = await _accountRepository.GetByUserIdAsync(_userId);
             var matchedAccount = accounts.FirstOrDefault(a =>
                 a.Name.Contains(accountName, StringComparison.OrdinalIgnoreCase));
@@ -667,12 +670,17 @@ public class FinancialDataPlugin
             var startDate = endDate.AddMonths(-6);
             var accountTransactions = await _transactionRepository.GetByDateRangeAsync(_userId, matchedAccount.Id, startDate, endDate);
             var accountDescriptions = accountTransactions
-                .Select(t => t.Description.ToLowerInvariant())
+                .Select(t => (t.Description ?? string.Empty).ToLowerInvariant())
                 .Distinct()
                 .ToHashSet();
 
             var matchedPatterns = patternList
-                .Where(p => accountDescriptions.Any(d => d.Contains(p.MerchantName.ToLowerInvariant())))
+                .Where(p =>
+                {
+                    var lowerMerchant = p.MerchantName?.ToLowerInvariant();
+                    return !string.IsNullOrEmpty(lowerMerchant) &&
+                           accountDescriptions.Any(d => d.Contains(lowerMerchant));
+                })
                 .ToList();
 
             if (!matchedPatterns.Any())

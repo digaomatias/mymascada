@@ -112,12 +112,13 @@ public class FinancialContextBuilder : IFinancialContextBuilder
                 var topCategories = txns
                     .Where(t => t.Amount < 0 && t.CategoryId.HasValue)
                     .GroupBy(t => t.CategoryId!.Value)
-                    .OrderByDescending(g => g.Sum(t => Math.Abs(t.Amount)))
+                    .Select(g => new { CategoryId = g.Key, Total = g.Sum(t => Math.Abs(t.Amount)) })
+                    .OrderByDescending(x => x.Total)
                     .Take(3)
-                    .Select(g =>
+                    .Select(x =>
                     {
-                        var name = categoryLookup?.GetValueOrDefault(g.Key, "Other") ?? "Other";
-                        return $"{name} ({g.Sum(t => Math.Abs(t.Amount)):N0})";
+                        var name = categoryLookup?.GetValueOrDefault(x.CategoryId, "Other") ?? "Other";
+                        return $"{name} ({x.Total:N0})";
                     });
 
                 var topStr = topCategories.Any() ? string.Join(", ", topCategories) : "none";
