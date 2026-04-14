@@ -1390,11 +1390,22 @@ public class FinancialDataPlugin
     private async Task<(Domain.Entities.Account? account, string? error)> FindAccountByNameAsync(string accountName)
     {
         var accounts = await _accountRepository.GetByUserIdAsync(_userId);
-        var matches = accounts.Where(a =>
-            a.Name.Contains(accountName, StringComparison.OrdinalIgnoreCase)).ToList();
+        var accountList = accounts.ToList();
+
+        // Prefer active accounts; fall back to inactive only if no active match
+        var matches = accountList
+            .Where(a => a.IsActive && a.Name.Contains(accountName, StringComparison.OrdinalIgnoreCase))
+            .ToList();
 
         if (matches.Count == 0)
-            return (null, $"No account found matching '{accountName}'. Available accounts: {string.Join(", ", accounts.Select(a => a.Name))}");
+        {
+            matches = accountList
+                .Where(a => a.Name.Contains(accountName, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
+        if (matches.Count == 0)
+            return (null, $"No account found matching '{accountName}'. Available accounts: {string.Join(", ", accountList.Where(a => a.IsActive).Select(a => a.Name))}");
         if (matches.Count > 1)
             return (null, $"Multiple accounts match '{accountName}': {string.Join(", ", matches.Select(a => a.Name))}. Please be more specific.");
 
