@@ -12,7 +12,7 @@ public class Wallet : BaseEntity
     [MaxLength(100)]
     public string Name { get; set; } = string.Empty;
 
-    [MaxLength(10)]
+    [MaxLength(50)]
     public string? Icon { get; set; }
 
     [MaxLength(7)]

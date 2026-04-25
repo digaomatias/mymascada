@@ -27,9 +27,9 @@ public class CreateWalletCommandValidator : AbstractValidator<CreateWalletComman
             .WithMessage("Currency must be letters only");
 
         RuleFor(x => x.Icon)
-            .MaximumLength(10)
+            .MaximumLength(50)
             .When(x => x.Icon != null)
-            .WithMessage("Icon cannot exceed 10 characters");
+            .WithMessage("Icon cannot exceed 50 characters");
 
         RuleFor(x => x.TargetAmount)
             .GreaterThan(0)
