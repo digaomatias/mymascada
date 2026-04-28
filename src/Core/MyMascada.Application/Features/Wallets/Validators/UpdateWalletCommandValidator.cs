@@ -3,15 +3,25 @@ using MyMascada.Application.Features.Wallets.Commands;
 
 namespace MyMascada.Application.Features.Wallets.Validators;
 
-public class CreateWalletCommandValidator : AbstractValidator<CreateWalletCommand>
+public class UpdateWalletCommandValidator : AbstractValidator<UpdateWalletCommand>
 {
-    public CreateWalletCommandValidator()
+    public UpdateWalletCommandValidator()
     {
+        RuleFor(x => x.WalletId)
+            .GreaterThan(0)
+            .WithMessage("Wallet ID must be greater than 0");
+
         RuleFor(x => x.Name)
             .NotEmpty()
-            .WithMessage("Wallet name is required")
+            .WithMessage("Wallet name cannot be empty")
             .MaximumLength(100)
-            .WithMessage("Wallet name cannot exceed 100 characters");
+            .WithMessage("Wallet name cannot exceed 100 characters")
+            .When(x => x.Name != null);
+
+        RuleFor(x => x.Icon)
+            .MaximumLength(50)
+            .When(x => x.Icon != null)
+            .WithMessage("Icon cannot exceed 50 characters");
 
         RuleFor(x => x.Color)
             .Matches(@"^#[0-9A-Fa-f]{6}$")
@@ -19,21 +29,15 @@ public class CreateWalletCommandValidator : AbstractValidator<CreateWalletComman
             .WithMessage("Color must be a valid hex color (e.g., #FF5733)");
 
         RuleFor(x => x.Currency)
-            .NotEmpty()
-            .WithMessage("Currency is required")
             .Length(3)
             .WithMessage("Currency must be a 3-character code (e.g., NZD)")
             .Matches("^[A-Za-z]{3}$")
-            .WithMessage("Currency must be letters only");
-
-        RuleFor(x => x.Icon)
-            .MaximumLength(50)
-            .When(x => x.Icon != null)
-            .WithMessage("Icon cannot exceed 50 characters");
+            .WithMessage("Currency must be letters only")
+            .When(x => x.Currency != null);
 
         RuleFor(x => x.TargetAmount)
             .GreaterThan(0)
-            .When(x => x.TargetAmount.HasValue)
+            .When(x => x.TargetAmount.HasValue && !x.ClearTargetAmount)
             .WithMessage("Target amount must be greater than 0 when specified");
 
         RuleFor(x => x.UserId)
