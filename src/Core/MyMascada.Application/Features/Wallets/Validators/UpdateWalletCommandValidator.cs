@@ -7,6 +7,10 @@ public class UpdateWalletCommandValidator : AbstractValidator<UpdateWalletComman
 {
     public UpdateWalletCommandValidator()
     {
+        RuleFor(x => x.WalletId)
+            .GreaterThan(0)
+            .WithMessage("Wallet ID must be greater than 0");
+
         RuleFor(x => x.Name)
             .NotEmpty()
             .WithMessage("Wallet name cannot be empty")
