@@ -37,7 +37,7 @@ public class UpdateWalletCommandValidator : AbstractValidator<UpdateWalletComman
 
         RuleFor(x => x.TargetAmount)
             .GreaterThan(0)
-            .When(x => x.TargetAmount.HasValue)
+            .When(x => x.TargetAmount.HasValue && !x.ClearTargetAmount)
             .WithMessage("Target amount must be greater than 0 when specified");
 
         RuleFor(x => x.UserId)
