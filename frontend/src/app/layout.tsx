@@ -4,6 +4,7 @@ import './globals.css';
 import { AuthProvider } from '@/contexts/auth-context';
 import { AiSuggestionsProvider } from '@/contexts/ai-suggestions-context';
 import { FeaturesProvider } from '@/contexts/features-context';
+import { getFeaturesServerSide } from '@/lib/features-server';
 import { LocaleWrapper } from '@/components/locale-wrapper';
 import { CookieConsent } from '@/components/cookie-consent';
 import { Toaster } from 'sonner';
@@ -44,12 +45,13 @@ export default async function RootLayout({
 }) {
   const locale = await getLocale();
   const messages = await getMessages();
+  const initialFeatures = await getFeaturesServerSide();
 
   return (
     <html lang={locale}>
       <body className={`${plusJakarta.className} ${plusJakarta.variable} ${dmMono.variable} ${instrumentSerif.variable}`}>
         <NextIntlClientProvider messages={messages}>
-          <FeaturesProvider>
+          <FeaturesProvider initialFeatures={initialFeatures}>
           <AuthProvider>
             <LocaleWrapper>
               <AiSuggestionsProvider>

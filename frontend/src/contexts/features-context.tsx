@@ -24,11 +24,15 @@ const FeaturesContext = createContext<FeaturesContextType>({
 
 interface FeaturesProviderProps {
   children: ReactNode;
+  // Flags fetched server-side and used to seed state, so flag-gated UI renders
+  // correctly on the first paint without waiting for a client round-trip.
+  initialFeatures?: FeatureFlags;
 }
 
-export function FeaturesProvider({ children }: FeaturesProviderProps) {
-  const [features, setFeatures] = useState<FeatureFlags>(defaultFeatures);
-  const [isLoading, setIsLoading] = useState(true);
+export function FeaturesProvider({ children, initialFeatures }: FeaturesProviderProps) {
+  const [features, setFeatures] = useState<FeatureFlags>(initialFeatures ?? defaultFeatures);
+  // When seeded from the server we already have flags — don't block on the client fetch.
+  const [isLoading, setIsLoading] = useState(initialFeatures === undefined);
 
   useEffect(() => {
     let cancelled = false;
