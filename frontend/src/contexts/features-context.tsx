@@ -1,21 +1,12 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { apiClient, FeatureFlags } from '@/lib/api-client';
+import { apiClient, defaultFeatures, FeatureFlags } from '@/lib/api-client';
 
 interface FeaturesContextType {
   features: FeatureFlags;
   isLoading: boolean;
 }
-
-const defaultFeatures: FeatureFlags = {
-  aiCategorization: false,
-  googleOAuth: false,
-  bankSync: false,
-  emailNotifications: false,
-  accountSharing: false,
-  stripeBilling: false,
-};
 
 const FeaturesContext = createContext<FeaturesContextType>({
   features: defaultFeatures,

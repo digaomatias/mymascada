@@ -2109,6 +2109,16 @@ export interface FeatureFlags {
   stripeBilling: boolean;
 }
 
+/** All flags disabled — the safe baseline used until real flags load. */
+export const defaultFeatures: FeatureFlags = {
+  aiCategorization: false,
+  googleOAuth: false,
+  bankSync: false,
+  emailNotifications: false,
+  accountSharing: false,
+  stripeBilling: false,
+};
+
 // Billing Types
 export interface BillingStatusResponse {
   planName: string;

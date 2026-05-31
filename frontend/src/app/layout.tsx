@@ -43,9 +43,13 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const locale = await getLocale();
-  const messages = await getMessages();
-  const initialFeatures = await getFeaturesServerSide();
+  // Resolve independent server data concurrently so the feature-flag fetch adds
+  // no latency beyond the locale/messages the layout already awaits.
+  const [locale, messages, initialFeatures] = await Promise.all([
+    getLocale(),
+    getMessages(),
+    getFeaturesServerSide(),
+  ]);
 
   return (
     <html lang={locale}>
