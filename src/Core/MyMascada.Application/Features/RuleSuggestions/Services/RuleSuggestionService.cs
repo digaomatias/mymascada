@@ -16,6 +16,7 @@ public class RuleSuggestionService : IRuleSuggestionService
     private readonly ICategoryRepository _categoryRepository;
     private readonly IRuleSuggestionAnalyzerFactory _analyzerFactory;
     private readonly IFeatureFlags _featureFlags;
+    private readonly IUserRepository _userRepository;
 
     public RuleSuggestionService(
         IRuleSuggestionRepository ruleSuggestionRepository,
@@ -23,7 +24,8 @@ public class RuleSuggestionService : IRuleSuggestionService
         ICategorizationRuleRepository categorizationRuleRepository,
         ICategoryRepository categoryRepository,
         IRuleSuggestionAnalyzerFactory analyzerFactory,
-        IFeatureFlags featureFlags)
+        IFeatureFlags featureFlags,
+        IUserRepository userRepository)
     {
         _ruleSuggestionRepository = ruleSuggestionRepository;
         _transactionRepository = transactionRepository;
@@ -31,6 +33,7 @@ public class RuleSuggestionService : IRuleSuggestionService
         _categoryRepository = categoryRepository;
         _analyzerFactory = analyzerFactory;
         _featureFlags = featureFlags;
+        _userRepository = userRepository;
     }
 
     /// <summary>
@@ -53,6 +56,10 @@ public class RuleSuggestionService : IRuleSuggestionService
         
         var existingRules = await _categorizationRuleRepository.GetActiveRulesForUserAsync(userId);
 
+        // The holder's own name appears on card statement lines and must not become a rule pattern.
+        var user = await _userRepository.GetByIdAsync(userId);
+        var holderNameTokens = ExtractHolderNameTokens(user);
+
         // Create analysis input
         var analysisInput = new RuleAnalysisInput
         {
@@ -61,7 +68,8 @@ public class RuleSuggestionService : IRuleSuggestionService
             AvailableCategories = allCategories,
             ExistingRules = existingRules.ToList(),
             MaxSuggestions = maxSuggestions,
-            MinConfidenceThreshold = minConfidence
+            MinConfidenceThreshold = minConfidence,
+            AccountHolderNameTokens = holderNameTokens
         };
 
         // Create analyzer based on default configuration
@@ -354,6 +362,23 @@ public class RuleSuggestionService : IRuleSuggestionService
             "GROCERY" => "Grocery Store Transactions",
             _ => $"{cleanPattern} Transactions"
         };
+    }
+
+    /// <summary>
+    /// Splits the account holder's name into uppercased tokens (length >= 2) used to suppress
+    /// merchant patterns that are really just the cardholder name.
+    /// </summary>
+    private static List<string> ExtractHolderNameTokens(User? user)
+    {
+        if (user == null)
+            return new List<string>();
+
+        return $"{user.FirstName} {user.LastName}"
+            .Split(new[] { ' ', '\t', '-', '\'' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(t => t.Trim().ToUpperInvariant())
+            .Where(t => t.Length >= 2)
+            .Distinct()
+            .ToList();
     }
 }
 
