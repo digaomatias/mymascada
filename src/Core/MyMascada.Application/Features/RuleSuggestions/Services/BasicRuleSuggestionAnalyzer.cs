@@ -111,9 +111,14 @@ public class BasicRuleSuggestionAnalyzer : IRuleSuggestionAnalyzer
         return Task.FromResult(result);
     }
 
+    // Splits on any run of non-alphanumeric characters. Compiled once and reused per transaction.
+    private static readonly Regex TokenSplitRegex = new(@"[^A-Z0-9]+", RegexOptions.Compiled);
+
     /// <summary>
     /// Builds the set of candidate phrases (1..N consecutive meaningful tokens) seen across all
-    /// transactions. Noise tokens break adjacency so phrases never span them.
+    /// transactions. Phrases are mined within contiguous meaningful segments only, so a phrase can
+    /// never bridge over a stripped noise/name/number token — which would form a string that never
+    /// occurred contiguously in the source.
     /// </summary>
     private static HashSet<string> MineCandidatePhrases(List<Transaction> transactions, HashSet<string> noise)
     {
@@ -121,16 +126,14 @@ public class BasicRuleSuggestionAnalyzer : IRuleSuggestionAnalyzer
 
         foreach (var transaction in transactions)
         {
-            var tokens = MeaningfulTokens(transaction.Description, noise);
-            if (tokens.Count == 0)
-                continue;
-
-            for (int start = 0; start < tokens.Count; start++)
+            foreach (var segment in MeaningfulTokenSegments(transaction.Description, noise))
             {
-                for (int len = 1; len <= MaxPhraseTokens && start + len <= tokens.Count; len++)
+                for (int start = 0; start < segment.Count; start++)
                 {
-                    var phrase = string.Join(' ', tokens.GetRange(start, len));
-                    candidates.Add(phrase);
+                    for (int len = 1; len <= MaxPhraseTokens && start + len <= segment.Count; len++)
+                    {
+                        candidates.Add(string.Join(' ', segment.GetRange(start, len)));
+                    }
                 }
             }
         }
@@ -139,34 +142,50 @@ public class BasicRuleSuggestionAnalyzer : IRuleSuggestionAnalyzer
     }
 
     /// <summary>
-    /// Tokenizes a description into the meaningful (non-noise) tokens in original order. A token is
-    /// dropped when it is a structural/name noise word, too short, or mostly digits (reference and
-    /// card numbers). Adjacency in the returned list implies adjacency in the source.
+    /// Splits a description into contiguous segments of meaningful tokens. A structural/name noise
+    /// word, a too-short token, or a mostly-digit token (reference and card numbers) acts as a
+    /// separator that ends the current segment — so tokens on either side of stripped noise are
+    /// never treated as adjacent.
     /// </summary>
-    private static List<string> MeaningfulTokens(string description, HashSet<string> noise)
+    private static List<List<string>> MeaningfulTokenSegments(string description, HashSet<string> noise)
     {
-        var rawTokens = Regex.Split(description.ToUpperInvariant(), @"[^A-Z0-9]+")
-            .Where(t => t.Length > 0)
-            .ToList();
+        var segments = new List<List<string>>();
+        var current = new List<string>();
 
-        var meaningful = new List<string>();
-        foreach (var token in rawTokens)
+        foreach (var token in TokenSplitRegex.Split(description.ToUpperInvariant()))
         {
-            if (token.Length < MinMeaningfulTokenLength)
-                continue;
-            if (IsMostlyDigits(token))
-                continue;
-            if (noise.Contains(token))
-                continue;
-            meaningful.Add(token);
+            var isSeparator = token.Length < MinMeaningfulTokenLength
+                              || IsMostlyDigits(token)
+                              || noise.Contains(token);
+
+            if (isSeparator)
+            {
+                if (current.Count > 0)
+                {
+                    segments.Add(current);
+                    current = new List<string>();
+                }
+            }
+            else
+            {
+                current.Add(token);
+            }
         }
 
-        return meaningful;
+        if (current.Count > 0)
+            segments.Add(current);
+
+        return segments;
     }
 
     private static bool IsMostlyDigits(string token)
     {
-        var digitCount = token.Count(char.IsDigit);
+        var digitCount = 0;
+        for (var i = 0; i < token.Length; i++)
+        {
+            if (char.IsDigit(token[i]))
+                digitCount++;
+        }
         return digitCount > 0 && digitCount * 2 >= token.Length;
     }
 
