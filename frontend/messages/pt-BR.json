@@ -498,6 +498,22 @@
         "totalAllocated": "Total Alocado",
         "viewAll": "Ver todas as carteiras",
         "loadError": "Falha ao carregar carteiras"
+      },
+      "categorization": {
+        "title": "Categorização Automática",
+        "subtitle": "Como suas transações estão sendo categorizadas este mês",
+        "autoThisMonth": "{count, plural, =0 {Nenhuma transação categorizada automaticamente ainda este mês} one {1 transação categorizada automaticamente este mês} other {# transações categorizadas automaticamente este mês}}",
+        "byRules": "por regras",
+        "byMl": "por aprendizado",
+        "byLlm": "por IA",
+        "byBank": "pelo banco",
+        "needsReview": "{count, plural, one {1 transação precisa de revisão} other {# transações precisam de revisão}}",
+        "reviewNow": "Revisar",
+        "pendingSuggestions": "{count, plural, one {1 nova sugestão de regra disponível} other {# novas sugestões de regras disponíveis}}",
+        "viewSuggestions": "Ver",
+        "allCaughtUp": "Você está em dia.",
+        "quickCategorize": "Categorização rápida",
+        "loadError": "Falha ao carregar estatísticas de categorização"
       }
     }
   },
@@ -639,7 +655,17 @@
       "bulkSelected": "{selected} de {total} grupos selecionados",
       "keepNewest": "Manter a mais recente",
       "keepOldest": "Manter a mais antiga",
-      "markNotDuplicate": "Marcar como não duplicada"
+      "markNotDuplicate": "Marcar como não duplicada",
+      "dateRange": "Período",
+      "sinceDaysOption": "Últimos {days} dias",
+      "allTime": "Todo o período",
+      "source": {
+        "manual": "Manual",
+        "csvImport": "Importação CSV",
+        "bankApi": "API Bancária",
+        "ofxImport": "Importação OFX",
+        "import": "Importação"
+      }
     },
     "potentialDuplicates": "Possíveis Duplicatas",
     "mergeTransactions": "Mesclar Transações",
@@ -881,7 +907,36 @@
     "exportCsv": "Exportar CSV",
     "exportingCsv": "Exportando...",
     "exportCsvSuccess": "Transações exportadas com sucesso",
-    "exportCsvError": "Falha ao exportar transações"
+    "exportCsvError": "Falha ao exportar transações",
+    "quickCategorize": {
+      "title": "Categorização Rápida",
+      "subtitle": "Ensine por exemplo — categorize um grupo uma vez e capturaremos todas as transações futuras iguais",
+      "backToTransactions": "Voltar para Transações",
+      "loading": "Carregando grupos não categorizados...",
+      "loadError": "Falha ao carregar transações não categorizadas",
+      "loadErrorDescription": "Algo deu errado ao carregar seus grupos. Por favor, tente novamente.",
+      "emptyTitle": "Nada para categorizar",
+      "emptyDescription": "Todas as suas transações já estão categorizadas. Novos grupos aparecerão aqui conforme chegarem.",
+      "emptyBack": "Voltar ao painel",
+      "groupCount": "{count, plural, one {1 transação neste grupo} other {# transações neste grupo}}",
+      "totalAmount": "Total {amount}",
+      "remaining": "{count, plural, one {1 grupo restante} other {# grupos restantes}}",
+      "progress": "{done} de {total} grupos categorizados",
+      "selectCategory": "Selecione uma categoria",
+      "categorizeGroup": "{count, plural, one {Categorizar 1 transação} other {Categorizar # transações}}",
+      "skip": "Pular",
+      "saving": "Salvando...",
+      "success": "{count, plural, one {Categorizada 1 transação} other {Categorizadas # transações}}",
+      "partial": "{success, plural, one {Categorizada 1 transação} other {Categorizadas # transações}} ({failed, plural, one {1 falhou} other {# falharam}})",
+      "error": "Falha ao categorizar grupo",
+      "allDoneTitle": "Tudo pronto",
+      "allDoneDescription": "Você passou pelos principais grupos. A partir de agora, categorizaremos automaticamente as transações correspondentes.",
+      "allDoneBack": "Voltar ao painel",
+      "samples": "Transações de exemplo",
+      "stepLabel": "Grupo {current} de {total}",
+      "moreSamples": "{count, plural, one {e mais 1} other {e mais #}}",
+      "hint": "Depois que você categorizar um grupo, aprendemos o padrão e aplicamos automaticamente a transações correspondentes daqui para frente."
+    }
   },
   "accounts": {
     "title": "Contas",
@@ -1723,9 +1778,17 @@
       "type": "Tipo:",
       "category": "Categoria:",
       "matches": "Correspondências:",
-      "matchCount": "{count} transações",
+      "matchCount": "{count, plural, one {1 transação} other {# transações}}",
       "sampleTransactions": "Transações de Exemplo",
       "unknown": "Desconhecido",
+      "acceptAllHighConfidence": "Aceitar todas de alta confiança",
+      "acceptAllHighConfidenceCount": "{count, plural, one {Aceitar 1 de alta confiança} other {Aceitar todas as # de alta confiança}}",
+      "acceptingAll": "Aceitando...",
+      "bulkAcceptSuccess": "{count, plural, one {Criada 1 regra a partir de sugestões de alta confiança} other {Criadas # regras a partir de sugestões de alta confiança}}",
+      "bulkAcceptPartial": "{success, plural, one {Criada 1 regra} other {Criadas # regras}} ({failed, plural, one {1 falhou} other {# falharam}})",
+      "bulkAcceptEmpty": "Nenhuma sugestão com 90%+ de confiança para aceitar",
+      "bulkAcceptFailed": "Falha ao aceitar sugestões de alta confiança",
+      "impactPreview": "{count, plural, =0 {Nenhuma transação não categorizada existente corresponde a esta regra ainda} one {Categorizaria automaticamente 1 transação não categorizada existente} other {Categorizaria automaticamente # transações não categorizadas existentes}}",
       "empty": {
         "title": "Nenhuma Sugestão Disponível",
         "description": "Precisamos de mais dados de transações para gerar sugestões de regras significativas.",
@@ -3004,7 +3067,26 @@
     "appTokenHint": "Começa com \"app_token_\"",
     "userTokenHint": "Começa com \"user_token_\"",
     "verifying": "Verificando...",
-    "saveAndContinue": "Salvar e continuar"
+    "saveAndContinue": "Salvar e continuar",
+    "akahuMigration": {
+      "ariaLabel": "Ação necessária: reautorize suas conexões bancárias",
+      "heading": "Ação necessária: reautorize suas conexões bancárias",
+      "body": "O Akahu está migrando ANZ, ASB, BNZ e Westpac para o open banking oficial. Reautorize cada conexão abaixo para continuar sincronizando suas transações. {daysRemaining, plural, =0 {O prazo é hoje.} =1 {Falta 1 dia.} other {Faltam # dias.}}",
+      "upgrade": "Reautorizar",
+      "upgrading": "Migrando...",
+      "dismiss": "Dispensar por hoje",
+      "row": {
+        "unknownBank": "Conexão bancária",
+        "lastSynced": "{days, plural, =0 {Sincronizada hoje} =1 {Sincronizada há 1 dia} other {Sincronizada há # dias}}",
+        "neverSynced": "Nunca sincronizada"
+      },
+      "toasts": {
+        "initiateFailed": "Não foi possível iniciar a atualização do Akahu. Tente novamente.",
+        "credentialsMissing": "Configure suas credenciais do Akahu nesta página primeiro e clique em Reautorizar novamente.",
+        "migrationSuccess": "{bankName} migrado. {count, plural, =0 {Nenhuma transação precisou ser remapeada.} =1 {1 transação remapeada.} other {# transações remapeadas.}}",
+        "migrationFailed": "Não foi possível migrar {bankName}. {error}"
+      }
+    }
   },
   "budgets": {
     "title": "Orçamentos",
@@ -3564,5 +3646,53 @@
     "message": "Usamos apenas cookies essenciais — para sua sessão e preferência de idioma. Sem cookies de rastreamento ou publicidade.",
     "learnMore": "Saiba mais",
     "accept": "Entendido"
+  },
+  "notifications": {
+    "title": "Notificações",
+    "empty": "Nenhuma notificação ainda",
+    "loading": "Carregando notificações...",
+    "loadError": "Falha ao carregar notificações",
+    "retry": "Tentar novamente",
+    "markAllRead": "Marcar todas como lidas",
+    "markRead": "Marcar como lida",
+    "dismiss": "Dispensar",
+    "justNow": "Agora mesmo",
+    "minutesAgo": "{count, plural, one {1 minuto atrás} other {# minutos atrás}}",
+    "hoursAgo": "{count, plural, one {1 hora atrás} other {# horas atrás}}",
+    "daysAgo": "{count, plural, one {1 dia atrás} other {# dias atrás}}",
+    "templates": {
+      "CategorizationReminder": {
+        "title": "Transações para categorizar",
+        "body": "{count, plural, one {Você tem 1 transação sem categoria} other {Você tem # transações sem categoria}}"
+      },
+      "TransactionReminder": {
+        "title": "Transação próxima",
+        "body": "{merchantName} — {amount} vence em {date}"
+      },
+      "RuleSuggestionsAvailable": {
+        "title": "Novas sugestões de regras",
+        "body": "{count, plural, one {1 nova sugestão de regra de categorização disponível} other {# novas sugestões de regras de categorização disponíveis}}"
+      }
+    }
+  },
+  "upsell": {
+    "categorization": {
+      "uncategorizedBacklog": {
+        "title": "Deixe a IA cuidar do seu acúmulo",
+        "description": "Você tem {count, plural, one {1 transação não categorizada} other {# transações não categorizadas}}. Atualize para Pro e tenha categorização com IA em um clique.",
+        "cta": "Atualizar para Pro"
+      },
+      "ruleSuggestions": {
+        "title": "Desbloqueie sugestões de regras aprimoradas por IA",
+        "description": "Usuários Pro recebem sugestões de regras mais inteligentes que aprendem seus padrões de gasto e cobrem dezenas de lojas de uma só vez.",
+        "cta": "Atualizar para Pro"
+      },
+      "postImport": {
+        "title": "Automatize da próxima vez",
+        "description": "Usuários Pro podem usar IA para categorizar todas as transações importadas em um clique — sem revisão manual.",
+        "cta": "Atualizar para Pro"
+      },
+      "dismiss": "Dispensar"
+    }
   }
 }

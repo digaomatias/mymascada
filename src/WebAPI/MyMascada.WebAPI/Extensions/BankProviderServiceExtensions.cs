@@ -38,6 +38,7 @@ public static class BankProviderServiceExtensions
         services.AddScoped<IBankConnectionRepository, BankConnectionRepository>();
         services.AddScoped<IBankSyncLogRepository, BankSyncLogRepository>();
         services.AddScoped<IAkahuUserCredentialRepository, AkahuUserCredentialRepository>();
+        services.AddScoped<IAkahuWebhookSubscriptionRepository, AkahuWebhookSubscriptionRepository>();
         services.AddScoped<IBankCategoryMappingRepository, BankCategoryMappingRepository>();
 
         // Bank category mapping service
@@ -51,6 +52,9 @@ public static class BankProviderServiceExtensions
 
         // Register Akahu as a bank provider (factory will auto-discover via DI)
         services.AddScoped<IBankProvider, AkahuBankProvider>();
+
+        // Webhook subscription lifecycle service
+        services.AddScoped<IAkahuWebhookSubscriptionService, AkahuWebhookSubscriptionService>();
 
         // Akahu webhook signature verification
         services.AddHttpClient<IAkahuWebhookSignatureService, AkahuWebhookSignatureService>();

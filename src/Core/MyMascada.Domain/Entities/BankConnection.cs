@@ -61,6 +61,12 @@ public class BankConnection : BaseEntity
     [MaxLength(1000)]
     public string? LastSyncError { get; set; }
 
+    /// <summary>
+    /// UTC timestamp of when this connection was successfully migrated from an Akahu
+    /// classic account to its official open-banking equivalent. Null = never migrated.
+    /// </summary>
+    public DateTime? LastMigratedAt { get; set; }
+
     // Navigation properties
 
     /// <summary>

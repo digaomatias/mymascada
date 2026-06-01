@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using Microsoft.SemanticKernel;
@@ -119,12 +120,12 @@ public class FinancialDataPlugin
     {
         try
         {
-            if (!DateTime.TryParse(startDate, out var start))
+            if (!DateTime.TryParseExact(startDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var start))
             {
                 return $"Invalid start date format: '{startDate}'. Please use YYYY-MM-DD format.";
             }
 
-            if (!DateTime.TryParse(endDate, out var end))
+            if (!DateTime.TryParseExact(endDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var end))
             {
                 return $"Invalid end date format: '{endDate}'. Please use YYYY-MM-DD format.";
             }
@@ -354,18 +355,12 @@ public class FinancialDataPlugin
     {
         try
         {
-            var accounts = await _accountRepository.GetByUserIdAsync(_userId);
-            var matchedAccount = accounts.FirstOrDefault(a =>
-                a.Name.Contains(accountName, StringComparison.OrdinalIgnoreCase));
-
+            var (matchedAccount, error) = await FindAccountByNameAsync(accountName);
             if (matchedAccount == null)
-            {
-                return $"No account found matching '{accountName}'. Available accounts: {string.Join(", ", accounts.Select(a => a.Name))}";
-            }
+                return error!;
 
-            // Calculate actual balance (initial balance + sum of transactions)
-            var balances = await _transactionRepository.GetAccountBalancesAsync(_userId);
-            var actualBalance = balances.GetValueOrDefault(matchedAccount.Id, matchedAccount.CurrentBalance);
+            // Calculate actual balance for this specific account
+            var actualBalance = await _transactionRepository.GetAccountBalanceAsync(matchedAccount.Id, _userId);
 
             var sb = new StringBuilder();
             sb.AppendLine($"Account: {matchedAccount.Name}");
@@ -395,6 +390,282 @@ public class FinancialDataPlugin
         catch (Exception ex)
         {
             return $"Error retrieving account details: {ex.Message}";
+        }
+    }
+
+    [KernelFunction("GetTransactionsByAccount")]
+    [Description("Get transactions for a specific account. Use when user asks about transactions on a specific card or account like 'show me my Amex transactions' or 'what did I spend on my checking account'.")]
+    public async Task<string> GetTransactionsByAccount(
+        [Description("Account name to search for (partial match, e.g. 'Amex' for 'American Express Gold Card')")] string accountName,
+        [Description("Number of months to look back (default 3, max 24)")] int months = 3)
+    {
+        try
+        {
+            months = Math.Clamp(months, 1, 24);
+
+            var (matchedAccount, error) = await FindAccountByNameAsync(accountName);
+            if (matchedAccount == null)
+                return error!;
+
+            var endDate = DateTimeProvider.UtcNow;
+            var startDate = endDate.AddMonths(-months);
+
+            // Fetch all transactions for accurate summary
+            var allTransactions = (await _transactionRepository.GetByDateRangeAsync(_userId, matchedAccount.Id, startDate, endDate)).ToList();
+
+            if (!allTransactions.Any())
+            {
+                return $"No transactions found for '{matchedAccount.Name}' in the last {months} months.";
+            }
+
+            var actualBalance = await _transactionRepository.GetAccountBalanceAsync(matchedAccount.Id, _userId);
+
+            // Compute summary from the full set
+            var income = allTransactions.Where(t => !t.IsExcluded && !t.IsTransfer() && t.Amount > 0).Sum(t => t.Amount);
+            var expenses = allTransactions.Where(t => !t.IsExcluded && !t.IsTransfer() && t.Amount < 0).Sum(t => Math.Abs(t.Amount));
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"Account: {matchedAccount.Name} ({matchedAccount.Type}) | Balance: {actualBalance:N2} {matchedAccount.Currency}");
+            sb.AppendLine($"Transactions (last {months} months) - {allTransactions.Count} total:");
+            sb.AppendLine();
+
+            // Display up to 50 most recent
+            var displayLimit = 50;
+            foreach (var t in allTransactions.OrderByDescending(t => t.TransactionDate).Take(displayLimit))
+            {
+                var categoryName = t.Category?.Name ?? "Uncategorized";
+                var marker = t.IsTransfer() ? " [Transfer]" : t.IsExcluded ? " [Excluded]" : "";
+                sb.AppendLine($"  {t.TransactionDate:yyyy-MM-dd} | {t.GetDisplayDescription()} | {t.Amount:N2} | {categoryName}{marker}");
+            }
+
+            sb.AppendLine();
+            sb.AppendLine($"Summary (excluding transfers): Income {income:N2} | Expenses {expenses:N2} | Net {income - expenses:N2}");
+            if (allTransactions.Count > displayLimit)
+                sb.AppendLine($"Showing {displayLimit} of {allTransactions.Count} transactions.");
+
+            return sb.ToString();
+        }
+        catch (Exception ex)
+        {
+            return $"Error retrieving transactions by account: {ex.Message}";
+        }
+    }
+
+    [KernelFunction("GetAccountSpendingByCategory")]
+    [Description("Get spending breakdown by category for a specific account. Use when user asks 'what am I spending on with my Amex?' or 'category breakdown for my checking account'.")]
+    public async Task<string> GetAccountSpendingByCategory(
+        [Description("Account name to search for (partial match)")] string accountName,
+        [Description("Number of months to look back (default 3, max 24)")] int months = 3)
+    {
+        try
+        {
+            months = Math.Clamp(months, 1, 24);
+
+            var (matchedAccount, error) = await FindAccountByNameAsync(accountName);
+            if (matchedAccount == null)
+                return error!;
+
+            var endDate = DateTimeProvider.UtcNow;
+            var startDate = endDate.AddMonths(-months);
+
+            var transactions = await _transactionRepository.GetByDateRangeAsync(_userId, matchedAccount.Id, startDate, endDate);
+            var transactionList = transactions.ToList();
+
+            if (!transactionList.Any())
+            {
+                return $"No transactions found for '{matchedAccount.Name}' in the last {months} months.";
+            }
+
+            var categories = await _categoryRepository.GetByUserIdAsync(_userId);
+            var categoryLookup = categories.ToDictionary(c => c.Id, c => c.Name);
+
+            var breakdown = transactionList
+                .Where(t => t.Amount < 0 && !t.IsExcluded && !t.IsTransfer())
+                .GroupBy(t => t.CategoryId ?? 0)
+                .Select(g => new
+                {
+                    CategoryName = g.Key == 0
+                        ? "Uncategorized"
+                        : categoryLookup.GetValueOrDefault(g.Key, $"Category #{g.Key}"),
+                    Total = g.Sum(t => Math.Abs(t.Amount)),
+                    Count = g.Count()
+                })
+                .OrderByDescending(x => x.Total)
+                .ToList();
+
+            var totalSpending = breakdown.Sum(b => b.Total);
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"Spending breakdown for '{matchedAccount.Name}' (last {months} months):");
+            sb.AppendLine();
+
+            foreach (var cat in breakdown)
+            {
+                var percentage = totalSpending > 0 ? (cat.Total / totalSpending * 100) : 0;
+                sb.AppendLine($"  {cat.CategoryName}: {cat.Total:N2} ({percentage:N1}%) - {cat.Count} transactions");
+            }
+
+            sb.AppendLine();
+            sb.AppendLine($"Total spending: {totalSpending:N2}");
+
+            var totalIncome = transactionList
+                .Where(t => t.Amount > 0 && !t.IsExcluded && !t.IsTransfer())
+                .Sum(t => t.Amount);
+
+            sb.AppendLine($"Total income: {totalIncome:N2}");
+            sb.AppendLine($"Net: {totalIncome - totalSpending:N2}");
+
+            return sb.ToString();
+        }
+        catch (Exception ex)
+        {
+            return $"Error retrieving account spending by category: {ex.Message}";
+        }
+    }
+
+    [KernelFunction("GetTransactionsForAccountByDateRange")]
+    [Description("Get transactions for a specific account within a date range. Use when user asks for account transactions in a specific period like 'show my Amex transactions from January'.")]
+    public async Task<string> GetTransactionsForAccountByDateRange(
+        [Description("Account name to search for (partial match)")] string accountName,
+        [Description("Start date (YYYY-MM-DD)")] string startDate,
+        [Description("End date (YYYY-MM-DD)")] string endDate)
+    {
+        try
+        {
+            var (matchedAccount, error) = await FindAccountByNameAsync(accountName);
+            if (matchedAccount == null)
+                return error!;
+
+            if (!DateTime.TryParseExact(startDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var start))
+            {
+                return $"Invalid start date format: '{startDate}'. Please use YYYY-MM-DD format.";
+            }
+
+            if (!DateTime.TryParseExact(endDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var end))
+            {
+                return $"Invalid end date format: '{endDate}'. Please use YYYY-MM-DD format.";
+            }
+
+            start = DateTimeProvider.ToUtc(start);
+            // Normalize end date to end-of-day so date-only inputs include the full final day
+            end = DateTimeProvider.ToUtc(end);
+            if (end.TimeOfDay == TimeSpan.Zero)
+                end = end.AddDays(1).AddTicks(-1);
+
+            // Fetch all transactions for accurate summary
+            var allTransactions = (await _transactionRepository.GetByDateRangeAsync(_userId, matchedAccount.Id, start, end)).ToList();
+
+            if (!allTransactions.Any())
+            {
+                return $"No transactions found for '{matchedAccount.Name}' between {start:yyyy-MM-dd} and {end:yyyy-MM-dd}.";
+            }
+
+            // Compute summary from the full set
+            var income = allTransactions.Where(t => !t.IsExcluded && !t.IsTransfer() && t.Amount > 0).Sum(t => t.Amount);
+            var expenses = allTransactions.Where(t => !t.IsExcluded && !t.IsTransfer() && t.Amount < 0).Sum(t => Math.Abs(t.Amount));
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"Account: {matchedAccount.Name} ({matchedAccount.Type})");
+            sb.AppendLine($"Transactions from {start:yyyy-MM-dd} to {end:yyyy-MM-dd} ({allTransactions.Count} total):");
+            sb.AppendLine();
+
+            // Display up to 100 most recent
+            var displayLimit = 100;
+            foreach (var t in allTransactions.OrderByDescending(t => t.TransactionDate).Take(displayLimit))
+            {
+                var categoryName = t.Category?.Name ?? "Uncategorized";
+                var marker = t.IsTransfer() ? " [Transfer]" : t.IsExcluded ? " [Excluded]" : "";
+                sb.AppendLine($"  {t.TransactionDate:yyyy-MM-dd} | {t.GetDisplayDescription()} | {t.Amount:N2} | {categoryName}{marker}");
+            }
+
+            sb.AppendLine();
+            sb.AppendLine($"Summary (excluding transfers): Income {income:N2} | Expenses {expenses:N2} | Net {income - expenses:N2}");
+            if (allTransactions.Count > displayLimit)
+                sb.AppendLine($"Showing {displayLimit} of {allTransactions.Count} transactions.");
+
+            return sb.ToString();
+        }
+        catch (Exception ex)
+        {
+            return $"Error retrieving account transactions by date range: {ex.Message}";
+        }
+    }
+
+    [KernelFunction("GetRecurringExpensesByAccount")]
+    [Description("Get recurring expenses and subscriptions that hit a specific account. Use when user asks 'what subscriptions are on my Amex?' or 'recurring charges on my checking account'.")]
+    public async Task<string> GetRecurringExpensesByAccount(
+        [Description("Account name to search for (partial match)")] string accountName)
+    {
+        try
+        {
+            var (matchedAccount, error) = await FindAccountByNameAsync(accountName);
+            if (matchedAccount == null)
+                return error!;
+
+            var patterns = await _recurringPatternRepository.GetActiveAsync(_userId);
+            var patternList = patterns.ToList();
+
+            if (!patternList.Any())
+            {
+                return $"No active recurring expenses detected for any account.";
+            }
+
+            // Match recurring patterns to this account using NormalizedMerchantKey
+            // against transaction descriptions for more reliable matching
+            var endDate = DateTimeProvider.UtcNow;
+            var startDate = endDate.AddMonths(-6);
+            var accountTransactions = await _transactionRepository.GetByDateRangeAsync(_userId, matchedAccount.Id, startDate, endDate);
+            var accountDescriptions = accountTransactions
+                .Select(t => (t.Description ?? string.Empty).ToLowerInvariant())
+                .Distinct()
+                .ToHashSet();
+
+            var matchedPatterns = patternList
+                .Where(p =>
+                {
+                    var key = p.NormalizedMerchantKey;
+                    if (string.IsNullOrEmpty(key)) return false;
+                    // NormalizedMerchantKey is already lowered; require minimum length to avoid false positives
+                    return key.Length >= 3 && accountDescriptions.Any(d => d.Contains(key));
+                })
+                .ToList();
+
+            if (!matchedPatterns.Any())
+            {
+                return $"No recurring expenses detected for '{matchedAccount.Name}'. There are {patternList.Count} recurring patterns on other accounts.";
+            }
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"Recurring expenses for '{matchedAccount.Name}':");
+            sb.AppendLine();
+
+            var totalMonthly = 0m;
+
+            foreach (var pattern in matchedPatterns.OrderByDescending(p => p.GetMonthlyCost()))
+            {
+                var monthlyCost = pattern.GetMonthlyCost();
+                totalMonthly += monthlyCost;
+                var daysUntilDue = pattern.GetDaysUntilDue(DateTimeProvider.UtcNow);
+                var dueInfo = daysUntilDue >= 0
+                    ? $"next due in {daysUntilDue} days"
+                    : $"overdue by {Math.Abs(daysUntilDue)} days";
+
+                sb.AppendLine($"  {pattern.MerchantName}:");
+                sb.AppendLine($"    Amount: ~{pattern.AverageAmount:N2} / {pattern.GetIntervalName()}");
+                sb.AppendLine($"    Monthly cost: ~{monthlyCost:N2}");
+                sb.AppendLine($"    Status: {pattern.Status} | {dueInfo}");
+                sb.AppendLine();
+            }
+
+            sb.AppendLine($"Total estimated monthly recurring on this account: ~{totalMonthly:N2}");
+            sb.AppendLine($"Total estimated annual recurring on this account: ~{totalMonthly * 12:N2}");
+            sb.AppendLine($"({matchedPatterns.Count} of {patternList.Count} total recurring patterns)");
+
+            return sb.ToString();
+        }
+        catch (Exception ex)
+        {
+            return $"Error retrieving recurring expenses by account: {ex.Message}";
         }
     }
 
@@ -675,13 +946,13 @@ public class FinancialDataPlugin
             DateTime? start = null, end = null;
             if (!string.IsNullOrWhiteSpace(startDate))
             {
-                if (!DateTime.TryParse(startDate, out var s))
+                if (!DateTime.TryParseExact(startDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var s))
                     return $"Invalid start date format: '{startDate}'. Please use YYYY-MM-DD.";
                 start = DateTimeProvider.ToUtc(s);
             }
             if (!string.IsNullOrWhiteSpace(endDate))
             {
-                if (!DateTime.TryParse(endDate, out var e))
+                if (!DateTime.TryParseExact(endDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var e))
                     return $"Invalid end date format: '{endDate}'. Please use YYYY-MM-DD.";
                 end = DateTimeProvider.ToUtc(e);
             }
@@ -1114,6 +1385,31 @@ public class FinancialDataPlugin
         {
             return $"Error retrieving goal details: {ex.Message}";
         }
+    }
+
+    private async Task<(Domain.Entities.Account? account, string? error)> FindAccountByNameAsync(string accountName)
+    {
+        var accounts = await _accountRepository.GetByUserIdAsync(_userId);
+        var accountList = accounts.ToList();
+
+        // Prefer active accounts; fall back to inactive only if no active match
+        var matches = accountList
+            .Where(a => a.IsActive && a.Name.Contains(accountName, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        if (matches.Count == 0)
+        {
+            matches = accountList
+                .Where(a => a.Name.Contains(accountName, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
+        if (matches.Count == 0)
+            return (null, $"No account found matching '{accountName}'. Available accounts: {string.Join(", ", accountList.Where(a => a.IsActive).Select(a => a.Name))}");
+        if (matches.Count > 1)
+            return (null, $"Multiple accounts match '{accountName}': {string.Join(", ", matches.Select(a => a.Name))}. Please be more specific.");
+
+        return (matches[0], null);
     }
 
     private class CategorizationItem

@@ -4,6 +4,7 @@ using MyMascada.Application.Common.Behaviours;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Infrastructure.Services;
 using MyMascada.Infrastructure.Services.Logging;
+using MyMascada.Infrastructure.Services.Subscription;
 using MyMascada.Infrastructure.Services.UserData;
 
 namespace MyMascada.WebAPI.Extensions;
@@ -38,6 +39,7 @@ public static class ApplicationServiceExtensions
         // Authentication services
         services.AddScoped<IAuthenticationService, AuthenticationService>();
         services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<IUserStatusService, UserStatusService>();
 
         // Invite code validation service
         services.AddScoped<IInviteCodeValidationService, InviteCodeValidationService>();
@@ -59,6 +61,10 @@ public static class ApplicationServiceExtensions
         services.AddScoped<MyMascada.Application.Features.Reconciliation.Services.IMatchConfidenceCalculator,
             MyMascada.Application.Features.Reconciliation.Services.MatchConfidenceCalculator>();
 
+        // Subscription / tier gating — registered here alongside its consumers
+        // (RuleSuggestionService, RuleSuggestionAnalyzerFactory, LLMHandler)
+        services.AddScoped<ISubscriptionService, SubscriptionService>();
+
         // Rules services
         services.AddScoped<MyMascada.Application.Features.Rules.Services.IRuleSuggestionsService,
             MyMascada.Application.Features.Rules.Services.SimplifiedRuleSuggestionsService>();
@@ -66,6 +72,8 @@ public static class ApplicationServiceExtensions
             MyMascada.Application.Features.RuleSuggestions.Services.RuleSuggestionService>();
 
         // Rule Suggestion Analyzers
+        services.AddScoped<MyMascada.Application.Features.RuleSuggestions.Services.ICategorizationHistoryAnalyzer,
+            MyMascada.Application.Features.RuleSuggestions.Services.CategorizationHistoryAnalyzer>();
         services.AddScoped<MyMascada.Application.Features.RuleSuggestions.Services.BasicRuleSuggestionAnalyzer>();
         services.AddScoped<MyMascada.Application.Features.RuleSuggestions.Services.AIEnhancedRuleSuggestionAnalyzer>();
         services.AddScoped<MyMascada.Application.Features.RuleSuggestions.Services.IRuleSuggestionAnalyzerFactory,
@@ -74,6 +82,10 @@ public static class ApplicationServiceExtensions
             MyMascada.Infrastructure.Services.RuleSuggestions.AIUsageTracker>();
         services.AddScoped<MyMascada.Application.Features.RuleSuggestions.Services.IPatternDetectionService,
             MyMascada.Application.Features.RuleSuggestions.Services.PatternDetectionService>();
+
+        // OAuth state store (singleton — backed by IMemoryCache which is also singleton)
+        services.AddSingleton<MyMascada.Application.Common.Interfaces.IOAuthStateStore,
+            MyMascada.Infrastructure.Services.Auth.OAuthStateStore>();
 
         // Event Handlers
         services.AddScoped<MyMascada.Application.Events.Handlers.TransactionsCreatedEventHandler>();
@@ -97,6 +109,10 @@ public static class ApplicationServiceExtensions
         // Recurring Pattern Persistence services
         services.AddScoped<MyMascada.Application.Features.RecurringPatterns.Services.IRecurringPatternPersistenceService,
             MyMascada.Application.Features.RecurringPatterns.Services.RecurringPatternPersistenceService>();
+
+        // Notification services
+        services.AddScoped<INotificationService, MyMascada.Infrastructure.Services.Notifications.NotificationService>();
+        services.AddScoped<INotificationTriggerService, MyMascada.Infrastructure.Services.Notifications.NotificationTriggerService>();
 
         return services;
     }

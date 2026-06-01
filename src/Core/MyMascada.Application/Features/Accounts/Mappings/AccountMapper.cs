@@ -50,8 +50,18 @@ public static partial class AccountMapper
     public static partial Account ToEntity(CreateAccountDto dto);
 
     // UpdateAccountDto -> Account (in-place update)
+    public static void ApplyTo(UpdateAccountDto dto, Account account)
+    {
+        ApplyToGenerated(dto, account);
+        if (dto.IsActive.HasValue)
+        {
+            account.IsActive = dto.IsActive.Value;
+        }
+    }
+
     [MapperIgnoreTarget(nameof(Account.UserId))]
     [MapperIgnoreTarget(nameof(Account.CurrentBalance))]
+    [MapperIgnoreTarget(nameof(Account.IsActive))]
     [MapperIgnoreTarget(nameof(Account.Transactions))]
     [MapperIgnoreTarget(nameof(Account.BankConnection))]
     [MapperIgnoreTarget(nameof(Account.Shares))]
@@ -62,7 +72,7 @@ public static partial class AccountMapper
     [MapperIgnoreTarget(nameof(Account.UpdatedBy))]
     [MapperIgnoreTarget(nameof(Account.LastReconciledDate))]
     [MapperIgnoreTarget(nameof(Account.LastReconciledBalance))]
-    public static partial void ApplyTo(UpdateAccountDto dto, Account account);
+    private static partial void ApplyToGenerated(UpdateAccountDto dto, Account account);
 
     // Account -> AccountWithBalanceDto
     [MapProperty(nameof(Account.Type), nameof(AccountWithBalanceDto.TypeDisplayName), Use = nameof(GetAccountTypeDisplayName))]

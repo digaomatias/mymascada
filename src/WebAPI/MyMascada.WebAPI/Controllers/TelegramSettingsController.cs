@@ -6,6 +6,7 @@ using MyMascada.Application.Common.Configuration;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Telegram.DTOs;
 using MyMascada.Domain.Common;
+using MyMascada.Application.Common.Security;
 using MyMascada.Domain.Entities;
 using System.Security.Cryptography;
 
@@ -96,7 +97,7 @@ public class TelegramSettingsController : ControllerBase
 
         var encryptedToken = _encryptionService.Encrypt(request.BotToken);
         var webhookSecret = GenerateWebhookSecret();
-        var webhookUrl = BuildWebhookUrl(webhookSecret);
+        var webhookUrl = BuildWebhookUrl();
 
         // Set webhook with Telegram
         var webhookSet = await _telegramBotService.SetWebhookAsync(request.BotToken, webhookUrl, webhookSecret);
@@ -111,7 +112,7 @@ public class TelegramSettingsController : ControllerBase
             {
                 UserId = userId,
                 EncryptedBotToken = encryptedToken,
-                WebhookSecret = webhookSecret,
+                WebhookSecretHash = Sha256Hasher.Hash(webhookSecret),
                 BotUsername = botInfo.Username,
                 IsActive = true,
                 IsVerified = true,
@@ -123,7 +124,7 @@ public class TelegramSettingsController : ControllerBase
         else
         {
             existing.EncryptedBotToken = encryptedToken;
-            existing.WebhookSecret = webhookSecret;
+            existing.WebhookSecretHash = Sha256Hasher.Hash(webhookSecret);
             existing.BotUsername = botInfo.Username;
             existing.IsActive = true;
             existing.IsVerified = true;
@@ -199,7 +200,7 @@ public class TelegramSettingsController : ControllerBase
         });
     }
 
-    private string BuildWebhookUrl(string webhookSecret)
+    private string BuildWebhookUrl()
     {
         var baseUrl = _configuration["Telegram:WebhookBaseUrl"];
         if (string.IsNullOrEmpty(baseUrl))
@@ -209,7 +210,7 @@ public class TelegramSettingsController : ControllerBase
 
         // Remove trailing slash
         baseUrl = baseUrl.TrimEnd('/');
-        return $"{baseUrl}/api/telegram/webhook/{webhookSecret}";
+        return $"{baseUrl}/api/telegram/webhook";
     }
 
     private static string GenerateWebhookSecret()

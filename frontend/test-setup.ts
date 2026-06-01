@@ -1,6 +1,31 @@
 import '@testing-library/jest-dom/vitest'
 import { vi } from 'vitest'
 
+// Mock next-intl with actual translations — single consolidated mock
+vi.mock('next-intl', async () => {
+  const messagesModule = await import('./messages/en.json')
+  const messages = (messagesModule as any).default || messagesModule
+
+  function getNestedValue(obj: any, keyPath: string): any {
+    return keyPath.split('.').reduce((current, key) => current?.[key], obj)
+  }
+
+  return {
+    useTranslations: (namespace?: string) => {
+      const section = namespace ? getNestedValue(messages, namespace) : messages
+      return (key: string, values?: Record<string, any>) => {
+        const value = getNestedValue(section, key)
+        if (typeof value !== 'string') return namespace ? `${namespace}.${key}` : key
+        if (!values) return value
+        return value.replace(/\{(\w+)\}/g, (_: string, k: string) => String(values[k] ?? `{${k}}`))
+      }
+    },
+    useLocale: () => 'en',
+    useMessages: () => messages,
+    NextIntlClientProvider: ({ children }: any) => children,
+  }
+})
+
 // Mock Next.js router
 vi.mock('next/navigation', () => ({
   useRouter() {
@@ -33,36 +58,49 @@ vi.mock('sonner', () => ({
 
 // Mock Heroicons
 vi.mock('@heroicons/react/24/outline', () => ({
-  CheckCircleIcon: vi.fn(() => null),
-  XMarkIcon: vi.fn(() => null),
-  ExclamationTriangleIcon: vi.fn(() => null),
-  InformationCircleIcon: vi.fn(() => null),
-  ArrowLeftIcon: vi.fn(() => null),
-  DocumentCheckIcon: vi.fn(() => null),
-  ChevronDownIcon: vi.fn(() => null),
-  ChevronUpIcon: vi.fn(() => null),
-  ArrowPathIcon: vi.fn(() => null),
-  EllipsisHorizontalIcon: vi.fn(() => null),
+  CheckCircleIcon: () => null,
+  XMarkIcon: () => null,
+  ExclamationTriangleIcon: () => null,
+  InformationCircleIcon: () => null,
+  ArrowLeftIcon: () => null,
+  DocumentCheckIcon: () => null,
+  ChevronDownIcon: () => null,
+  ChevronUpIcon: () => null,
+  ArrowPathIcon: () => null,
+  EllipsisHorizontalIcon: () => null,
+  DocumentDuplicateIcon: () => null,
+  ClockIcon: () => null,
 }))
 
-// Mock UI components  
-vi.mock('@/components/ui/button', () => ({
-  Button: vi.fn(({ children }) => children),
-}))
+// Mock UI components
+vi.mock('@/components/ui/button', () => {
+  const React = require('react')
+  return {
+    Button: ({ children, disabled, onClick, className, type, ...rest }: any) => {
+      return React.createElement('button', { disabled: disabled || undefined, onClick, className, type }, children)
+    },
+  }
+})
 
-vi.mock('@/components/ui/card', () => ({
-  Card: vi.fn(({ children }) => children),
-  CardContent: vi.fn(({ children }) => children),
-  CardHeader: vi.fn(({ children }) => children),
-  CardTitle: vi.fn(({ children }) => children),
-}))
+vi.mock('@/components/ui/card', () => {
+  const React = require('react')
+  return {
+    Card: ({ children, className, ...rest }: any) => React.createElement('div', { className, 'data-testid': 'card' }, children),
+    CardContent: ({ children, className, ...rest }: any) => React.createElement('div', { className }, children),
+    CardHeader: ({ children, className, onClick, ...rest }: any) => React.createElement('div', { className, onClick }, children),
+    CardTitle: ({ children, className, ...rest }: any) => React.createElement('div', { className }, children),
+  }
+})
 
-vi.mock('@/components/ui/badge', () => ({
-  Badge: vi.fn(({ children }) => children),
-}))
+vi.mock('@/components/ui/badge', () => {
+  const React = require('react')
+  return {
+    Badge: ({ children, className, ...rest }: any) => React.createElement('span', { className }, children),
+  }
+})
 
 vi.mock('@/components/ui/confidence-indicator', () => ({
-  ConfidenceIndicator: vi.fn(() => 'Confidence Indicator'),
+  ConfidenceIndicator: () => null,
 }))
 
 vi.mock('@/lib/utils', () => ({
@@ -84,8 +122,8 @@ Object.defineProperty(window, 'matchMedia', {
     matches: false,
     media: query,
     onchange: null,
-    addListener: vi.fn(), // deprecated
-    removeListener: vi.fn(), // deprecated
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),

@@ -1,4 +1,5 @@
 using MediatR;
+using MyMascada.Application.BackgroundJobs;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.BankConnections.DTOs;
 
@@ -18,11 +19,11 @@ public record ExchangeAkahuCodeQuery(
 ) : IRequest<ExchangeAkahuCodeResult>;
 
 /// <summary>
-/// Result of the OAuth code exchange, containing available accounts and the access token.
+/// Result of the OAuth code exchange, containing available accounts.
+/// The access token is persisted server-side only and never returned to the client.
 /// </summary>
 public record ExchangeAkahuCodeResult(
-    IEnumerable<AkahuAccountDto> Accounts,
-    string AccessToken
+    IEnumerable<AkahuAccountDto> Accounts
 );
 
 /// <summary>
@@ -38,6 +39,9 @@ public class ExchangeAkahuCodeQueryHandler : IRequestHandler<ExchangeAkahuCodeQu
     private readonly IAkahuUserCredentialRepository _credentialRepository;
     private readonly IBankConnectionRepository _bankConnectionRepository;
     private readonly ISettingsEncryptionService _encryptionService;
+    private readonly IOAuthStateStore _oauthStateStore;
+    private readonly IAkahuWebhookSubscriptionService _webhookSubscriptionService;
+    private readonly IAkahuMigrationJobService _migrationJobService;
     private readonly IApplicationLogger<ExchangeAkahuCodeQueryHandler> _logger;
 
     public ExchangeAkahuCodeQueryHandler(
@@ -45,12 +49,18 @@ public class ExchangeAkahuCodeQueryHandler : IRequestHandler<ExchangeAkahuCodeQu
         IAkahuUserCredentialRepository credentialRepository,
         IBankConnectionRepository bankConnectionRepository,
         ISettingsEncryptionService encryptionService,
+        IOAuthStateStore oauthStateStore,
+        IAkahuWebhookSubscriptionService webhookSubscriptionService,
+        IAkahuMigrationJobService migrationJobService,
         IApplicationLogger<ExchangeAkahuCodeQueryHandler> logger)
     {
         _akahuApiClient = akahuApiClient ?? throw new ArgumentNullException(nameof(akahuApiClient));
         _credentialRepository = credentialRepository ?? throw new ArgumentNullException(nameof(credentialRepository));
         _bankConnectionRepository = bankConnectionRepository ?? throw new ArgumentNullException(nameof(bankConnectionRepository));
         _encryptionService = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
+        _oauthStateStore = oauthStateStore ?? throw new ArgumentNullException(nameof(oauthStateStore));
+        _webhookSubscriptionService = webhookSubscriptionService ?? throw new ArgumentNullException(nameof(webhookSubscriptionService));
+        _migrationJobService = migrationJobService ?? throw new ArgumentNullException(nameof(migrationJobService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -68,6 +78,18 @@ public class ExchangeAkahuCodeQueryHandler : IRequestHandler<ExchangeAkahuCodeQu
         if (string.IsNullOrWhiteSpace(request.AppIdToken))
         {
             throw new ArgumentException("AppIdToken is required for OAuth mode");
+        }
+
+        // Validate OAuth state server-side (CSRF protection)
+        if (string.IsNullOrWhiteSpace(request.State))
+        {
+            throw new ArgumentException("OAuth state parameter is required");
+        }
+
+        var stateValid = await _oauthStateStore.ValidateAndConsumeAsync(request.UserId, request.State, cancellationToken);
+        if (!stateValid)
+        {
+            throw new UnauthorizedAccessException("Invalid or expired OAuth state. Please restart the connection flow.");
         }
 
         // 1. Exchange code for access token
@@ -90,6 +112,10 @@ public class ExchangeAkahuCodeQueryHandler : IRequestHandler<ExchangeAkahuCodeQu
             existingCredential.EncryptedUserToken = encryptedUserToken;
             existingCredential.LastValidatedAt = DateTime.UtcNow;
             existingCredential.LastValidationError = null;
+            existingCredential.ConsentScope = tokenResponse.Scope;
+            existingCredential.ConsentGrantedAt = DateTimeOffset.UtcNow;
+            existingCredential.ConsentCorrelationId = request.State;
+            existingCredential.ConsentRevokedAt = null;
             existingCredential.UpdatedAt = DateTime.UtcNow;
             await _credentialRepository.UpdateAsync(existingCredential, cancellationToken);
         }
@@ -101,9 +127,67 @@ public class ExchangeAkahuCodeQueryHandler : IRequestHandler<ExchangeAkahuCodeQu
                 EncryptedAppToken = encryptedAppToken,
                 EncryptedUserToken = encryptedUserToken,
                 LastValidatedAt = DateTime.UtcNow,
+                ConsentScope = tokenResponse.Scope,
+                ConsentGrantedAt = DateTimeOffset.UtcNow,
+                ConsentCorrelationId = request.State,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             }, cancellationToken);
+        }
+
+        // 1b. Make sure the user has the required Akahu webhook subscriptions in place. The
+        // service swallows per-type failures so this never blocks OAuth completion.
+        try
+        {
+            var ensureResult = await _webhookSubscriptionService.EnsureSubscriptionsAsync(request.UserId, cancellationToken);
+            _logger.LogInformation(
+                "Akahu webhook subscriptions ensured for user {UserId}: subscribed={SubscribedCount}, adopted={AdoptedCount}, healthy={HealthyCount}, failed={FailedCount}",
+                request.UserId,
+                ensureResult.SubscribedTypes.Count,
+                ensureResult.AdoptedTypes.Count,
+                ensureResult.AlreadyHealthyTypes.Count,
+                ensureResult.FailedTypes.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "EnsureSubscriptionsAsync threw for user {UserId} during OAuth callback; continuing", request.UserId);
+        }
+
+        // 1c. Enqueue the Akahu classic→official migration as a background job for any
+        // existing active connections the user has that have not already been migrated.
+        // Failures are logged but never block the OAuth callback.
+        try
+        {
+            var existingAkahuConnections = await _bankConnectionRepository.GetByUserIdAsync(request.UserId, cancellationToken);
+            var candidates = existingAkahuConnections
+                .Where(c => c.ProviderId == AkahuProviderId && c.IsActive && c.LastMigratedAt == null)
+                .ToList();
+
+            if (candidates.Count > 0)
+            {
+                foreach (var candidate in candidates)
+                {
+                    try
+                    {
+                        var jobId = _migrationJobService.EnqueueMigration(request.UserId, candidate.Id);
+                        _logger.LogInformation(
+                            "Post-OAuth: enqueued Akahu migration job {JobId} for connection {ConnectionId} (user {UserId})",
+                            jobId, candidate.Id, request.UserId);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Post-OAuth: failed to enqueue Akahu migration for connection {ConnectionId}", candidate.Id);
+                    }
+                }
+
+                _logger.LogInformation(
+                    "Post-OAuth Akahu migration sweep enqueued {Count} job(s) for user {UserId}",
+                    candidates.Count, request.UserId);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Post-OAuth Akahu migration sweep failed for user {UserId}; continuing", request.UserId);
         }
 
         // 2. Get all Akahu accounts using the app's token and the OAuth access token
@@ -136,6 +220,6 @@ public class ExchangeAkahuCodeQueryHandler : IRequestHandler<ExchangeAkahuCodeQu
             "Found {TotalCount} Akahu accounts, {LinkedCount} already linked for user {UserId}",
             accountDtos.Count, accountDtos.Count(a => a.IsAlreadyLinked), request.UserId);
 
-        return new ExchangeAkahuCodeResult(accountDtos, tokenResponse.AccessToken);
+        return new ExchangeAkahuCodeResult(accountDtos);
     }
 }

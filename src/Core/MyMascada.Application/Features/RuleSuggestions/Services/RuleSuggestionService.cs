@@ -10,12 +10,17 @@ namespace MyMascada.Application.Features.RuleSuggestions.Services;
 /// </summary>
 public class RuleSuggestionService : IRuleSuggestionService
 {
+    private const int MinManuallyCategorizedThreshold = 10;
+    private const int MinUncoveredPatternsThreshold = 3;
+
     private readonly IRuleSuggestionRepository _ruleSuggestionRepository;
     private readonly ITransactionRepository _transactionRepository;
     private readonly ICategorizationRuleRepository _categorizationRuleRepository;
     private readonly ICategoryRepository _categoryRepository;
     private readonly IRuleSuggestionAnalyzerFactory _analyzerFactory;
+    private readonly ICategorizationHistoryRepository _historyRepository;
     private readonly IFeatureFlags _featureFlags;
+    private readonly ISubscriptionService _subscriptionService;
     private readonly IUserRepository _userRepository;
 
     public RuleSuggestionService(
@@ -24,7 +29,9 @@ public class RuleSuggestionService : IRuleSuggestionService
         ICategorizationRuleRepository categorizationRuleRepository,
         ICategoryRepository categoryRepository,
         IRuleSuggestionAnalyzerFactory analyzerFactory,
+        ICategorizationHistoryRepository historyRepository,
         IFeatureFlags featureFlags,
+        ISubscriptionService subscriptionService,
         IUserRepository userRepository)
     {
         _ruleSuggestionRepository = ruleSuggestionRepository;
@@ -32,14 +39,16 @@ public class RuleSuggestionService : IRuleSuggestionService
         _categorizationRuleRepository = categorizationRuleRepository;
         _categoryRepository = categoryRepository;
         _analyzerFactory = analyzerFactory;
+        _historyRepository = historyRepository;
         _featureFlags = featureFlags;
+        _subscriptionService = subscriptionService;
         _userRepository = userRepository;
     }
 
     /// <summary>
     /// Generates new rule suggestions for a user based on their transaction patterns
     /// </summary>
-    public async Task<List<RuleSuggestion>> GenerateSuggestionsAsync(Guid userId, int maxSuggestions = 10, double minConfidence = 0.7)
+    public async Task<List<RuleSuggestion>> GenerateSuggestionsAsync(Guid userId, int maxSuggestions = 10, double minConfidence = 0.7, CancellationToken cancellationToken = default)
     {
         // Get required data for analysis
         var recentTransactions = await _transactionRepository.GetRecentTransactionsAsync(userId, 500);
@@ -72,12 +81,15 @@ public class RuleSuggestionService : IRuleSuggestionService
             AccountHolderNameTokens = holderNameTokens
         };
 
-        // Create analyzer based on default configuration
-        // The factory will handle configuration reading from the Infrastructure layer
+        // Atomically reserve AI quota before selecting the analyzer.
+        // TryReserveRuleSuggestionQuotaAsync checks and increments in one operation,
+        // preventing concurrent requests from both passing the quota check.
+        var canUseAi = await _subscriptionService.TryReserveRuleSuggestionQuotaAsync(userId, cancellationToken);
+
         var config = new RuleAnalysisConfiguration
         {
             IsAIAnalysisEnabled = _featureFlags.AiCategorization,
-            UseAIForUser = true, // TODO: This should be based on user tier (free vs pro)
+            UseAIForUser = canUseAi,
             FallbackToBasicOnAIFailure = true,
             MaxAICallsPerUserPerDay = 5,
             MinTransactionsForAI = 50
@@ -94,13 +106,25 @@ public class RuleSuggestionService : IRuleSuggestionService
         // Filter out duplicates and overlapping suggestions
         var filteredSuggestions = await FilterAndDeduplicateSuggestions(ruleSuggestions, userId, minConfidence);
 
-        // Save suggestions to database
+        // Save suggestions to database, skipping any that fail due to duplicate constraints
+        var savedSuggestions = new List<RuleSuggestion>();
         foreach (var suggestion in filteredSuggestions)
         {
-            await _ruleSuggestionRepository.CreateSuggestionAsync(suggestion);
+            try
+            {
+                await _ruleSuggestionRepository.CreateSuggestionAsync(suggestion);
+                savedSuggestions.Add(suggestion);
+            }
+            catch (InvalidOperationException)
+            {
+                // Duplicate detected at DB level (concurrent generation race) — skip
+            }
         }
 
-        return filteredSuggestions;
+        // Usage was already reserved atomically via TryReserveRuleSuggestionQuotaAsync above.
+        // No separate RecordRuleSuggestionUsageAsync call needed.
+
+        return savedSuggestions;
     }
 
     /// <summary>
@@ -215,7 +239,7 @@ public class RuleSuggestionService : IRuleSuggestionService
                 Name = GenerateRuleName(pattern.Pattern, pattern.SuggestedCategoryName),
                 Description = pattern.Reasoning ?? $"Found multiple transactions that appear to be from {pattern.SuggestedCategoryName.ToLower()}",
                 Pattern = pattern.Pattern,
-                Type = RuleType.Contains,
+                Type = pattern.SuggestedRuleType,
                 IsCaseSensitive = false,
                 ConfidenceScore = pattern.ConfidenceScore,
                 MatchCount = pattern.MatchingTransactions.Count,
@@ -323,27 +347,44 @@ public class RuleSuggestionService : IRuleSuggestionService
     }
 
     /// <summary>
-    /// Tests if a rule would match a transaction description
+    /// Tests if a rule would match a transaction description.
+    /// Delegates to RulePatternMatcher — single source of truth for all rule types including Regex.
     /// </summary>
-    private bool DoesRuleMatchTransaction(CategorizationRule rule, string transactionDescription)
+    private static bool DoesRuleMatchTransaction(CategorizationRule rule, string transactionDescription)
+        => RulePatternMatcher.Matches(rule, transactionDescription);
+
+    /// <summary>
+    /// Checks trigger conditions: user has enough history entries and enough uncovered patterns.
+    /// </summary>
+    public async Task<bool> ShouldGenerateRuleSuggestionsAsync(Guid userId, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(transactionDescription) || string.IsNullOrWhiteSpace(rule.Pattern))
+        // Check minimum history entries (proxy for manually categorized transactions)
+        var allHistory = await _historyRepository.GetAllForUserAsync(userId, ct);
+        if (allHistory.Count < MinManuallyCategorizedThreshold)
             return false;
 
-        return rule.Type switch
+        // Count history entries not covered by existing rules
+        var existingRules = (await _categorizationRuleRepository.GetActiveRulesForUserAsync(userId)).ToList();
+        if (!existingRules.Any())
+            return true; // No rules and enough history (checked above) = definitely should generate
+
+        int uncoveredCount = 0;
+        foreach (var entry in allHistory)
         {
-            RuleType.Contains => transactionDescription.Contains(rule.Pattern, 
-                rule.IsCaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase),
-            RuleType.StartsWith => transactionDescription.StartsWith(rule.Pattern, 
-                rule.IsCaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase),
-            RuleType.EndsWith => transactionDescription.EndsWith(rule.Pattern, 
-                rule.IsCaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase),
-            RuleType.Equals => transactionDescription.Equals(rule.Pattern, 
-                rule.IsCaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase),
-            RuleType.Regex => System.Text.RegularExpressions.Regex.IsMatch(transactionDescription, rule.Pattern, 
-                rule.IsCaseSensitive ? System.Text.RegularExpressions.RegexOptions.None : System.Text.RegularExpressions.RegexOptions.IgnoreCase),
-            _ => false
-        };
+            bool covered = existingRules.Any(r =>
+                r.IsActive &&
+                r.CategoryId == entry.CategoryId &&
+                RulePatternMatcher.Matches(r, entry.OriginalDescription));
+
+            if (!covered)
+            {
+                uncoveredCount++;
+                if (uncoveredCount >= MinUncoveredPatternsThreshold)
+                    return true; // Early exit once threshold is met
+            }
+        }
+
+        return false;
     }
 
     /// <summary>

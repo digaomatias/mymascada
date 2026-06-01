@@ -39,7 +39,8 @@ public class OnboardingController : ControllerBase
                 GoalTargetAmount = request.GoalTargetAmount,
                 GoalType = request.GoalType,
                 DataEntryMethod = request.DataEntryMethod,
-                LinkedAccountId = request.LinkedAccountId
+                LinkedAccountId = request.LinkedAccountId,
+                Skipped = request.Skipped
             };
 
             var result = await _mediator.Send(command);

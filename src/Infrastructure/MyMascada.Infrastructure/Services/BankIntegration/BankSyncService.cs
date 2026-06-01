@@ -1,8 +1,10 @@
+using Microsoft.Extensions.Options;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.BankConnections.DTOs;
 using MyMascada.Application.Features.ImportReview.DTOs;
 using MyMascada.Domain.Entities;
 using MyMascada.Domain.Enums;
+using MyMascada.Infrastructure.Services.BankIntegration.Providers;
 
 namespace MyMascada.Infrastructure.Services.BankIntegration;
 
@@ -19,7 +21,18 @@ public class BankSyncService : IBankSyncService
     private readonly IImportAnalysisService _importAnalysisService;
     private readonly ITransactionRepository _transactionRepository;
     private readonly IBankCategoryMappingService _categoryMappingService;
+    private readonly AkahuOptions _akahuOptions;
     private readonly IApplicationLogger<BankSyncService> _logger;
+
+    /// <summary>
+    /// Provider ID of Akahu connections.
+    /// </summary>
+    private const string AkahuProviderId = "akahu";
+
+    /// <summary>
+    /// How long after a migration the loosened dedup tolerance applies.
+    /// </summary>
+    private const int MigrationFallbackWindowDays = 30;
 
     /// <summary>
     /// Default sync window: last 30 days
@@ -36,6 +49,20 @@ public class BankSyncService : IBankSyncService
     /// </summary>
     private const decimal AutoCategorizeMinConfidence = 0.9m;
 
+    /// <summary>
+    /// Confidence at or above which a potential duplicate is skipped during a normal sync.
+    /// </summary>
+    private const decimal DuplicateSkipConfidence = 0.95m;
+
+    /// <summary>
+    /// Lowered skip confidence used inside the post-migration window. Akahu re-emits
+    /// historical transactions with date/description drift that caps the fuzzy-match
+    /// confidence (see ImportAnalysisService) well below the normal 0.95 bar — a 1-day
+    /// date drift with an exact-amount match maxes out around 0.8 — so without this the
+    /// widened tolerances would flag the re-imports but never actually suppress them.
+    /// </summary>
+    private const decimal MigrationDuplicateSkipConfidence = 0.60m;
+
     public BankSyncService(
         IBankProviderFactory providerFactory,
         IBankConnectionRepository connectionRepository,
@@ -44,6 +71,7 @@ public class BankSyncService : IBankSyncService
         IImportAnalysisService importAnalysisService,
         ITransactionRepository transactionRepository,
         IBankCategoryMappingService categoryMappingService,
+        IOptions<AkahuOptions> akahuOptions,
         IApplicationLogger<BankSyncService> logger)
     {
         _providerFactory = providerFactory ?? throw new ArgumentNullException(nameof(providerFactory));
@@ -53,6 +81,7 @@ public class BankSyncService : IBankSyncService
         _importAnalysisService = importAnalysisService ?? throw new ArgumentNullException(nameof(importAnalysisService));
         _transactionRepository = transactionRepository ?? throw new ArgumentNullException(nameof(transactionRepository));
         _categoryMappingService = categoryMappingService ?? throw new ArgumentNullException(nameof(categoryMappingService));
+        _akahuOptions = akahuOptions?.Value ?? throw new ArgumentNullException(nameof(akahuOptions));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -128,20 +157,48 @@ public class BankSyncService : IBankSyncService
                 .ToList();
 
             // 9. Use ImportAnalysisService for duplicate detection
-            var analysisRequest = new AnalyzeImportRequest
-            {
-                Source = "bankapi",
-                AccountId = connection.AccountId,
-                UserId = connection.UserId,
-                Candidates = candidates,
-                Options = new ImportAnalysisOptions
+            // Akahu's classic-to-official migration re-emits historical transactions with new IDs
+            // and documented drift in date/type/description, so exact-match dedup misses them.
+            // For recently-migrated Akahu connections we widen the tolerance during a 30-day
+            // window so near-duplicate re-imports are still caught.
+            var usesMigrationFallback =
+                _akahuOptions.MigrationFallbackEnabled
+                && connection.ProviderId == AkahuProviderId
+                && connection.LastMigratedAt.HasValue
+                && connection.LastMigratedAt.Value >= DateTime.UtcNow.AddDays(-MigrationFallbackWindowDays);
+
+            var importOptions = usesMigrationFallback
+                ? new ImportAnalysisOptions
+                {
+                    DateToleranceDays = 2,
+                    AmountTolerance = 0.005m,
+                    DescriptionSimilarityThreshold = 0.7,
+                    IncludeManualTransactions = true,
+                    IncludeRecentImports = true
+                }
+                : new ImportAnalysisOptions
                 {
                     DateToleranceDays = 0, // Exact date match for bank API (bank APIs provide precise dates)
                     AmountTolerance = 0m, // Exact amount match
                     DescriptionSimilarityThreshold = 0.5,
                     IncludeManualTransactions = true,
                     IncludeRecentImports = true
-                }
+                };
+
+            // The skip bar moves with the tolerance: a normal sync demands near-certain
+            // matches, but during the migration window the confidence formula cannot
+            // reach 0.95 for a drifted re-import, so the bar drops to match.
+            var duplicateSkipConfidence = usesMigrationFallback
+                ? MigrationDuplicateSkipConfidence
+                : DuplicateSkipConfidence;
+
+            var analysisRequest = new AnalyzeImportRequest
+            {
+                Source = "bankapi",
+                AccountId = connection.AccountId,
+                UserId = connection.UserId,
+                Candidates = candidates,
+                Options = importOptions
             };
 
             var analysisResult = await _importAnalysisService.AnalyzeImportAsync(analysisRequest);
@@ -186,7 +243,7 @@ public class BankSyncService : IBankSyncService
                 // Check for exact duplicates (same external reference ID) or other high-confidence duplicates
                 var hasExactDuplicate = item.Conflicts.Any(c =>
                     c.Type == ConflictType.ExactDuplicate ||
-                    (c.Type == ConflictType.PotentialDuplicate && c.ConfidenceScore >= 0.95m));
+                    (c.Type == ConflictType.PotentialDuplicate && c.ConfidenceScore >= duplicateSkipConfidence));
 
                 if (hasExactDuplicate)
                 {

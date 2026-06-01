@@ -6,9 +6,28 @@ primary_region = "syd"
 [build]
   dockerfile = "src/Dockerfile.api"
 
+[deploy]
+  release_command = "/app/migrate.sh"
+
 [env]
   ASPNETCORE_ENVIRONMENT = "Production"
   ASPNETCORE_URLS = "http://+:5126"
+  App__FrontendUrl = "https://app.mymascada.com"
+  Cors__AllowedOrigins = "https://mymascada.com,https://www.mymascada.com,https://app.mymascada.com,https://mymascada-api.fly.dev"
+  Jwt__Issuer = "https://mymascada.com"
+  Jwt__Audience = "https://mymascada.com"
+  BetaAccess__RequireInviteCode = "true"
+  Email__Enabled = "false"
+  Email__Provider = "smtp"
+  Email__DefaultFromEmail = "noreply@mymascada.com"
+  Email__DefaultFromName = "MyMascada"
+  Email__Smtp__Host = "mail.mymascada.com"
+  Email__Smtp__Port = "587"
+  Email__Smtp__Username = "mymascada/mymascada"
+  Email__Smtp__UseStartTls = "false"
+  Email__Smtp__UseSsl = "false"
+  PasswordReset__FrontendResetUrl = "https://app.mymascada.com/auth/reset-password"
+  EmailVerification__FrontendVerifyUrl = "https://app.mymascada.com/auth/verify-email"
 
 [http_service]
   internal_port = 5126
@@ -34,3 +53,7 @@ primary_region = "syd"
   size = "shared-cpu-1x"
   memory = "512mb"
   processes = ["app"]
+
+[[mounts]]
+  source = "mymascada_data"
+  destination = "/app/data"

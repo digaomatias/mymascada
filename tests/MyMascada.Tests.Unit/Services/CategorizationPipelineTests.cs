@@ -43,13 +43,17 @@ public class CategorizationPipelineTests
             Substitute.For<ILogger<BankCategoryHandler>>());
 
         _mlHandler = Substitute.For<MLHandler>(
+            Substitute.For<ISimilarityMatchingService>(),
+            optionsMock,
             Substitute.For<ILogger<MLHandler>>());
 
         _llmHandler = Substitute.For<LLMHandler>(
             Substitute.For<ISharedCategorizationService>(),
+            Substitute.For<ISubscriptionService>(),
             Substitute.For<ILogger<LLMHandler>>());
 
         _candidatesService = Substitute.For<ICategorizationCandidatesService>();
+        var historyService = Substitute.For<ICategorizationHistoryService>();
         _transactionRepository = Substitute.For<ITransactionRepository>();
         _logger = Substitute.For<ILogger<CategorizationPipeline>>();
 
@@ -59,6 +63,7 @@ public class CategorizationPipelineTests
             _mlHandler,
             _llmHandler,
             _candidatesService,
+            historyService,
             _transactionRepository,
             _logger);
     }

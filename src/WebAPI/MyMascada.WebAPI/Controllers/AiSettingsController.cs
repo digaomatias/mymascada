@@ -18,17 +18,20 @@ public class AiSettingsController : ControllerBase
     private readonly IUserAiSettingsRepository _repository;
     private readonly ISettingsEncryptionService _encryptionService;
     private readonly IUserAiKernelFactory _kernelFactory;
+    private readonly IEndpointValidator _endpointValidator;
 
     public AiSettingsController(
         ICurrentUserService currentUserService,
         IUserAiSettingsRepository repository,
         ISettingsEncryptionService encryptionService,
-        IUserAiKernelFactory kernelFactory)
+        IUserAiKernelFactory kernelFactory,
+        IEndpointValidator endpointValidator)
     {
         _currentUserService = currentUserService;
         _repository = repository;
         _encryptionService = encryptionService;
         _kernelFactory = kernelFactory;
+        _endpointValidator = endpointValidator;
     }
 
     [HttpGet]
@@ -68,16 +71,12 @@ public class AiSettingsController : ControllerBase
         if (string.IsNullOrWhiteSpace(request.ModelId))
             return BadRequest(new { Error = "Model ID is required." });
 
-        // Validate API endpoint URL if provided
+        // Validate API endpoint URL if provided (SSRF protection)
         if (!string.IsNullOrWhiteSpace(request.ApiEndpoint))
         {
-            if (!Uri.TryCreate(request.ApiEndpoint, UriKind.Absolute, out var uri))
-                return BadRequest(new { Error = "Invalid API endpoint URL format." });
-
-            // HTTPS required except for localhost
-            var isLocalhost = uri.Host == "localhost" || uri.Host == "127.0.0.1" || uri.Host == "::1";
-            if (!isLocalhost && uri.Scheme != "https")
-                return BadRequest(new { Error = "API endpoint must use HTTPS (except for localhost)." });
+            var validation = await _endpointValidator.ValidateEndpointAsync(request.ApiEndpoint);
+            if (!validation.IsValid)
+                return BadRequest(new { Error = validation.Error });
         }
 
         var userId = _currentUserService.GetUserId();
@@ -176,15 +175,12 @@ public class AiSettingsController : ControllerBase
             return BadRequest(new { Error = "API key is required for testing." });
         }
 
-        // Validate endpoint URL if provided
+        // Validate endpoint URL if provided (SSRF protection)
         if (!string.IsNullOrWhiteSpace(request.ApiEndpoint))
         {
-            if (!Uri.TryCreate(request.ApiEndpoint, UriKind.Absolute, out var uri))
-                return BadRequest(new { Error = "Invalid API endpoint URL format." });
-
-            var isLocalhost = uri.Host == "localhost" || uri.Host == "127.0.0.1" || uri.Host == "::1";
-            if (!isLocalhost && uri.Scheme != "https")
-                return BadRequest(new { Error = "API endpoint must use HTTPS (except for localhost)." });
+            var validation = await _endpointValidator.ValidateEndpointAsync(request.ApiEndpoint);
+            if (!validation.IsValid)
+                return BadRequest(new { Error = validation.Error });
         }
 
         var result = await _kernelFactory.TestConnectionAsync(

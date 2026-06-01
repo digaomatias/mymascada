@@ -1,4 +1,6 @@
+using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Reflection;
 using MediatR;
 using MyMascada.Application.Common.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -102,46 +104,154 @@ public class AuditLoggingBehaviour<TRequest, TResponse> : IPipelineBehavior<TReq
         }
     }
 
+    private enum AuditCategory
+    {
+        Transaction,
+        Authentication,
+        DataAccess,
+        ConfigurationChange
+    }
+
+    private static readonly HashSet<string> TransactionCommands =
+    [
+        "CreateTransactionCommand",
+        "UpdateTransactionCommand",
+        "DeleteTransactionCommand",
+        "BulkDeleteTransactionsCommand",
+        "ImportCsvTransactionsCommand",
+        "ImportCsvWithMappingsCommand",
+        "ImportOfxFileCommand",
+        "ExecuteImportCommand",
+        "CreateTransferCommand",
+        "ReverseTransferCommand",
+        "CreateMissingTransferCommand",
+        "LinkTransactionsAsTransferCommand",
+        "BulkAssignCategoryCommand",
+        "CreateAccountCommand",
+        "UpdateAccountCommand",
+        "DeleteAccountCommand"
+    ];
+
+    private static readonly HashSet<string> AuthenticationCommands =
+    [
+        "RegisterCommand",
+        "ChangePasswordCommand",
+        "ResetPasswordCommand",
+        "ForgotPasswordCommand",
+        "ConfirmEmailCommand"
+    ];
+
+    private static readonly HashSet<string> DataAccessCommands =
+    [
+        "DeleteUserAccountCommand",
+        "InitiateAkahuConnectionCommand",
+        "CompleteAkahuConnectionCommand",
+        "DisconnectBankConnectionCommand",
+        "SaveAkahuCredentialsCommand",
+        "SyncBankConnectionCommand",
+        "SyncAllConnectionsCommand",
+        "CreateAccountShareCommand",
+        "DeclineAccountShareCommand",
+        "DeclineAccountShareByIdCommand",
+        "RevokeAccountShareCommand",
+        "UpdateAccountShareRoleCommand",
+        "AcceptAccountShareCommand",
+        "AcceptAccountShareByIdCommand"
+    ];
+
+    private static readonly HashSet<string> ConfigurationChangeCommands =
+    [
+        "UpdateNotificationPreferencesCommand",
+        "CompleteOnboardingCommand",
+        "GenerateInvitationCommand",
+        "CreateRuleCommand",
+        "CreateBankCategoryMappingCommand",
+        "UpdateBankCategoryMappingCommand",
+        "DeleteBankCategoryMappingCommand",
+        "SetBankCategoryExclusionCommand"
+    ];
+
+    private static readonly ConcurrentDictionary<(Type, string), PropertyInfo?> PropertyCache = new();
+
+    private static AuditCategory? GetAuditCategory(string requestName)
+    {
+        if (TransactionCommands.Contains(requestName))
+            return AuditCategory.Transaction;
+        if (AuthenticationCommands.Contains(requestName))
+            return AuditCategory.Authentication;
+        if (DataAccessCommands.Contains(requestName))
+            return AuditCategory.DataAccess;
+        if (ConfigurationChangeCommands.Contains(requestName))
+            return AuditCategory.ConfigurationChange;
+        return null;
+    }
+
     private static bool IsAuditableCommand(string requestName)
     {
-        // Define which commands require audit logging
-        var auditableCommands = new[]
-        {
-            "CreateTransactionCommand",
-            "UpdateTransactionCommand",
-            "DeleteTransactionCommand",
-            "ImportCsvTransactionsCommand",
-            "CreateTransferCommand",
-            "CreateAccountCommand",
-            "UpdateAccountCommand",
-            "DeleteAccountCommand"
-        };
-
-        return auditableCommands.Any(cmd => requestName.Contains(cmd));
+        return GetAuditCategory(requestName) != null;
     }
 
     private async Task LogAuditTrailAsync(TRequest request, string requestName, TResponse? response, bool success, Exception? exception = null)
     {
         try
         {
-            // Extract user ID and relevant data from request
+            var category = GetAuditCategory(requestName);
             var userId = ExtractUserId(request);
-            var auditData = ExtractAuditData(request, response);
 
-            await _auditLogger.LogTransactionOperationAsync(
-                operation: requestName,
-                userId: userId,
-                transactionId: auditData.TransactionId,
-                amount: auditData.Amount,
-                description: auditData.Description,
-                additionalData: new
-                {
-                    Success = success,
-                    ErrorMessage = exception?.Message,
-                    Timestamp = DateTime.UtcNow,
-                    RequestData = SerializeForAudit(request),
-                    ResponseData = success ? SerializeForAudit(response) : null
-                });
+            switch (category)
+            {
+                case AuditCategory.Authentication:
+                    var email = ExtractStringProperty(request, "Email");
+                    var ipAddress = ExtractStringProperty(request, "IpAddress");
+                    await _auditLogger.LogAuthenticationEventAsync(
+                        event_: requestName,
+                        userId: userId != Guid.Empty ? userId : null,
+                        userEmail: email,
+                        ipAddress: ipAddress,
+                        success: success,
+                        failureReason: exception?.Message);
+                    break;
+
+                case AuditCategory.DataAccess:
+                    var entityId = ExtractStringProperty(request, "Id")
+                                   ?? ExtractStringProperty(request, "ConnectionId")
+                                   ?? ExtractStringProperty(request, "ShareId");
+                    await _auditLogger.LogDataAccessAsync(
+                        operation: requestName,
+                        userId: userId,
+                        entityType: requestName.Replace("Command", ""),
+                        entityId: entityId,
+                        queryParameters: SerializeForAudit(request));
+                    break;
+
+                case AuditCategory.ConfigurationChange:
+                    await _auditLogger.LogConfigurationChangeAsync(
+                        setting: requestName,
+                        oldValue: null,
+                        newValue: SerializeForAudit(request)?.ToString(),
+                        userId: userId != Guid.Empty ? userId : null,
+                        source: "MediatR");
+                    break;
+
+                case AuditCategory.Transaction:
+                default:
+                    var auditData = ExtractAuditData(request, response);
+                    await _auditLogger.LogTransactionOperationAsync(
+                        operation: requestName,
+                        userId: userId,
+                        transactionId: auditData.TransactionId,
+                        amount: auditData.Amount,
+                        description: auditData.Description,
+                        additionalData: new
+                        {
+                            Success = success,
+                            ErrorMessage = exception?.Message,
+                            Timestamp = DateTime.UtcNow,
+                            RequestData = SerializeForAudit(request),
+                            ResponseData = success ? SerializeForAudit(response) : null
+                        });
+                    break;
+            }
         }
         catch (Exception ex)
         {
@@ -153,13 +263,24 @@ public class AuditLoggingBehaviour<TRequest, TResponse> : IPipelineBehavior<TReq
     private static Guid ExtractUserId(TRequest request)
     {
         // Use reflection to find UserId property in request
-        var userIdProperty = request.GetType().GetProperty("UserId");
+        var userIdProperty = GetCachedProperty(request.GetType(), "UserId");
         if (userIdProperty?.GetValue(request) is Guid userId)
         {
             return userId;
         }
-        
+
         return Guid.Empty; // Should not happen in properly designed commands
+    }
+
+    private static string? ExtractStringProperty(TRequest request, string propertyName)
+    {
+        var property = GetCachedProperty(request.GetType(), propertyName);
+        return property?.GetValue(request)?.ToString();
+    }
+
+    private static PropertyInfo? GetCachedProperty(Type type, string propertyName)
+    {
+        return PropertyCache.GetOrAdd((type, propertyName), key => key.Item1.GetProperty(key.Item2));
     }
 
     private static (int? TransactionId, decimal? Amount, string? Description) ExtractAuditData(TRequest request, TResponse? response)
@@ -168,21 +289,23 @@ public class AuditLoggingBehaviour<TRequest, TResponse> : IPipelineBehavior<TReq
         decimal? amount = null;
         string? description = null;
 
+        var requestType = request.GetType();
+
         // Extract transaction ID from request or response
-        var requestTransactionId = request.GetType().GetProperty("TransactionId")?.GetValue(request) as int?;
-        var requestId = request.GetType().GetProperty("Id")?.GetValue(request) as int?;
+        var requestTransactionId = GetCachedProperty(requestType, "TransactionId")?.GetValue(request) as int?;
+        var requestId = GetCachedProperty(requestType, "Id")?.GetValue(request) as int?;
 
         transactionId = requestTransactionId ?? requestId;
 
         // Extract amount from request
-        var amountProperty = request.GetType().GetProperty("Amount");
+        var amountProperty = GetCachedProperty(requestType, "Amount");
         if (amountProperty?.GetValue(request) is decimal amt)
         {
             amount = amt;
         }
 
         // Extract description from request - mask PII before logging
-        var descriptionProperty = request.GetType().GetProperty("Description");
+        var descriptionProperty = GetCachedProperty(requestType, "Description");
         if (descriptionProperty?.GetValue(request) is string desc)
         {
             // Mask any PII patterns in the description (emails, phone numbers, etc.)

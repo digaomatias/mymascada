@@ -41,12 +41,20 @@ public class TelegramWebhookController : ControllerBase
         _logger = logger;
     }
 
-    [HttpPost("{secret}")]
-    public async Task<IActionResult> HandleWebhook(string secret)
+    [HttpPost]
+    public async Task<IActionResult> HandleWebhook()
     {
         // Always return 200 to prevent Telegram retries
         try
         {
+            // Validate the secret from Telegram's X-Telegram-Bot-Api-Secret-Token header
+            var secret = Request.Headers["X-Telegram-Bot-Api-Secret-Token"].FirstOrDefault();
+            if (string.IsNullOrEmpty(secret))
+            {
+                _logger.LogWarning("Webhook called without secret token header");
+                return Ok();
+            }
+
             // Read the raw body
             using var reader = new StreamReader(Request.Body);
             var body = await reader.ReadToEndAsync();

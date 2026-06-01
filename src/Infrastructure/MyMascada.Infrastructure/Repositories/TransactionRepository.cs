@@ -193,6 +193,57 @@ public class TransactionRepository : ITransactionRepository
                 .SetProperty(t => t.DeletedAt, now), ct);
     }
 
+    public async Task<DateTime?> GetOldestTransactionDateForAccountAsync(int accountId, CancellationToken ct = default)
+    {
+        var dates = await _context.Transactions
+            .Where(t => t.AccountId == accountId && !t.IsDeleted)
+            .OrderBy(t => t.TransactionDate)
+            .Select(t => (DateTime?)t.TransactionDate)
+            .Take(1)
+            .ToListAsync(ct);
+        return dates.FirstOrDefault();
+    }
+
+    public async Task<int> RemapExternalIdsAsync(int accountId, IReadOnlyDictionary<string, string> oldToNewExternalIds, CancellationToken ct = default)
+    {
+        if (oldToNewExternalIds == null || oldToNewExternalIds.Count == 0)
+            return 0;
+
+        // Filter to only well-formed remap pairs (non-empty old/new, and actually changing).
+        var pairs = oldToNewExternalIds
+            .Where(kvp => !string.IsNullOrEmpty(kvp.Key) && !string.IsNullOrEmpty(kvp.Value) && kvp.Key != kvp.Value)
+            .ToList();
+
+        if (pairs.Count == 0)
+            return 0;
+
+        // Single round-trip: build a VALUES (...) join that maps every (oldId, newId) pair
+        // and update Transactions in one statement. This replaces the previous per-key loop,
+        // which fired N ExecuteUpdateAsync calls.
+        var now = DateTime.UtcNow;
+
+        var sql = new System.Text.StringBuilder();
+        sql.Append("UPDATE \"Transactions\" t SET \"ExternalId\" = m.\"NewId\", \"UpdatedAt\" = {0} FROM (VALUES ");
+
+        var parameters = new List<object> { now };
+        for (var i = 0; i < pairs.Count; i++)
+        {
+            if (i > 0) sql.Append(", ");
+            var oldIdx = parameters.Count;
+            parameters.Add(pairs[i].Key);
+            var newIdx = parameters.Count;
+            parameters.Add(pairs[i].Value);
+            sql.Append("({").Append(oldIdx).Append("}, {").Append(newIdx).Append("})");
+        }
+
+        sql.Append(") AS m(\"OldId\", \"NewId\") ");
+        sql.Append("WHERE t.\"AccountId\" = {").Append(parameters.Count).Append("} ");
+        parameters.Add(accountId);
+        sql.Append("AND t.\"ExternalId\" = m.\"OldId\" AND t.\"IsDeleted\" = false");
+
+        return await _context.Database.ExecuteSqlRawAsync(sql.ToString(), parameters, ct);
+    }
+
     public async Task DeleteByAccountIdAsync(int accountId, Guid userId)
     {
         if (!await _accountAccess.IsOwnerAsync(userId, accountId))
@@ -247,7 +298,10 @@ public class TransactionRepository : ITransactionRepository
             .AsNoTracking()
             .Include(t => t.Account)
             .Include(t => t.Category)
-            .Where(t => accessibleIds.Contains(t.AccountId) && !t.Account.IsDeleted)
+            .Where(t => accessibleIds.Contains(t.AccountId)
+                        && !t.Account.IsDeleted
+                        && !t.TransferId.HasValue
+                        && t.Type != TransactionType.TransferComponent)
             .OrderByDescending(t => t.TransactionDate)
             .Take(count)
             .ToListAsync(cancellationToken);
@@ -684,10 +738,65 @@ public class TransactionRepository : ITransactionRepository
             .Include(t => t.Account)
             .Where(t => accessibleIds.Contains(t.AccountId) &&
                        !t.CategoryId.HasValue &&
-                       !t.IsDeleted)
+                       !t.IsDeleted &&
+                       // Match the filter applied by CountUncategorizedTransactionsAsync —
+                       // without this, the wizard surfaces rows on soft-deleted
+                       // accounts that the dashboard count excludes, producing an
+                       // off-by-one between the "needs review" badge and the
+                       // wizard contents.
+                       !t.Account.IsDeleted &&
+                       !t.TransferId.HasValue &&
+                       t.Type != TransactionType.TransferComponent)
             .OrderByDescending(t => t.CreatedAt)
             .Take(maxCount)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<int> CountUncategorizedTransactionsAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
+        // Mirror the filter applied by GetUncategorizedTransactionsAsync +
+        // GetUncategorizedGroupsQueryHandler so the dashboard stats card and
+        // the quick-categorize wizard agree on which rows "need review".
+        //
+        // The wizard's grouper additionally drops rows where
+        // `DescriptionNormalizer.Normalize(description)` returns empty —
+        // caught here with a `!IsNullOrWhiteSpace(Description)` filter that
+        // handles the 99.9% case (null/whitespace descriptions). The tiny
+        // edge case where a non-whitespace description normalizes to empty
+        // post-stripping (e.g. "!!!") still drifts by a few rows, but that's
+        // extraordinarily rare for bank transactions and not worth the round
+        // trip to normalize server-side.
+        return await _context.Transactions
+            .CountAsync(t => accessibleIds.Contains(t.AccountId) &&
+                             !t.CategoryId.HasValue &&
+                             !t.IsDeleted &&
+                             !t.Account.IsDeleted &&
+                             !t.TransferId.HasValue &&
+                             t.Type != TransactionType.TransferComponent &&
+                             !string.IsNullOrWhiteSpace(t.Description),
+                        cancellationToken);
+    }
+
+    public async Task<Dictionary<string, int>> GetAutoCategorizationCountsByMethodAsync(
+        Guid userId, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default)
+    {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
+
+        var counts = await _context.Transactions
+            .AsNoTracking()
+            .Where(t => accessibleIds.Contains(t.AccountId) &&
+                        !t.IsDeleted &&
+                        t.IsAutoCategorized &&
+                        t.AutoCategorizationMethod != null &&
+                        t.AutoCategorizedAt.HasValue &&
+                        t.AutoCategorizedAt.Value >= startUtc &&
+                        t.AutoCategorizedAt.Value < endUtc)
+            .GroupBy(t => t.AutoCategorizationMethod!)
+            .Select(g => new { Method = g.Key, Count = g.Count() })
+            .ToListAsync(cancellationToken);
+
+        return counts.ToDictionary(c => c.Method, c => c.Count);
     }
 
     public async Task<HashSet<int>> GetCategorizedTransactionIdsAsync(IEnumerable<int> transactionIds)

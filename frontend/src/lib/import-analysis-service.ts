@@ -40,7 +40,7 @@ export class ImportAnalysisService {
     } = options;
 
     return candidates.map((candidate, index) => {
-      const conflicts = this.detectConflicts(
+      const conflicts = this.detectConflictsForCandidate(
         candidate,
         existingTransactions,
         {
@@ -64,7 +64,7 @@ export class ImportAnalysisService {
   /**
    * Detects conflicts between an import candidate and existing transactions
    */
-  private static detectConflicts(
+  private static detectConflictsForCandidate(
     candidate: ImportCandidate,
     existingTransactions: Transaction[],
     options: {
@@ -442,22 +442,87 @@ export class ImportAnalysisService {
     return {
       totalCandidates: reviewItems.length,
       cleanImports: reviewItems.filter(item => item.conflicts.length === 0).length,
-      exactDuplicates: reviewItems.filter(item => 
+      exactDuplicates: reviewItems.filter(item =>
         item.conflicts.some(c => c.type === ConflictType.ExactDuplicate)
       ).length,
-      potentialDuplicates: reviewItems.filter(item => 
+      potentialDuplicates: reviewItems.filter(item =>
         item.conflicts.some(c => c.type === ConflictType.PotentialDuplicate) &&
         !item.conflicts.some(c => c.type === ConflictType.ExactDuplicate)
       ).length,
-      transferConflicts: reviewItems.filter(item => 
+      transferConflicts: reviewItems.filter(item =>
         item.conflicts.some(c => c.type === ConflictType.TransferConflict)
       ).length,
-      manualConflicts: reviewItems.filter(item => 
+      manualConflicts: reviewItems.filter(item =>
         item.conflicts.some(c => c.type === ConflictType.ManualEntryConflict)
       ).length,
-      requiresReview: reviewItems.filter(item => 
+      requiresReview: reviewItems.filter(item =>
         item.reviewDecision === ConflictResolution.Pending
       ).length
     };
+  }
+
+  // --- Public instance methods ---
+
+  detectConflicts(
+    candidates: ImportCandidate[],
+    existingTransactions: Partial<Transaction>[]
+  ): { importCandidate: ImportCandidate; conflicts: ConflictInfo[] }[] {
+    return candidates.map(candidate => {
+      const conflicts = ImportAnalysisService.detectConflictsForCandidate(
+        candidate,
+        existingTransactions as Transaction[],
+        {
+          dateToleranceDays: ImportAnalysisService.DEFAULT_DATE_TOLERANCE_DAYS,
+          amountTolerance: ImportAnalysisService.DEFAULT_AMOUNT_TOLERANCE,
+          enableTransferDetection: true,
+          conflictDetectionLevel: 'moderate'
+        }
+      );
+      return { importCandidate: candidate, conflicts };
+    });
+  }
+
+  calculateConfidenceScore(candidate: ImportCandidate, existing: Partial<Transaction>): number {
+    return ImportAnalysisService.calculateSimilarityScore(
+      candidate,
+      existing as Transaction
+    );
+  }
+
+  generateAnalysisSummary(reviewItems: ImportReviewItem[]) {
+    return ImportAnalysisService.createAnalysisSummary(reviewItems);
+  }
+
+  optimizeBulkActions(reviewItems: ImportReviewItem[]) {
+    const hasCleanItems = reviewItems.some(item => item.conflicts.length === 0);
+    const hasExactDuplicates = reviewItems.some(item =>
+      item.conflicts.some(c => c.type === ConflictType.ExactDuplicate)
+    );
+    const hasLowConfidenceItems = reviewItems.some(item =>
+      item.conflicts.some(c => c.type === ConflictType.PotentialDuplicate)
+    );
+
+    return {
+      importAllClean: hasCleanItems,
+      skipAllExactDuplicates: hasExactDuplicates,
+      hasLowConfidenceItems: hasLowConfidenceItems
+    };
+  }
+
+  validateImportCandidate(candidate: ImportCandidate) {
+    const errors: string[] = [];
+
+    const dateStr = typeof candidate.date === 'string' ? candidate.date.trim() : candidate.date;
+    if (!dateStr) {
+      errors.push('Date is required');
+    } else if (isNaN(new Date(dateStr).getTime())) {
+      errors.push('Invalid date format');
+    }
+
+    if (isNaN(candidate.amount)) {
+      errors.push('Invalid amount: must be a number');
+    }
+
+    return { isValid: errors.length === 0, errors };
   }
 }

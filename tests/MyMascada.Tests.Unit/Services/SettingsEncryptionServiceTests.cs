@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.DataProtection;
 using MyMascada.Application.Common.Interfaces;
+using MyMascada.Application.Features.BankConnections.DTOs;
 using MyMascada.Infrastructure.Services.Security;
 using MyMascada.Infrastructure.Services.BankIntegration.Providers;
 

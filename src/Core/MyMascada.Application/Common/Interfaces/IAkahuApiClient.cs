@@ -54,6 +54,37 @@ public interface IAkahuApiClient
         CancellationToken ct = default);
 
     /// <summary>
+    /// Lists the user's bank connections (conn_xxx). Used during the classic-to-official
+    /// migration window to detect which connections have a `_classic` predecessor.
+    /// </summary>
+    /// <param name="appIdToken">Akahu App ID Token (app_token_xxx)</param>
+    /// <param name="userToken">User's access token (user_token_xxx)</param>
+    /// <param name="ct">Cancellation token</param>
+    Task<IReadOnlyList<AkahuConnectionInfo>> GetConnectionsWithCredentialsAsync(
+        string appIdToken,
+        string userToken,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Fetches transactions for a given Akahu account between two dates. Returned DTOs include
+    /// the `Migrated` field so callers can build classic-to-official transaction ID maps during
+    /// the Akahu open-banking migration.
+    /// </summary>
+    /// <param name="appIdToken">Akahu App ID Token (app_token_xxx)</param>
+    /// <param name="userToken">User's access token (user_token_xxx)</param>
+    /// <param name="accountId">Akahu account ID (acc_xxx)</param>
+    /// <param name="start">Inclusive start date (null for no lower bound)</param>
+    /// <param name="end">Inclusive end date (null for no upper bound)</param>
+    /// <param name="ct">Cancellation token</param>
+    Task<IReadOnlyList<MyMascada.Application.Features.BankConnections.DTOs.BankTransactionDto>> GetTransactionsWithCredentialsAsync(
+        string appIdToken,
+        string userToken,
+        string accountId,
+        DateTime? start = null,
+        DateTime? end = null,
+        CancellationToken ct = default);
+
+    /// <summary>
     /// Validates that the provided credentials are valid by making a test API call.
     /// </summary>
     /// <param name="appIdToken">Akahu App ID Token (app_token_xxx)</param>
@@ -81,7 +112,8 @@ public interface IAkahuApiClient
     /// <param name="webhookType">Webhook type (TOKEN, ACCOUNT, TRANSACTION)</param>
     /// <param name="state">State value passed back in webhook events (e.g. user ID)</param>
     /// <param name="ct">Cancellation token</param>
-    Task SubscribeToWebhookAsync(string appIdToken, string userToken, string webhookType, string? state = null, CancellationToken ct = default);
+    /// <returns>The created webhook subscription as returned by Akahu.</returns>
+    Task<AkahuWebhookSubscriptionInfo> SubscribeToWebhookAsync(string appIdToken, string userToken, string webhookType, string? state = null, CancellationToken ct = default);
 
     /// <summary>
     /// Unsubscribes from an Akahu webhook.
@@ -182,4 +214,46 @@ public record AkahuAccountInfo
     /// Name of the bank (e.g., "ANZ")
     /// </summary>
     public string BankName { get; init; } = string.Empty;
+
+    /// <summary>
+    /// The Akahu ID of the classic account this account was migrated from (the official open
+    /// banking migration carries this on the new account record). Null when no migration applies.
+    /// </summary>
+    public string? Migrated { get; init; }
+
+    /// <summary>
+    /// The Akahu ID of the classic connection this account's connection was migrated from.
+    /// Sourced from the `_classic` field on the parent connection. Null for native official
+    /// connections (no classic predecessor) and for classic connections themselves.
+    /// </summary>
+    public string? ConnectionClassic { get; init; }
+}
+
+/// <summary>
+/// Represents an Akahu bank connection (conn_xxx) — the linkage between the user and a
+/// specific bank in Akahu. During the classic-to-official migration window, an official
+/// connection may carry a `_classic` reference back to the predecessor classic connection.
+/// </summary>
+public record AkahuConnectionInfo
+{
+    /// <summary>
+    /// Akahu connection ID (conn_xxx).
+    /// </summary>
+    public string Id { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Display name of the bank (e.g., "ANZ").
+    /// </summary>
+    public string Name { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Optional URL of the bank's logo.
+    /// </summary>
+    public string? Logo { get; init; }
+
+    /// <summary>
+    /// When this is an official open-banking connection that was migrated from a classic
+    /// predecessor, this is the classic connection's ID. Null otherwise.
+    /// </summary>
+    public string? Classic { get; init; }
 }

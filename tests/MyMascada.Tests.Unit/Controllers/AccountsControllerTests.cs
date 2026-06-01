@@ -252,6 +252,74 @@ public class AccountsControllerTests
     }
 
     [Fact]
+    public async Task UpdateAccount_WithIsActiveOmitted_PreservesExistingActiveState()
+    {
+        // Regression: UpdateAccountDto.IsActive used to be non-nullable bool, so a
+        // request that didn't include the field would deserialize to false and silently
+        // archive the account. Now nullable; null must preserve the existing value.
+        var accountId = 42;
+        var request = new UpdateAccountDto
+        {
+            Id = accountId,
+            Name = "Renamed",
+            Type = AccountType.Checking,
+            Currency = "NZD",
+            IsActive = null
+        };
+
+        var existingAccount = new Account
+        {
+            Id = accountId,
+            Name = "Original",
+            Currency = "NZD",
+            UserId = _userId,
+            IsActive = true
+        };
+
+        _accountRepository.GetByIdAsync(accountId, _userId).Returns(existingAccount);
+        _accountRepository.UpdateAsync(Arg.Any<Account>()).Returns(Task.CompletedTask);
+
+        var result = await _controller.UpdateAccount(accountId, request);
+
+        result.Result.Should().BeOfType<OkObjectResult>();
+        existingAccount.IsActive.Should().BeTrue();
+        await _accountRepository.Received(1).UpdateAsync(
+            Arg.Is<Account>(a => a.Id == accountId && a.IsActive));
+    }
+
+    [Fact]
+    public async Task UpdateAccount_WithIsActiveSetToFalse_AppliesIsActiveFalse()
+    {
+        // The complementary case: explicitly archiving via the update endpoint still works.
+        var accountId = 43;
+        var request = new UpdateAccountDto
+        {
+            Id = accountId,
+            Name = "Renamed",
+            Type = AccountType.Checking,
+            Currency = "NZD",
+            IsActive = false
+        };
+
+        var existingAccount = new Account
+        {
+            Id = accountId,
+            Name = "Original",
+            Currency = "NZD",
+            UserId = _userId,
+            IsActive = true
+        };
+
+        _accountRepository.GetByIdAsync(accountId, _userId).Returns(existingAccount);
+        _accountRepository.UpdateAsync(Arg.Any<Account>()).Returns(Task.CompletedTask);
+
+        var result = await _controller.UpdateAccount(accountId, request);
+
+        result.Result.Should().BeOfType<OkObjectResult>();
+        existingAccount.IsActive.Should().BeFalse();
+    }
+
+    [Fact]
     public async Task UpdateAccount_WithTransactions_ShouldAllowUpdate()
     {
         // Arrange

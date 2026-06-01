@@ -19,6 +19,8 @@ export interface RegisterRequest {
   language?: string;
 }
 
+export type SubscriptionTier = 'Free' | 'Pro' | 'Family' | 'SelfHosted';
+
 export interface UserDto {
   id: string;
   email: string;
@@ -33,6 +35,8 @@ export interface UserDto {
   aiDescriptionCleaning?: boolean;
   hasAiConfigured?: boolean;
   isOnboardingComplete?: boolean;
+  subscriptionTier?: SubscriptionTier;
+  isSelfHosted?: boolean;
 }
 
 export interface AuthenticationResponse {

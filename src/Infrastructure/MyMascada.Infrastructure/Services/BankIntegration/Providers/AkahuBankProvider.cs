@@ -1,5 +1,6 @@
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.BankConnections.DTOs;
+using MyMascada.Domain.Common;
 
 namespace MyMascada.Infrastructure.Services.BankIntegration.Providers;
 
@@ -102,8 +103,8 @@ public class AkahuBankProvider : IBankProvider
                 to,
                 ct);
 
-            _logger.LogInformation("Fetched {Count} transactions from Akahu for account {AccountId} ({From:yyyy-MM-dd} to {To:yyyy-MM-dd})",
-                transactions.Count, accountId, from, to);
+            _logger.LogInformation("Fetched {Count} transactions from Akahu ({From:yyyy-MM-dd} to {To:yyyy-MM-dd})",
+                transactions.Count, from, to);
 
             var mapped = transactions.Select(MapTransaction).ToList();
             return BankTransactionFetchResult.Success(mapped);
@@ -184,8 +185,8 @@ public class AkahuBankProvider : IBankProvider
             var total = pendingTransactions.Sum(t => t.Amount);
 
             _logger.LogInformation(
-                "Fetched {Count} pending transactions totalling {Total:C} for account {AccountId}",
-                pendingTransactions.Count, total, accountId);
+                "Fetched {Count} pending transactions totalling {Total:C}",
+                pendingTransactions.Count, total);
 
             return new PendingTransactionsSummary(total, pendingTransactions.Count);
         }
@@ -263,13 +264,17 @@ public class AkahuBankProvider : IBankProvider
         return new BankTransactionDto
         {
             ExternalId = tx.Id,
-            Date = tx.Date,
+            // Normalize to start-of-day UTC to prevent timezone display shifts.
+            // Akahu dates may include a time component that, when converted to NZ timezone
+            // (UTC+13) on the frontend, can shift the displayed date forward by a day.
+            Date = DateTimeProvider.StartOfDayUtc(tx.Date),
             Amount = tx.Amount,  // Akahu uses standard convention: negative = expense
             Description = tx.Description,
             Reference = reference,
             Category = tx.Category?.Name,
             MerchantName = tx.Merchant?.Name,
-            Metadata = metadata.Count > 0 ? metadata : null
+            Metadata = metadata.Count > 0 ? metadata : null,
+            Migrated = tx.Migrated
         };
     }
 }

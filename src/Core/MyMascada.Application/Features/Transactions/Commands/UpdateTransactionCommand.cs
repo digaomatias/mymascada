@@ -1,7 +1,9 @@
 using MediatR;
 using MyMascada.Application.Common.Interfaces;
+using MyMascada.Application.Features.Categorization.Services;
 using MyMascada.Application.Features.Transactions.DTOs;
 using MyMascada.Application.Features.Transactions.Mappings;
+using MyMascada.Domain.Entities;
 using MyMascada.Domain.Enums;
 using MyMascada.Domain.Common;
 
@@ -28,17 +30,20 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
     private readonly ICategoryRepository _categoryRepository;
     private readonly ITransferRepository _transferRepository;
     private readonly IAccountAccessService _accountAccessService;
+    private readonly ICategorizationHistoryService _historyService;
 
     public UpdateTransactionCommandHandler(
         ITransactionRepository transactionRepository,
         ICategoryRepository categoryRepository,
         ITransferRepository transferRepository,
-        IAccountAccessService accountAccessService)
+        IAccountAccessService accountAccessService,
+        ICategorizationHistoryService historyService)
     {
         _transactionRepository = transactionRepository;
         _categoryRepository = categoryRepository;
         _transferRepository = transferRepository;
         _accountAccessService = accountAccessService;
+        _historyService = historyService;
     }
 
     public async Task<TransactionDto> Handle(UpdateTransactionCommand request, CancellationToken cancellationToken)
@@ -98,9 +103,11 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
             }
         }
 
-        // Store original amount for transfer amount calculations
+        // Store originals before mutation
         var originalAmount = transaction.Amount;
         var amountChanged = Math.Abs(originalAmount - request.Amount) > 0.01m;
+        var originalCategoryId = transaction.CategoryId;
+        var originalDescription = transaction.Description;
 
         // Update transaction properties
         transaction.Amount = request.Amount;
@@ -152,6 +159,31 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
         }
 
         await _transactionRepository.SaveChangesAsync();
+
+        // Record categorization history (best-effort — transaction update already persisted above)
+        var categoryChanged = originalCategoryId != request.CategoryId;
+        var descriptionChanged = originalDescription != request.Description;
+        if (!isTransfer && request.CategoryId.HasValue && (categoryChanged || descriptionChanged))
+        {
+            try
+            {
+                await _historyService.RecordCategorizationAsync(
+                    request.UserId,
+                    transaction.Description,
+                    request.CategoryId.Value,
+                    CategorizationHistorySource.Manual,
+                    cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch
+            {
+                // History service already logs internally; swallow to avoid failing
+                // the user's transaction update which was already saved.
+            }
+        }
 
         // Return updated DTO
         return TransactionMapper.ToDto(transaction);

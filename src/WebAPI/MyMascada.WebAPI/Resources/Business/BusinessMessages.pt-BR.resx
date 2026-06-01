@@ -174,4 +174,18 @@
     <value>O saldo calculado nao corresponde ao saldo esperado</value>
   </data>
 
+  <!-- Subscription / AI Quota -->
+  <data name="Subscription.LlmDeniedFreeTier" xml:space="preserve">
+    <value>A categorizacao por IA nao esta disponivel no plano Gratuito. Faca upgrade para o Pro para categorizacao com IA.</value>
+  </data>
+  <data name="Subscription.LlmQuotaExhausted" xml:space="preserve">
+    <value>Cota mensal de categorizacao por IA excedida. A cota sera renovada no inicio do proximo mes.</value>
+  </data>
+  <data name="Subscription.AiRulesDeniedFreeTier" xml:space="preserve">
+    <value>Sugestoes de regras com IA nao estao disponiveis no plano Gratuito. Sugestoes basicas sao geradas automaticamente.</value>
+  </data>
+  <data name="Subscription.AiRulesQuotaExhausted" xml:space="preserve">
+    <value>Cota mensal de sugestoes de regras com IA excedida. A cota sera renovada no inicio do proximo mes.</value>
+  </data>
+
 </root>

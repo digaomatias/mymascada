@@ -1,4 +1,5 @@
 using MyMascada.Application.Common.Interfaces;
+using MyMascada.Infrastructure.Data;
 using MyMascada.Infrastructure.Repositories;
 
 namespace MyMascada.WebAPI.Extensions;
@@ -7,6 +8,9 @@ public static class RepositoryServiceExtensions
 {
     public static IServiceCollection AddRepositories(this IServiceCollection services)
     {
+        // Unit of work (DbContext transaction abstraction)
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+
         // Core repositories
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ITransactionRepository, TransactionRepository>();
@@ -57,6 +61,10 @@ public static class RepositoryServiceExtensions
 
         // Dashboard nudge repositories
         services.AddScoped<IDashboardNudgeDismissalRepository, DashboardNudgeDismissalRepository>();
+
+        // Notification repositories
+        services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<INotificationPreferenceRepository, NotificationPreferenceRepository>();
 
         return services;
     }

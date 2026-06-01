@@ -31,6 +31,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<BankConnection> BankConnections => Set<BankConnection>();
     public DbSet<BankSyncLog> BankSyncLogs => Set<BankSyncLog>();
     public DbSet<AkahuUserCredential> AkahuUserCredentials => Set<AkahuUserCredential>();
+    public DbSet<AkahuWebhookSubscription> AkahuWebhookSubscriptions => Set<AkahuWebhookSubscription>();
     public DbSet<BankCategoryMapping> BankCategoryMappings => Set<BankCategoryMapping>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
@@ -52,6 +53,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<AiTokenUsage> AiTokenUsages => Set<AiTokenUsage>();
     public DbSet<BillingPlan> BillingPlans => Set<BillingPlan>();
     public DbSet<UserSubscription> UserSubscriptions => Set<UserSubscription>();
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
+    public DbSet<CategorizationHistory> CategorizationHistories => Set<CategorizationHistory>();
+    public DbSet<AiCategorizationUsage> AiCategorizationUsages => Set<AiCategorizationUsage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -451,9 +456,40 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.EncryptedAppToken).IsRequired();
             entity.Property(e => e.EncryptedUserToken).IsRequired();
             entity.Property(e => e.LastValidationError).HasMaxLength(500);
+            entity.Property(e => e.ConsentScope).HasMaxLength(500);
+            entity.Property(e => e.ConsentCorrelationId).HasMaxLength(256);
 
             // Unique constraint: one credential per user (user can only have one Akahu Personal App)
             entity.HasIndex(e => e.UserId).IsUnique();
+
+            entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
+        // AkahuWebhookSubscription configuration
+        modelBuilder.Entity<AkahuWebhookSubscription>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.AkahuUserCredentialId).IsRequired();
+            entity.Property(e => e.WebhookId).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.WebhookType).IsRequired().HasMaxLength(40);
+            entity.Property(e => e.State).HasMaxLength(100);
+            entity.Property(e => e.LastReconcileError).HasMaxLength(500);
+
+            // Both unique indexes are filtered to non-deleted rows: the entity is
+            // soft-deleted, and reconciliation re-subscribes (re-using a WebhookId)
+            // after a partial teardown — an unfiltered constraint would block that.
+            entity.HasIndex(e => e.WebhookId)
+                .IsUnique()
+                .HasFilter("\"IsDeleted\" = false");
+            entity.HasIndex(e => new { e.UserId, e.WebhookType })
+                .IsUnique()
+                .HasFilter("\"IsDeleted\" = false");
+
+            entity.HasOne<AkahuUserCredential>()
+                .WithMany()
+                .HasForeignKey(e => e.AkahuUserCredentialId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasQueryFilter(e => !e.IsDeleted);
         });
@@ -764,14 +800,14 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.UserId).IsRequired();
             entity.Property(e => e.EncryptedBotToken).IsRequired();
-            entity.Property(e => e.WebhookSecret).IsRequired().HasMaxLength(64);
+            entity.Property(e => e.WebhookSecretHash).IsRequired().HasMaxLength(64);
             entity.Property(e => e.BotUsername).HasMaxLength(100);
 
             // One bot per user
             entity.HasIndex(e => e.UserId).IsUnique();
 
-            // O(1) webhook lookup
-            entity.HasIndex(e => e.WebhookSecret).IsUnique();
+            // O(1) webhook lookup by hash
+            entity.HasIndex(e => e.WebhookSecretHash).IsUnique();
 
             entity.HasQueryFilter(e => !e.IsDeleted);
         });
@@ -805,7 +841,7 @@ public class ApplicationDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Icon).HasMaxLength(10);
+            entity.Property(e => e.Icon).HasMaxLength(50);
             entity.Property(e => e.Color).HasMaxLength(7);
             entity.Property(e => e.Currency).IsRequired().HasMaxLength(3);
             entity.Property(e => e.TargetAmount).HasPrecision(18, 2);
@@ -934,6 +970,113 @@ public class ApplicationDbContext : DbContext
                 .WithMany(p => p.Subscriptions)
                 .HasForeignKey(e => e.PlanId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
+        // Notification configuration
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.Property(e => e.Type).IsRequired();
+            entity.Property(e => e.Priority).IsRequired().HasDefaultValue(MyMascada.Domain.Enums.NotificationPriority.Normal);
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Body).IsRequired().HasMaxLength(2000);
+            entity.Property(e => e.Data).HasColumnType("jsonb");
+            entity.Property(e => e.GroupKey).HasMaxLength(200);
+
+            // Indexes for efficient querying
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => new { e.UserId, e.IsRead });
+            entity.HasIndex(e => new { e.UserId, e.Type });
+            entity.HasIndex(e => new { e.UserId, e.CreatedAt });
+            // Composite unique index on (UserId, GroupKey) to enforce idempotency at DB level.
+            // Filter excludes NULL GroupKey and soft-deleted rows so that deleted notifications
+            // do not block future inserts for the same (UserId, GroupKey) combination.
+            entity.HasIndex(e => new { e.UserId, e.GroupKey })
+                .IsUnique()
+                .HasFilter("\"GroupKey\" IS NOT NULL AND \"IsDeleted\" = false");
+
+            // Partial index to speed up DeleteExpiredAsync which filters on ExpiresAt IS NOT NULL.
+            entity.HasIndex(e => e.ExpiresAt)
+                .HasFilter("\"ExpiresAt\" IS NOT NULL AND \"IsDeleted\" = false");
+
+            entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
+        // NotificationPreference configuration
+        modelBuilder.Entity<NotificationPreference>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.Property(e => e.ChannelPreferences).HasColumnType("jsonb");
+            entity.Property(e => e.QuietHoursTimezone).HasMaxLength(50);
+            entity.Property(e => e.LargeTransactionThreshold).HasPrecision(18, 2);
+
+            // One preference record per user
+            entity.HasIndex(e => e.UserId).IsUnique();
+
+            entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
+        // CategorizationHistory configuration
+        modelBuilder.Entity<CategorizationHistory>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.NormalizedDescription).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.OriginalDescription).HasMaxLength(500);
+            entity.Property(e => e.CategoryId).IsRequired();
+            entity.Property(e => e.MatchCount).IsRequired().HasDefaultValue(1);
+            entity.Property(e => e.LastUsedAt).IsRequired();
+            entity.Property(e => e.Source)
+                .HasMaxLength(20)
+                .HasDefaultValue(CategorizationHistorySource.Manual)
+                .HasConversion<string>();
+
+            // Unique composite index: one mapping per user per normalized description
+            entity.HasIndex(e => new { e.UserId, e.NormalizedDescription }).IsUnique();
+
+            // Index for querying by user + category (used for conflict detection)
+            entity.HasIndex(e => new { e.UserId, e.CategoryId });
+
+            // Foreign key to Category — Restrict to preserve history if category is deleted
+            entity.HasOne(e => e.Category)
+                .WithMany()
+                .HasForeignKey(e => e.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
+        // AiCategorizationUsage configuration
+        modelBuilder.Entity<AiCategorizationUsage>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.Year).IsRequired();
+            entity.Property(e => e.Month).IsRequired();
+            entity.Property(e => e.LlmCategorizationCount).IsRequired().HasDefaultValue(0);
+            entity.Property(e => e.RuleSuggestionCount).IsRequired().HasDefaultValue(0);
+
+            // One row per user per month
+            entity.HasIndex(e => new { e.UserId, e.Year, e.Month }).IsUnique();
+
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_AiCategorizationUsage_Month", "\"Month\" BETWEEN 1 AND 12");
+                t.HasCheckConstraint("CK_AiCategorizationUsage_LlmCategorizationCount", "\"LlmCategorizationCount\" >= 0");
+                t.HasCheckConstraint("CK_AiCategorizationUsage_RuleSuggestionCount", "\"RuleSuggestionCount\" >= 0");
+            });
 
             entity.HasQueryFilter(e => !e.IsDeleted);
         });

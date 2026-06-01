@@ -5,6 +5,8 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
 using MyMascada.Application.Common.Interfaces;
+using MyMascada.Application.Features.BankConnections.DTOs;
+using MyMascada.Domain.Common;
 
 namespace MyMascada.Infrastructure.Services.BankIntegration.Providers;
 
@@ -110,6 +112,40 @@ public class AkahuApiClient : IAkahuApiClient
         return account != null ? MapToAccountInfo(account) : null;
     }
 
+    public async Task<IReadOnlyList<AkahuConnectionInfo>> GetConnectionsWithCredentialsAsync(
+        string appIdToken,
+        string userToken,
+        CancellationToken ct = default)
+    {
+        var request = CreateAuthenticatedRequest(HttpMethod.Get, "connections", appIdToken, userToken);
+        _logger.LogInformation("Akahu API request: {Method} {BaseAddress}{RequestUri}",
+            request.Method, _httpClient.BaseAddress, request.RequestUri);
+        var response = await _httpClient.SendAsync(request, ct);
+        await EnsureSuccessAsync(response, "Get connections");
+
+        var result = await response.Content.ReadFromJsonAsync<AkahuListResponse<AkahuConnection>>(JsonOptions, ct);
+        var connections = result?.Items ?? Array.Empty<AkahuConnection>();
+        return connections.Select(c => new AkahuConnectionInfo
+        {
+            Id = c.Id,
+            Name = c.Name,
+            Logo = c.Logo,
+            Classic = c.Classic
+        }).ToList();
+    }
+
+    public async Task<IReadOnlyList<BankTransactionDto>> GetTransactionsWithCredentialsAsync(
+        string appIdToken,
+        string userToken,
+        string accountId,
+        DateTime? start = null,
+        DateTime? end = null,
+        CancellationToken ct = default)
+    {
+        var transactions = await GetTransactionsAsync(appIdToken, userToken, accountId, start, end, ct);
+        return transactions.Select(MapToBankTransactionDto).ToList();
+    }
+
     /// <summary>
     /// Validates that the provided credentials are valid by making a test API call.
     /// </summary>
@@ -144,8 +180,45 @@ public class AkahuApiClient : IAkahuApiClient
         CurrentBalance = account.Balance?.Current,
         AvailableBalance = account.Balance?.Available,
         Currency = account.Balance?.Currency ?? "NZD",
-        BankName = account.Connection?.Name ?? string.Empty
+        BankName = account.Connection?.Name ?? string.Empty,
+        Migrated = account.Migrated,
+        ConnectionClassic = account.Connection?.Classic
     };
+
+    private static BankTransactionDto MapToBankTransactionDto(AkahuTransaction tx)
+    {
+        var referenceParts = new[] { tx.Meta?.Particulars, tx.Meta?.Code, tx.Meta?.Reference }
+            .Where(p => !string.IsNullOrEmpty(p));
+        var reference = referenceParts.Any() ? string.Join(" | ", referenceParts) : null;
+
+        var metadata = new Dictionary<string, object>();
+        if (tx.Meta?.OtherAccount != null)
+            metadata["otherAccount"] = tx.Meta.OtherAccount;
+        if (tx.Meta?.CardSuffix != null)
+            metadata["cardSuffix"] = tx.Meta.CardSuffix;
+        if (tx.Meta?.Conversion != null)
+        {
+            metadata["foreignAmount"] = tx.Meta.Conversion.Amount;
+            metadata["foreignCurrency"] = tx.Meta.Conversion.Currency;
+            metadata["exchangeRate"] = tx.Meta.Conversion.Rate;
+        }
+        if (tx.Category?.Groups?.PersonalFinance != null)
+            metadata["akahuCategoryGroup"] = tx.Category.Groups.PersonalFinance;
+
+        return new BankTransactionDto
+        {
+            ExternalId = tx.Id,
+            // Match AkahuBankProvider.MapTransaction so timezone display does not shift the date.
+            Date = DateTimeProvider.StartOfDayUtc(tx.Date),
+            Amount = tx.Amount,
+            Description = tx.Description,
+            Reference = reference,
+            Category = tx.Category?.Name,
+            MerchantName = tx.Merchant?.Name,
+            Metadata = metadata.Count > 0 ? metadata : null,
+            Migrated = tx.Migrated
+        };
+    }
 
     /// <summary>
     /// Exchange authorization code for access token (internal - Production App mode)
@@ -181,7 +254,7 @@ public class AkahuApiClient : IAkahuApiClient
             fullUrl, _options.RedirectUri, code?.Length ?? 0);
 
         var response = await _httpClient.SendAsync(request, ct);
-        await EnsureSuccessAsync(response, "Token exchange", ct);
+        await EnsureSuccessAsync(response, "Token exchange");
 
         return await response.Content.ReadFromJsonAsync<AkahuTokenResponse>(JsonOptions, ct)
             ?? throw new InvalidOperationException("Failed to parse token response");
@@ -199,7 +272,7 @@ public class AkahuApiClient : IAkahuApiClient
         _logger.LogInformation("Akahu API request: {Method} {BaseAddress}{RequestUri}",
             request.Method, _httpClient.BaseAddress, request.RequestUri);
         var response = await _httpClient.SendAsync(request, ct);
-        await EnsureSuccessAsync(response, "Get accounts", ct);
+        await EnsureSuccessAsync(response, "Get accounts");
 
         var result = await response.Content.ReadFromJsonAsync<AkahuListResponse<AkahuAccount>>(JsonOptions, ct);
         return result?.Items ?? Array.Empty<AkahuAccount>();
@@ -220,7 +293,7 @@ public class AkahuApiClient : IAkahuApiClient
         if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             return null;
 
-        await EnsureSuccessAsync(response, "Get account", ct);
+        await EnsureSuccessAsync(response, "Get account");
 
         var result = await response.Content.ReadFromJsonAsync<AkahuItemResponse<AkahuAccount>>(JsonOptions, ct);
         return result?.Item;
@@ -259,7 +332,7 @@ public class AkahuApiClient : IAkahuApiClient
 
             var request = CreateAuthenticatedRequest(HttpMethod.Get, url, appIdToken, userToken);
             var response = await _httpClient.SendAsync(request, ct);
-            await EnsureSuccessAsync(response, "Get transactions", ct);
+            await EnsureSuccessAsync(response, "Get transactions");
 
             var result = await response.Content.ReadFromJsonAsync<AkahuListResponse<AkahuTransaction>>(JsonOptions, ct);
 
@@ -278,12 +351,12 @@ public class AkahuApiClient : IAkahuApiClient
 
         if (pageCount >= maxPages)
         {
-            _logger.LogWarning("Reached maximum page limit ({MaxPages}) while fetching transactions for account {AccountId}",
-                maxPages, accountId);
+            _logger.LogWarning("Reached maximum page limit ({MaxPages}) while fetching transactions",
+                maxPages);
         }
 
-        _logger.LogInformation("Fetched {TotalCount} transactions across {PageCount} pages for account {AccountId}",
-            allTransactions.Count, pageCount, accountId);
+        _logger.LogInformation("Fetched {TotalCount} transactions across {PageCount} pages",
+            allTransactions.Count, pageCount);
 
         return allTransactions;
     }
@@ -300,7 +373,7 @@ public class AkahuApiClient : IAkahuApiClient
         var url = $"accounts/{accountId}/transactions/pending";
         var request = CreateAuthenticatedRequest(HttpMethod.Get, url, appIdToken, userToken);
         var response = await _httpClient.SendAsync(request, ct);
-        await EnsureSuccessAsync(response, "Get pending transactions", ct);
+        await EnsureSuccessAsync(response, "Get pending transactions");
 
         var result = await response.Content.ReadFromJsonAsync<AkahuListResponse<AkahuPendingTransaction>>(JsonOptions, ct);
         return result?.Items ?? Array.Empty<AkahuPendingTransaction>();
@@ -319,26 +392,98 @@ public class AkahuApiClient : IAkahuApiClient
         request.Headers.Add("X-Akahu-Id", appIdToken);
 
         var response = await _httpClient.SendAsync(request, ct);
-        // Don't throw on failure - token may already be revoked
         if (!response.IsSuccessStatusCode)
         {
-            _logger.LogWarning("Failed to revoke Akahu token: {StatusCode}", response.StatusCode);
+            var ex = new HttpRequestException(
+                $"Akahu token revocation failed with status {response.StatusCode}",
+                inner: null,
+                response.StatusCode);
+            _logger.LogError(ex, "Failed to revoke Akahu token: {StatusCode}", response.StatusCode);
+            throw ex;
         }
     }
 
     /// <summary>
-    /// Subscribe to an Akahu webhook type for the given user.
+    /// Subscribe to an Akahu webhook type for the given user. Returns the created subscription
+    /// (Akahu-issued <c>_id</c>, type, and the echoed state) so the caller can persist the row.
     /// </summary>
-    public async Task SubscribeToWebhookAsync(string appIdToken, string userToken, string webhookType, string? state = null, CancellationToken ct = default)
+    public async Task<AkahuWebhookSubscriptionInfo> SubscribeToWebhookAsync(string appIdToken, string userToken, string webhookType, string? state = null, CancellationToken ct = default)
     {
         var request = CreateAuthenticatedRequest(HttpMethod.Post, "webhooks", appIdToken, userToken);
         var payload = new { webhook_type = webhookType, state };
         request.Content = JsonContent.Create(payload, options: JsonOptions);
 
         var response = await _httpClient.SendAsync(request, ct);
-        await EnsureSuccessAsync(response, $"Subscribe to webhook ({webhookType})", ct);
+        await EnsureSuccessAsync(response, $"Subscribe to webhook ({webhookType})");
 
-        _logger.LogInformation("Subscribed to Akahu {WebhookType} webhook", webhookType);
+        // Buffer the body to a string so we can attempt multiple response shapes without
+        // re-reading the underlying Stream (which is disposed after the first read).
+        // Akahu's POST /webhooks actually returns { "success": true, "item_id": "hook_xxx" }
+        // (verified empirically against the dev environment, 2026-05-17); the other shapes
+        // are kept as fallbacks in case other endpoints or future versions differ.
+        var body = await response.Content.ReadAsStringAsync(ct);
+
+        AkahuWebhookSubscriptionResponse? parsed = null;
+
+        // Shape 1 (current Akahu behaviour for POST /webhooks): { success, item_id }
+        try
+        {
+            var idResponse = JsonSerializer.Deserialize<AkahuItemIdResponse>(body, JsonOptions);
+            if (!string.IsNullOrEmpty(idResponse?.ItemId))
+            {
+                parsed = new AkahuWebhookSubscriptionResponse
+                {
+                    Id = idResponse.ItemId,
+                    WebhookType = webhookType,
+                    State = state
+                };
+            }
+        }
+        catch (JsonException) { /* fall through */ }
+
+        // Shape 2: { success, item: { _id, webhook_type, state } }
+        if (parsed == null || string.IsNullOrEmpty(parsed.Id))
+        {
+            try
+            {
+                var item = JsonSerializer.Deserialize<AkahuItemResponse<AkahuWebhookSubscriptionResponse>>(body, JsonOptions);
+                parsed = item?.Item;
+            }
+            catch (JsonException) { parsed = null; }
+        }
+
+        // Shape 3: bare { _id, webhook_type, state }
+        if (parsed == null || string.IsNullOrEmpty(parsed.Id))
+        {
+            try
+            {
+                parsed = JsonSerializer.Deserialize<AkahuWebhookSubscriptionResponse>(body, JsonOptions);
+            }
+            catch (JsonException) { parsed = null; }
+        }
+
+        if (parsed == null || string.IsNullOrEmpty(parsed.Id))
+        {
+            // The body echoes the request's `state` value (we use the user's GUID),
+            // so we deliberately don't include any of the body in logs or the exception
+            // message. Length + status code is enough to diagnose a future shape drift
+            // without leaking user identifiers into logs/APM.
+            _logger.LogWarning(
+                "Akahu webhook subscribe ({WebhookType}) returned unexpected shape; status={StatusCode}, bodyLength={BodyLength}",
+                webhookType, response.StatusCode, body.Length);
+            throw new AkahuApiException(
+                $"Akahu webhook subscribe ({webhookType}) returned unexpected shape (status {(int)response.StatusCode}).",
+                response.StatusCode);
+        }
+
+        _logger.LogInformation("Subscribed to Akahu {WebhookType} webhook (id={WebhookId})", webhookType, parsed.Id);
+
+        return new AkahuWebhookSubscriptionInfo
+        {
+            Id = parsed.Id,
+            WebhookType = string.IsNullOrEmpty(parsed.WebhookType) ? webhookType : parsed.WebhookType,
+            State = parsed.State ?? state
+        };
     }
 
     /// <summary>
@@ -348,9 +493,9 @@ public class AkahuApiClient : IAkahuApiClient
     {
         var request = CreateAuthenticatedRequest(HttpMethod.Delete, $"webhooks/{webhookId}", appIdToken, userToken);
         var response = await _httpClient.SendAsync(request, ct);
-        await EnsureSuccessAsync(response, $"Unsubscribe from webhook ({webhookId})", ct);
+        await EnsureSuccessAsync(response, "Unsubscribe from webhook");
 
-        _logger.LogInformation("Unsubscribed from Akahu webhook {WebhookId}", webhookId);
+        _logger.LogInformation("Unsubscribed from Akahu webhook");
     }
 
     /// <summary>
@@ -360,7 +505,7 @@ public class AkahuApiClient : IAkahuApiClient
     {
         var request = CreateAuthenticatedRequest(HttpMethod.Get, "webhooks", appIdToken, userToken);
         var response = await _httpClient.SendAsync(request, ct);
-        await EnsureSuccessAsync(response, "List webhooks", ct);
+        await EnsureSuccessAsync(response, "List webhooks");
 
         var result = await response.Content.ReadFromJsonAsync<AkahuListResponse<AkahuWebhookSubscriptionResponse>>(JsonOptions, ct);
         return (result?.Items ?? Array.Empty<AkahuWebhookSubscriptionResponse>())
@@ -385,22 +530,28 @@ public class AkahuApiClient : IAkahuApiClient
         return request;
     }
 
-    private async Task EnsureSuccessAsync(HttpResponseMessage response, string operation, CancellationToken ct)
+    private Task EnsureSuccessAsync(HttpResponseMessage response, string operation)
     {
         if (response.IsSuccessStatusCode)
-            return;
+            return Task.CompletedTask;
 
-        var content = await response.Content.ReadAsStringAsync(ct);
+        // Extract request ID from response headers for correlation (safe to log)
+        response.Headers.TryGetValues("X-Request-Id", out var requestIdValues);
+        var requestId = requestIdValues?.FirstOrDefault();
+
+        // Log only safe metadata — never log raw response bodies as they may contain tokens, PII, or account identifiers
         _logger.LogError(new HttpRequestException($"Akahu API error: {response.StatusCode}"),
-            "Akahu API error - {Operation}: {StatusCode} - {Content}",
-            operation, response.StatusCode, content);
+            "Akahu API error - {Operation}: {StatusCode}, RequestId: {RequestId}",
+            operation, response.StatusCode, requestId);
 
         throw response.StatusCode switch
         {
+            HttpStatusCode.BadRequest => new AkahuApiException($"Akahu: {operation} - Bad request.", response.StatusCode),
             HttpStatusCode.Unauthorized => new UnauthorizedAccessException($"Akahu: {operation} - Unauthorized. Token may be expired or revoked."),
-            HttpStatusCode.Forbidden => new UnauthorizedAccessException($"Akahu: {operation} - Forbidden. Insufficient permissions."),
-            HttpStatusCode.TooManyRequests => new InvalidOperationException($"Akahu: {operation} - Rate limit exceeded. Please try again later."),
-            _ => new AkahuApiException($"Akahu: {operation} failed with status {response.StatusCode}: {content}", response.StatusCode)
+            HttpStatusCode.Forbidden => new AkahuApiException($"Akahu: {operation} - Forbidden. Insufficient permissions.", response.StatusCode),
+            HttpStatusCode.NotFound => new AkahuApiException($"Akahu: {operation} - Resource not found.", response.StatusCode),
+            HttpStatusCode.TooManyRequests => new AkahuApiException($"Akahu: {operation} - Rate limit exceeded. Please try again later.", response.StatusCode),
+            _ => new AkahuApiException($"Akahu: {operation} failed with status {response.StatusCode}", response.StatusCode)
         };
     }
 }
@@ -439,6 +590,13 @@ public record AkahuItemResponse<T>
     public T? Item { get; init; }
 }
 
+public record AkahuItemIdResponse
+{
+    public bool Success { get; init; }
+    [JsonPropertyName("item_id")]
+    public string? ItemId { get; init; }
+}
+
 public record AkahuTokenResponse
 {
     public string AccessToken { get; init; } = string.Empty;
@@ -458,6 +616,8 @@ public record AkahuAccount
     public AkahuAccountBalance? Balance { get; init; }
     public AkahuConnection? Connection { get; init; }
     public string[] Attributes { get; init; } = Array.Empty<string>();
+    [JsonPropertyName("_migrated")]
+    public string? Migrated { get; init; }
 }
 
 public record AkahuAccountBalance
@@ -475,6 +635,8 @@ public record AkahuConnection
     public string Id { get; init; } = string.Empty;  // conn_xxx
     public string Name { get; init; } = string.Empty;  // e.g., "ANZ"
     public string? Logo { get; init; }
+    [JsonPropertyName("_classic")]
+    public string? Classic { get; init; }
 }
 
 public record AkahuTransaction
@@ -493,6 +655,8 @@ public record AkahuTransaction
     public AkahuTransactionMeta? Meta { get; init; }
     [JsonPropertyName("created_at")]
     public DateTime CreatedAt { get; init; }
+    [JsonPropertyName("_migrated")]
+    public string? Migrated { get; init; }
 }
 
 public record AkahuTransactionCategory

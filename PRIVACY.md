@@ -50,13 +50,24 @@ The following external services can be optionally configured. When enabled, data
 - **When**: For password resets, email verification, and notification delivery.
 - **How to disable**: Set `EMAIL_ENABLED=false` (the default). The application functions without email, but password reset requires administrator intervention.
 
+## Data Retention
+
+MyMascada enforces automated data retention policies for certain data classes. See [`DATA_RETENTION.md`](DATA_RETENTION.md) for the full policy, including retention periods, automated cleanup schedules, and configuration options.
+
+Key points:
+
+- **AI chat messages** are automatically cleaned up after 90 days (configurable).
+- **Auth tokens** are cleaned up 7 days after expiry.
+- **Financial data** is retained while the account is active and removed on account deletion.
+- **Database backups** are the operator's responsibility (recommended: 30 days).
+
 ## Self-Hosters' Responsibilities
 
 As a self-hoster, you are responsible for:
 
 - Securing your server and database
 - Complying with applicable data protection laws in your jurisdiction
-- Managing backups and data retention
+- Managing backups and data retention (see [`DATA_RETENTION.md`](DATA_RETENTION.md))
 - Configuring HTTPS for production deployments
 - Protecting credentials and API keys stored in your `.env` file
 

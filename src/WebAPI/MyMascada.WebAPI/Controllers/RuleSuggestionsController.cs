@@ -18,11 +18,36 @@ public class RuleSuggestionsController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IRuleSuggestionRepository _ruleSuggestionRepository;
 
-    public RuleSuggestionsController(IMediator mediator, ICurrentUserService currentUserService)
+    public RuleSuggestionsController(
+        IMediator mediator,
+        ICurrentUserService currentUserService,
+        IRuleSuggestionRepository ruleSuggestionRepository)
     {
         _mediator = mediator;
         _currentUserService = currentUserService;
+        _ruleSuggestionRepository = ruleSuggestionRepository;
+    }
+
+    /// <summary>
+    /// Returns a lightweight count of pending rule suggestions for the
+    /// current user. Used by the sidebar "Rules" link to drive the badge
+    /// without materializing the full suggestion graph (SampleTransactions,
+    /// SuggestedCategory, etc.) that the main listing endpoint loads.
+    /// </summary>
+    [HttpGet("summary")]
+    public async Task<ActionResult<RuleSuggestionsCountSummary>> GetRuleSuggestionsSummary(
+        CancellationToken cancellationToken = default)
+    {
+        var userId = _currentUserService.GetUserId();
+        var totalSuggestions = await _ruleSuggestionRepository
+            .CountPendingSuggestionsAsync(userId, cancellationToken);
+
+        return Ok(new RuleSuggestionsCountSummary
+        {
+            TotalSuggestions = totalSuggestions
+        });
     }
 
     /// <summary>
@@ -55,7 +80,9 @@ public class RuleSuggestionsController : ControllerBase
     }
 
     /// <summary>
-    /// Generate new rule suggestions for the current user
+    /// Generate new rule suggestions for the current user.
+    /// AI-enhanced generation requires a Pro subscription or self-hosted deployment.
+    /// Free users still get basic (deterministic) suggestions.
     /// </summary>
     [HttpPost("generate")]
     public async Task<ActionResult<RuleSuggestionsResponse>> GenerateRuleSuggestions(
@@ -64,6 +91,9 @@ public class RuleSuggestionsController : ControllerBase
         try
         {
             var userId = _currentUserService.GetUserId();
+
+            // No 403 gate here — RuleSuggestionService checks the tier internally
+            // and falls back to deterministic (basic) suggestions when AI is unavailable.
             var command = new GenerateRuleSuggestionsCommand
             {
                 UserId = userId,

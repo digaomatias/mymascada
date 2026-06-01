@@ -42,4 +42,23 @@ public class UserDto
     public bool AiDescriptionCleaning { get; set; }
     public bool HasAiConfigured { get; set; }
     public bool IsOnboardingComplete { get; set; }
+
+    /// <summary>
+    /// Current subscription tier ("Free", "Pro", "Family", "SelfHosted").
+    /// Used by the frontend to show/hide upsell banners and gated features.
+    ///
+    /// Nullable by design — defaulting to "Free" would silently downgrade
+    /// paid users on any auth endpoint that forgets to populate this field,
+    /// flashing upsell banners to them. The frontend treats `null` as
+    /// "unknown / don't gate yet" and waits for a value before applying
+    /// tier-based UI. Every handler that returns a UserDto in an auth flow
+    /// must explicitly set this field (see AuthController.EnrichSubscriptionFieldsAsync).
+    /// </summary>
+    public string? SubscriptionTier { get; set; }
+
+    /// <summary>
+    /// True when the deployment is self-hosted (IFeatureFlags.StripeBilling == false).
+    /// Self-hosted users never see upsell banners — they already have unlimited access.
+    /// </summary>
+    public bool IsSelfHosted { get; set; }
 }

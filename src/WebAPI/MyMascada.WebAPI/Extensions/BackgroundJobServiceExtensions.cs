@@ -40,6 +40,26 @@ public static class BackgroundJobServiceExtensions
         services.AddScoped<MyMascada.Application.BackgroundJobs.IExpiredBudgetJobService,
             MyMascada.Infrastructure.BackgroundJobs.ExpiredBudgetJobService>();
 
+        // Data retention service
+        services.AddScoped<MyMascada.Application.BackgroundJobs.IDataRetentionService,
+            MyMascada.Infrastructure.BackgroundJobs.DataRetentionService>();
+
+        // Token revocation retry service
+        services.AddScoped<MyMascada.Application.BackgroundJobs.ITokenRevocationRetryJobService,
+            MyMascada.Infrastructure.BackgroundJobs.TokenRevocationRetryJobService>();
+
+        // Akahu webhook subscription reconciliation service
+        services.AddScoped<MyMascada.Application.BackgroundJobs.IAkahuWebhookSubscriptionReconciliationJobService,
+            MyMascada.Infrastructure.BackgroundJobs.AkahuWebhookSubscriptionReconciliationJobService>();
+
+        // Akahu classic→official migration service (fire-and-forget enqueue from webhook/OAuth)
+        services.AddScoped<MyMascada.Application.BackgroundJobs.IAkahuMigrationJobService,
+            MyMascada.Infrastructure.BackgroundJobs.AkahuMigrationJobService>();
+
+        // Rule suggestion generation job service
+        services.AddScoped<MyMascada.Application.BackgroundJobs.IRuleSuggestionGenerationJobService,
+            MyMascada.Infrastructure.BackgroundJobs.RuleSuggestionGenerationJobService>();
+
         return services;
     }
 }

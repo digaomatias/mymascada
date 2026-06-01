@@ -28,7 +28,9 @@ public class UpdateAccountDto
     [StringLength(500)]
     public string? Notes { get; set; }
     
-    public bool IsActive { get; set; }
+    // Nullable so an omitted JSON field doesn't silently archive an account.
+    // The mapper only applies this when the caller explicitly sets it.
+    public bool? IsActive { get; set; }
     
     [Required]
     [StringLength(3, MinimumLength = 3)]

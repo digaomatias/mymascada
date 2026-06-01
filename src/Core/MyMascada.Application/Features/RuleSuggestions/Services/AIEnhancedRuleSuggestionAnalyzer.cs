@@ -1,345 +1,236 @@
+using Microsoft.Extensions.Logging;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Domain.Entities;
+using MyMascada.Domain.Enums;
 using System.Text.Json;
 
 namespace MyMascada.Application.Features.RuleSuggestions.Services;
 
 /// <summary>
-/// AI-enhanced rule suggestion analyzer that combines basic analysis with AI insights
+/// AI-enhanced rule suggestion analyzer that combines history-based cluster analysis
+/// with focused AI prompts for ambiguous clusters.
 /// </summary>
 public class AIEnhancedRuleSuggestionAnalyzer : IRuleSuggestionAnalyzer
 {
     private readonly BasicRuleSuggestionAnalyzer _basicAnalyzer;
+    private readonly ICategorizationHistoryAnalyzer _historyAnalyzer;
     private readonly ILlmCategorizationService _llmService;
     private readonly IAIUsageTracker _usageTracker;
+    private readonly ILogger<AIEnhancedRuleSuggestionAnalyzer> _logger;
 
-    public string AnalysisMethod => "AI-Enhanced Pattern Analysis";
+    private const int MaxAiClustersToProcess = 5;
+    private const double MinAiSuggestionConfidence = 0.80;
+
+    public string AnalysisMethod => "AI-Enhanced History Analysis";
     public bool RequiresAI => true;
 
     public AIEnhancedRuleSuggestionAnalyzer(
         BasicRuleSuggestionAnalyzer basicAnalyzer,
+        ICategorizationHistoryAnalyzer historyAnalyzer,
         ILlmCategorizationService llmService,
-        IAIUsageTracker usageTracker)
+        IAIUsageTracker usageTracker,
+        ILogger<AIEnhancedRuleSuggestionAnalyzer> logger)
     {
         _basicAnalyzer = basicAnalyzer;
+        _historyAnalyzer = historyAnalyzer;
         _llmService = llmService;
         _usageTracker = usageTracker;
+        _logger = logger;
     }
 
     public async Task<List<PatternSuggestion>> AnalyzePatternsAsync(RuleAnalysisInput input, CancellationToken cancellationToken = default)
     {
         var allSuggestions = new List<PatternSuggestion>();
 
-        try
-        {
-            // 1. Always run basic analysis first (fast and reliable)
-            var basicSuggestions = await _basicAnalyzer.AnalyzePatternsAsync(input, cancellationToken);
-            allSuggestions.AddRange(basicSuggestions);
+        // 1. Run history-based cluster analysis (deterministic suggestions + ambiguous clusters)
+        var historyResult = await _historyAnalyzer.AnalyzeAsync(input.UserId, cancellationToken);
+        allSuggestions.AddRange(historyResult.DeterministicSuggestions);
 
-            // 2. Check if user can use AI
-            var canUseAI = await _usageTracker.CanUseAIAsync(input.UserId, cancellationToken);
-            if (!canUseAI)
+        // 2. Always include basic transaction-based analysis
+        var basicSuggestions = await _basicAnalyzer.AnalyzePatternsAsync(input, cancellationToken);
+        allSuggestions.AddRange(basicSuggestions);
+
+        // 3. Use AI for ambiguous clusters (if quota allows)
+        if (historyResult.AmbiguousClusters.Count > 0)
+        {
+            try
             {
-                return FilterAndCombineSuggestions(allSuggestions, input.MaxSuggestions, input.MinConfidenceThreshold);
+                var canUseAI = await _usageTracker.CanUseAIAsync(input.UserId, cancellationToken);
+                if (canUseAI)
+                {
+                    var aiSuggestions = await AnalyzeAmbiguousClustersAsync(
+                        historyResult.AmbiguousClusters, input, cancellationToken);
+                    allSuggestions.AddRange(aiSuggestions);
+                }
             }
-
-            // 3. Run AI analysis for uncategorized transactions
-            var aiSuggestions = await RunAIAnalysis(input, cancellationToken);
-            allSuggestions.AddRange(aiSuggestions);
-
-            // 4. Record AI usage
-            await _usageTracker.RecordAIUsageAsync(input.UserId, "rule_suggestions", cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            // Log error but don't fail - return basic suggestions
-            System.Diagnostics.Debug.WriteLine($"AI analysis failed: {ex.Message}");
-            // In production, use proper logging
+            catch (OperationCanceledException) { throw; }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "AI cluster analysis failed, returning deterministic + basic suggestions only");
+            }
         }
 
         return FilterAndCombineSuggestions(allSuggestions, input.MaxSuggestions, input.MinConfidenceThreshold);
     }
 
     /// <summary>
-    /// Runs AI analysis for complex pattern detection
+    /// Sends focused AI prompts for each ambiguous cluster (~$0.005/call).
     /// </summary>
-    private async Task<List<PatternSuggestion>> RunAIAnalysis(RuleAnalysisInput input, CancellationToken cancellationToken)
+    private async Task<List<PatternSuggestion>> AnalyzeAmbiguousClustersAsync(
+        List<AmbiguousCluster> clusters,
+        RuleAnalysisInput input,
+        CancellationToken cancellationToken)
     {
         var suggestions = new List<PatternSuggestion>();
 
-        // Focus on uncategorized transactions for AI analysis
-        var uncategorizedTransactions = input.Transactions
-            .Where(t => !t.CategoryId.HasValue && !string.IsNullOrWhiteSpace(t.Description))
-            .OrderByDescending(t => t.TransactionDate)
-            .Take(30) // Limit for cost control
-            .ToList();
-
-        if (uncategorizedTransactions.Count < 3)
-            return suggestions;
-
-        try
+        foreach (var cluster in clusters.Take(MaxAiClustersToProcess))
         {
-            // Get available categories for AI context
-            var categoryContext = input.AvailableCategories
-                .Select(c => $"{c.Id}:{c.Name}")
-                .ToList();
-
-            // Create AI prompt for rule suggestions
-            var prompt = CreateRuleSuggestionPrompt(uncategorizedTransactions, categoryContext);
-            
-            var aiResponse = await _llmService.SendPromptAsync(prompt, cancellationToken);
-            
-            // Parse AI response and create suggestions
-            var aiSuggestions = await ParseAIResponse(aiResponse, input);
-            suggestions.AddRange(aiSuggestions);
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"AI rule analysis failed: {ex.Message}");
-            // Return empty list but don't fail the entire process
+            try
+            {
+                var prompt = CreateClusterPrompt(cluster);
+                var aiResponse = await _llmService.SendPromptAsync(prompt, cancellationToken);
+                await _usageTracker.RecordAIUsageAsync(input.UserId, "rule_suggestions_history", cancellationToken);
+                var clusterSuggestions = ParseClusterResponse(aiResponse, cluster, input);
+                suggestions.AddRange(clusterSuggestions);
+            }
+            catch (OperationCanceledException) { throw; }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "AI cluster analysis failed for category '{CategoryName}'", cluster.CategoryName);
+            }
         }
 
         return suggestions;
     }
 
     /// <summary>
-    /// Creates a focused prompt for AI rule suggestion analysis
+    /// Creates a focused prompt for a single ambiguous cluster.
+    /// Much smaller than per-transaction prompts — costs ~$0.005.
     /// </summary>
-    private string CreateRuleSuggestionPrompt(List<Transaction> transactions, List<string> categories)
+    private static string CreateClusterPrompt(AmbiguousCluster cluster)
     {
-        var transactionSamples = transactions
-            .Take(20)
-            .Select(t => $"- {t.Description} (${Math.Abs(t.Amount):F2})")
+        var descriptions = cluster.Descriptions
+            .Take(15)
+            .Select(d => $"- {d}")
             .ToList();
 
-        return $@"Analyze these transaction descriptions to suggest automation rules for categorization:
+        return $@"These transaction descriptions are all categorized as '{cluster.CategoryName}' by the user:
 
-TRANSACTIONS:
-{string.Join("\n", transactionSamples)}
+{string.Join("\n", descriptions)}
 
-AVAILABLE CATEGORIES:
-{string.Join(", ", categories)}
-
-TASK:
-Find patterns that could be automated into categorization rules. Look for:
-1. Recurring merchant names (Netflix, Starbucks, etc.)
-2. Transaction type patterns (ATM, transfers, subscriptions)
-3. Description patterns that indicate specific categories
+Suggest ONE categorization rule pattern that would match most of these descriptions.
 
 RESPONSE FORMAT (JSON):
 {{
-  ""suggestions"": [
-    {{
-      ""pattern"": ""keyword or phrase to match"",
-      ""categoryId"": ""numeric category ID"",
-      ""categoryName"": ""category name"",
-      ""confidence"": 0.85,
-      ""reasoning"": ""why this pattern makes sense"",
-      ""matchingDescriptions"": [""example1"", ""example2""]
-    }}
-  ]
+  ""pattern"": ""keyword or phrase to match"",
+  ""ruleType"": ""Contains"",
+  ""confidence"": 0.85,
+  ""reasoning"": ""why this pattern works""
 }}
 
 RULES:
-- Only suggest patterns with confidence > 0.8
-- Maximum 5 suggestions
-- Focus on clear, actionable patterns
-- Ensure categoryId matches available categories";
+- Pattern must be a single keyword or short phrase (not a regex)
+- ruleType must be one of: Contains, StartsWith, EndsWith, Equals
+- Only suggest if confidence > {MinAiSuggestionConfidence}
+- Focus on the most distinctive shared element";
     }
 
     /// <summary>
-    /// Parses AI response and converts to PatternSuggestions
+    /// Parses AI response for a single cluster.
     /// </summary>
-    private async Task<List<PatternSuggestion>> ParseAIResponse(string aiResponse, RuleAnalysisInput input)
+    private List<PatternSuggestion> ParseClusterResponse(
+        string aiResponse, AmbiguousCluster cluster, RuleAnalysisInput input)
     {
         var suggestions = new List<PatternSuggestion>();
 
         try
         {
-            // Try to parse JSON response
             var jsonStart = aiResponse.IndexOf('{');
             var jsonEnd = aiResponse.LastIndexOf('}') + 1;
-            
+
             if (jsonStart >= 0 && jsonEnd > jsonStart)
             {
                 var jsonContent = aiResponse.Substring(jsonStart, jsonEnd - jsonStart);
-                var response = JsonSerializer.Deserialize<AIRuleSuggestionResponse>(jsonContent, new JsonSerializerOptions
+                var response = JsonSerializer.Deserialize<AIClusterSuggestion>(jsonContent, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 });
 
-                if (response?.Suggestions != null)
+                if (response != null && IsValidClusterSuggestion(response, cluster, input))
                 {
-                    foreach (var aiSuggestion in response.Suggestions)
+                    suggestions.Add(new PatternSuggestion
                     {
-                        // Validate the suggestion
-                        if (IsValidAISuggestion(aiSuggestion, input))
-                        {
-                            var matchingTransactions = FindMatchingTransactions(aiSuggestion.Pattern, input.Transactions);
-                            
-                            suggestions.Add(new PatternSuggestion
-                            {
-                                Pattern = aiSuggestion.Pattern,
-                                SuggestedCategoryId = aiSuggestion.CategoryId,
-                                SuggestedCategoryName = aiSuggestion.CategoryName,
-                                ConfidenceScore = aiSuggestion.Confidence,
-                                MatchingTransactions = matchingTransactions,
-                                DetectionMethod = "AI Pattern Recognition",
-                                Reasoning = aiSuggestion.Reasoning
-                            });
-                        }
-                    }
+                        Pattern = response.Pattern,
+                        SuggestedCategoryId = cluster.CategoryId,
+                        SuggestedCategoryName = cluster.CategoryName,
+                        ConfidenceScore = response.Confidence,
+                        SuggestedRuleType = ParseRuleType(response.RuleType),
+                        MatchingTransactions = new List<Transaction>(),
+                        DetectionMethod = "AI Cluster Analysis",
+                        Reasoning = response.Reasoning
+                    });
                 }
             }
         }
         catch (JsonException ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Failed to parse AI response as JSON: {ex.Message}");
-            // Try fallback parsing or use heuristics
-            suggestions.AddRange(ParseAIResponseFallback(aiResponse, input));
+            _logger.LogDebug(ex, "Failed to parse AI response for cluster '{CategoryName}'", cluster.CategoryName);
         }
 
         return suggestions;
     }
 
-    /// <summary>
-    /// Fallback parsing when JSON parsing fails
-    /// </summary>
-    private List<PatternSuggestion> ParseAIResponseFallback(string aiResponse, RuleAnalysisInput input)
+    private static bool IsValidClusterSuggestion(
+        AIClusterSuggestion suggestion, AmbiguousCluster cluster, RuleAnalysisInput input)
     {
-        var suggestions = new List<PatternSuggestion>();
-
-        // Simple pattern-based parsing as fallback
-        // Look for common patterns in the AI response
-        var lines = aiResponse.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-        
-        foreach (var line in lines)
-        {
-            // Look for patterns like "NETFLIX -> Entertainment (90% confidence)"
-            if (line.Contains("->") && line.Contains("%"))
-            {
-                try
-                {
-                    var parts = line.Split(new[] { "->" }, StringSplitOptions.RemoveEmptyEntries);
-                    if (parts.Length >= 2)
-                    {
-                        var pattern = parts[0].Trim().Trim('"', '\'');
-                        var categoryPart = parts[1].Trim();
-                        
-                        // Extract confidence if present
-                        var confidenceMatch = System.Text.RegularExpressions.Regex.Match(categoryPart, @"(\d+)%");
-                        var confidence = confidenceMatch.Success ? double.Parse(confidenceMatch.Groups[1].Value) / 100.0 : 0.8;
-                        
-                        if (confidence >= 0.8)
-                        {
-                            // Find matching category
-                            var categoryName = categoryPart.Split('(')[0].Trim();
-                            var category = input.AvailableCategories.FirstOrDefault(c => 
-                                c.Name.Equals(categoryName, StringComparison.OrdinalIgnoreCase));
-                            
-                            if (category != null)
-                            {
-                                var matchingTransactions = FindMatchingTransactions(pattern, input.Transactions);
-                                
-                                suggestions.Add(new PatternSuggestion
-                                {
-                                    Pattern = pattern,
-                                    SuggestedCategoryId = category.Id,
-                                    SuggestedCategoryName = category.Name,
-                                    ConfidenceScore = confidence,
-                                    MatchingTransactions = matchingTransactions,
-                                    DetectionMethod = "AI Pattern Recognition (Fallback)",
-                                    Reasoning = $"AI identified pattern '{pattern}' for {category.Name} category"
-                                });
-                            }
-                        }
-                    }
-                }
-                catch
-                {
-                    // Skip malformed lines
-                    continue;
-                }
-            }
-        }
-
-        return suggestions;
-    }
-
-    /// <summary>
-    /// Validates AI suggestion before adding to results
-    /// </summary>
-    private bool IsValidAISuggestion(AISuggestionItem suggestion, RuleAnalysisInput input)
-    {
-        // Check if pattern is meaningful
         if (string.IsNullOrWhiteSpace(suggestion.Pattern) || suggestion.Pattern.Length < 2)
             return false;
 
-        // Check if confidence is reasonable
-        if (suggestion.Confidence < 0.8 || suggestion.Confidence > 1.0)
+        if (suggestion.Confidence < MinAiSuggestionConfidence || suggestion.Confidence > 1.0)
             return false;
 
-        // Check if category exists
-        var categoryExists = input.AvailableCategories.Any(c => c.Id == suggestion.CategoryId);
-        if (!categoryExists)
-            return false;
-
-        // Check if rule doesn't already exist
-        var ruleExists = input.ExistingRules.Any(r => 
+        // Check the pattern doesn't already exist as a rule with the same type
+        var parsedType = ParseRuleType(suggestion.RuleType);
+        return !input.ExistingRules.Any(r =>
             r.Pattern.Equals(suggestion.Pattern, StringComparison.OrdinalIgnoreCase) &&
-            r.CategoryId == suggestion.CategoryId);
-        
-        return !ruleExists;
+            r.CategoryId == cluster.CategoryId &&
+            r.Type == parsedType);
     }
 
-    /// <summary>
-    /// Finds transactions that match a given pattern
-    /// </summary>
-    private List<Transaction> FindMatchingTransactions(string pattern, List<Transaction> transactions)
+    private static RuleType ParseRuleType(string ruleType)
     {
-        return transactions
-            .Where(t => !string.IsNullOrWhiteSpace(t.Description) && 
-                       t.Description.Contains(pattern, StringComparison.OrdinalIgnoreCase))
-            .Take(5) // Limit samples
-            .ToList();
+        return ruleType?.ToLowerInvariant() switch
+        {
+            "contains" => RuleType.Contains,
+            "startswith" => RuleType.StartsWith,
+            "endswith" => RuleType.EndsWith,
+            "equals" => RuleType.Equals,
+            _ => RuleType.Contains
+        };
     }
 
-    /// <summary>
-    /// Filters and combines suggestions from multiple sources
-    /// </summary>
-    private List<PatternSuggestion> FilterAndCombineSuggestions(List<PatternSuggestion> suggestions, int maxSuggestions, double minConfidence)
+    private static List<PatternSuggestion> FilterAndCombineSuggestions(
+        List<PatternSuggestion> suggestions, int maxSuggestions, double minConfidence)
     {
-        // Remove duplicates based on pattern and category
-        var uniqueSuggestions = suggestions
-            .GroupBy(s => new { Pattern = s.Pattern.ToLowerInvariant(), CategoryId = s.SuggestedCategoryId })
+        return suggestions
+            .GroupBy(s => new { Pattern = s.Pattern.ToLowerInvariant(), CategoryId = s.SuggestedCategoryId, s.SuggestedRuleType })
             .Select(group => group.OrderByDescending(s => s.ConfidenceScore).First())
-            .ToList();
-
-        // Filter by confidence and rank
-        return uniqueSuggestions
             .Where(s => s.ConfidenceScore >= minConfidence)
             .OrderByDescending(s => s.ConfidenceScore)
             .ThenByDescending(s => s.MatchingTransactions.Count)
-            .ThenBy(s => s.DetectionMethod == "AI Pattern Recognition" ? 0 : 1) // Prefer AI suggestions when confidence is equal
             .Take(maxSuggestions)
             .ToList();
     }
 }
 
 /// <summary>
-/// AI response structure for JSON parsing
+/// AI response structure for single-cluster analysis.
 /// </summary>
-public class AIRuleSuggestionResponse
-{
-    public List<AISuggestionItem> Suggestions { get; set; } = new();
-}
-
-public class AISuggestionItem
+public class AIClusterSuggestion
 {
     public string Pattern { get; set; } = string.Empty;
-    public int CategoryId { get; set; }
-    public string CategoryName { get; set; } = string.Empty;
+    public string RuleType { get; set; } = "Contains";
     public double Confidence { get; set; }
     public string Reasoning { get; set; } = string.Empty;
-    public List<string> MatchingDescriptions { get; set; } = new();
 }
+

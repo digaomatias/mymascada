@@ -13,6 +13,8 @@ import {
   HasAkahuCredentialsResponse,
   SaveAkahuCredentialsRequest,
   SaveAkahuCredentialsResult,
+  AkahuMigrationStatus,
+  MigrateAkahuConnectionResult,
 } from '@/types/bank-connections';
 import {
   BudgetSummary,
@@ -49,6 +51,12 @@ import type {
   BudgetHealthSummaryResponse,
   CoachingInsightResponse,
 } from '@/types/api-responses';
+import type {
+  NotificationListResponse,
+  UnreadCountResponse,
+  NotificationPreferenceDto,
+  UpdateNotificationPreferenceRequest,
+} from '@/types/notifications';
 
 class ApiClient {
   private baseURL: string;
@@ -543,9 +551,10 @@ class ApiClient {
     includeReviewed?: boolean;
     sameAccountOnly?: boolean;
     minConfidence?: number;
+    sinceDays?: number;
   }): Promise<unknown> {
     const searchParams = new URLSearchParams();
-    
+
     if (params?.amountTolerance !== undefined) {
       searchParams.append('amountTolerance', params.amountTolerance.toString());
     }
@@ -560,6 +569,9 @@ class ApiClient {
     }
     if (params?.minConfidence !== undefined) {
       searchParams.append('minConfidence', params.minConfidence.toString());
+    }
+    if (params?.sinceDays !== undefined) {
+      searchParams.append('sinceDays', params.sinceDays.toString());
     }
     
     const queryString = searchParams.toString();
@@ -759,6 +771,7 @@ class ApiClient {
     currentBalance: number;
     currency: string;
     notes?: string;
+    isActive?: boolean;
   }): Promise<unknown> {
     return this.request(`/api/accounts/${id}`, {
       method: 'PUT',
@@ -1542,8 +1555,55 @@ class ApiClient {
     });
   }
 
-  async getRuleSuggestionsSummary(): Promise<RuleSuggestionsSummary> {
+  async getRuleSuggestionsSummary(): Promise<RuleSuggestionsCountSummary> {
+    // Hits the lightweight `GET /RuleSuggestions/summary` endpoint which
+    // only issues a `SELECT COUNT(*)` — the main listing endpoint would
+    // materialize the full suggestion graph (category + sample transactions)
+    // for every nav render, which is wasteful when we only want the badge.
     const response = await this.request('/api/RuleSuggestions/summary');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return response as any;
+  }
+
+  // Quick-categorize wizard & dashboard stats (Phase 4 UX)
+  async getUncategorizedGroups(options?: {
+    maxGroups?: number;
+    minGroupSize?: number;
+  }): Promise<UncategorizedGroupsResponse> {
+    const params = new URLSearchParams();
+    if (options?.maxGroups !== undefined) params.set('maxGroups', options.maxGroups.toString());
+    if (options?.minGroupSize !== undefined) params.set('minGroupSize', options.minGroupSize.toString());
+    // `request()` rewrites `/api/…` → `/api/latest/…` automatically, so
+    // the endpoints passed in here must start with `/api/` (not
+    // `/api/latest/`) — otherwise the URL becomes `/api/latest/latest/…`
+    // and every call 404s.
+    const url = `/api/Categorization/uncategorized-groups${params.toString() ? '?' + params.toString() : ''}`;
+    const response = await this.request(url);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return response as any;
+  }
+
+  async bulkCategorizeGroup(request: {
+    transactionIds: number[];
+    categoryId: number;
+    /**
+     * Optional — set to `false` on every chunk but the first when splitting a
+     * logical group across multiple requests, so the server only increments
+     * CategorizationHistory.MatchCount once per user confirmation. Defaults to
+     * `true` when omitted.
+     */
+    recordHistory?: boolean;
+  }): Promise<BulkCategorizeGroupResponse> {
+    const response = await this.request('/api/Categorization/bulk-categorize-group', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return response as any;
+  }
+
+  async getCategorizationStats(): Promise<CategorizationStatsResponse> {
+    const response = await this.request('/api/Categorization/stats');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return response as any;
   }
@@ -1572,6 +1632,26 @@ class ApiClient {
     return this.request('/api/BankConnections/akahu/has-credentials');
   }
 
+  /**
+   * Returns the user's Akahu connections that still need to be re-authorised
+   * for the classic→official open-banking migration, plus the global deadline.
+   * Backed by GET /api/BankConnections/akahu/migration-status.
+   */
+  async getAkahuMigrationStatus(): Promise<AkahuMigrationStatus> {
+    return this.request('/api/BankConnections/akahu/migration-status');
+  }
+
+  /**
+   * Triggers the classic→official migration for a single Akahu connection.
+   * Used by the migration banner in Personal App mode (no OAuth re-auth step).
+   * Backed by POST /api/BankConnections/akahu/connections/{id}/migrate.
+   */
+  async migrateAkahuConnection(connectionId: number): Promise<MigrateAkahuConnectionResult> {
+    return this.request(`/api/BankConnections/akahu/connections/${connectionId}/migrate`, {
+      method: 'POST',
+    });
+  }
+
   async saveAkahuCredentials(request: SaveAkahuCredentialsRequest): Promise<SaveAkahuCredentialsResult> {
     return this.request('/api/BankConnections/akahu/credentials', {
       method: 'POST',
@@ -1587,7 +1667,7 @@ class ApiClient {
   }
 
   // Note: This is for Production App OAuth mode only, not Personal App mode
-  async exchangeAkahuCode(code: string, state?: string, appIdToken?: string): Promise<{ accounts: AkahuAccount[]; accessToken: string }> {
+  async exchangeAkahuCode(code: string, state?: string, appIdToken?: string): Promise<{ accounts: AkahuAccount[] }> {
     return this.request('/api/BankConnections/akahu/exchange', {
       method: 'POST',
       body: JSON.stringify({ code, state: state ?? null, appIdToken: appIdToken || '' }),
@@ -2093,6 +2173,49 @@ class ApiClient {
     });
   }
 
+  // Notification methods
+  async getNotifications(params?: {
+    page?: number;
+    pageSize?: number;
+    type?: string;
+    isRead?: boolean;
+  }): Promise<NotificationListResponse> {
+    const queryParams = new URLSearchParams();
+    if (params?.page !== undefined) queryParams.append('page', params.page.toString());
+    if (params?.pageSize !== undefined) queryParams.append('pageSize', params.pageSize.toString());
+    if (params?.type !== undefined) queryParams.append('type', params.type);
+    if (params?.isRead !== undefined) queryParams.append('isRead', params.isRead.toString());
+    const queryString = queryParams.toString();
+    return this.request(`/api/notifications${queryString ? `?${queryString}` : ''}`);
+  }
+
+  async getNotificationUnreadCount(): Promise<UnreadCountResponse> {
+    return this.request('/api/notifications/unread-count');
+  }
+
+  async markNotificationRead(id: string): Promise<void> {
+    return this.request(`/api/notifications/${id}/read`, { method: 'PATCH' });
+  }
+
+  async markAllNotificationsRead(): Promise<void> {
+    return this.request('/api/notifications/read-all', { method: 'POST' });
+  }
+
+  async deleteNotification(id: string): Promise<void> {
+    return this.request(`/api/notifications/${id}`, { method: 'DELETE' });
+  }
+
+  async getNotificationPreferences(): Promise<NotificationPreferenceDto> {
+    return this.request('/api/notifications/preferences');
+  }
+
+  async updateNotificationPreferences(request: UpdateNotificationPreferenceRequest): Promise<NotificationPreferenceDto> {
+    return this.request('/api/notifications/preferences', {
+      method: 'PUT',
+      body: JSON.stringify(request),
+    });
+  }
+
   private getAuthHeaders(): Record<string, string> {
     const token = this.getToken();
     return token ? { 'Authorization': `Bearer ${token}` } : {};
@@ -2108,6 +2231,16 @@ export interface FeatureFlags {
   accountSharing: boolean;
   stripeBilling: boolean;
 }
+
+/** All flags disabled — the safe baseline used until real flags load. */
+export const defaultFeatures: FeatureFlags = {
+  aiCategorization: false,
+  googleOAuth: false,
+  bankSync: false,
+  emailNotifications: false,
+  accountSharing: false,
+  stripeBilling: false,
+};
 
 // Billing Types
 export interface BillingStatusResponse {
@@ -2241,6 +2374,69 @@ export interface RuleSuggestionsSummary {
   lastGeneratedDate?: string;
   generationMethod: string;
   categoryDistribution: Record<string, number>;
+}
+
+/**
+ * Lightweight response for the sidebar badge — only the pending-suggestions
+ * count. Returned by `GET /RuleSuggestions/summary` so the nav doesn't load
+ * the full suggestion graph just to drive a numeric badge.
+ */
+export interface RuleSuggestionsCountSummary {
+  totalSuggestions: number;
+}
+
+// Quick-categorize wizard & dashboard stats (Phase 4 UX)
+export interface UncategorizedGroupSample {
+  id: number;
+  description: string;
+  amount: number;
+  transactionDate: string;
+  accountName: string;
+}
+
+export interface UncategorizedGroupDto {
+  normalizedDescription: string;
+  sampleDescription: string;
+  transactionCount: number;
+  totalAmount: number;
+  transactionIds: number[];
+  samples: UncategorizedGroupSample[];
+}
+
+export interface UncategorizedGroupsResponse {
+  groups: UncategorizedGroupDto[];
+  totalUncategorized: number;
+  groupedTransactions: number;
+}
+
+export interface BulkCategorizeGroupResponse {
+  success: boolean;
+  transactionsUpdated: number;
+  /**
+   * IDs of transactions whose category actually changed. The quick-categorize
+   * wizard narrows the current group's id set on partial success so a
+   * follow-up retry (with a different category) can't silently re-categorize
+   * rows that were already committed in the previous attempt.
+   */
+  updatedTransactionIds: number[];
+  message: string;
+  errors: string[];
+}
+
+export interface CategorizationStatsResponse {
+  autoCategorizedThisMonth: number;
+  processedByRules: number;
+  processedByML: number;
+  processedByLLM: number;
+  processedByBankCategory: number;
+  rulesPercentage: number;
+  mlPercentage: number;
+  llmPercentage: number;
+  bankCategoryPercentage: number;
+  needsReview: number;
+  pendingSuggestions: number;
+  periodStart: string;
+  periodEnd: string;
 }
 
 // Bank Category Mapping Types
@@ -2421,19 +2617,28 @@ export interface ExpenseCategoryBreakdown {
 }
 
 // Onboarding Types
-export interface CompleteOnboardingRequest {
-  monthlyIncome: number;
-  monthlyExpenses: number;
-  goalName: string;
-  goalTargetAmount: number;
-  goalType: string;
-  dataEntryMethod: string;
-  linkedAccountId?: number;
-}
+export type CompleteOnboardingRequest =
+  | {
+      skipped: true;
+      monthlyIncome: number;
+      monthlyExpenses: number;
+      dataEntryMethod: string;
+      linkedAccountId?: number;
+    }
+  | {
+      skipped?: false;
+      monthlyIncome: number;
+      monthlyExpenses: number;
+      goalName: string;
+      goalTargetAmount: number;
+      goalType: string;
+      dataEntryMethod: string;
+      linkedAccountId?: number;
+    };
 
 export interface CompleteOnboardingResponse {
   profileId: number;
-  goalId: number;
+  goalId: number | null;
   monthlyIncome: number;
   monthlyExpenses: number;
   monthlyAvailable: number;

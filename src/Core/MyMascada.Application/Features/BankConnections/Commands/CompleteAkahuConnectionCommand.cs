@@ -181,16 +181,4 @@ public class CompleteAkahuConnectionCommandHandler : IRequestHandler<CompleteAka
             CreatedAt = savedConnection.CreatedAt
         };
     }
-
-    /// <summary>
-    /// Settings class for Akahu connections stored in encrypted settings.
-    /// NOTE: Access tokens are now stored per-user in AkahuUserCredential, not here.
-    /// This only stores sync state and the specific Akahu account ID for this connection.
-    /// </summary>
-    private class AkahuConnectionSettings
-    {
-        public string AkahuAccountId { get; set; } = string.Empty;
-        public string? LastSyncedTransactionId { get; set; }
-        public DateTime? LastSyncTimestamp { get; set; }
-    }
 }

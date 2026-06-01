@@ -34,6 +34,7 @@ public class SaveAkahuCredentialsCommandHandler : IRequestHandler<SaveAkahuCrede
     private readonly IAkahuUserCredentialRepository _credentialRepository;
     private readonly IBankConnectionRepository _bankConnectionRepository;
     private readonly ISettingsEncryptionService _encryptionService;
+    private readonly IAkahuWebhookSubscriptionService _webhookSubscriptionService;
     private readonly IApplicationLogger<SaveAkahuCredentialsCommandHandler> _logger;
 
     public SaveAkahuCredentialsCommandHandler(
@@ -41,12 +42,14 @@ public class SaveAkahuCredentialsCommandHandler : IRequestHandler<SaveAkahuCrede
         IAkahuUserCredentialRepository credentialRepository,
         IBankConnectionRepository bankConnectionRepository,
         ISettingsEncryptionService encryptionService,
+        IAkahuWebhookSubscriptionService webhookSubscriptionService,
         IApplicationLogger<SaveAkahuCredentialsCommandHandler> logger)
     {
         _akahuApiClient = akahuApiClient;
         _credentialRepository = credentialRepository;
         _bankConnectionRepository = bankConnectionRepository;
         _encryptionService = encryptionService;
+        _webhookSubscriptionService = webhookSubscriptionService;
         _logger = logger;
     }
 
@@ -114,6 +117,23 @@ public class SaveAkahuCredentialsCommandHandler : IRequestHandler<SaveAkahuCrede
             };
             await _credentialRepository.AddAsync(newCredential, cancellationToken);
             _logger.LogInformation("Created new Akahu credentials for user {UserId}", request.UserId);
+        }
+
+        // 3b. Ensure Akahu webhook subscriptions exist for this user. Best-effort — never fails the save.
+        try
+        {
+            var ensureResult = await _webhookSubscriptionService.EnsureSubscriptionsAsync(request.UserId, cancellationToken);
+            _logger.LogInformation(
+                "Akahu webhook subscriptions ensured for user {UserId}: subscribed={SubscribedCount}, adopted={AdoptedCount}, healthy={HealthyCount}, failed={FailedCount}",
+                request.UserId,
+                ensureResult.SubscribedTypes.Count,
+                ensureResult.AdoptedTypes.Count,
+                ensureResult.AlreadyHealthyTypes.Count,
+                ensureResult.FailedTypes.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "EnsureSubscriptionsAsync threw for user {UserId} during Personal-App save; continuing", request.UserId);
         }
 
         // 4. Get existing connections to mark already linked accounts

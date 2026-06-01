@@ -48,6 +48,18 @@ public record AkahuWebhookPayload
     /// </summary>
     [JsonPropertyName("removed_transactions")]
     public string[]? RemovedTransactions { get; init; }
+
+    /// <summary>
+    /// On ACCOUNT/MIGRATE: the classic account ID being migrated away from.
+    /// </summary>
+    [JsonPropertyName("previous_item_id")]
+    public string? PreviousItemId { get; init; }
+
+    /// <summary>
+    /// On ACCOUNT/MIGRATE: the new official account ID.
+    /// </summary>
+    [JsonPropertyName("new_item_id")]
+    public string? NewItemId { get; init; }
 }
 
 /// <summary>
@@ -70,4 +82,6 @@ public static class AkahuWebhookCodes
     public const string Delete = "DELETE";
     public const string InitialUpdate = "INITIAL_UPDATE";
     public const string DefaultUpdate = "DEFAULT_UPDATE";
+    public const string Migrate = "MIGRATE";
+    public const string WebhookCancelled = "WEBHOOK_CANCELLED";
 }

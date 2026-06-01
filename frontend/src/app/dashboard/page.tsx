@@ -2,13 +2,14 @@
 
 import { useAuth } from '@/contexts/auth-context';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, Suspense } from 'react';
+import { useEffect, useRef, Suspense } from 'react';
 import { toast } from 'sonner';
 import { AppLayout } from '@/components/app-layout';
 import { apiClient } from '@/lib/api-client';
 import { DashboardProvider } from '@/contexts/dashboard-context';
 import { DashboardHeader } from '@/components/dashboard/dashboard-header';
 import { DashboardTemplateRenderer } from '@/components/dashboard/dashboard-template-renderer';
+import { AkahuMigrationBanner } from '@/components/bank-connections/akahu-migration-banner';
 import { useTranslations } from 'next-intl';
 import { useAuthGuard } from '@/hooks/use-auth-guard';
 import { SkeletonCard, SkeletonPanel } from '@/components/skeletons';
@@ -20,28 +21,32 @@ function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tToasts = useTranslations('toasts');
+  const oauthExchangeStarted = useRef(false);
 
   // Handle Google OAuth code from URL
   useEffect(() => {
     const code = searchParams.get('code');
-    if (code && !isAuthResolved) {
-      apiClient
-        .exchangeCode(code)
-        .then((result) => loginWithToken(result.token))
-        .then((success) => {
-          if (success) {
-            toast.success(tToasts('signedIn'));
-            router.replace('/dashboard');
-          } else {
-            toast.error(tToasts('error.generic'));
-            router.push('/auth/login');
-          }
-        })
-        .catch(() => {
+    if (!code || isAuthResolved || oauthExchangeStarted.current) {
+      return;
+    }
+    oauthExchangeStarted.current = true;
+
+    apiClient
+      .exchangeCode(code)
+      .then((result) => loginWithToken(result.token))
+      .then((success) => {
+        if (success) {
+          toast.success(tToasts('signedIn'));
+          router.replace('/dashboard');
+        } else {
           toast.error(tToasts('error.generic'));
           router.push('/auth/login');
-        });
-    }
+        }
+      })
+      .catch(() => {
+        toast.error(tToasts('error.generic'));
+        router.push('/auth/login');
+      });
   }, [searchParams, isAuthResolved, loginWithToken, router, tToasts]);
 
   // Onboarding redirect
@@ -60,6 +65,11 @@ function DashboardContent() {
     <DashboardProvider>
       <AppLayout mainClassName="relative z-10 flex-1 w-full px-4 py-6 sm:px-5 lg:px-6 lg:py-8">
         <DashboardHeader />
+        {/* TODO(akahu-migration): once a global alerts slot lands, move this
+            into it. The banner returns null on empty/error so it's safe to
+            mount at the top of the dashboard for the migration window
+            (per docs/plans/akahu-migration-impact.md §4.7). */}
+        {isAuthResolved && <AkahuMigrationBanner />}
         {isAuthResolved ? (
           <DashboardTemplateRenderer />
         ) : (

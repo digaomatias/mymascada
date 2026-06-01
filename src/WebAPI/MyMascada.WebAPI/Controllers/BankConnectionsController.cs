@@ -116,6 +116,35 @@ public class BankConnectionsController : ControllerBase
     }
 
     /// <summary>
+    /// Returns the user's Akahu connections that still need to be migrated to the official
+    /// open-banking equivalent before the 24 May 2026 cut-over. Drives the in-app upgrade banner.
+    /// </summary>
+    [HttpGet("akahu/migration-status")]
+    [ProducesResponseType(typeof(AkahuMigrationStatusDto), StatusCodes.Status200OK)]
+    public async Task<ActionResult<AkahuMigrationStatusDto>> GetAkahuMigrationStatus()
+    {
+        var query = new GetAkahuMigrationStatusQuery(_currentUserService.GetUserId());
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Triggers the Akahu classic→official migration for a single bank connection.
+    /// Drives the migration banner's upgrade button in Personal App mode, where there
+    /// is no OAuth re-authorisation step — the user completes the upgrade on Akahu's
+    /// side (my.akahu.nz), then this endpoint rewrites the stored account and
+    /// transaction IDs to their official open-banking equivalents.
+    /// </summary>
+    [HttpPost("akahu/connections/{id}/migrate")]
+    [ProducesResponseType(typeof(MigrateAkahuConnectionResult), StatusCodes.Status200OK)]
+    public async Task<ActionResult<MigrateAkahuConnectionResult>> MigrateAkahuConnection(int id)
+    {
+        var command = new MigrateAkahuConnectionCommand(_currentUserService.GetUserId(), id);
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Saves or updates the user's Akahu credentials.
     /// Validates the credentials against the Akahu API before saving.
     /// </summary>
@@ -217,7 +246,7 @@ public class BankConnectionsController : ControllerBase
                 _akahuOptions.AppIdToken
             );
             var result = await _mediator.Send(query);
-            return Ok(new ExchangeAkahuCodeResponse(result.Accounts, result.AccessToken));
+            return Ok(new ExchangeAkahuCodeResponse(result.Accounts));
         }
         catch (ArgumentException ex)
         {
@@ -481,10 +510,5 @@ public record ExchangeAkahuCodeResponse(
     /// <summary>
     /// List of available Akahu accounts that can be linked.
     /// </summary>
-    [property: JsonPropertyName("accounts")] IEnumerable<AkahuAccountDto> Accounts,
-
-    /// <summary>
-    /// The access token for subsequent API calls.
-    /// </summary>
-    [property: JsonPropertyName("accessToken")] string AccessToken
+    [property: JsonPropertyName("accounts")] IEnumerable<AkahuAccountDto> Accounts
 );

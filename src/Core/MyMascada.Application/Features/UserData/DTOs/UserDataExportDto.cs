@@ -46,7 +46,6 @@ public class UserProfileExportDto
     public DateTime RegisteredAt { get; set; }
     public DateTime? LastLoginAt { get; set; }
     public bool EmailConfirmed { get; set; }
-    public bool TwoFactorEnabled { get; set; }
 }
 
 public class AccountExportDto

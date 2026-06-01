@@ -58,8 +58,7 @@ public class UserDataExportService : IUserDataExportService
             Locale = user.Locale,
             RegisteredAt = user.RegisteredAt,
             LastLoginAt = user.LastLoginAt,
-            EmailConfirmed = user.EmailConfirmed,
-            TwoFactorEnabled = user.TwoFactorEnabled
+            EmailConfirmed = user.EmailConfirmed
         };
 
         // Accounts (include soft-deleted for complete export)

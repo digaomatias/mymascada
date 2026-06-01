@@ -667,13 +667,13 @@ export function CategorizationRibbon({
       {/* AI Assistant Section (Progressive Disclosure) */}
       {showAiSection && isHealthy && (
         <Card className="bg-gradient-to-r from-primary-50 to-blue-50 border-primary-200">
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 <div className="w-10 h-10 bg-gradient-to-r from-primary-500 to-blue-500 rounded-lg flex items-center justify-center shrink-0">
                   <SparklesIcon className="w-5 h-5 text-white" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <h3 className="text-lg font-semibold text-ink-900">{tTransactions('aiCategorization.title')}</h3>
                   <p className="text-sm text-ink-600">
                     {tTransactions('aiCategorization.subtitleLimited', { limit: 25 })}
@@ -773,13 +773,13 @@ export function CategorizationRibbon({
 
                     return (
                       <div key={suggestion.transactionId} className="p-3 bg-white rounded-lg border border-primary-200">
-                        <div className="flex items-start justify-between">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-ink-900 truncate">
                               {transaction.userDescription || transaction.description}
                             </p>
-                            <div className="flex items-center gap-3 mt-1">
-                              <span className="text-sm font-medium text-primary-700">
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
+                              <span className="text-sm font-medium text-primary-700 break-words">
                                 {bestSuggestion.categoryName}
                               </span>
                               <ConfidenceIndicator confidence={bestSuggestion.confidence} />
@@ -790,13 +790,13 @@ export function CategorizationRibbon({
                               </p>
                             )}
                           </div>
-                          
-                          <div className="flex gap-2 ml-3">
+
+                          <div className="flex gap-2 sm:shrink-0">
                             <Button
                               size="sm"
                               onClick={() => handleApplySuggestion(suggestion)}
                               disabled={isProcessing}
-                              className="text-primary-700 border-primary-200 hover:bg-primary-100"
+                              className="flex-1 sm:flex-none text-primary-700 border-primary-200 hover:bg-primary-100"
                               variant="secondary"
                             >
                               <CheckIcon className="w-3 h-3 mr-1" />
@@ -806,7 +806,7 @@ export function CategorizationRibbon({
                               size="sm"
                               variant="secondary"
                               onClick={() => handleRejectSuggestion(suggestion)}
-                              className="text-ink-600 border-ink-200 hover:bg-ink-100"
+                              className="flex-1 sm:flex-none text-ink-600 border-ink-200 hover:bg-ink-100"
                             >
                               <XMarkIcon className="w-3 h-3 mr-1" />
                               {tTransactions('aiCategorization.skip')}

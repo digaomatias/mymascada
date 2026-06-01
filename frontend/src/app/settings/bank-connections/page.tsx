@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { BankConnectionList } from '@/components/bank-connections/bank-connection-list';
 import { LinkAccountDialog } from '@/components/bank-connections/link-account-dialog';
 import { AkahuSetupDialog } from '@/components/bank-connections/akahu-setup-dialog';
+import { AkahuMigrationBanner } from '@/components/bank-connections/akahu-migration-banner';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
 import {
@@ -391,6 +392,11 @@ export default function BankConnectionsPage() {
             </div>
           </div>
         </div>
+
+        {/* Akahu classic→official migration banner. Renders nothing when the user
+            has no pending migrations, when the fetch fails, or when the user has
+            already dismissed it today (per-day localStorage flag). */}
+        <AkahuMigrationBanner />
 
         {/* Info Banner */}
         <div className="rounded-2xl border border-blue-200/60 bg-blue-50/80 backdrop-blur-xs p-4 mb-6">

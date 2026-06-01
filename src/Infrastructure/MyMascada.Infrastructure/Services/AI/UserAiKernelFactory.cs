@@ -12,17 +12,20 @@ public class UserAiKernelFactory : IUserAiKernelFactory
     private readonly ISettingsEncryptionService _encryptionService;
     private readonly IConfiguration _configuration;
     private readonly ILogger<UserAiKernelFactory> _logger;
+    private readonly IEndpointValidator _endpointValidator;
 
     public UserAiKernelFactory(
         IUserAiSettingsRepository settingsRepository,
         ISettingsEncryptionService encryptionService,
         IConfiguration configuration,
-        ILogger<UserAiKernelFactory> logger)
+        ILogger<UserAiKernelFactory> logger,
+        IEndpointValidator endpointValidator)
     {
         _settingsRepository = settingsRepository;
         _encryptionService = encryptionService;
         _configuration = configuration;
         _logger = logger;
+        _endpointValidator = endpointValidator;
     }
 
     public async Task<Kernel?> CreateKernelForUserAsync(Guid userId)
@@ -71,6 +74,18 @@ public class UserAiKernelFactory : IUserAiKernelFactory
         {
             try
             {
+                // Validate endpoint before making any outbound requests (defense in depth)
+                if (!string.IsNullOrEmpty(settings.ApiEndpoint))
+                {
+                    var validation = await _endpointValidator.ValidateEndpointAsync(settings.ApiEndpoint);
+                    if (!validation.IsValid)
+                    {
+                        _logger.LogWarning("Blocked kernel creation for user {UserId}: endpoint {Endpoint} failed SSRF validation — {Reason}",
+                            userId, settings.ApiEndpoint, validation.Error);
+                        return null;
+                    }
+                }
+
                 var apiKey = _encryptionService.Decrypt(settings.EncryptedApiKey);
                 return BuildKernel(settings.ProviderType, apiKey, settings.ModelId, settings.ApiEndpoint);
             }
@@ -87,6 +102,22 @@ public class UserAiKernelFactory : IUserAiKernelFactory
         string providerType, string apiKey, string modelId, string? apiEndpoint = null)
     {
         var sw = Stopwatch.StartNew();
+
+        // Validate endpoint before making any outbound requests (defense in depth)
+        if (!string.IsNullOrEmpty(apiEndpoint))
+        {
+            var validation = await _endpointValidator.ValidateEndpointAsync(apiEndpoint);
+            if (!validation.IsValid)
+            {
+                sw.Stop();
+                return new AiConnectionTestResult
+                {
+                    Success = false,
+                    Error = validation.Error,
+                    LatencyMs = (int)sw.ElapsedMilliseconds
+                };
+            }
+        }
 
         try
         {
@@ -119,9 +150,14 @@ public class UserAiKernelFactory : IUserAiKernelFactory
     {
         var builder = Kernel.CreateBuilder();
 
+        // Disable auto-redirect to prevent SSRF bypass: an attacker-controlled host could pass
+        // endpoint validation then redirect to an internal IP. With auto-redirect disabled,
+        // the HttpClient will not follow redirects automatically.
+        var handler = new HttpClientHandler { AllowAutoRedirect = false };
+
         if (providerType == "openai-compatible" && !string.IsNullOrEmpty(apiEndpoint))
         {
-            var httpClient = new HttpClient
+            var httpClient = new HttpClient(handler)
             {
                 BaseAddress = new Uri(apiEndpoint),
                 Timeout = TimeSpan.FromMinutes(5)
@@ -130,7 +166,7 @@ public class UserAiKernelFactory : IUserAiKernelFactory
         }
         else
         {
-            var httpClient = new HttpClient
+            var httpClient = new HttpClient(handler)
             {
                 Timeout = TimeSpan.FromMinutes(5)
             };

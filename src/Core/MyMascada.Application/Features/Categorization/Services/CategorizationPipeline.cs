@@ -28,6 +28,7 @@ public class CategorizationPipeline : ICategorizationPipeline
     private readonly MLHandler _mlHandler;
     private readonly LLMHandler _llmHandler;
     private readonly ICategorizationCandidatesService _candidatesService;
+    private readonly ICategorizationHistoryService _historyService;
     private readonly ITransactionRepository _transactionRepository;
     private readonly ILogger<CategorizationPipeline> _logger;
 
@@ -37,6 +38,7 @@ public class CategorizationPipeline : ICategorizationPipeline
         MLHandler mlHandler,
         LLMHandler llmHandler,
         ICategorizationCandidatesService candidatesService,
+        ICategorizationHistoryService historyService,
         ITransactionRepository transactionRepository,
         ILogger<CategorizationPipeline> logger)
     {
@@ -45,6 +47,7 @@ public class CategorizationPipeline : ICategorizationPipeline
         _mlHandler = mlHandler;
         _llmHandler = llmHandler;
         _candidatesService = candidatesService;
+        _historyService = historyService;
         _transactionRepository = transactionRepository;
         _logger = logger;
     }
@@ -52,6 +55,18 @@ public class CategorizationPipeline : ICategorizationPipeline
     public async Task<CategorizationResult> ProcessAsync(IEnumerable<Transaction> transactions, CancellationToken cancellationToken = default)
     {
         var transactionsList = transactions.ToList();
+
+        // Filter out transfer components — they should not be categorized as expenses/income
+        var transfers = transactionsList.Where(t => t.IsTransfer()).ToList();
+        if (transfers.Any())
+        {
+            _logger.LogInformation(
+                "Skipping {TransferCount} transfer component(s) from categorization pipeline. IDs: [{TransferIds}]",
+                transfers.Count, string.Join(", ", transfers.Select(t => t.Id)));
+            transactionsList = transactionsList.Where(t => !t.IsTransfer()).ToList();
+        }
+
+        // Check after filtering: covers both empty input and all-transfer input
         if (!transactionsList.Any())
         {
             return new CategorizationResult();
@@ -60,10 +75,10 @@ public class CategorizationPipeline : ICategorizationPipeline
         var stopwatch = Stopwatch.StartNew();
         var finalResult = new CategorizationResult();
         finalResult.Metrics.TotalTransactions = transactionsList.Count;
-        
+
         // Log transaction IDs for better traceability
         var transactionIds = transactionsList.Select(t => t.Id).ToList();
-        _logger.LogInformation("Starting categorization pipeline for {TransactionCount} transactions. IDs: [{TransactionIds}]", 
+        _logger.LogInformation("Starting categorization pipeline for {TransactionCount} transactions. IDs: [{TransactionIds}]",
             transactionsList.Count, string.Join(", ", transactionIds));
 
         try
@@ -252,7 +267,7 @@ public class CategorizationPipeline : ICategorizationPipeline
                     var transaction = categorized.Transaction;
                     transaction.CategoryId = categorized.CategoryId;
                     transaction.MarkAsAutoCategorized(
-                        categorized.ProcessedBy switch 
+                        categorized.ProcessedBy switch
                         {
                             "Rules" => "Rule",
                             "ML" => "ML",
@@ -260,12 +275,34 @@ public class CategorizationPipeline : ICategorizationPipeline
                         },
                         categorized.ConfidenceScore,
                         categorized.ProcessedBy);
-                    
+
                     await _transactionRepository.UpdateAsync(transaction);
                 }
-                
+
                 await _transactionRepository.SaveChangesAsync();
                 _logger.LogInformation("Auto-applied {Count} high-confidence categorizations", result.AutoAppliedTransactions.Count);
+
+                // Record auto-applied categorizations into history (batch to avoid N+1 round-trips)
+                var historyEvents = result.AutoAppliedTransactions
+                    .Where(categorized => categorized.Transaction.Account?.UserId != null)
+                    .Select(categorized => new CategorizationHistoryEvent(
+                        categorized.Transaction.Account!.UserId,
+                        categorized.Transaction.Description,
+                        categorized.CategoryId,
+                        categorized.ProcessedBy switch
+                        {
+                            "Rules" => CategorizationHistorySource.RuleApplied,
+                            "ML" => CategorizationHistorySource.ModelAutoApplied,
+                            "BankCategory" => CategorizationHistorySource.RuleApplied,
+                            "LLM" => CategorizationHistorySource.ModelAutoApplied,
+                            _ => CategorizationHistorySource.Manual
+                        }))
+                    .ToList();
+
+                if (historyEvents.Count > 0)
+                {
+                    await _historyService.RecordCategorizationBatchAsync(historyEvents, cancellationToken);
+                }
             }
         }
         catch (Exception ex)
@@ -276,62 +313,3 @@ public class CategorizationPipeline : ICategorizationPipeline
     }
 }
 
-/// <summary>
-/// Cost-aware pipeline wrapper that tracks and limits expensive operations
-/// </summary>
-public class CostAwareCategorizationPipeline : ICategorizationPipeline
-{
-    private readonly ICategorizationPipeline _innerPipeline;
-    private readonly ILogger<CostAwareCategorizationPipeline> _logger;
-    private readonly decimal _dailyCostLimit;
-    private readonly decimal _currentDailyCost; // This would come from a cost tracking service
-
-    public CostAwareCategorizationPipeline(
-        ICategorizationPipeline innerPipeline,
-        ILogger<CostAwareCategorizationPipeline> logger,
-        decimal dailyCostLimit = 10.0m)
-    {
-        _innerPipeline = innerPipeline;
-        _logger = logger;
-        _dailyCostLimit = dailyCostLimit;
-        _currentDailyCost = 0; // TODO: Get from cost tracking service
-    }
-
-    public async Task<CategorizationResult> ProcessAsync(IEnumerable<Transaction> transactions, CancellationToken cancellationToken = default)
-    {
-        var transactionsList = transactions.ToList();
-        var estimatedLLMCost = EstimateLLMCost(transactionsList);
-        
-        // Check if processing would exceed daily cost limit
-        if (_currentDailyCost + estimatedLLMCost > _dailyCostLimit)
-        {
-            _logger.LogWarning(
-                "Skipping LLM processing to stay within daily cost limit. " +
-                "Current: ${CurrentCost:F4}, Estimated: ${EstimatedCost:F4}, Limit: ${Limit:F4}",
-                _currentDailyCost, estimatedLLMCost, _dailyCostLimit);
-            
-            // Process with rules and ML only (create pipeline without LLM)
-            // For now, delegate to full pipeline but this is where cost control would be implemented
-        }
-
-        var result = await _innerPipeline.ProcessAsync(transactionsList, cancellationToken);
-        
-        // TODO: Record actual costs with cost tracking service
-        await RecordCostMetrics(result);
-        
-        return result;
-    }
-
-    private decimal EstimateLLMCost(IEnumerable<Transaction> transactions)
-    {
-        // Rough estimate: $0.005 per transaction for LLM processing
-        return transactions.Count() * 0.005m;
-    }
-
-    private async Task RecordCostMetrics(CategorizationResult result)
-    {
-        // TODO: Implement cost tracking service integration
-        _logger.LogDebug("Cost metrics - Estimated savings: ${CostSavings:F4}", result.Metrics.EstimatedCostSavings);
-        await Task.CompletedTask;
-    }
-}

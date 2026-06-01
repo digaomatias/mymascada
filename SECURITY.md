@@ -79,6 +79,10 @@ When self-hosting MyMascada, please follow these security recommendations:
 - Keep Docker and Docker Compose updated
 - Use Docker secrets for sensitive configuration in production swarm deployments
 
+## Incident Response
+
+For production incident procedures -- including severity classification, containment steps, and communication templates -- see our [Incident Response Runbook](docs/INCIDENT_RESPONSE.md).
+
 ## Acknowledgments
 
 We appreciate the security research community's efforts in helping keep MyMascada and its users safe. Reporters of valid security issues will be acknowledged here (with permission).

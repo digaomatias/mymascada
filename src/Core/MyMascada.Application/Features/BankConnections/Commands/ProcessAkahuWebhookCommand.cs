@@ -1,4 +1,5 @@
 using MediatR;
+using MyMascada.Application.BackgroundJobs;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.BankConnections.DTOs;
 using MyMascada.Domain.Enums;
@@ -16,6 +17,8 @@ public class ProcessAkahuWebhookCommandHandler : IRequestHandler<ProcessAkahuWeb
     private readonly IBankSyncService _bankSyncService;
     private readonly IAkahuUserCredentialRepository _credentialRepository;
     private readonly ITransactionRepository _transactionRepository;
+    private readonly IAkahuWebhookSubscriptionRepository _subscriptionRepository;
+    private readonly IAkahuMigrationJobService _migrationJobService;
     private readonly IApplicationLogger<ProcessAkahuWebhookCommandHandler> _logger;
 
     private const string AkahuProviderId = "akahu";
@@ -25,12 +28,16 @@ public class ProcessAkahuWebhookCommandHandler : IRequestHandler<ProcessAkahuWeb
         IBankSyncService bankSyncService,
         IAkahuUserCredentialRepository credentialRepository,
         ITransactionRepository transactionRepository,
+        IAkahuWebhookSubscriptionRepository subscriptionRepository,
+        IAkahuMigrationJobService migrationJobService,
         IApplicationLogger<ProcessAkahuWebhookCommandHandler> logger)
     {
         _bankConnectionRepository = bankConnectionRepository;
         _bankSyncService = bankSyncService;
         _credentialRepository = credentialRepository;
         _transactionRepository = transactionRepository;
+        _subscriptionRepository = subscriptionRepository;
+        _migrationJobService = migrationJobService;
         _logger = logger;
     }
 
@@ -93,6 +100,10 @@ public class ProcessAkahuWebhookCommandHandler : IRequestHandler<ProcessAkahuWeb
 
         // Clean up stored credentials
         await _credentialRepository.DeleteByUserIdAsync(userId, ct);
+
+        // Akahu cancels the subscription on its end when the token is revoked, so we only need
+        // to purge the local rows — no DELETE /webhooks API call is necessary.
+        await _subscriptionRepository.DeleteByUserIdAsync(userId, ct);
     }
 
     private async Task HandleAccountEventAsync(AkahuWebhookPayload payload, CancellationToken ct)
@@ -111,10 +122,79 @@ public class ProcessAkahuWebhookCommandHandler : IRequestHandler<ProcessAkahuWeb
                 _logger.LogInformation("New Akahu account {AccountId} connected — will be picked up on next sync", payload.ItemId);
                 break;
 
+            case AkahuWebhookCodes.Migrate:
+                await HandleAccountMigrateAsync(payload, ct);
+                break;
+
+            case AkahuWebhookCodes.WebhookCancelled:
+                await HandleWebhookCancelledAsync(payload, AkahuWebhookTypes.Account, ct);
+                break;
+
             default:
                 _logger.LogInformation("Ignoring ACCOUNT/{WebhookCode} event", payload.WebhookCode);
                 break;
         }
+    }
+
+    private async Task HandleAccountMigrateAsync(AkahuWebhookPayload payload, CancellationToken ct)
+    {
+        if (string.IsNullOrEmpty(payload.PreviousItemId))
+        {
+            _logger.LogWarning("ACCOUNT/MIGRATE webhook missing previous_item_id");
+            return;
+        }
+
+        var connection = await _bankConnectionRepository.GetByExternalAccountIdAsync(payload.PreviousItemId, AkahuProviderId, ct);
+        if (connection == null)
+        {
+            _logger.LogWarning(
+                "ACCOUNT/MIGRATE webhook for unknown classic account {PreviousItemId}; will catch up on next sync",
+                payload.PreviousItemId);
+            return;
+        }
+
+        _logger.LogInformation(
+            "ACCOUNT/MIGRATE webhook: enqueueing migration job for connection {ConnectionId} (user {UserId})",
+            connection.Id, connection.UserId);
+
+        try
+        {
+            // Fire-and-forget via Hangfire so this webhook handler responds within Akahu's
+            // timeout. The job retries automatically on failure.
+            var jobId = _migrationJobService.EnqueueMigration(connection.UserId, connection.Id);
+            _logger.LogInformation(
+                "ACCOUNT/MIGRATE enqueued job {JobId} for connection {ConnectionId}",
+                jobId, connection.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ACCOUNT/MIGRATE failed to enqueue migration job for connection {ConnectionId}", connection.Id);
+        }
+
+        await Task.CompletedTask;
+    }
+
+    private async Task HandleWebhookCancelledAsync(AkahuWebhookPayload payload, string webhookType, CancellationToken ct)
+    {
+        if (!TryParseUserId(payload.State, out var userId))
+        {
+            _logger.LogWarning("WEBHOOK_CANCELLED event missing or invalid state");
+            return;
+        }
+
+        var subscriptions = await _subscriptionRepository.GetByUserIdAsync(userId, ct);
+        var match = subscriptions.FirstOrDefault(s => string.Equals(s.WebhookType, webhookType, StringComparison.OrdinalIgnoreCase));
+        if (match == null)
+        {
+            _logger.LogInformation("WEBHOOK_CANCELLED for user {UserId} type {WebhookType}: no local row to delete", userId, webhookType);
+            return;
+        }
+
+        _logger.LogInformation(
+            "WEBHOOK_CANCELLED for user {UserId} type {WebhookType}: deleting local subscription row {Id} so reconciliation can re-create it",
+            userId, webhookType, match.Id);
+
+        await _subscriptionRepository.DeleteByIdAsync(match.Id, ct);
     }
 
     private async Task HandleAccountUpdateAsync(AkahuWebhookPayload payload, CancellationToken ct)
@@ -160,6 +240,10 @@ public class ProcessAkahuWebhookCommandHandler : IRequestHandler<ProcessAkahuWeb
 
             case AkahuWebhookCodes.Delete:
                 await HandleTransactionDeleteAsync(payload, ct);
+                break;
+
+            case AkahuWebhookCodes.WebhookCancelled:
+                await HandleWebhookCancelledAsync(payload, AkahuWebhookTypes.Transaction, ct);
                 break;
 
             default:

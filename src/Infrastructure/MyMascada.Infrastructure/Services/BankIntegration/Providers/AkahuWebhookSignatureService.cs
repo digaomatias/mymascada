@@ -100,7 +100,12 @@ public partial class AkahuWebhookSignatureService : IAkahuWebhookSignatureServic
                 return null;
             }
 
-            var publicKey = doc.RootElement.GetProperty("item").GetProperty("key").GetString();
+            // Akahu's GET /keys/{id} returns the PEM public key as a bare string in "item":
+            //   { "success": true, "item": "-----BEGIN RSA PUBLIC KEY-----\n..." }
+            var itemElement = doc.RootElement.GetProperty("item");
+            var publicKey = itemElement.ValueKind == JsonValueKind.String
+                ? itemElement.GetString()
+                : null;
             if (string.IsNullOrEmpty(publicKey))
             {
                 _logger.LogWarning("Signing key {KeyId} had empty key value", keyId);

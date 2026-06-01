@@ -64,18 +64,18 @@ export function ReconciliationBalanceCards({
   const hasSignificantDiscrepancy = discrepancy > 1.00; // More than $1 difference
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-6">
       {/* Statement Balance Card */}
       <Card className="bg-blue-50 border-blue-200">
-        <CardContent className="p-4">
+        <CardContent className="p-2.5 sm:p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-blue-600 font-medium">{t('balanceCards.statementBalance')}</p>
-              <p className="text-2xl font-bold text-blue-800">
+              <p className="text-xs sm:text-sm text-blue-600 font-medium">{t('balanceCards.statementBalance')}</p>
+              <p className="text-lg sm:text-2xl font-bold text-blue-800">
                 {formatCurrency(statementEndBalance)}
               </p>
             </div>
-            <BanknotesIcon className="h-8 w-8 text-blue-600" />
+            <BanknotesIcon className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 shrink-0" />
           </div>
         </CardContent>
       </Card>
@@ -87,7 +87,7 @@ export function ReconciliationBalanceCards({
           ? "bg-red-50 border-red-200" 
           : "bg-green-50 border-green-200"
       )}>
-        <CardContent className="p-4">
+        <CardContent className="p-2.5 sm:p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className={cn(
@@ -97,17 +97,17 @@ export function ReconciliationBalanceCards({
                 {t('balanceCards.unmatchedBank')}
               </p>
               <p className={cn(
-                "text-2xl font-bold",
+                "text-lg sm:text-2xl font-bold",
                 unmatchedBankTotal !== 0 ? "text-red-800" : "text-green-800"
               )}>
                 {formatCurrency(unmatchedBankTotal)}
               </p>
-              <p className="text-xs text-ink-500 mt-1">
+              <p className="text-xs text-ink-500 mt-1 hidden sm:block">
                 {t('balanceCards.expectedBalance', { amount: formatCurrency(expectedBalance) })}
               </p>
             </div>
             <div className={cn(
-              "h-8 w-8",
+              "h-6 w-6 sm:h-8 sm:w-8 shrink-0",
               unmatchedBankTotal !== 0 ? "text-red-600" : "text-green-600"
             )}>
               {unmatchedBankTotal !== 0 ? (
@@ -127,7 +127,7 @@ export function ReconciliationBalanceCards({
           ? "bg-yellow-50 border-yellow-200" 
           : "bg-green-50 border-green-200"
       )}>
-        <CardContent className="p-4">
+        <CardContent className="p-2.5 sm:p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className={cn(
@@ -137,17 +137,17 @@ export function ReconciliationBalanceCards({
                 {t('balanceCards.unmatchedSystem')}
               </p>
               <p className={cn(
-                "text-2xl font-bold",
+                "text-lg sm:text-2xl font-bold",
                 unmatchedSystemTotal !== 0 ? "text-yellow-800" : "text-green-800"
               )}>
                 {formatCurrency(unmatchedSystemTotal)}
               </p>
-              <p className="text-xs text-ink-500 mt-1">
+              <p className="text-xs text-ink-500 mt-1 hidden sm:block">
                 {t('balanceCards.systemBalance', { amount: formatCurrency(systemBalance) })}
               </p>
             </div>
             <ComputerDesktopIcon className={cn(
-              "h-8 w-8",
+              "h-6 w-6 sm:h-8 sm:w-8 shrink-0",
               unmatchedSystemTotal !== 0 ? "text-yellow-600" : "text-green-600"
             )} />
           </div>
@@ -163,7 +163,7 @@ export function ReconciliationBalanceCards({
             ? "bg-red-50 border-red-200"
             : "bg-yellow-50 border-yellow-200"
       )}>
-        <CardContent className="p-4">
+        <CardContent className="p-2.5 sm:p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className={cn(
@@ -177,24 +177,24 @@ export function ReconciliationBalanceCards({
                 {t('balanceCards.discrepancy')}
               </p>
               <p className={cn(
-                "text-2xl font-bold",
-                isReconciled 
+                "text-lg sm:text-2xl font-bold",
+                isReconciled
                   ? "text-green-800"
-                  : hasSignificantDiscrepancy 
+                  : hasSignificantDiscrepancy
                     ? "text-red-800"
                     : "text-yellow-800"
               )}>
                 {formatCurrency(discrepancy)}
               </p>
-              <p className="text-xs text-ink-500 mt-1">
+              <p className="text-xs text-ink-500 mt-1 hidden sm:block">
                 {isReconciled ? t('balanceCards.reconciled') : t('balanceCards.needsReview')}
               </p>
             </div>
             <ScaleIcon className={cn(
-              "h-8 w-8",
-              isReconciled 
+              "h-6 w-6 sm:h-8 sm:w-8 shrink-0",
+              isReconciled
                 ? "text-green-600"
-                : hasSignificantDiscrepancy 
+                : hasSignificantDiscrepancy
                   ? "text-red-600"
                   : "text-yellow-600"
             )} />

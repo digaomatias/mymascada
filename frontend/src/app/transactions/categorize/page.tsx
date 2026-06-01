@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuth } from '@/contexts/auth-context';
+import { useAuthGuard } from '@/hooks/use-auth-guard';
 import { AiSuggestionsProvider } from '@/contexts/ai-suggestions-context';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback, useMemo } from 'react';
@@ -17,7 +17,6 @@ import {
   CalendarIcon,
   TagIcon,
   BuildingOffice2Icon,
-  WalletIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
   CheckIcon
@@ -50,7 +49,7 @@ interface Transaction {
 }
 
 export default function CategorizePage() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { shouldRender, isAuthResolved } = useAuthGuard();
   const { isMobile } = useDeviceDetect();
   const router = useRouter();
   const t = useTranslations('transactions');
@@ -98,14 +97,8 @@ export default function CategorizePage() {
   // Batch fetch AI suggestions for all visible transactions
   const transactionCandidates = useTransactionCandidates({
     queryParams: candidatesQueryParams,
-    enabled: isAuthenticated && transactions.length > 0
+    enabled: isAuthResolved && transactions.length > 0
   });
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/auth/login');
-    }
-  }, [isAuthenticated, isLoading, router]);
 
   const fetchUncategorizedTransactions = useCallback(async (page = 1, search = '', accountId = selectedAccountId) => {
     try {
@@ -160,10 +153,10 @@ export default function CategorizePage() {
   }, [selectedAccountId, pageSize, showAll, updatePagination]);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthResolved) {
       fetchUncategorizedTransactions(currentPage, searchTerm, selectedAccountId);
     }
-  }, [isAuthenticated, currentPage, pageSize, searchTerm, selectedAccountId, showAll, fetchUncategorizedTransactions]);
+  }, [isAuthResolved, currentPage, pageSize, searchTerm, selectedAccountId, showAll, fetchUncategorizedTransactions]);
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
@@ -193,11 +186,11 @@ export default function CategorizePage() {
 
   // Load initial data when authenticated
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthResolved) {
       loadCategories();
       loadAccounts();
     }
-  }, [isAuthenticated]);
+  }, [isAuthResolved]);
 
   const handleApplyFilters = () => {
     handlePageChange(1);
@@ -263,20 +256,7 @@ export default function CategorizePage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-surface-alt flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-400 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse mx-auto">
-            <WalletIcon className="w-8 h-8 text-white" />
-          </div>
-          <div className="mt-6 text-ink-700 font-medium">{t('loading')}</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
+  if (!shouldRender) {
     return null;
   }
 

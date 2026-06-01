@@ -1,29 +1,6 @@
 namespace MyMascada.Infrastructure.Services.BankIntegration.Providers;
 
 /// <summary>
-/// Settings stored encrypted for an Akahu bank connection.
-/// These are per-connection sync state stored in BankConnection.EncryptedSettings.
-/// NOTE: Access tokens are now stored per-user in AkahuUserCredential, not per-connection.
-/// </summary>
-public class AkahuConnectionSettings
-{
-    /// <summary>
-    /// Akahu account ID (acc_xxx) that this connection is linked to.
-    /// </summary>
-    public string AkahuAccountId { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Last transaction ID that was successfully synced (for incremental sync).
-    /// </summary>
-    public string? LastSyncedTransactionId { get; set; }
-
-    /// <summary>
-    /// Timestamp of the last successful sync.
-    /// </summary>
-    public DateTime? LastSyncTimestamp { get; set; }
-}
-
-/// <summary>
 /// Akahu application configuration (from appsettings, not encrypted per-connection).
 /// NOTE: For Personal App mode, tokens are stored per-user in AkahuUserCredential,
 /// NOT in this configuration. These options are primarily for Production App OAuth mode.
@@ -73,4 +50,10 @@ public class AkahuOptions
     /// Default: 1440 (24 hours).
     /// </summary>
     public int WebhookSigningKeysCacheMinutes { get; set; } = 1440;
+
+    /// <summary>
+    /// Whether to loosen duplicate-detection tolerance for Akahu connections that were
+    /// migrated to official open banking within the last 30 days. Default: true.
+    /// </summary>
+    public bool MigrationFallbackEnabled { get; set; } = true;
 }

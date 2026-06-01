@@ -116,6 +116,19 @@ export interface HasAkahuCredentialsResponse {
   hasCredentials: boolean;
 }
 
+// Akahu classic → official migration types (banner)
+export interface AkahuMigrationStatus {
+  pendingConnections: PendingMigrationConnection[];
+  deadline: string; // ISO timestamp
+}
+
+export interface PendingMigrationConnection {
+  connectionId: number;
+  bankName: string | null;
+  externalAccountId: string | null;
+  lastSyncedAt: string | null;
+}
+
 export interface SaveAkahuCredentialsRequest {
   appIdToken: string;
   userToken: string;
@@ -125,4 +138,13 @@ export interface SaveAkahuCredentialsResult {
   isSuccess: boolean;
   errorMessage?: string;
   availableAccounts?: AkahuAccount[];
+}
+
+// Result of triggering the classic → official migration for one connection.
+export interface MigrateAkahuConnectionResult {
+  success: boolean;
+  oldExternalAccountId: string | null;
+  newExternalAccountId: string | null;
+  transactionsRemapped: number;
+  errorMessage: string | null;
 }

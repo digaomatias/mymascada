@@ -1,26 +1,30 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.RuleSuggestions.Services;
 
 namespace MyMascada.Infrastructure.Services.RuleSuggestions;
 
 /// <summary>
-/// Factory for creating appropriate rule suggestion analyzers based on configuration
+/// Factory for creating appropriate rule suggestion analyzers based on configuration and subscription tier.
 /// </summary>
 public class RuleSuggestionAnalyzerFactory : IRuleSuggestionAnalyzerFactory
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<RuleSuggestionAnalyzerFactory> _logger;
     private readonly IAIUsageTracker _usageTracker;
+    private readonly ISubscriptionService _subscriptionService;
 
     public RuleSuggestionAnalyzerFactory(
         IServiceProvider serviceProvider,
         ILogger<RuleSuggestionAnalyzerFactory> logger,
-        IAIUsageTracker usageTracker)
+        IAIUsageTracker usageTracker,
+        ISubscriptionService subscriptionService)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
         _usageTracker = usageTracker;
+        _subscriptionService = subscriptionService;
     }
 
     public async Task<IRuleSuggestionAnalyzer> CreateAnalyzerAsync(Guid userId, RuleAnalysisConfiguration config)
@@ -49,7 +53,7 @@ public class RuleSuggestionAnalyzerFactory : IRuleSuggestionAnalyzerFactory
     }
 
     /// <summary>
-    /// Determines if AI analysis should be used based on configuration and user context
+    /// Determines if AI analysis should be used based on configuration, subscription tier, and quota.
     /// </summary>
     private async Task<bool> ShouldUseAIAnalysis(Guid userId, RuleAnalysisConfiguration config)
     {
@@ -60,10 +64,10 @@ public class RuleSuggestionAnalyzerFactory : IRuleSuggestionAnalyzerFactory
             return false;
         }
 
-        // Check user-specific AI enablement (for pro/free tier)
+        // Check user-specific AI enablement (subscription tier via ISubscriptionService)
         if (!config.UseAIForUser)
         {
-            _logger.LogDebug("AI analysis disabled for user {UserId} (user tier restriction)", userId);
+            _logger.LogDebug("AI analysis disabled for user {UserId} (subscription tier restriction)", userId);
             return false;
         }
 

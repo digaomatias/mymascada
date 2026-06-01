@@ -110,11 +110,9 @@ export function OnboardingWizard() {
     setError(null);
     try {
       await apiClient.completeOnboarding({
+        skipped: true,
         monthlyIncome: 0,
         monthlyExpenses: 0,
-        goalName: t('goalSuggestion.suggestedGoal'),
-        goalTargetAmount: 0,
-        goalType: 'EmergencyFund',
         dataEntryMethod: 'manual',
       });
       await navigateToDashboard();
@@ -124,7 +122,7 @@ export function OnboardingWizard() {
       setError(message);
       setIsSkipping(false);
     }
-  }, [navigateToDashboard, t]);
+  }, [navigateToDashboard]);
 
   useEffect(() => {
     if (currentStep !== 5) {

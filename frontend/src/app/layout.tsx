@@ -4,6 +4,7 @@ import './globals.css';
 import { AuthProvider } from '@/contexts/auth-context';
 import { AiSuggestionsProvider } from '@/contexts/ai-suggestions-context';
 import { FeaturesProvider } from '@/contexts/features-context';
+import { getFeaturesServerSide } from '@/lib/features-server';
 import { LocaleWrapper } from '@/components/locale-wrapper';
 import { CookieConsent } from '@/components/cookie-consent';
 import { Toaster } from 'sonner';
@@ -23,7 +24,12 @@ export const metadata: Metadata = {
   description: 'AI-powered personal finance management application',
   manifest: '/manifest.json',
   icons: {
-    icon: '/favicon.png',
+    icon: [
+      { url: '/favicon.ico', sizes: '16x16 32x32', type: 'image/x-icon' },
+      { url: '/favicon.png', type: 'image/png', sizes: '32x32' },
+      { url: '/icon-192.png', type: 'image/png', sizes: '192x192' },
+      { url: '/icon-512.png', type: 'image/png', sizes: '512x512' },
+    ],
     apple: '/apple-touch-icon.png',
   },
 };
@@ -42,14 +48,19 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const locale = await getLocale();
-  const messages = await getMessages();
+  // Resolve independent server data concurrently so the feature-flag fetch adds
+  // no latency beyond the locale/messages the layout already awaits.
+  const [locale, messages, initialFeatures] = await Promise.all([
+    getLocale(),
+    getMessages(),
+    getFeaturesServerSide(),
+  ]);
 
   return (
     <html lang={locale}>
       <body className={`${plusJakarta.className} ${plusJakarta.variable} ${dmMono.variable} ${instrumentSerif.variable}`}>
         <NextIntlClientProvider messages={messages}>
-          <FeaturesProvider>
+          <FeaturesProvider initialFeatures={initialFeatures}>
           <AuthProvider>
             <LocaleWrapper>
               <AiSuggestionsProvider>

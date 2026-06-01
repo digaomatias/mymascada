@@ -176,6 +176,14 @@ public record BankTransactionDto
     /// Additional metadata from the provider
     /// </summary>
     public Dictionary<string, object>? Metadata { get; init; }
+
+    /// <summary>
+    /// The external ID of the predecessor transaction when this record was created by Akahu's
+    /// classic-to-official migration. Used to remap historical Transaction.ExternalId values
+    /// without losing categorisation history. Null for new transactions that have no migration
+    /// predecessor.
+    /// </summary>
+    public string? Migrated { get; init; }
 }
 
 /// <summary>

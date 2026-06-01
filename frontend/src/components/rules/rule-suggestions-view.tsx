@@ -12,11 +12,43 @@ import {
   LightBulbIcon,
   ArrowRightIcon,
   ClockIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  BoltIcon,
 } from '@heroicons/react/24/outline';
 import { apiClient, RuleSuggestion, RuleSuggestionsSummary } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
+import { CategorizationUpsellBanner } from '@/components/categorization/categorization-upsell-banner';
+
+/**
+ * Threshold for the "accept all high-confidence" bulk action, expressed as a
+ * whole-number percentage so it stays consistent with the rounded value the
+ * UI badge actually displays. A raw score of 0.895 rounds to "90%" in the
+ * badge, so the user sees a 90%-confidence suggestion — the bulk action must
+ * include that row too, otherwise the button and the UI drift apart.
+ */
+const HIGH_CONFIDENCE_PERCENT = 90;
+
+/**
+ * Normalize a raw confidence score (0..1) to the same rounded percentage the
+ * badge renders. Callers comparing against `HIGH_CONFIDENCE_PERCENT` MUST go
+ * through this helper so the gating logic tracks the displayed value.
+ */
+function toDisplayedConfidencePercent(score: number): number {
+  return Math.round(score * 100);
+}
+
+/**
+ * Notify the sidebar that the pending rule-suggestions count may have
+ * changed. `navigation.tsx` listens for this and refetches
+ * `/RuleSuggestions/summary` so the badge stays in sync after accepts /
+ * dismisses / bulk-accepts. No-op during SSR.
+ */
+function notifySuggestionsChanged() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('mymascada:rule-suggestions-changed'));
+  }
+}
 
 interface RuleSuggestionsResponse {
   suggestions: RuleSuggestion[];
@@ -25,10 +57,15 @@ interface RuleSuggestionsResponse {
 
 export function RuleSuggestionsView() {
   const t = useTranslations('rules');
+  const tSuggestions = useTranslations('rules.suggestions');
   const [suggestions, setSuggestions] = useState<RuleSuggestionsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [creatingRules, setCreatingRules] = useState<Set<number>>(new Set());
+  // Id-keyed (not index-keyed) so in-session dismissals stay bound to the
+  // correct suggestion even if `loadSuggestions()` reloads and reorders the
+  // list. Index keys would shadow a different row after a reorder.
   const [dismissedSuggestions, setDismissedSuggestions] = useState<Set<number>>(new Set());
+  const [bulkAccepting, setBulkAccepting] = useState(false);
 
   useEffect(() => {
     loadSuggestions();
@@ -65,6 +102,10 @@ export function RuleSuggestionsView() {
 
       // Clear dismissed suggestions since we have fresh data
       setDismissedSuggestions(new Set());
+
+      // Tell the sidebar to refetch its pending-count badge — the suggestion
+      // we just accepted and any siblings the backend auto-cleared are gone.
+      notifySuggestionsChanged();
     } catch (error) {
       console.error('Failed to create rule:', error);
       toast.error(t('toasts.suggestionAcceptFailed'));
@@ -77,16 +118,80 @@ export function RuleSuggestionsView() {
     }
   };
 
-  const dismissSuggestion = async (suggestionId: number, index: number) => {
+  const dismissSuggestion = async (suggestionId: number) => {
     try {
       await apiClient.rejectRuleSuggestion(suggestionId);
 
-      // Remove from local state after successful API call
-      setDismissedSuggestions(prev => new Set([...prev, index]));
+      // Track dismissal by suggestion id so a subsequent `loadSuggestions()`
+      // reorder can't shadow a different row.
+      setDismissedSuggestions(prev => new Set([...prev, suggestionId]));
       toast.success(t('toasts.suggestionDismissed'));
+
+      // Sidebar badge should drop by one — the backend already persisted
+      // the rejection, so a refetch reflects reality.
+      notifySuggestionsChanged();
     } catch (error) {
       console.error('Failed to dismiss suggestion:', error);
       toast.error(t('toasts.suggestionDismissFailed'));
+    }
+  };
+
+  const bulkAcceptHighConfidence = async () => {
+    if (!suggestions) return;
+    // Skip anything the user already dismissed in-session — otherwise the
+    // button count and the actual bulk action drift apart and dismissed rows
+    // get silently re-accepted. Dismissal set is id-keyed so this stays
+    // correct even after a reload that reorders the list.
+    const candidates = suggestions.suggestions.filter(
+      (s) =>
+        !dismissedSuggestions.has(s.id) &&
+        toDisplayedConfidencePercent(s.confidenceScore) >= HIGH_CONFIDENCE_PERCENT,
+    );
+    if (candidates.length === 0) {
+      toast.info(tSuggestions('bulkAcceptEmpty'));
+      return;
+    }
+
+    try {
+      setBulkAccepting(true);
+      // Process candidates in bounded batches rather than firing every
+      // request at once. Unbounded parallel writes can trip rate limits or
+      // connection-pool limits when a user has many high-confidence rules.
+      const BATCH_SIZE = 5;
+      const results: PromiseSettledResult<unknown>[] = [];
+      for (let i = 0; i < candidates.length; i += BATCH_SIZE) {
+        const batch = candidates.slice(i, i + BATCH_SIZE);
+        const batchResults = await Promise.allSettled(
+          batch.map((s) =>
+            apiClient.acceptRuleSuggestion(s.id, {
+              customName: s.name,
+              customDescription: s.description,
+              priority: 0,
+            }),
+          ),
+        );
+        results.push(...batchResults);
+      }
+      const succeeded = results.filter((r) => r.status === 'fulfilled').length;
+      const failed = results.length - succeeded;
+
+      if (failed === 0) {
+        toast.success(tSuggestions('bulkAcceptSuccess', { count: succeeded }));
+      } else {
+        toast.warning(tSuggestions('bulkAcceptPartial', { success: succeeded, failed }));
+      }
+
+      await loadSuggestions();
+      setDismissedSuggestions(new Set());
+
+      // Sidebar badge needs to drop — this is the most visible stale-data
+      // path in the whole rule-suggestions flow.
+      notifySuggestionsChanged();
+    } catch (error) {
+      console.error('Bulk accept failed:', error);
+      toast.error(tSuggestions('bulkAcceptFailed'));
+    } finally {
+      setBulkAccepting(false);
     }
   };
 
@@ -153,12 +258,24 @@ export function RuleSuggestionsView() {
     );
   }
 
-  const visibleSuggestions = suggestions.suggestions.filter((_, index) =>
-    !dismissedSuggestions.has(index)
+  const visibleSuggestions = suggestions.suggestions.filter(
+    (s) => !dismissedSuggestions.has(s.id),
   );
+
+  // Count only *visible* (non-dismissed) high-confidence suggestions so the
+  // "Accept all {count}" button stays in sync with `bulkAcceptHighConfidence`,
+  // which also skips dismissed rows.
+  const highConfidenceCount = suggestions.suggestions.filter(
+    (s) =>
+      !dismissedSuggestions.has(s.id) &&
+      toDisplayedConfidencePercent(s.confidenceScore) >= HIGH_CONFIDENCE_PERCENT,
+  ).length;
 
   return (
     <div className="space-y-5">
+      {/* Upsell banner — free-tier users only; self-hosted hidden */}
+      <CategorizationUpsellBanner context="ruleSuggestions" dismissible />
+
       {/* Header Stats */}
       <section className="rounded-[26px] border border-ink-200 bg-white/90 p-6 shadow-lg shadow-primary-200/20 backdrop-blur-xs">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
@@ -231,15 +348,35 @@ export function RuleSuggestionsView() {
 
       {/* Suggestions List */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-[var(--font-dash-sans)] text-lg font-semibold text-ink-900">
             {t('suggestions.suggestedRules')}
           </h2>
-          {visibleSuggestions.length < suggestions.suggestions.length && (
-            <p className="text-sm text-ink-500">
-              {t('suggestions.showingCount', { visible: visibleSuggestions.length, total: suggestions.suggestions.length })}
-            </p>
-          )}
+          <div className="flex items-center gap-3">
+            {visibleSuggestions.length < suggestions.suggestions.length && (
+              <p className="text-sm text-ink-500">
+                {t('suggestions.showingCount', { visible: visibleSuggestions.length, total: suggestions.suggestions.length })}
+              </p>
+            )}
+            {highConfidenceCount > 0 && (
+              <Button
+                size="sm"
+                onClick={bulkAcceptHighConfidence}
+                disabled={bulkAccepting}
+                className="bg-primary-600 hover:bg-primary-700 text-white flex items-center gap-1.5"
+                data-testid="bulk-accept-high-confidence"
+              >
+                {bulkAccepting ? (
+                  <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                ) : (
+                  <BoltIcon className="h-4 w-4" />
+                )}
+                {bulkAccepting
+                  ? tSuggestions('acceptingAll')
+                  : tSuggestions('acceptAllHighConfidenceCount', { count: highConfidenceCount })}
+              </Button>
+            )}
+          </div>
         </div>
 
         {visibleSuggestions.map((suggestion, index) => (
@@ -257,7 +394,7 @@ export function RuleSuggestionsView() {
                       {suggestion.name}
                     </h3>
                     <Badge className={cn('text-[10px] font-medium', getConfidenceColor(suggestion.confidenceScore * 100))}>
-                      {t('suggestions.confidence', { score: Math.round(suggestion.confidenceScore * 100) })}
+                      {t('suggestions.confidence', { score: toDisplayedConfidencePercent(suggestion.confidenceScore) })}
                     </Badge>
                   </div>
                   <p className="text-sm text-ink-500 mt-1">{suggestion.description}</p>
@@ -279,7 +416,7 @@ export function RuleSuggestionsView() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => dismissSuggestion(suggestion.id, index)}
+                    onClick={() => dismissSuggestion(suggestion.id)}
                     className="text-ink-400 hover:text-ink-600"
                   >
                     <XMarkIcon className="h-4 w-4" />
@@ -290,6 +427,14 @@ export function RuleSuggestionsView() {
 
             <div className="p-5">
               <div className="space-y-4">
+                {/* Impact preview — how many transactions this rule would categorize */}
+                <div className="rounded-2xl border border-primary-200 bg-primary-50/60 p-3 text-sm text-primary-900 flex items-start gap-2">
+                  <BoltIcon className="h-4 w-4 shrink-0 mt-0.5 text-primary-500" />
+                  <span data-testid="suggestion-impact-preview">
+                    {tSuggestions('impactPreview', { count: suggestion.matchCount })}
+                  </span>
+                </div>
+
                 {/* Rule Details */}
                 <div className="bg-ink-50 p-4 rounded-2xl">
                   <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-400 mb-3">

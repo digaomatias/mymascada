@@ -51,7 +51,10 @@ function CallbackContent() {
         return;
       }
 
-      if (event && event !== 'ACCEPT') {
+      // Akahu sends event=ACCEPT for new consents and event=UPDATE for re-consent /
+      // migration upgrades; both are successful outcomes. Anything else means the
+      // user denied or cancelled.
+      if (event && event !== 'ACCEPT' && event !== 'UPDATE') {
         setStatus('error');
         setErrorMessage(t('errors.denied'));
         return;

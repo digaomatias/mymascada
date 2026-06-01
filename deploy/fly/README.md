@@ -52,13 +52,29 @@ flyctl secrets set --app mymascada-api \
   GOOGLE_CLIENT_SECRET="..."
 ```
 
-### 4. Deploy API
+### 4. Create persistent volume for Data Protection keys
+
+The API requires a persistent volume at `/app/data` to store Data Protection keys.
+Without this volume, keys are lost on container restart, breaking encrypted data
+(auth cookies, tokens, etc.).
+
+```bash
+flyctl volumes create mymascada_data \
+  --region syd \
+  --size 1 \
+  --app mymascada-api
+```
+
+> **Warning:** If the volume is not mounted, the API will log a warning on startup
+> but will still run. Encrypted data from previous instances will be unreadable.
+
+### 5. Deploy API
 
 ```bash
 flyctl deploy --config deploy/fly/fly.api.toml
 ```
 
-### 5. Deploy Frontend
+### 6. Deploy Frontend
 
 ```bash
 flyctl deploy --config deploy/fly/fly.frontend.toml

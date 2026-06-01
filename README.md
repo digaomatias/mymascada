@@ -125,6 +125,7 @@ npx playwright test
 - [Self-Hosting Guide](SELF-HOSTING.md) -- Deployment, configuration, and production setup
 - [Contributing](CONTRIBUTING.md) -- How to contribute to the project
 - [Security Policy](SECURITY.md) -- How to report vulnerabilities
+- [Incident Response Runbook](docs/INCIDENT_RESPONSE.md) -- Production incident procedures
 - [Privacy](PRIVACY.md) -- Data handling and privacy information
 - [Changelog](CHANGELOG.md) -- Release history and changes
 - [Code of Conduct](CODE_OF_CONDUCT.md) -- Community guidelines

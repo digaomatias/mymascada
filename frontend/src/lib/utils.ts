@@ -26,6 +26,7 @@ export function formatDate(date: string | Date): string {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
+      timeZone: 'UTC',
     }).format(d);
   } catch (error) {
     console.error('Error formatting date:', date, error);

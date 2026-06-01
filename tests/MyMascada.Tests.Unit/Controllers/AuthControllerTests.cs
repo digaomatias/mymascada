@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MyMascada.Application.Common.Configuration;
 using MyMascada.Application.Common.Interfaces;
@@ -11,6 +11,7 @@ using MyMascada.Application.Features.Authentication.Commands;
 using MyMascada.Application.Features.Authentication.DTOs;
 using MyMascada.Application.Features.Authentication.Queries;
 using MyMascada.Domain.Entities;
+using MyMascada.WebAPI.Constants;
 using MyMascada.WebAPI.Controllers;
 using NSubstitute;
 using System.Security.Claims;
@@ -25,10 +26,8 @@ public class AuthControllerTests
     private readonly IUserRepository _userRepository;
     private readonly IOptions<AppOptions> _appOptions;
     private readonly IWebHostEnvironment _environment;
-    private readonly IUserAiSettingsRepository _aiSettingsRepository;
-    private readonly IConfiguration _configuration;
-    private readonly IUserFinancialProfileRepository _financialProfileRepository;
-    private readonly IAccountRepository _accountRepository;
+    private readonly IUserStatusService _userStatusService;
+    private readonly ISubscriptionService _subscriptionService;
     private readonly AuthController _controller;
 
     public AuthControllerTests()
@@ -40,11 +39,11 @@ public class AuthControllerTests
         _appOptions = Options.Create(new AppOptions { FrontendUrl = "http://localhost:3000" });
         _environment = Substitute.For<IWebHostEnvironment>();
         _environment.EnvironmentName.Returns("Development");
-        _aiSettingsRepository = Substitute.For<IUserAiSettingsRepository>();
-        _configuration = Substitute.For<IConfiguration>();
-        _financialProfileRepository = Substitute.For<IUserFinancialProfileRepository>();
-        _accountRepository = Substitute.For<IAccountRepository>();
-        _controller = new AuthController(_mediator, _authService, _dataProtectionProvider, _userRepository, _appOptions, _environment, _aiSettingsRepository, _configuration, _financialProfileRepository, _accountRepository);
+        _userStatusService = Substitute.For<IUserStatusService>();
+        _userStatusService.GetStatusAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((false, false));
+        _subscriptionService = Substitute.For<ISubscriptionService>();
+        var logger = Substitute.For<ILogger<AuthController>>();
+        _controller = new AuthController(_mediator, _authService, _dataProtectionProvider, _userRepository, _appOptions, _environment, _userStatusService, _subscriptionService, logger);
 
         // Provide a default HttpContext so methods that access Request.Headers don't throw
         _controller.ControllerContext = new ControllerContext
@@ -110,6 +109,109 @@ public class AuthControllerTests
             cmd.PhoneNumber == request.PhoneNumber &&
             cmd.Currency == request.Currency &&
             cmd.TimeZone == request.TimeZone));
+    }
+
+    [Fact]
+    public async Task Register_WithClientPlatformHeader_ShouldPassItToCommand()
+    {
+        // Arrange
+        var request = new RegisterRequest
+        {
+            Email = "mobile@example.com",
+            UserName = "mobileuser",
+            Password = "TestPass123!",
+            ConfirmPassword = "TestPass123!",
+            FirstName = "Mobile",
+            LastName = "User",
+            Currency = "USD",
+            TimeZone = "UTC"
+        };
+
+        _controller.ControllerContext.HttpContext.Request.Headers[CustomHeaders.ClientPlatform] = RegisterCommandHandler.MobileClientPlatform;
+
+        var expectedResponse = new AuthenticationResponse { IsSuccess = true, Token = "jwt" };
+        _mediator.Send(Arg.Any<RegisterCommand>()).Returns(expectedResponse);
+
+        // Act
+        await _controller.Register(request);
+
+        // Assert
+        await _mediator.Received(1).Send(Arg.Is<RegisterCommand>(cmd =>
+            cmd.ClientPlatform == RegisterCommandHandler.MobileClientPlatform));
+    }
+
+    [Fact]
+    public async Task Register_WithRefreshToken_InProduction_ShouldSetSecureHttpOnlyLaxCookie()
+    {
+        // Arrange
+        _environment.EnvironmentName.Returns("Production");
+
+        var request = new RegisterRequest
+        {
+            Email = "secure@example.com",
+            UserName = "secureuser",
+            Password = "TestPass123!",
+            ConfirmPassword = "TestPass123!",
+            FirstName = "Secure",
+            LastName = "User",
+            Currency = "USD",
+            TimeZone = "UTC"
+        };
+
+        _mediator.Send(Arg.Any<RegisterCommand>()).Returns(new AuthenticationResponse
+        {
+            IsSuccess = true,
+            Token = "jwt",
+            RefreshToken = "refresh-token",
+            RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(30)
+        });
+
+        // Act
+        await _controller.Register(request);
+
+        // Assert
+        var setCookie = _controller.ControllerContext.HttpContext.Response.Headers["Set-Cookie"].ToString().ToLowerInvariant();
+        setCookie.Should().Contain("refresh_token=refresh-token");
+        setCookie.Should().Contain("httponly");
+        setCookie.Should().Contain("samesite=lax");
+        setCookie.Should().Contain("secure");
+    }
+
+    [Fact]
+    public async Task Register_WithRefreshToken_InDevelopment_ShouldNotSetSecureCookie()
+    {
+        // Arrange
+        _environment.EnvironmentName.Returns("Development");
+
+        var request = new RegisterRequest
+        {
+            Email = "dev@example.com",
+            UserName = "devuser",
+            Password = "TestPass123!",
+            ConfirmPassword = "TestPass123!",
+            FirstName = "Dev",
+            LastName = "User",
+            Currency = "USD",
+            TimeZone = "UTC"
+        };
+
+        _mediator.Send(Arg.Any<RegisterCommand>()).Returns(new AuthenticationResponse
+        {
+            IsSuccess = true,
+            Token = "jwt",
+            RefreshToken = "refresh-token",
+            RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(30)
+        });
+
+        // Act
+        await _controller.Register(request);
+
+        // Assert
+        var setCookie = _controller.ControllerContext.HttpContext.Response.Headers["Set-Cookie"].ToString().ToLowerInvariant();
+        setCookie.Should().Contain("refresh_token=refresh-token");
+        setCookie.Should().Contain("httponly");
+        setCookie.Should().Contain("samesite=lax");
+        setCookie.Should().NotContain("secure");
     }
 
     [Fact]
@@ -431,5 +533,65 @@ public class AuthControllerTests
 
         // Assert
         result.Result.Should().BeOfType<NotFoundResult>();
+    }
+
+    [Fact]
+    public async Task GetCurrentUser_WhenSubscriptionServiceThrows_ShouldReturnOkWithNullTier()
+    {
+        // Arrange — reproduces a Stripe outage / transient DB blip where the
+        // subscription lookup fails. /auth/me MUST still succeed so the user
+        // bootstrap (and everything downstream) doesn't break for the entire
+        // duration of the outage. The frontend treats a null tier as
+        // "unknown → hide upsell", which is the intended graceful-degradation
+        // behavior shared across all auth endpoints via EnrichSubscriptionFieldsAsync.
+        var userId = Guid.NewGuid();
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, userId.ToString()),
+            new(ClaimTypes.Email, "test@example.com"),
+            new(ClaimTypes.Name, "testuser")
+        };
+
+        var identity = new ClaimsIdentity(claims, "Test");
+        var principal = new ClaimsPrincipal(identity);
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = principal
+            }
+        };
+
+        var user = new User
+        {
+            Id = userId,
+            Email = "test@example.com",
+            UserName = "testuser",
+            FirstName = "Test",
+            LastName = "User",
+            Currency = "USD",
+            TimeZone = "UTC",
+            Locale = "en"
+        };
+        _userRepository.GetByIdAsync(userId).Returns(user);
+
+        // Simulate the subscription service failing (e.g. Stripe API down).
+        _subscriptionService
+            .GetUserTierAsync(userId, Arg.Any<CancellationToken>())
+            .Returns<Task<MyMascada.Domain.Enums.SubscriptionTier>>(_ =>
+                throw new InvalidOperationException("Stripe is unreachable"));
+
+        // Act
+        var result = await _controller.GetCurrentUser();
+
+        // Assert — endpoint still returns 200 OK; tier left null so the
+        // frontend hides the upsell until the next auth refresh resolves.
+        var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        var userDto = okResult.Value.Should().BeOfType<UserDto>().Subject;
+
+        userDto.Id.Should().Be(userId);
+        userDto.Email.Should().Be("test@example.com");
+        userDto.SubscriptionTier.Should().BeNull();
     }
 }

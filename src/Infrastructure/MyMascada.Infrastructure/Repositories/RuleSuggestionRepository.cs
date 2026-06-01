@@ -32,6 +32,19 @@ public class RuleSuggestionRepository : IRuleSuggestionRepository
     }
 
     /// <summary>
+    /// Counts pending rule suggestions for a user using a SELECT COUNT(*) query.
+    /// Avoids loading the SuggestedCategory + SampleTransactions graphs that the
+    /// dashboard stats card does not need.
+    /// </summary>
+    public async Task<int> CountPendingSuggestionsAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        return await _context.RuleSuggestions
+            .CountAsync(
+                rs => rs.UserId == userId && !rs.IsDeleted && !rs.IsAccepted && !rs.IsRejected,
+                cancellationToken);
+    }
+
+    /// <summary>
     /// Gets all rule suggestions for a user (including processed ones)
     /// </summary>
     public async Task<IEnumerable<RuleSuggestion>> GetAllSuggestionsAsync(Guid userId, bool includeProcessed = false, CancellationToken cancellationToken = default)

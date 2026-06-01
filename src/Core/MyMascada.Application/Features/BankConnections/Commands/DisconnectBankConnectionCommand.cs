@@ -24,6 +24,7 @@ public class DisconnectBankConnectionCommandHandler : IRequestHandler<Disconnect
     private readonly IAkahuApiClient _akahuApiClient;
     private readonly IAkahuUserCredentialRepository _credentialRepository;
     private readonly ISettingsEncryptionService _encryptionService;
+    private readonly IAkahuWebhookSubscriptionService _webhookSubscriptionService;
     private readonly IApplicationLogger<DisconnectBankConnectionCommandHandler> _logger;
 
     public DisconnectBankConnectionCommandHandler(
@@ -32,6 +33,7 @@ public class DisconnectBankConnectionCommandHandler : IRequestHandler<Disconnect
         IAkahuApiClient akahuApiClient,
         IAkahuUserCredentialRepository credentialRepository,
         ISettingsEncryptionService encryptionService,
+        IAkahuWebhookSubscriptionService webhookSubscriptionService,
         IApplicationLogger<DisconnectBankConnectionCommandHandler> logger)
     {
         _bankConnectionRepository = bankConnectionRepository ?? throw new ArgumentNullException(nameof(bankConnectionRepository));
@@ -39,6 +41,7 @@ public class DisconnectBankConnectionCommandHandler : IRequestHandler<Disconnect
         _akahuApiClient = akahuApiClient ?? throw new ArgumentNullException(nameof(akahuApiClient));
         _credentialRepository = credentialRepository ?? throw new ArgumentNullException(nameof(credentialRepository));
         _encryptionService = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
+        _webhookSubscriptionService = webhookSubscriptionService ?? throw new ArgumentNullException(nameof(webhookSubscriptionService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -71,6 +74,17 @@ public class DisconnectBankConnectionCommandHandler : IRequestHandler<Disconnect
         // Tokens are stored per-user in AkahuUserCredential, not per-connection.
         if (connection.ProviderId == AkahuProviderId)
         {
+            // 3a. Best-effort teardown of webhook subscriptions before the token is revoked.
+            // Wrapped so a failure here never blocks the disconnect.
+            try
+            {
+                await _webhookSubscriptionService.TearDownSubscriptionsAsync(request.UserId, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "TearDownSubscriptionsAsync failed for user {UserId} during disconnect; continuing", request.UserId);
+            }
+
             try
             {
                 var credential = await _credentialRepository.GetByUserIdAsync(request.UserId, cancellationToken);
@@ -84,15 +98,49 @@ public class DisconnectBankConnectionCommandHandler : IRequestHandler<Disconnect
                         _logger.LogDebug("Revoking Akahu access token for connection {ConnectionId}", request.BankConnectionId);
                         await _akahuApiClient.RevokeTokenAsync(appIdToken, accessToken, cancellationToken);
                         _logger.LogDebug("Successfully revoked Akahu access token");
+
+                        // Clear any previous pending revocation flag on success
+                        if (credential.IsRevocationPending)
+                        {
+                            credential.IsRevocationPending = false;
+                            credential.RevocationFailedAt = null;
+                            credential.RevocationFailureCount = 0;
+                            await _credentialRepository.UpdateAsync(credential, cancellationToken);
+                        }
                     }
+
+                    // Record consent revocation timestamp for compliance evidence
+                    credential.ConsentRevokedAt = DateTimeOffset.UtcNow;
+                    credential.UpdatedAt = DateTime.UtcNow;
+                    await _credentialRepository.UpdateAsync(credential, cancellationToken);
                 }
             }
             catch (Exception ex)
             {
-                // Log but continue - we still want to delete the connection even if token revocation fails
-                _logger.LogWarning(ex,
-                    "Failed to revoke access token for connection {ConnectionId}. Continuing with deletion.",
+                // Log as error so monitoring catches it, but continue with deletion
+                _logger.LogError(ex,
+                    "Failed to revoke access token for connection {ConnectionId}. " +
+                    "Marking credential for retry. Continuing with deletion.",
                     request.BankConnectionId);
+
+                // Mark the credential for background retry
+                try
+                {
+                    var credential = await _credentialRepository.GetByUserIdAsync(request.UserId, cancellationToken);
+                    if (credential != null)
+                    {
+                        credential.IsRevocationPending = true;
+                        credential.RevocationFailedAt = DateTime.UtcNow;
+                        credential.RevocationFailureCount++;
+                        await _credentialRepository.UpdateAsync(credential, cancellationToken);
+                    }
+                }
+                catch (Exception updateEx)
+                {
+                    _logger.LogError(updateEx,
+                        "Failed to mark credential for revocation retry for connection {ConnectionId}",
+                        request.BankConnectionId);
+                }
             }
         }
 

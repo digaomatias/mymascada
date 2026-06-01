@@ -225,3 +225,10 @@ to-localize.md
 .clawdbot/
 src/qemu_dotnet_20260224-224113_1.core
 output/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Akahu dev credentials (never commit)
+akahu-dev-cred*
+.env.akahu*

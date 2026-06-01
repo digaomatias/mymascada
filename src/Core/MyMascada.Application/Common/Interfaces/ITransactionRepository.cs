@@ -42,6 +42,14 @@ public interface ITransactionRepository
     Task<IEnumerable<CategorizationRule>> GetCategorizationRulesAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<IEnumerable<Transaction>> GetCategorizedTransactionsAsync(Guid userId, int count = 200, CancellationToken cancellationToken = default);
     Task<IEnumerable<Transaction>> GetUncategorizedTransactionsAsync(Guid userId, int maxCount = 500, CancellationToken cancellationToken = default);
+    Task<int> CountUncategorizedTransactionsAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Returns auto-categorization counts grouped by method ("Rule", "ML", "LLM", "Manual")
+    /// for transactions whose CategorizedAt falls inside [start, end).
+    /// </summary>
+    Task<Dictionary<string, int>> GetAutoCategorizationCountsByMethodAsync(
+        Guid userId, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default);
 
     Task SaveChangesAsync();
     
@@ -67,6 +75,23 @@ public interface ITransactionRepository
     // Bulk operations for categorization
     Task BulkUpdateCategorizationAsync<T>(IEnumerable<T> updates, Guid userId, CancellationToken cancellationToken = default)
         where T : class;
+
+    /// <summary>
+    /// Returns the oldest <see cref="Transaction.TransactionDate"/> for the given account, or
+    /// null when the account has no transactions. Used by the Akahu classic-to-official
+    /// migration to determine how far back to refetch transaction history when remapping
+    /// external IDs.
+    /// </summary>
+    Task<DateTime?> GetOldestTransactionDateForAccountAsync(int accountId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Updates <see cref="Transaction.ExternalId"/> for transactions on the given account
+    /// according to the supplied old-to-new map. Only rows whose current <c>ExternalId</c>
+    /// matches a key in the map are touched. Returns the number of rows actually updated.
+    /// Used by the Akahu classic-to-official migration to rewrite <c>trans_xxx</c> IDs in
+    /// bulk while preserving categorisation history.
+    /// </summary>
+    Task<int> RemapExternalIdsAsync(int accountId, IReadOnlyDictionary<string, string> oldToNewExternalIds, CancellationToken ct = default);
 }
 
 public interface IAccountRepository

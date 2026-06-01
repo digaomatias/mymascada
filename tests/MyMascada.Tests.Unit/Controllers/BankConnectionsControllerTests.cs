@@ -25,7 +25,7 @@ public class BankConnectionsControllerTests
         });
 
         mediator.Send(Arg.Any<ExchangeAkahuCodeQuery>(), Arg.Any<CancellationToken>())
-            .Returns(new ExchangeAkahuCodeResult(Array.Empty<MyMascada.Application.Features.BankConnections.DTOs.AkahuAccountDto>(), "access_token"));
+            .Returns(new ExchangeAkahuCodeResult(Array.Empty<MyMascada.Application.Features.BankConnections.DTOs.AkahuAccountDto>()));
 
         var logger = Substitute.For<ILogger<BankConnectionsController>>();
         var controller = new BankConnectionsController(mediator, currentUserService, options, logger);
