@@ -734,6 +734,7 @@ public class TransactionRepository : ITransactionRepository
     public async Task<IEnumerable<Transaction>> GetUncategorizedTransactionsAsync(Guid userId, int maxCount = 500, CancellationToken cancellationToken = default)
     {
         var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
+        var now = DateTime.UtcNow;
         return await _context.Transactions
             .Include(t => t.Account)
             .Where(t => accessibleIds.Contains(t.AccountId) &&
@@ -746,7 +747,9 @@ public class TransactionRepository : ITransactionRepository
                        // wizard contents.
                        !t.Account.IsDeleted &&
                        !t.TransferId.HasValue &&
-                       t.Type != TransactionType.TransferComponent)
+                       t.Type != TransactionType.TransferComponent &&
+                       !t.IsHiddenFromQuickCategorize &&
+                       (t.QuickCategorizeSnoozedUntil == null || t.QuickCategorizeSnoozedUntil <= now))
             .OrderByDescending(t => t.CreatedAt)
             .Take(maxCount)
             .ToListAsync(cancellationToken);
@@ -755,6 +758,7 @@ public class TransactionRepository : ITransactionRepository
     public async Task<int> CountUncategorizedTransactionsAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
+        var now = DateTime.UtcNow;
         // Mirror the filter applied by GetUncategorizedTransactionsAsync +
         // GetUncategorizedGroupsQueryHandler so the dashboard stats card and
         // the quick-categorize wizard agree on which rows "need review".
@@ -774,7 +778,9 @@ public class TransactionRepository : ITransactionRepository
                              !t.Account.IsDeleted &&
                              !t.TransferId.HasValue &&
                              t.Type != TransactionType.TransferComponent &&
-                             !string.IsNullOrWhiteSpace(t.Description),
+                             !string.IsNullOrWhiteSpace(t.Description) &&
+                             !t.IsHiddenFromQuickCategorize &&
+                             (t.QuickCategorizeSnoozedUntil == null || t.QuickCategorizeSnoozedUntil <= now),
                         cancellationToken);
     }
 

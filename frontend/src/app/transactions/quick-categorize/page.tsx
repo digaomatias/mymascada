@@ -8,11 +8,15 @@ import {
   SparklesIcon,
   ArrowRightIcon,
   CheckBadgeIcon,
+  ClockIcon,
+  EyeSlashIcon,
+  ArrowsRightLeftIcon,
 } from '@heroicons/react/24/outline';
 import { AppLayout } from '@/components/app-layout';
 import { BackButton } from '@/components/ui/back-button';
 import { Button } from '@/components/ui/button';
 import { CategoryPicker } from '@/components/forms/category-picker';
+import { TransfersModal } from '@/components/modals/transfers-modal';
 import { apiClient } from '@/lib/api-client';
 import type { UncategorizedGroupDto, UncategorizedGroupsResponse } from '@/lib/api-client';
 import { useAuth } from '@/contexts/auth-context';
@@ -49,7 +53,9 @@ export default function QuickCategorizePage() {
   const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const [saving, setSaving] = useState(false);
+  const [dismissing, setDismissing] = useState(false);
   const [totalCompleted, setTotalCompleted] = useState(0);
+  const [showTransfersModal, setShowTransfersModal] = useState(false);
 
   // Session-scoped set of `{normalizedKey}::{categoryId}` pairs that already
   // had CategorizationHistory recorded during this wizard session. Needed so
@@ -118,8 +124,41 @@ export default function QuickCategorizePage() {
     setCurrentIndex((i) => i + 1);
   };
 
-  const handleSkip = () => {
-    goNext();
+  // Snooze and Ignore both call the same backend endpoint with different
+  // `mode` values — server-side, snooze sets QuickCategorizeSnoozedUntil
+  // (30 days) while ignore flips IsHiddenFromQuickCategorize permanently.
+  // Either way, the group won't reappear on the next visit until the snooze
+  // expires or the user re-enables it elsewhere.
+  const dismissCurrentGroup = async (mode: 'snooze' | 'ignore') => {
+    if (!currentGroup || dismissing || saving) return;
+    try {
+      setDismissing(true);
+      await apiClient.dismissUncategorizedGroup({
+        transactionIds: currentGroup.transactionIds,
+        mode,
+      });
+      toast.success(mode === 'snooze' ? t('snoozeSuccess') : t('ignoreSuccess'));
+      goNext();
+    } catch (err) {
+      console.error('Failed to dismiss group:', err);
+      toast.error(t('dismissError'));
+    } finally {
+      setDismissing(false);
+    }
+  };
+
+  const handleMarkAsTransfer = () => {
+    setShowTransfersModal(true);
+  };
+
+  // After the transfers modal closes we refetch — any transactions paired as
+  // transfers there will have `TransferId` set and be filtered out of the
+  // wizard's groups query, so the current group's transactionCount may shrink
+  // or the group may vanish entirely.
+  const handleTransfersModalClose = () => {
+    setShowTransfersModal(false);
+    setReloadTick((n) => n + 1);
+    setCurrentIndex(0);
   };
 
   const handleCategorize = async () => {
@@ -512,18 +551,39 @@ export default function QuickCategorizePage() {
             <p className="mt-4 text-xs text-ink-400">{t('hint')}</p>
 
             {/* Actions */}
-            <div className="mt-6 flex items-center justify-between gap-3">
-              <Button
-                variant="ghost"
-                onClick={handleSkip}
-                disabled={saving}
-                data-testid="quick-categorize-skip"
-              >
-                {t('skip')}
-              </Button>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  variant="ghost"
+                  onClick={() => dismissCurrentGroup('snooze')}
+                  disabled={saving || dismissing}
+                  data-testid="quick-categorize-snooze"
+                >
+                  <ClockIcon className="mr-1.5 h-4 w-4" />
+                  {t('snooze')}
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => dismissCurrentGroup('ignore')}
+                  disabled={saving || dismissing}
+                  data-testid="quick-categorize-ignore"
+                >
+                  <EyeSlashIcon className="mr-1.5 h-4 w-4" />
+                  {t('ignore')}
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={handleMarkAsTransfer}
+                  disabled={saving || dismissing}
+                  data-testid="quick-categorize-mark-transfer"
+                >
+                  <ArrowsRightLeftIcon className="mr-1.5 h-4 w-4" />
+                  {t('markAsTransfer')}
+                </Button>
+              </div>
               <Button
                 onClick={handleCategorize}
-                disabled={saving || !selectedCategoryId}
+                disabled={saving || dismissing || !selectedCategoryId}
                 className="bg-primary-600 hover:bg-primary-700 text-white"
                 data-testid="quick-categorize-submit"
               >
@@ -536,6 +596,12 @@ export default function QuickCategorizePage() {
           </div>
         </div>
       )}
+
+      <TransfersModal
+        isOpen={showTransfersModal}
+        onClose={handleTransfersModalClose}
+        onRefresh={() => setReloadTick((n) => n + 1)}
+      />
     </AppLayout>
   );
 }

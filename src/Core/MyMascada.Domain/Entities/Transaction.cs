@@ -85,6 +85,21 @@ public class Transaction : BaseEntity
     public bool IsExcluded { get; set; } = false;
 
     /// <summary>
+    /// When set in the future, the transaction is hidden from the
+    /// Quick-Categorize wizard until that timestamp. Set by the "Skip for now"
+    /// action so previously-skipped groups don't reappear on every visit.
+    /// </summary>
+    public DateTime? QuickCategorizeSnoozedUntil { get; set; }
+
+    /// <summary>
+    /// When true, the transaction is permanently hidden from the
+    /// Quick-Categorize wizard. Set by the "Ignore" / "Mark as transfer"
+    /// actions. The transaction can still be reviewed and categorized via the
+    /// main transactions list — this only affects wizard visibility.
+    /// </summary>
+    public bool IsHiddenFromQuickCategorize { get; set; } = false;
+
+    /// <summary>
     /// Tags for additional organization (comma-separated)
     /// </summary>
     [MaxLength(500)]

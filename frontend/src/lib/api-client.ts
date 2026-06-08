@@ -1601,6 +1601,28 @@ class ApiClient {
     return response as any;
   }
 
+  /**
+   * Hide a group of uncategorized transactions from the Quick-Categorize wizard.
+   * mode=0 (Snooze) hides them for `snoozeDays` (default 30); mode=1 (Ignore)
+   * hides them permanently. Does not touch the transaction's category.
+   */
+  async dismissUncategorizedGroup(request: {
+    transactionIds: number[];
+    mode: 'snooze' | 'ignore';
+    snoozeDays?: number;
+  }): Promise<{ success: boolean; transactionsUpdated: number; message: string }> {
+    const response = await this.request('/api/Categorization/dismiss-group', {
+      method: 'POST',
+      body: JSON.stringify({
+        transactionIds: request.transactionIds,
+        mode: request.mode === 'ignore' ? 1 : 0,
+        snoozeDays: request.snoozeDays,
+      }),
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return response as any;
+  }
+
   async getCategorizationStats(): Promise<CategorizationStatsResponse> {
     const response = await this.request('/api/Categorization/stats');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

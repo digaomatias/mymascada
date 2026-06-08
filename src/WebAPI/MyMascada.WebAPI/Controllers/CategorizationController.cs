@@ -555,6 +555,46 @@ public class CategorizationController : ControllerBase
     }
 
     /// <summary>
+    /// Hides a group of uncategorized transactions from the Quick-Categorize
+    /// wizard. mode=Snooze hides them for 30 days; mode=Ignore hides them
+    /// permanently. Does not change category or any financial field.
+    /// </summary>
+    [HttpPost("dismiss-group")]
+    public async Task<IActionResult> DismissUncategorizedGroup(
+        [FromBody] DismissUncategorizedGroupRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (request == null || request.TransactionIds == null || request.TransactionIds.Count == 0)
+        {
+            return BadRequest("Transaction IDs are required");
+        }
+
+        var userId = GetCurrentUserId();
+
+        var result = await _mediator.Send(
+            new DismissUncategorizedGroupCommand
+            {
+                UserId = userId,
+                TransactionIds = request.TransactionIds,
+                Mode = request.Mode,
+                SnoozeDays = request.SnoozeDays ?? 30
+            },
+            cancellationToken);
+
+        if (!result.Success)
+        {
+            return BadRequest(new { message = result.Message });
+        }
+
+        return Ok(new
+        {
+            success = result.Success,
+            transactionsUpdated = result.TransactionsUpdated,
+            message = result.Message
+        });
+    }
+
+    /// <summary>
     /// Monthly categorization stats for the dashboard card — auto-applied counts
     /// broken down by method, review-queue size, and pending rule suggestion count.
     /// </summary>
@@ -1255,4 +1295,19 @@ public class BulkCategorizeGroupRequest
     /// or sending `null` defaults to `true` for non-chunked callers.
     /// </summary>
     public bool? RecordHistory { get; set; }
+}
+
+/// <summary>
+/// Request for hiding a group of uncategorized transactions from the
+/// Quick-Categorize wizard (snooze for a window or ignore permanently).
+/// </summary>
+public class DismissUncategorizedGroupRequest
+{
+    public List<int> TransactionIds { get; set; } = new();
+    public DismissUncategorizedGroupMode Mode { get; set; } = DismissUncategorizedGroupMode.Snooze;
+
+    /// <summary>
+    /// Snooze window in days. Only used when Mode == Snooze. Defaults to 30.
+    /// </summary>
+    public int? SnoozeDays { get; set; }
 }
