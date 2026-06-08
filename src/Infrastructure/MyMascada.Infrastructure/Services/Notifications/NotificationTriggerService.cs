@@ -3,23 +3,41 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using MyMascada.Application.Common.Interfaces;
+using MyMascada.Application.Features.Budgets.DTOs;
+using MyMascada.Application.Features.Budgets.Services;
 using MyMascada.Domain.Enums;
 
 namespace MyMascada.Infrastructure.Services.Notifications;
 
 public class NotificationTriggerService : INotificationTriggerService
 {
+    /// <summary>
+    /// Threshold (percent of effective budget) at which an "approaching limit"
+    /// alert fires when the user has not set their own preference. Matches
+    /// <c>BudgetCategory.IsApproachingLimit</c>'s hardcoded 80%.
+    /// </summary>
+    private const int DefaultBudgetAlertThresholdPercent = 80;
+
     private readonly INotificationService _notificationService;
     private readonly ITransactionRepository _transactionRepository;
+    private readonly IBudgetRepository _budgetRepository;
+    private readonly IBudgetCalculationService _budgetCalculationService;
+    private readonly INotificationPreferenceRepository _notificationPreferenceRepository;
     private readonly ILogger<NotificationTriggerService> _logger;
 
     public NotificationTriggerService(
         INotificationService notificationService,
         ITransactionRepository transactionRepository,
+        IBudgetRepository budgetRepository,
+        IBudgetCalculationService budgetCalculationService,
+        INotificationPreferenceRepository notificationPreferenceRepository,
         ILogger<NotificationTriggerService> logger)
     {
         _notificationService = notificationService;
         _transactionRepository = transactionRepository;
+        _budgetRepository = budgetRepository;
+        _budgetCalculationService = budgetCalculationService;
+        _notificationPreferenceRepository = notificationPreferenceRepository;
         _logger = logger;
     }
 
@@ -147,5 +165,109 @@ public class NotificationTriggerService : INotificationTriggerService
         {
             _logger.LogError(ex, "Error sending transaction reminder for user {UserId}", userId);
         }
+    }
+
+    public async Task CheckBudgetThresholdsAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var budgets = await _budgetRepository.GetActiveBudgetsForUserAsync(userId, cancellationToken);
+            if (budgets is null)
+                return;
+
+            // The same preference row that controls quiet hours / channels also
+            // stores the per-user alert threshold. Null means "use the default".
+            var preference = await _notificationPreferenceRepository.GetByUserIdAsync(userId, cancellationToken);
+            var alertThreshold = preference?.BudgetAlertPercentage ?? DefaultBudgetAlertThresholdPercent;
+
+            foreach (var budget in budgets)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                // Reuse the same calculation the budget detail page uses, so the
+                // alert and the UI can never disagree about a category's status.
+                var progress = await _budgetCalculationService.CalculateBudgetProgressAsync(
+                    budget, userId, cancellationToken);
+
+                foreach (var category in progress.Categories)
+                {
+                    // Intentionally-unbudgeted categories (no allocation, no rollover)
+                    // have an effective budget of zero, which makes UsedPercentage
+                    // meaningless (always >= 100%). Skip them so users aren't spammed
+                    // about categories they never budgeted for.
+                    if (category.EffectiveBudget <= 0)
+                        continue;
+
+                    if (category.IsOverBudget)
+                    {
+                        // Exceeded takes precedence over approaching — only the most
+                        // severe alert fires for a given category.
+                        await CreateBudgetThresholdNotificationAsync(
+                            userId, budget.Id, budget.StartDate, category,
+                            NotificationType.BudgetExceeded, "exceeded",
+                            NotificationPriority.High, cancellationToken);
+                    }
+                    else if (category.UsedPercentage >= alertThreshold)
+                    {
+                        await CreateBudgetThresholdNotificationAsync(
+                            userId, budget.Id, budget.StartDate, category,
+                            NotificationType.BudgetThreshold, "approaching",
+                            NotificationPriority.Normal, cancellationToken);
+                    }
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking budget thresholds for user {UserId}", userId);
+        }
+    }
+
+    private async Task CreateBudgetThresholdNotificationAsync(
+        Guid userId,
+        int budgetId,
+        DateTime periodStart,
+        BudgetCategoryProgressDto category,
+        NotificationType type,
+        string conditionTag,
+        NotificationPriority priority,
+        CancellationToken cancellationToken)
+    {
+        // Scope the idempotency key to the budget PERIOD, not the run date. This
+        // guarantees exactly one "approaching" and one "exceeded" notification per
+        // category per period, no matter how often the daily job runs. The key
+        // resets automatically when the next period starts (new StartDate).
+        var groupKey =
+            $"budget:{budgetId}:cat:{category.CategoryId}:threshold:{conditionTag}:{periodStart:yyyy-MM-dd}";
+
+        var usedPercentage = (int)Math.Round(category.UsedPercentage);
+        var data = JsonSerializer.Serialize(new
+        {
+            href = $"/budgets/{budgetId}",
+            templateKey = type.ToString(),
+            budgetId,
+            categoryId = category.CategoryId,
+            categoryName = category.CategoryName,
+            usedPercentage,
+            // Minor units for future push/email channels that need to render currency.
+            budgetedAmountMinorUnits = (long)Math.Round(category.EffectiveBudget * 100),
+            actualSpentMinorUnits = (long)Math.Round(category.ActualSpent * 100)
+        });
+
+        // Title/body are template keys the client resolves to localised copy;
+        // the raw values for interpolation travel in the data payload.
+        await _notificationService.CreateNotificationAsync(
+            userId,
+            type,
+            type.ToString(),
+            $"{type}.body",
+            data,
+            priority,
+            groupKey,
+            cancellationToken: cancellationToken);
     }
 }

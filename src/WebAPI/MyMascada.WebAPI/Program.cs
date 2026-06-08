@@ -453,6 +453,14 @@ recurringJobManager.AddOrUpdate<MyMascada.Application.BackgroundJobs.IExpiredBud
     service => service.ProcessAllUsersAsync(null),
     Hangfire.Cron.Daily(1, 0)); // Run daily at 1:00 AM
 
+// Runs at 1:30 AM — after the 1:00 AM expired-budget job has rolled periods
+// over, so alerts evaluate the current period, not the one that just ended.
+// Hangfire replaces the CancellationToken with its shutdown token at runtime.
+recurringJobManager.AddOrUpdate<MyMascada.Application.BackgroundJobs.IBudgetAlertJobService>(
+    "daily-budget-alert-check",
+    service => service.ProcessAllUsersAsync(default),
+    Hangfire.Cron.Daily(1, 30)); // Run daily at 1:30 AM
+
 recurringJobManager.AddOrUpdate<MyMascada.Application.BackgroundJobs.IDataRetentionService>(
     "cleanup-expired-chat-messages",
     service => service.CleanupExpiredChatMessagesAsync(),
