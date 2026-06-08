@@ -28,6 +28,7 @@ import { useTranslations } from 'next-intl';
 import { apiClient } from '@/lib/api-client';
 import { useFeatures } from '@/contexts/features-context';
 import { SettingsSkeleton } from '@/components/skeletons/settings-skeleton';
+import type { NotificationPreferenceDto } from '@/types/notifications';
 
 interface SettingsItem {
   href: string;
@@ -80,6 +81,14 @@ export default function SettingsPage() {
   const [dashboardTemplate, setDashboardTemplate] = useState<'education' | 'advanced'>('education');
   const [backendVersion, setBackendVersion] = useState<string | null>(null);
 
+  // Budget alert threshold. We keep the full preference object so saving the
+  // threshold doesn't wipe the user's other notification settings — the backend
+  // replaces all fields from the request.
+  const [notificationPrefs, setNotificationPrefs] = useState<NotificationPreferenceDto | null>(null);
+  const [budgetAlertInput, setBudgetAlertInput] = useState<string>('80');
+  const [isSavingBudgetAlert, setIsSavingBudgetAlert] = useState(false);
+  const [budgetAlertError, setBudgetAlertError] = useState(false);
+
   useEffect(() => {
     try {
       // Check for new key first
@@ -106,6 +115,43 @@ export default function SettingsPage() {
       .then((res) => setBackendVersion(res.version))
       .catch(() => setBackendVersion(null));
   }, []);
+
+  useEffect(() => {
+    apiClient.getNotificationPreferences()
+      .then((prefs) => {
+        setNotificationPrefs(prefs);
+        setBudgetAlertInput(String(prefs.budgetAlertPercentage ?? 80));
+      })
+      .catch(() => {
+        // Leave the default (80) in place if preferences can't be loaded.
+      });
+  }, []);
+
+  const handleSaveBudgetAlert = async () => {
+    const value = Number(budgetAlertInput);
+    if (!Number.isInteger(value) || value < 1 || value > 100) {
+      setBudgetAlertError(true);
+      return;
+    }
+    setBudgetAlertError(false);
+    if (notificationPrefs && value === (notificationPrefs.budgetAlertPercentage ?? 80)) {
+      return; // No change.
+    }
+    setIsSavingBudgetAlert(true);
+    try {
+      // Send the full current preference set so unrelated fields aren't reset.
+      const updated = await apiClient.updateNotificationPreferences({
+        ...(notificationPrefs ?? {}),
+        budgetAlertPercentage: value,
+      });
+      setNotificationPrefs(updated);
+      setBudgetAlertInput(String(updated.budgetAlertPercentage ?? 80));
+    } catch (error) {
+      console.error('Failed to update budget alert threshold:', error);
+    } finally {
+      setIsSavingBudgetAlert(false);
+    }
+  };
 
   const handleDashboardTemplateToggle = () => {
     const newTemplate = dashboardTemplate === 'education' ? 'advanced' : 'education';
@@ -262,6 +308,59 @@ export default function SettingsPage() {
                   {isSavingLocale && (
                     <p className="text-sm text-primary-600 mt-2">
                       {t('language.saving')}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Budget Alerts Card */}
+          <Card className="rounded-[26px] border border-ink-200 bg-white/92 shadow-[0_20px_46px_-30px_rgba(47,129,112,0.20)] backdrop-blur-xs h-full">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shrink-0">
+                  <BellIcon className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-semibold text-ink-900">
+                    {t('budgetAlerts.title')}
+                  </h3>
+                  <p className="text-sm text-ink-500 mt-1 mb-3">
+                    {t('budgetAlerts.description')}
+                  </p>
+                  <label htmlFor="budget-alert-threshold" className="block text-sm font-medium text-ink-700 mb-1">
+                    {t('budgetAlerts.thresholdLabel')}
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="budget-alert-threshold"
+                      type="number"
+                      min={1}
+                      max={100}
+                      value={budgetAlertInput}
+                      onChange={(e) => {
+                        setBudgetAlertInput(e.target.value);
+                        setBudgetAlertError(false);
+                      }}
+                      className="input w-24"
+                    />
+                    <span className="text-sm text-ink-500">%</span>
+                    <Button
+                      onClick={handleSaveBudgetAlert}
+                      disabled={isSavingBudgetAlert}
+                      className="ml-auto"
+                    >
+                      {isSavingBudgetAlert ? t('budgetAlerts.saving') : t('budgetAlerts.save')}
+                    </Button>
+                  </div>
+                  {budgetAlertError ? (
+                    <p className="text-sm text-red-600 mt-2">
+                      {t('budgetAlerts.invalid')}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-ink-500 mt-2">
+                      {t('budgetAlerts.thresholdHelp')}
                     </p>
                   )}
                 </div>

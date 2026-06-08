@@ -1935,6 +1935,15 @@
       "description": "Choose your preferred language for the application",
       "saving": "Saving preference..."
     },
+    "budgetAlerts": {
+      "title": "Budget Alerts",
+      "description": "Get notified when a budget category approaches or exceeds its limit",
+      "thresholdLabel": "Alert threshold",
+      "thresholdHelp": "We'll alert you when a category reaches this percentage of its budget. Default: 80%.",
+      "save": "Save",
+      "saving": "Saving...",
+      "invalid": "Enter a whole number between 1 and 100"
+    },
     "items": {
       "bankConnections": {
         "title": "Bank Connections",
@@ -3671,6 +3680,14 @@
       "RuleSuggestionsAvailable": {
         "title": "New rule suggestions",
         "body": "{count, plural, one {1 new categorization rule suggestion is available} other {# new categorization rule suggestions are available}}"
+      },
+      "BudgetThreshold": {
+        "title": "Budget alert: {categoryName}",
+        "body": "{categoryName} is at {usedPercentage}% of its budget"
+      },
+      "BudgetExceeded": {
+        "title": "Budget exceeded: {categoryName}",
+        "body": "{categoryName} is over budget — {usedPercentage}% spent"
       }
     }
   },
