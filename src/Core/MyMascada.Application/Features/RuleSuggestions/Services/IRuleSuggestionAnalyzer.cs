@@ -34,6 +34,13 @@ public class RuleAnalysisInput
     public List<CategorizationRule> ExistingRules { get; set; } = new();
     public int MaxSuggestions { get; set; } = 10;
     public double MinConfidenceThreshold { get; set; } = 0.7;
+
+    /// <summary>
+    /// Uppercased tokens of the account holder's name. These are treated as structural noise when
+    /// mining merchant patterns, so rules never key off the cardholder name printed on statement
+    /// lines (e.g. "Gem Visa MATIAS LEOTE ...").
+    /// </summary>
+    public List<string> AccountHolderNameTokens { get; set; } = new();
 }
 
 /// <summary>

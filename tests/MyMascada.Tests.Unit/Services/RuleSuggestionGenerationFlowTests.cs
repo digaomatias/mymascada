@@ -219,7 +219,8 @@ public class RuleSuggestionGenerationFlowTests
             analyzerFactory,
             historyRepo,
             featureFlags,
-            Substitute.For<ISubscriptionService>());
+            Substitute.For<ISubscriptionService>(),
+            Substitute.For<IUserRepository>());
 
         var result = await service.ShouldGenerateRuleSuggestionsAsync(_userId);
 
@@ -253,7 +254,8 @@ public class RuleSuggestionGenerationFlowTests
             Substitute.For<IRuleSuggestionAnalyzerFactory>(),
             historyRepo,
             Substitute.For<IFeatureFlags>(),
-            Substitute.For<ISubscriptionService>());
+            Substitute.For<ISubscriptionService>(),
+            Substitute.For<IUserRepository>());
 
         var result = await service.ShouldGenerateRuleSuggestionsAsync(_userId);
 
@@ -295,7 +297,8 @@ public class RuleSuggestionGenerationFlowTests
             Substitute.For<IRuleSuggestionAnalyzerFactory>(),
             historyRepo,
             Substitute.For<IFeatureFlags>(),
-            Substitute.For<ISubscriptionService>());
+            Substitute.For<ISubscriptionService>(),
+            Substitute.For<IUserRepository>());
 
         var result = await service.ShouldGenerateRuleSuggestionsAsync(_userId);
 

@@ -133,10 +133,33 @@ export function AkahuMigrationBanner({ className }: AkahuMigrationBannerProps) {
         return;
       }
 
-      // Personal App mode returns availableAccounts inline. The actual
-      // re-link UX lives on the bank-connections page; nudge the user to
-      // the standard Connect-Bank flow they already know.
-      toast.info(t('toasts.personalAppFallback'));
+      // Personal App mode — no OAuth redirect. Trigger the classic→official
+      // migration directly; the user has already completed the upgrade on
+      // Akahu's side (my.akahu.nz).
+      const bankName = connection.bankName ?? t('row.unknownBank');
+      const migration = await apiClient.migrateAkahuConnection(connection.connectionId);
+
+      if (migration.success) {
+        toast.success(
+          t('toasts.migrationSuccess', {
+            bankName,
+            count: migration.transactionsRemapped,
+          }),
+        );
+        // Refresh so the migrated connection drops off the banner.
+        try {
+          setStatus(await apiClient.getAkahuMigrationStatus());
+        } catch {
+          // Non-fatal — the row clears on the next page load.
+        }
+      } else {
+        toast.error(
+          t('toasts.migrationFailed', {
+            bankName,
+            error: migration.errorMessage ?? '',
+          }),
+        );
+      }
     } catch (error) {
       console.error('Failed to initiate Akahu upgrade', error);
       toast.error(t('toasts.initiateFailed'));

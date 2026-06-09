@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/contexts/auth-context';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, Suspense } from 'react';
+import { useEffect, useRef, Suspense } from 'react';
 import { toast } from 'sonner';
 import { AppLayout } from '@/components/app-layout';
 import { apiClient } from '@/lib/api-client';
@@ -21,28 +21,32 @@ function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tToasts = useTranslations('toasts');
+  const oauthExchangeStarted = useRef(false);
 
   // Handle Google OAuth code from URL
   useEffect(() => {
     const code = searchParams.get('code');
-    if (code && !isAuthResolved) {
-      apiClient
-        .exchangeCode(code)
-        .then((result) => loginWithToken(result.token))
-        .then((success) => {
-          if (success) {
-            toast.success(tToasts('signedIn'));
-            router.replace('/dashboard');
-          } else {
-            toast.error(tToasts('error.generic'));
-            router.push('/auth/login');
-          }
-        })
-        .catch(() => {
+    if (!code || isAuthResolved || oauthExchangeStarted.current) {
+      return;
+    }
+    oauthExchangeStarted.current = true;
+
+    apiClient
+      .exchangeCode(code)
+      .then((result) => loginWithToken(result.token))
+      .then((success) => {
+        if (success) {
+          toast.success(tToasts('signedIn'));
+          router.replace('/dashboard');
+        } else {
           toast.error(tToasts('error.generic'));
           router.push('/auth/login');
-        });
-    }
+        }
+      })
+      .catch(() => {
+        toast.error(tToasts('error.generic'));
+        router.push('/auth/login');
+      });
   }, [searchParams, isAuthResolved, loginWithToken, router, tToasts]);
 
   // Onboarding redirect
