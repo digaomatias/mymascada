@@ -61,6 +61,17 @@ public class NotificationServiceTests
     }
 
     [Fact]
+    public async Task CreateNotification_PeriodDeduplicatedWithoutGroupKey_Throws()
+    {
+        // Misuse guard: periodDeduplicated's only dedup mechanism is the groupKey,
+        // and it skips the daily cap — without a groupKey it would spam.
+        var act = () => _sut.CreateNotificationAsync(
+            _userId, NotificationType.BudgetThreshold, "title", "body", periodDeduplicated: true);
+
+        await act.Should().ThrowAsync<ArgumentException>();
+    }
+
+    [Fact]
     public async Task CreateNotification_DuringQuietHours_StillCreatesInAppNotification()
     {
         // Quiet hours cover the entire day, so "now" is always inside the window.

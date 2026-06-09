@@ -36,6 +36,14 @@ public class NotificationService : INotificationService
         bool periodDeduplicated = false,
         CancellationToken cancellationToken = default)
     {
+        // periodDeduplicated relies entirely on the groupKey for dedup and skips the
+        // per-type daily cap; without a groupKey it would have no duplicate
+        // protection at all and could spam. Treat that combination as a misuse.
+        if (periodDeduplicated && string.IsNullOrEmpty(groupKey))
+            throw new ArgumentException(
+                "periodDeduplicated notifications require a groupKey — it is the only dedup mechanism.",
+                nameof(groupKey));
+
         // Idempotency pre-check (optimization — the real guard is the DB unique constraint on (UserId, GroupKey)).
         // A concurrent insert that races past this check will be caught by DbUpdateException in CreateAsync.
         // Period-deduplicated producers also count soft-deleted rows, so deleting an
