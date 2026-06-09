@@ -65,6 +65,7 @@ public static class RepositoryServiceExtensions
         // Notification repositories
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<INotificationPreferenceRepository, NotificationPreferenceRepository>();
+        services.AddScoped<IUserDeviceRepository, UserDeviceRepository>();
 
         return services;
     }

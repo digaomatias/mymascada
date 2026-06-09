@@ -55,6 +55,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<UserSubscription> UserSubscriptions => Set<UserSubscription>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
+    public DbSet<UserDevice> UserDevices => Set<UserDevice>();
     public DbSet<CategorizationHistory> CategorizationHistories => Set<CategorizationHistory>();
     public DbSet<AiCategorizationUsage> AiCategorizationUsages => Set<AiCategorizationUsage>();
 
@@ -1024,6 +1025,26 @@ public class ApplicationDbContext : DbContext
 
             // One preference record per user
             entity.HasIndex(e => e.UserId).IsUnique();
+
+            entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
+        // UserDevice configuration (FCM push notification device registry)
+        modelBuilder.Entity<UserDevice>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.Property(e => e.FcmToken).IsRequired().HasMaxLength(512);
+            entity.Property(e => e.Platform).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.LastSeenAt).IsRequired();
+
+            // One row per FCM token regardless of user — registration reassigns ownership.
+            entity.HasIndex(e => e.FcmToken).IsUnique();
+            entity.HasIndex(e => e.UserId);
 
             entity.HasQueryFilter(e => !e.IsDeleted);
         });
