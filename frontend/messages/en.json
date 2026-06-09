@@ -1942,7 +1942,8 @@
       "thresholdHelp": "We'll alert you when a category reaches this percentage of its budget. Default: 80%.",
       "save": "Save",
       "saving": "Saving...",
-      "invalid": "Enter a whole number between 1 and 100"
+      "invalid": "Enter a whole number between 1 and 100",
+      "saveError": "Couldn't save the budget alert threshold"
     },
     "items": {
       "bankConnections": {

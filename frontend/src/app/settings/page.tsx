@@ -29,6 +29,7 @@ import { apiClient } from '@/lib/api-client';
 import { useFeatures } from '@/contexts/features-context';
 import { SettingsSkeleton } from '@/components/skeletons/settings-skeleton';
 import type { NotificationPreferenceDto } from '@/types/notifications';
+import { toast } from 'sonner';
 
 interface SettingsItem {
   href: string;
@@ -134,20 +135,28 @@ export default function SettingsPage() {
       return;
     }
     setBudgetAlertError(false);
-    if (notificationPrefs && value === (notificationPrefs.budgetAlertPercentage ?? 80)) {
+    // Don't save until preferences have loaded — the backend replaces all
+    // fields, so saving with a null prefs object (spreading {}) would wipe the
+    // user's other notification settings. The Save button is also disabled in
+    // this state; this is a belt-and-suspenders guard.
+    if (!notificationPrefs) {
+      return;
+    }
+    if (value === (notificationPrefs.budgetAlertPercentage ?? 80)) {
       return; // No change.
     }
     setIsSavingBudgetAlert(true);
     try {
       // Send the full current preference set so unrelated fields aren't reset.
       const updated = await apiClient.updateNotificationPreferences({
-        ...(notificationPrefs ?? {}),
+        ...notificationPrefs,
         budgetAlertPercentage: value,
       });
       setNotificationPrefs(updated);
       setBudgetAlertInput(String(updated.budgetAlertPercentage ?? 80));
     } catch (error) {
       console.error('Failed to update budget alert threshold:', error);
+      toast.error(t('budgetAlerts.saveError'));
     } finally {
       setIsSavingBudgetAlert(false);
     }
@@ -348,7 +357,7 @@ export default function SettingsPage() {
                     <span className="text-sm text-ink-500">%</span>
                     <Button
                       onClick={handleSaveBudgetAlert}
-                      disabled={isSavingBudgetAlert}
+                      disabled={isSavingBudgetAlert || !notificationPrefs}
                       className="ml-auto"
                     >
                       {isSavingBudgetAlert ? t('budgetAlerts.saving') : t('budgetAlerts.save')}

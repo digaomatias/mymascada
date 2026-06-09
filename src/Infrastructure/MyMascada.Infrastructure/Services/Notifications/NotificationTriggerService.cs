@@ -18,6 +18,13 @@ public class NotificationTriggerService : INotificationTriggerService
     /// </summary>
     private const int DefaultBudgetAlertThresholdPercent = 80;
 
+    /// <summary>
+    /// Upper bound for the percentage reported in a budget alert. Guards against
+    /// an int overflow when an effective budget is tiny relative to spend; any
+    /// value at or above this just reads as "999999%+".
+    /// </summary>
+    private const int MaxReportedUsedPercentage = 999999;
+
     private readonly INotificationService _notificationService;
     private readonly ITransactionRepository _transactionRepository;
     private readonly IBudgetRepository _budgetRepository;
@@ -169,61 +176,55 @@ public class NotificationTriggerService : INotificationTriggerService
 
     public async Task CheckBudgetThresholdsAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        try
+        // Deliberately does NOT swallow exceptions: the caller is
+        // BudgetAlertJobService, which isolates failures per user and aggregates
+        // them so Hangfire records a failed run and retries. Swallowing here
+        // would make a transient DB/notification failure silently skip a user's
+        // alerts until the next daily run.
+        var budgets = await _budgetRepository.GetActiveBudgetsForUserAsync(userId, cancellationToken);
+        if (budgets is null)
+            return;
+
+        // The same preference row that controls quiet hours / channels also
+        // stores the per-user alert threshold. Null means "use the default".
+        var preference = await _notificationPreferenceRepository.GetByUserIdAsync(userId, cancellationToken);
+        var alertThreshold = preference?.BudgetAlertPercentage ?? DefaultBudgetAlertThresholdPercent;
+
+        foreach (var budget in budgets)
         {
-            var budgets = await _budgetRepository.GetActiveBudgetsForUserAsync(userId, cancellationToken);
-            if (budgets is null)
-                return;
+            cancellationToken.ThrowIfCancellationRequested();
 
-            // The same preference row that controls quiet hours / channels also
-            // stores the per-user alert threshold. Null means "use the default".
-            var preference = await _notificationPreferenceRepository.GetByUserIdAsync(userId, cancellationToken);
-            var alertThreshold = preference?.BudgetAlertPercentage ?? DefaultBudgetAlertThresholdPercent;
+            // Reuse the same calculation the budget detail page uses, so the
+            // alert and the UI can never disagree about a category's status.
+            var progress = await _budgetCalculationService.CalculateBudgetProgressAsync(
+                budget, userId, cancellationToken);
 
-            foreach (var budget in budgets)
+            foreach (var category in progress.Categories)
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                // Intentionally-unbudgeted categories (no allocation, no rollover)
+                // have an effective budget of zero, which makes UsedPercentage
+                // meaningless (always >= 100%). Skip them so users aren't spammed
+                // about categories they never budgeted for.
+                if (category.EffectiveBudget <= 0)
+                    continue;
 
-                // Reuse the same calculation the budget detail page uses, so the
-                // alert and the UI can never disagree about a category's status.
-                var progress = await _budgetCalculationService.CalculateBudgetProgressAsync(
-                    budget, userId, cancellationToken);
-
-                foreach (var category in progress.Categories)
+                if (category.IsOverBudget)
                 {
-                    // Intentionally-unbudgeted categories (no allocation, no rollover)
-                    // have an effective budget of zero, which makes UsedPercentage
-                    // meaningless (always >= 100%). Skip them so users aren't spammed
-                    // about categories they never budgeted for.
-                    if (category.EffectiveBudget <= 0)
-                        continue;
-
-                    if (category.IsOverBudget)
-                    {
-                        // Exceeded takes precedence over approaching — only the most
-                        // severe alert fires for a given category.
-                        await CreateBudgetThresholdNotificationAsync(
-                            userId, budget.Id, budget.StartDate, category,
-                            NotificationType.BudgetExceeded, "exceeded",
-                            NotificationPriority.High, cancellationToken);
-                    }
-                    else if (category.UsedPercentage >= alertThreshold)
-                    {
-                        await CreateBudgetThresholdNotificationAsync(
-                            userId, budget.Id, budget.StartDate, category,
-                            NotificationType.BudgetThreshold, "approaching",
-                            NotificationPriority.Normal, cancellationToken);
-                    }
+                    // Exceeded takes precedence over approaching — only the most
+                    // severe alert fires for a given category.
+                    await CreateBudgetThresholdNotificationAsync(
+                        userId, budget.Id, budget.StartDate, category,
+                        NotificationType.BudgetExceeded, "exceeded",
+                        NotificationPriority.High, cancellationToken);
+                }
+                else if (category.UsedPercentage >= alertThreshold)
+                {
+                    await CreateBudgetThresholdNotificationAsync(
+                        userId, budget.Id, budget.StartDate, category,
+                        NotificationType.BudgetThreshold, "approaching",
+                        NotificationPriority.Normal, cancellationToken);
                 }
             }
-        }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error checking budget thresholds for user {UserId}", userId);
         }
     }
 
@@ -244,7 +245,11 @@ public class NotificationTriggerService : INotificationTriggerService
         var groupKey =
             $"budget:{budgetId}:cat:{category.CategoryId}:threshold:{conditionTag}:{periodStart:yyyy-MM-dd}";
 
-        var usedPercentage = (int)Math.Round(category.UsedPercentage);
+        // Cap before casting to int: a tiny effective budget (e.g. $0.01) with
+        // large spend produces an enormous percentage that could overflow int.
+        var usedPercentage = category.UsedPercentage >= MaxReportedUsedPercentage
+            ? MaxReportedUsedPercentage
+            : (int)Math.Round(category.UsedPercentage);
         var data = JsonSerializer.Serialize(new
         {
             href = $"/budgets/{budgetId}",

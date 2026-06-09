@@ -248,6 +248,9 @@ export function NotificationBell() {
       if (typeof parsed.count === 'number') args.count = parsed.count;
       if (typeof parsed.merchantName === 'string') args.merchantName = parsed.merchantName;
       if (typeof parsed.dateIso === 'string') args.date = parsed.dateIso;
+      // Budget alert templates (BudgetThreshold / BudgetExceeded).
+      if (typeof parsed.categoryName === 'string') args.categoryName = parsed.categoryName;
+      if (typeof parsed.usedPercentage === 'number') args.usedPercentage = parsed.usedPercentage;
       if (typeof parsed.amountMinorUnits === 'number') {
         // Format amount using active locale; fall back to raw value
         try {

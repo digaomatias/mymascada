@@ -1942,7 +1942,8 @@
       "thresholdHelp": "Vamos alertá-lo quando uma categoria atingir esta porcentagem do seu orçamento. Padrão: 80%.",
       "save": "Salvar",
       "saving": "Salvando...",
-      "invalid": "Insira um número inteiro entre 1 e 100"
+      "invalid": "Insira um número inteiro entre 1 e 100",
+      "saveError": "Não foi possível salvar o limite de alerta de orçamento"
     },
     "items": {
       "bankConnections": {

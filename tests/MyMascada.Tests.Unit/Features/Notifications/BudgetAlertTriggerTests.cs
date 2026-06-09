@@ -5,6 +5,7 @@ using MyMascada.Application.Features.Budgets.Services;
 using MyMascada.Domain.Entities;
 using MyMascada.Domain.Enums;
 using MyMascada.Infrastructure.Services.Notifications;
+using NSubstitute.ExceptionExtensions;
 
 namespace MyMascada.Tests.Unit.Features.Notifications;
 
@@ -196,5 +197,25 @@ public class BudgetAlertTriggerTests
             Arg.Any<Guid>(), Arg.Any<NotificationType>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<NotificationPriority>(), Arg.Any<string?>(),
             Arg.Any<DateTime?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task CheckBudgetThresholds_WhenDependencyThrows_PropagatesToCaller()
+    {
+        // The trigger must NOT swallow exceptions — BudgetAlertJobService relies
+        // on them propagating so it can isolate the failure per user, aggregate,
+        // and let Hangfire retry. Swallowing would silently skip the user's alerts.
+        _budgetRepo.GetActiveBudgetsForUserAsync(_userId, Arg.Any<CancellationToken>())
+            .Returns(new List<Budget>
+            {
+                new() { Id = 42, UserId = _userId, StartDate = PeriodStart, Status = BudgetStatus.Active }
+            });
+        _preferenceRepo.GetByUserIdAsync(_userId, Arg.Any<CancellationToken>()).Returns((NotificationPreference?)null);
+        _budgetCalc.CalculateBudgetProgressAsync(Arg.Any<Budget>(), _userId, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new InvalidOperationException("transient db error"));
+
+        var act = () => _sut.CheckBudgetThresholdsAsync(_userId);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
     }
 }
