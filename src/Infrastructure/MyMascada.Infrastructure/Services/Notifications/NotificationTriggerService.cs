@@ -256,6 +256,13 @@ public class NotificationTriggerService : INotificationTriggerService
         var usedPercentage = category.UsedPercentage >= MaxReportedUsedPercentage
             ? MaxReportedUsedPercentage
             : (int)Math.Round(category.UsedPercentage);
+
+        // For an over-budget category whose effective budget is zero or negative
+        // (rollover debt), GetUsedPercentage returns 0 or a negative value, which
+        // would render as "over budget — -33% spent". Floor an exceeded alert at
+        // 100% so the reported percentage is never a nonsensical sub-100 figure.
+        if (category.IsOverBudget && usedPercentage < 100)
+            usedPercentage = 100;
         var data = JsonSerializer.Serialize(new
         {
             href = $"/budgets/{budgetId}",

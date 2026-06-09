@@ -154,16 +154,19 @@ public class BudgetAlertTriggerTests
         // Carry-overspend can push a category with a real allocation to a negative
         // effective budget (prior deficit exceeds the new budget). That user starts
         // the period already over budget and MUST be alerted — the unbudgeted guard
-        // must not swallow it.
+        // must not swallow it. GetUsedPercentage returns a negative value for a
+        // negative effective budget, so the reported percentage must be floored to
+        // 100 (never "over budget — -40% spent").
         SetupBudget(42, userThreshold: null, Cat(
-            effectiveBudget: -30, actualSpent: 0, usedPct: 100, over: true, approaching: false,
+            effectiveBudget: -30, actualSpent: 12, usedPct: -40, over: true, approaching: false,
             budgetedAmount: 20, rolloverAmount: -50));
 
         await _sut.CheckBudgetThresholdsAsync(_userId);
 
         await _notificationService.Received(1).CreateNotificationAsync(
             _userId, NotificationType.BudgetExceeded, Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), NotificationPriority.High, Arg.Any<string?>(),
+            Arg.Is<string?>(d => d != null && d.Contains("\"usedPercentage\":100")),
+            NotificationPriority.High, Arg.Any<string?>(),
             Arg.Any<DateTime?>(), Arg.Any<bool>(), Arg.Any<CancellationToken>());
     }
 
