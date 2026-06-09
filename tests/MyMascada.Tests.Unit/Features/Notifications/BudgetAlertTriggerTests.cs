@@ -171,6 +171,27 @@ public class BudgetAlertTriggerTests
     }
 
     [Fact]
+    public async Task CheckBudgetThresholds_ExtremeNegativePercentage_DoesNotOverflowAndFloorsTo100()
+    {
+        // A tiny negative effective budget with large spend makes GetUsedPercentage
+        // hugely negative — below int.MinValue. Casting it directly would throw an
+        // OverflowException and fail the whole per-user check. The clamp must handle
+        // it without casting, and the over-budget floor still reports 100%.
+        SetupBudget(42, userThreshold: null, Cat(
+            effectiveBudget: -0.01m, actualSpent: 5000, usedPct: -50_000_000m, over: true, approaching: false,
+            budgetedAmount: 10, rolloverAmount: -10.01m));
+
+        var act = () => _sut.CheckBudgetThresholdsAsync(_userId);
+        await act.Should().NotThrowAsync();
+
+        await _notificationService.Received(1).CreateNotificationAsync(
+            _userId, NotificationType.BudgetExceeded, Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Is<string?>(d => d != null && d.Contains("\"usedPercentage\":100")),
+            NotificationPriority.High, Arg.Any<string?>(),
+            Arg.Any<DateTime?>(), Arg.Any<bool>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task CheckBudgetThresholds_UserThresholdHigherThanSpend_DoesNotFire()
     {
         // User raised their alert threshold to 90%; a category at 85% must not alert.

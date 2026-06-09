@@ -251,16 +251,25 @@ public class NotificationTriggerService : INotificationTriggerService
         var groupKey =
             $"budget:{budgetId}:cat:{category.CategoryId}:threshold:{conditionTag}:{periodStart:yyyy-MM-dd}";
 
-        // Cap before casting to int: a tiny effective budget (e.g. $0.01) with
-        // large spend produces an enormous percentage that could overflow int.
-        var usedPercentage = category.UsedPercentage >= MaxReportedUsedPercentage
-            ? MaxReportedUsedPercentage
-            : (int)Math.Round(category.UsedPercentage);
+        // Clamp BOTH ends before casting to int. A tiny effective budget (e.g.
+        // $0.01) with large spend yields a percentage that overflows int — and for
+        // rollover debt (negative effective budget) it can be hugely negative, which
+        // would also overflow on cast. Resolve those out-of-range cases without ever
+        // casting the raw decimal.
+        int usedPercentage;
+        if (category.UsedPercentage >= MaxReportedUsedPercentage)
+            usedPercentage = MaxReportedUsedPercentage;
+        else if (category.UsedPercentage <= 0)
+            // Non-positive (rollover debt, or zero effective budget): the percentage
+            // is meaningless. Over-budget categories are floored to 100 just below.
+            usedPercentage = 0;
+        else
+            usedPercentage = (int)Math.Round(category.UsedPercentage);
 
         // For an over-budget category whose effective budget is zero or negative
-        // (rollover debt), GetUsedPercentage returns 0 or a negative value, which
-        // would render as "over budget — -33% spent". Floor an exceeded alert at
-        // 100% so the reported percentage is never a nonsensical sub-100 figure.
+        // (rollover debt), the percentage above is 0, which would render as
+        // "over budget — 0% spent". Floor an exceeded alert at 100% so the reported
+        // percentage is never a nonsensical sub-100 figure.
         if (category.IsOverBudget && usedPercentage < 100)
             usedPercentage = 100;
         var data = JsonSerializer.Serialize(new
