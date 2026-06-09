@@ -139,9 +139,12 @@ public class CategorizationController : ControllerBase
 
         try
         {
-            // Get uncategorized transactions
+            // Get uncategorized transactions. includeWizardHidden: true so the
+            // auto-categorization pipeline still processes snoozed/"don't show
+            // again" rows — those flags only hide rows from the wizard, they
+            // don't exclude a transaction from categorization.
             var uncategorizedTransactions = await _transactionRepository.GetUncategorizedTransactionsAsync(
-                userId, maxTransactions, cancellationToken);
+                userId, maxTransactions, includeWizardHidden: true, cancellationToken);
             var transactionsList = uncategorizedTransactions.ToList();
 
             if (!transactionsList.Any())

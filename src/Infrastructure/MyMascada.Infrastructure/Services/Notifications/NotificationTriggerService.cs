@@ -27,7 +27,7 @@ public class NotificationTriggerService : INotificationTriggerService
     {
         try
         {
-            var count = await _transactionRepository.CountUncategorizedTransactionsAsync(userId, cancellationToken);
+            var count = await _transactionRepository.CountUncategorizedTransactionsAsync(userId, cancellationToken: cancellationToken);
 
             if (count == 0)
                 return;

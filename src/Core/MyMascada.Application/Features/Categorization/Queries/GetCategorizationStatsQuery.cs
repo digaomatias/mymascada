@@ -118,7 +118,7 @@ public class GetCategorizationStatsQueryHandler
         var total = byRules + byMl + byLlm + byBankCategory;
 
         var needsReview = await _transactionRepository.CountUncategorizedTransactionsAsync(
-            request.UserId, cancellationToken);
+            request.UserId, cancellationToken: cancellationToken);
 
         var pendingSuggestions = await _ruleSuggestionRepository.CountPendingSuggestionsAsync(
             request.UserId, cancellationToken);

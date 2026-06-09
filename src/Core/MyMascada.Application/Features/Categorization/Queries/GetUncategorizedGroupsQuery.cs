@@ -142,10 +142,10 @@ public class GetUncategorizedGroupsQueryHandler
         // over-fetching, so returning more transactions here never inflates
         // the response size.
         var transactions = (await _transactionRepository.GetUncategorizedTransactionsAsync(
-            request.UserId, maxCount: 1000, cancellationToken)).ToList();
+            request.UserId, maxCount: 1000, cancellationToken: cancellationToken)).ToList();
 
         var totalUncategorized = await _transactionRepository.CountUncategorizedTransactionsAsync(
-            request.UserId, cancellationToken);
+            request.UserId, cancellationToken: cancellationToken);
 
         if (transactions.Count == 0)
         {
