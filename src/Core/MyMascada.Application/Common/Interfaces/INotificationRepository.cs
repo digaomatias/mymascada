@@ -19,7 +19,11 @@ public interface INotificationRepository
     Task MarkAllAsReadAsync(Guid userId, CancellationToken cancellationToken = default);
     Task DeleteAsync(Guid id, Guid userId, CancellationToken cancellationToken = default);
     Task DeleteExpiredAsync(int retentionDays = 90, CancellationToken cancellationToken = default);
-    Task<bool> ExistsByGroupKeyAsync(Guid userId, string groupKey, CancellationToken cancellationToken = default);
+    // includeDeleted: when true, soft-deleted notifications with the same groupKey
+    // also count as existing. Used by period-deduplicated producers (e.g. budget
+    // alerts) so deleting an alert from the bell doesn't cause it to be recreated
+    // on the next run within the same period.
+    Task<bool> ExistsByGroupKeyAsync(Guid userId, string groupKey, bool includeDeleted = false, CancellationToken cancellationToken = default);
     Task<int> CountRecentByTypeAsync(Guid userId, NotificationType type, TimeSpan window, CancellationToken cancellationToken = default);
 
     /// <summary>

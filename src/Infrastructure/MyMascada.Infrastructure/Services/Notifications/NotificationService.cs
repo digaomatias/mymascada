@@ -33,14 +33,17 @@ public class NotificationService : INotificationService
         NotificationPriority priority = NotificationPriority.Normal,
         string? groupKey = null,
         DateTime? expiresAt = null,
-        bool bypassDailyLimit = false,
+        bool periodDeduplicated = false,
         CancellationToken cancellationToken = default)
     {
         // Idempotency pre-check (optimization — the real guard is the DB unique constraint on (UserId, GroupKey)).
         // A concurrent insert that races past this check will be caught by DbUpdateException in CreateAsync.
+        // Period-deduplicated producers also count soft-deleted rows, so deleting an
+        // alert from the bell doesn't un-suppress it for the rest of the period.
         if (!string.IsNullOrEmpty(groupKey))
         {
-            var exists = await _notificationRepository.ExistsByGroupKeyAsync(userId, groupKey, cancellationToken);
+            var exists = await _notificationRepository.ExistsByGroupKeyAsync(
+                userId, groupKey, includeDeleted: periodDeduplicated, cancellationToken);
             if (exists)
             {
                 _logger.LogDebug("Skipping duplicate notification for user {UserId} with groupKey {GroupKey}", userId, groupKey);
@@ -101,12 +104,12 @@ public class NotificationService : INotificationService
             ExpiresAt = expiresAt
         };
 
-        if (bypassDailyLimit)
+        if (periodDeduplicated)
         {
-            // groupKey-deduplicated fan-out (e.g. budget alerts): the per-type
-            // daily cap would silently drop legitimate distinct alerts (one per
-            // category) past the 10th. The groupKey unique constraint still
-            // prevents duplicates.
+            // Period-deduplicated fan-out (e.g. budget alerts): the per-type daily
+            // cap would silently drop legitimate distinct alerts (one per category)
+            // past the 10th. The groupKey check above (including soft-deleted) is
+            // what bounds these, not the daily cap.
             await _notificationRepository.CreateAsync(notification, cancellationToken);
         }
         else

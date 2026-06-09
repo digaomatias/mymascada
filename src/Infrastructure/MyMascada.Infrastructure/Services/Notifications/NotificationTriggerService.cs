@@ -279,10 +279,10 @@ public class NotificationTriggerService : INotificationTriggerService
         // Title/body are template keys the client resolves to localised copy;
         // the raw values for interpolation travel in the data payload.
         //
-        // bypassDailyLimit: budget alerts fan out one per category; the generic
-        // per-type daily cap (10) would silently drop alerts for users with many
-        // categories. The period-scoped groupKey already bounds this to one alert
-        // per category per period.
+        // periodDeduplicated: budget alerts fan out one per category and are bounded
+        // by the period-scoped groupKey. This skips the per-type daily cap (which
+        // would drop alerts for users with many categories) and keeps the alert
+        // suppressed for the period even if the user deletes it from the bell.
         await _notificationService.CreateNotificationAsync(
             userId,
             type,
@@ -291,7 +291,7 @@ public class NotificationTriggerService : INotificationTriggerService
             data,
             priority,
             groupKey,
-            bypassDailyLimit: true,
+            periodDeduplicated: true,
             cancellationToken: cancellationToken);
     }
 }
