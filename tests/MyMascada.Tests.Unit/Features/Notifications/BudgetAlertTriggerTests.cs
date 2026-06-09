@@ -38,11 +38,16 @@ public class BudgetAlertTriggerTests
 
     private static BudgetCategoryProgressDto Cat(
         decimal effectiveBudget, decimal actualSpent, decimal usedPct,
-        bool over, bool approaching, int categoryId = 7, string name = "Groceries")
+        bool over, bool approaching, int categoryId = 7, string name = "Groceries",
+        decimal? budgetedAmount = null, decimal rolloverAmount = 0)
         => new()
         {
             CategoryId = categoryId,
             CategoryName = name,
+            // Default a category's allocation to its effective budget (no rollover),
+            // so the "genuinely unbudgeted" guard only fires when explicitly modelled.
+            BudgetedAmount = budgetedAmount ?? effectiveBudget,
+            RolloverAmount = rolloverAmount,
             EffectiveBudget = effectiveBudget,
             ActualSpent = actualSpent,
             UsedPercentage = usedPct,
@@ -128,16 +133,37 @@ public class BudgetAlertTriggerTests
     [Fact]
     public async Task CheckBudgetThresholds_ZeroEffectiveBudget_SkipsCategory()
     {
-        // An unbudgeted category (effective budget 0) reports over-budget for any
-        // spend — it must be skipped so users aren't spammed about categories they
-        // never budgeted for.
-        SetupBudget(42, userThreshold: null, Cat(effectiveBudget: 0, actualSpent: 30, usedPct: 100, over: true, approaching: false));
+        // A genuinely-unbudgeted category (no allocation, no rollover) reports
+        // over-budget for any spend — it must be skipped so users aren't spammed
+        // about categories they never budgeted for.
+        SetupBudget(42, userThreshold: null, Cat(
+            effectiveBudget: 0, actualSpent: 30, usedPct: 100, over: true, approaching: false,
+            budgetedAmount: 0, rolloverAmount: 0));
 
         await _sut.CheckBudgetThresholdsAsync(_userId);
 
         await _notificationService.DidNotReceive().CreateNotificationAsync(
             Arg.Any<Guid>(), Arg.Any<NotificationType>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<NotificationPriority>(), Arg.Any<string?>(),
+            Arg.Any<DateTime?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task CheckBudgetThresholds_RolloverDebtWithRealAllocation_FiresExceeded()
+    {
+        // Carry-overspend can push a category with a real allocation to a negative
+        // effective budget (prior deficit exceeds the new budget). That user starts
+        // the period already over budget and MUST be alerted — the unbudgeted guard
+        // must not swallow it.
+        SetupBudget(42, userThreshold: null, Cat(
+            effectiveBudget: -30, actualSpent: 0, usedPct: 100, over: true, approaching: false,
+            budgetedAmount: 20, rolloverAmount: -50));
+
+        await _sut.CheckBudgetThresholdsAsync(_userId);
+
+        await _notificationService.Received(1).CreateNotificationAsync(
+            _userId, NotificationType.BudgetExceeded, Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), NotificationPriority.High, Arg.Any<string?>(),
             Arg.Any<DateTime?>(), Arg.Any<CancellationToken>());
     }
 

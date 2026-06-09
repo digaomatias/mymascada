@@ -201,11 +201,17 @@ public class NotificationTriggerService : INotificationTriggerService
 
             foreach (var category in progress.Categories)
             {
-                // Intentionally-unbudgeted categories (no allocation, no rollover)
-                // have an effective budget of zero, which makes UsedPercentage
-                // meaningless (always >= 100%). Skip them so users aren't spammed
+                // Skip only genuinely-unbudgeted categories: no allocation AND no
+                // rollover carry. Their effective budget is zero, which makes
+                // UsedPercentage meaningless (always >= 100%) and would spam users
                 // about categories they never budgeted for.
-                if (category.EffectiveBudget <= 0)
+                //
+                // A category with a real allocation whose EffectiveBudget is <= 0
+                // because a negative rollover (carry-overspend) wiped it out is
+                // legitimately over budget — it must NOT be skipped, otherwise a
+                // user who starts the period already in rollover debt never gets
+                // the exceeded alert.
+                if (category.BudgetedAmount <= 0 && category.RolloverAmount == 0)
                     continue;
 
                 if (category.IsOverBudget)
