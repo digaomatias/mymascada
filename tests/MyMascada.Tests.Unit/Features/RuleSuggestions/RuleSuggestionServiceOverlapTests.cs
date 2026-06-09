@@ -24,6 +24,7 @@ public class RuleSuggestionServiceOverlapTests
     private readonly ICategorizationHistoryRepository _historyRepo = Substitute.For<ICategorizationHistoryRepository>();
     private readonly IFeatureFlags _featureFlags = Substitute.For<IFeatureFlags>();
     private readonly ISubscriptionService _subscriptionService = Substitute.For<ISubscriptionService>();
+    private readonly IUserRepository _userRepo = Substitute.For<IUserRepository>();
     private readonly RuleSuggestionService _sut;
     private readonly Guid _userId = Guid.NewGuid();
 
@@ -31,7 +32,7 @@ public class RuleSuggestionServiceOverlapTests
     {
         _sut = new RuleSuggestionService(
             _ruleSuggestionRepo, _transactionRepo, _ruleRepo, _categoryRepo,
-            _analyzerFactory, _historyRepo, _featureFlags, _subscriptionService);
+            _analyzerFactory, _historyRepo, _featureFlags, _subscriptionService, _userRepo);
     }
 
     // ---- helpers ---------------------------------------------------------
