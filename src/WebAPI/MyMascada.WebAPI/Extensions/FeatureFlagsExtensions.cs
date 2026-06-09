@@ -60,6 +60,7 @@ public static class FeatureFlagsExtensions
         {
             "smtp" => !string.IsNullOrWhiteSpace(emailSection["Smtp:Host"]),
             "postmark" => !string.IsNullOrWhiteSpace(emailSection["Postmark:ServerToken"]),
+            "resend" => !string.IsNullOrWhiteSpace(emailSection["Resend:ApiKey"]),
             _ => false
         };
     }
