@@ -59,7 +59,7 @@ public class GetAttentionItemsQueryHandler : IRequestHandler<GetAttentionItemsQu
 
     private async Task<AttentionItemDto?> GetUncategorizedItemAsync(Guid userId, CancellationToken cancellationToken)
     {
-        var uncategorized = await _transactionRepository.GetUncategorizedTransactionsAsync(userId, 500, cancellationToken);
+        var uncategorized = await _transactionRepository.GetUncategorizedTransactionsAsync(userId, 500, cancellationToken: cancellationToken);
         var count = uncategorized.Count();
 
         if (count == 0)

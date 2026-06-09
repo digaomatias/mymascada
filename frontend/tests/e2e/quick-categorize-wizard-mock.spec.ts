@@ -168,6 +168,22 @@ async function setupMocks(page: Page) {
     });
   });
 
+  // Dismiss a group (Skip for now / Don't show again). Echo success with the
+  // count of ids sent, mirroring the real endpoint.
+  await page.route('**/dismiss-group', async (route) => {
+    const body = JSON.parse(route.request().postData() || '{}');
+    const ids: number[] = body.transactionIds || [];
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        success: true,
+        transactionsUpdated: ids.length,
+        message: 'Dismissed',
+      }),
+    });
+  });
+
   // Rule suggestions summary (for the sidebar badge fetch). Same version-
   // rewrite gotcha as the categories mock — use `**/api/**/...` so the
   // rewritten `/api/latest/RuleSuggestions/summary` URL still matches.
@@ -228,8 +244,13 @@ test.describe('Quick-Categorize Wizard (mocked)', () => {
       'PAK N SAVE PETONE',
     );
 
-    // Skip the second group
-    await page.getByTestId('quick-categorize-skip').click();
+    // Skip the second group via "Skip for now" (snooze) — this now posts to
+    // dismiss-group before advancing, so wait for that request.
+    const dismissCall = page.waitForRequest((req) =>
+      req.url().includes('dismiss-group') && req.method() === 'POST',
+    );
+    await page.getByTestId('quick-categorize-snooze').click();
+    await dismissCall;
 
     // Third group now visible
     await expect(page.getByTestId('quick-categorize-group-description')).toHaveText(

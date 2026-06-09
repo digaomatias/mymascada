@@ -41,9 +41,9 @@ public class GetUncategorizedGroupsQueryHandlerTests
             MakeTransaction(6, "UBER *EATS", -25.00m),
         };
 
-        _transactionRepo.GetUncategorizedTransactionsAsync(_userId, Arg.Any<int>(), Arg.Any<CancellationToken>())
+        _transactionRepo.GetUncategorizedTransactionsAsync(_userId, Arg.Any<int>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(txns);
-        _transactionRepo.CountUncategorizedTransactionsAsync(_userId, Arg.Any<CancellationToken>())
+        _transactionRepo.CountUncategorizedTransactionsAsync(_userId, Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(6);
 
         var result = await _handler.Handle(new GetUncategorizedGroupsQuery { UserId = _userId }, CancellationToken.None);
@@ -71,9 +71,9 @@ public class GetUncategorizedGroupsQueryHandlerTests
             MakeTransaction(3, "UBER *EATS", -25.00m),
         };
 
-        _transactionRepo.GetUncategorizedTransactionsAsync(_userId, Arg.Any<int>(), Arg.Any<CancellationToken>())
+        _transactionRepo.GetUncategorizedTransactionsAsync(_userId, Arg.Any<int>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(txns);
-        _transactionRepo.CountUncategorizedTransactionsAsync(_userId, Arg.Any<CancellationToken>())
+        _transactionRepo.CountUncategorizedTransactionsAsync(_userId, Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(3);
 
         var result = await _handler.Handle(
@@ -88,9 +88,9 @@ public class GetUncategorizedGroupsQueryHandlerTests
     [Fact]
     public async Task Handle_NoTransactions_ReturnsEmptyResult()
     {
-        _transactionRepo.GetUncategorizedTransactionsAsync(_userId, Arg.Any<int>(), Arg.Any<CancellationToken>())
+        _transactionRepo.GetUncategorizedTransactionsAsync(_userId, Arg.Any<int>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(new List<Transaction>());
-        _transactionRepo.CountUncategorizedTransactionsAsync(_userId, Arg.Any<CancellationToken>())
+        _transactionRepo.CountUncategorizedTransactionsAsync(_userId, Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(0);
 
         var result = await _handler.Handle(new GetUncategorizedGroupsQuery { UserId = _userId }, CancellationToken.None);
@@ -113,9 +113,9 @@ public class GetUncategorizedGroupsQueryHandlerTests
             MakeTransaction(3, "NETFLIX.COM", -14.99m),
         };
 
-        _transactionRepo.GetUncategorizedTransactionsAsync(_userId, Arg.Any<int>(), Arg.Any<CancellationToken>())
+        _transactionRepo.GetUncategorizedTransactionsAsync(_userId, Arg.Any<int>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(txns);
-        _transactionRepo.CountUncategorizedTransactionsAsync(_userId, Arg.Any<CancellationToken>())
+        _transactionRepo.CountUncategorizedTransactionsAsync(_userId, Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(3);
 
         var result = await _handler.Handle(new GetUncategorizedGroupsQuery { UserId = _userId }, CancellationToken.None);

@@ -41,8 +41,11 @@ public interface ITransactionRepository
     Task<IEnumerable<Category>> GetCategoriesAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<IEnumerable<CategorizationRule>> GetCategorizationRulesAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<IEnumerable<Transaction>> GetCategorizedTransactionsAsync(Guid userId, int count = 200, CancellationToken cancellationToken = default);
-    Task<IEnumerable<Transaction>> GetUncategorizedTransactionsAsync(Guid userId, int maxCount = 500, CancellationToken cancellationToken = default);
-    Task<int> CountUncategorizedTransactionsAsync(Guid userId, CancellationToken cancellationToken = default);
+    // includeWizardHidden: when true, returns snoozed/"don't show again" rows too.
+    // The auto-categorization pipeline passes true (those flags only hide rows from
+    // the Quick-Categorize wizard; they don't opt a transaction out of categorization).
+    Task<IEnumerable<Transaction>> GetUncategorizedTransactionsAsync(Guid userId, int maxCount = 500, bool includeWizardHidden = false, CancellationToken cancellationToken = default);
+    Task<int> CountUncategorizedTransactionsAsync(Guid userId, bool includeWizardHidden = false, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Returns auto-categorization counts grouped by method ("Rule", "ML", "LLM", "Manual")
