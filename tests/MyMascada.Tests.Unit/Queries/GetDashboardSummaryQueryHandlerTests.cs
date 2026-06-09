@@ -30,15 +30,15 @@ public class GetDashboardSummaryQueryHandlerTests
         _handler = new GetDashboardSummaryQueryHandler(_accountRepository, _transactionRepository);
     }
 
+    // Returns the first day (UTC midnight) of the month that contains the given date.
+    private static DateTime MonthStart(DateTime date) =>
+        new(date.Year, date.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+
     [Fact]
     public async Task Handle_WhenCurrentMonthEmpty_FallsBackAndKeepsDisplayedFiguresConsistent()
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var now = DateTimeProvider.UtcNow;
-
-        var currentMonthStart = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
-        var fallbackMonthStart = currentMonthStart.AddMonths(-1);
 
         _accountRepository.GetByUserIdAsync(userId).Returns(new List<Account>());
         _transactionRepository.GetAccountBalancesAsync(userId)
@@ -46,30 +46,31 @@ public class GetDashboardSummaryQueryHandlerTests
         _transactionRepository.GetRecentAsync(userId, 5).Returns(new List<Transaction>());
         _transactionRepository.GetCountByUserIdAsync(userId).Returns(2);
 
-        // Fallback (previous) month has income 2000 and expenses 573 => netSaved 1427.
-        var fallbackTransactions = new List<Transaction>
-        {
-            new() { Id = 1, AccountId = 1, Amount = 2000m, TransactionDate = fallbackMonthStart.AddDays(2), Description = "Salary" },
-            new() { Id = 2, AccountId = 1, Amount = -573m, TransactionDate = fallbackMonthStart.AddDays(5), Description = "Rent" },
-        };
-
-        // Route repository calls by the start date the handler passes in:
-        //  - current month start  => empty (triggers fallback)
-        //  - fallback month start  => the populated fallback transactions
-        //  - any other range (3-month averages) => empty
+        // Route repository calls relative to the start date the handler passes in,
+        // derived from that argument (not from a separately captured "now"), so the
+        // test is deterministic even if the clock crosses a month boundary mid-test:
+        //  - the current month (start == this month's 1st) => empty (triggers fallback)
+        //  - the immediately preceding month               => populated fallback data
+        //  - any other range (3-month averages)            => empty
+        // The fallback month has income 2000 and expenses 573 => netSaved 1427.
         _transactionRepository
             .GetByDateRangeAsync(userId, Arg.Any<DateTime>(), Arg.Any<DateTime>())
             .Returns(callInfo =>
             {
                 var start = callInfo.ArgAt<DateTime>(1);
-                if (start == currentMonthStart)
-                {
-                    return Task.FromResult<IEnumerable<Transaction>>(new List<Transaction>());
-                }
+                var currentMonthStart = MonthStart(DateTimeProvider.UtcNow);
+                var fallbackMonthStart = currentMonthStart.AddMonths(-1);
+
                 if (start == fallbackMonthStart)
                 {
+                    var fallbackTransactions = new List<Transaction>
+                    {
+                        new() { Id = 1, AccountId = 1, Amount = 2000m, TransactionDate = fallbackMonthStart.AddDays(2), Description = "Salary" },
+                        new() { Id = 2, AccountId = 1, Amount = -573m, TransactionDate = fallbackMonthStart.AddDays(5), Description = "Rent" },
+                    };
                     return Task.FromResult<IEnumerable<Transaction>>(fallbackTransactions);
                 }
+
                 return Task.FromResult<IEnumerable<Transaction>>(new List<Transaction>());
             });
 
@@ -79,9 +80,10 @@ public class GetDashboardSummaryQueryHandlerTests
         var result = await _handler.Handle(query, CancellationToken.None);
 
         // Assert — fallback engaged and pointing at the previous month
+        var expectedFallback = MonthStart(DateTimeProvider.UtcNow).AddMonths(-1);
         result.IsUsingFallbackMonth.Should().BeTrue("the current month has no non-transfer transactions");
-        result.DisplayMonth.Should().Be(fallbackMonthStart.Month);
-        result.DisplayYear.Should().Be(fallbackMonthStart.Year);
+        result.DisplayMonth.Should().Be(expectedFallback.Month);
+        result.DisplayYear.Should().Be(expectedFallback.Year);
 
         // Assert — displayed figures come from the fallback month, not the empty current month
         result.MonthlyIncome.Should().Be(2000m);
@@ -101,8 +103,6 @@ public class GetDashboardSummaryQueryHandlerTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var now = DateTimeProvider.UtcNow;
-        var currentMonthStart = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
         _accountRepository.GetByUserIdAsync(userId).Returns(new List<Account>());
         _transactionRepository.GetAccountBalancesAsync(userId)
@@ -110,21 +110,26 @@ public class GetDashboardSummaryQueryHandlerTests
         _transactionRepository.GetRecentAsync(userId, 5).Returns(new List<Transaction>());
         _transactionRepository.GetCountByUserIdAsync(userId).Returns(2);
 
-        var currentTransactions = new List<Transaction>
-        {
-            new() { Id = 1, AccountId = 1, Amount = 1000m, TransactionDate = now, Description = "Salary" },
-            new() { Id = 2, AccountId = 1, Amount = -250m, TransactionDate = now, Description = "Groceries" },
-        };
-
+        // Populate the current month (income 1000, expenses 250). Routing is derived
+        // from the start argument relative to the current month, so it stays
+        // deterministic across a month boundary.
         _transactionRepository
             .GetByDateRangeAsync(userId, Arg.Any<DateTime>(), Arg.Any<DateTime>())
             .Returns(callInfo =>
             {
                 var start = callInfo.ArgAt<DateTime>(1);
+                var currentMonthStart = MonthStart(DateTimeProvider.UtcNow);
+
                 if (start == currentMonthStart)
                 {
+                    var currentTransactions = new List<Transaction>
+                    {
+                        new() { Id = 1, AccountId = 1, Amount = 1000m, TransactionDate = currentMonthStart.AddDays(1), Description = "Salary" },
+                        new() { Id = 2, AccountId = 1, Amount = -250m, TransactionDate = currentMonthStart.AddDays(1), Description = "Groceries" },
+                    };
                     return Task.FromResult<IEnumerable<Transaction>>(currentTransactions);
                 }
+
                 return Task.FromResult<IEnumerable<Transaction>>(new List<Transaction>());
             });
 
@@ -134,9 +139,10 @@ public class GetDashboardSummaryQueryHandlerTests
         var result = await _handler.Handle(query, CancellationToken.None);
 
         // Assert
+        var expectedCurrent = MonthStart(DateTimeProvider.UtcNow);
         result.IsUsingFallbackMonth.Should().BeFalse("the current month has non-transfer transactions");
-        result.DisplayMonth.Should().Be(now.Month);
-        result.DisplayYear.Should().Be(now.Year);
+        result.DisplayMonth.Should().Be(expectedCurrent.Month);
+        result.DisplayYear.Should().Be(expectedCurrent.Year);
 
         result.MonthlyIncome.Should().Be(1000m);
         result.MonthlyExpenses.Should().Be(250m);
