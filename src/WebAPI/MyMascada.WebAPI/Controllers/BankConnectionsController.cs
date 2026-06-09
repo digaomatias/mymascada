@@ -129,6 +129,22 @@ public class BankConnectionsController : ControllerBase
     }
 
     /// <summary>
+    /// Triggers the Akahu classic→official migration for a single bank connection.
+    /// Drives the migration banner's upgrade button in Personal App mode, where there
+    /// is no OAuth re-authorisation step — the user completes the upgrade on Akahu's
+    /// side (my.akahu.nz), then this endpoint rewrites the stored account and
+    /// transaction IDs to their official open-banking equivalents.
+    /// </summary>
+    [HttpPost("akahu/connections/{id}/migrate")]
+    [ProducesResponseType(typeof(MigrateAkahuConnectionResult), StatusCodes.Status200OK)]
+    public async Task<ActionResult<MigrateAkahuConnectionResult>> MigrateAkahuConnection(int id)
+    {
+        var command = new MigrateAkahuConnectionCommand(_currentUserService.GetUserId(), id);
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Saves or updates the user's Akahu credentials.
     /// Validates the credentials against the Akahu API before saving.
     /// </summary>

@@ -14,6 +14,7 @@ import {
   SaveAkahuCredentialsRequest,
   SaveAkahuCredentialsResult,
   AkahuMigrationStatus,
+  MigrateAkahuConnectionResult,
 } from '@/types/bank-connections';
 import {
   BudgetSummary,
@@ -1640,6 +1641,17 @@ class ApiClient {
     return this.request('/api/BankConnections/akahu/migration-status');
   }
 
+  /**
+   * Triggers the classic→official migration for a single Akahu connection.
+   * Used by the migration banner in Personal App mode (no OAuth re-auth step).
+   * Backed by POST /api/BankConnections/akahu/connections/{id}/migrate.
+   */
+  async migrateAkahuConnection(connectionId: number): Promise<MigrateAkahuConnectionResult> {
+    return this.request(`/api/BankConnections/akahu/connections/${connectionId}/migrate`, {
+      method: 'POST',
+    });
+  }
+
   async saveAkahuCredentials(request: SaveAkahuCredentialsRequest): Promise<SaveAkahuCredentialsResult> {
     return this.request('/api/BankConnections/akahu/credentials', {
       method: 'POST',
@@ -2219,6 +2231,16 @@ export interface FeatureFlags {
   accountSharing: boolean;
   stripeBilling: boolean;
 }
+
+/** All flags disabled — the safe baseline used until real flags load. */
+export const defaultFeatures: FeatureFlags = {
+  aiCategorization: false,
+  googleOAuth: false,
+  bankSync: false,
+  emailNotifications: false,
+  accountSharing: false,
+  stripeBilling: false,
+};
 
 // Billing Types
 export interface BillingStatusResponse {

@@ -3083,7 +3083,7 @@
       "heading": "Ação necessária: reautorize suas conexões bancárias",
       "body": "O Akahu está migrando ANZ, ASB, BNZ e Westpac para o open banking oficial. Reautorize cada conexão abaixo para continuar sincronizando suas transações. {daysRemaining, plural, =0 {O prazo é hoje.} =1 {Falta 1 dia.} other {Faltam # dias.}}",
       "upgrade": "Reautorizar",
-      "upgrading": "Abrindo o Akahu...",
+      "upgrading": "Migrando...",
       "dismiss": "Dispensar por hoje",
       "row": {
         "unknownBank": "Conexão bancária",
@@ -3093,7 +3093,8 @@
       "toasts": {
         "initiateFailed": "Não foi possível iniciar a atualização do Akahu. Tente novamente.",
         "credentialsMissing": "Configure suas credenciais do Akahu nesta página primeiro e clique em Reautorizar novamente.",
-        "personalAppFallback": "Abra o fluxo Conectar Banco acima para revincular sua conta migrada."
+        "migrationSuccess": "{bankName} migrado. {count, plural, =0 {Nenhuma transação precisou ser remapeada.} =1 {1 transação remapeada.} other {# transações remapeadas.}}",
+        "migrationFailed": "Não foi possível migrar {bankName}. {error}"
       }
     }
   },

@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import {
-  SparklesIcon,
   ArrowRightIcon,
   CheckBadgeIcon,
 } from '@heroicons/react/24/outline';
@@ -301,11 +300,17 @@ export default function QuickCategorizePage() {
     return null;
   }
 
+  const pageHeader = (
+    <header className="mb-5 flex flex-wrap items-center justify-between gap-4">
+      <BackButton href="/transactions" label={t('backToTransactions')} />
+    </header>
+  );
+
   if (loading) {
     return (
       <AppLayout>
-        <BackButton href="/transactions" label={t('backToTransactions')} />
-        <div className="mt-6 rounded-2xl border border-ink-200 bg-white/90 p-12 text-center text-ink-500">
+        {pageHeader}
+        <div className="rounded-2xl border border-ink-200 bg-white/90 p-12 text-center text-ink-500">
           {t('loading')}
         </div>
       </AppLayout>
@@ -318,9 +323,9 @@ export default function QuickCategorizePage() {
   if (loadError) {
     return (
       <AppLayout>
-        <BackButton href="/transactions" label={t('backToTransactions')} />
+        {pageHeader}
         <div
-          className="mt-6 rounded-2xl border border-ink-200 bg-white/90 p-12 text-center shadow-lg"
+          className="rounded-2xl border border-ink-200 bg-white/90 p-12 text-center shadow-lg"
           data-testid="quick-categorize-load-error"
         >
           <h2 className="font-[var(--font-dash-sans)] text-xl font-semibold text-ink-900">
@@ -343,18 +348,12 @@ export default function QuickCategorizePage() {
 
   return (
     <AppLayout>
-      <BackButton href="/transactions" label={t('backToTransactions')} />
-
-      <div className="mt-4 mb-6">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-400 shadow-lg">
-            <SparklesIcon className="h-5 w-5 text-white" />
-          </div>
-          <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-ink-900 sm:text-[2.1rem]">
-            {t('title')}
-          </h1>
-        </div>
-        <p className="mt-2 text-[15px] text-ink-500">{t('subtitle')}</p>
+      {pageHeader}
+      <div className="mb-6">
+        <h1 className="font-[var(--font-dash-sans)] text-3xl font-semibold tracking-[-0.03em] text-ink-900 sm:text-[2.1rem]">
+          {t('title')}
+        </h1>
+        <p className="mt-1.5 text-[15px] text-ink-500">{t('subtitle')}</p>
       </div>
 
       {finished && groups.length === 0 && (

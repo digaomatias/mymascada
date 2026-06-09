@@ -139,3 +139,12 @@ export interface SaveAkahuCredentialsResult {
   errorMessage?: string;
   availableAccounts?: AkahuAccount[];
 }
+
+// Result of triggering the classic → official migration for one connection.
+export interface MigrateAkahuConnectionResult {
+  success: boolean;
+  oldExternalAccountId: string | null;
+  newExternalAccountId: string | null;
+  transactionsRemapped: number;
+  errorMessage: string | null;
+}

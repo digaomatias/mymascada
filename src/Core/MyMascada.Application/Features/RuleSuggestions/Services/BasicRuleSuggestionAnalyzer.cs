@@ -1,437 +1,293 @@
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Domain.Entities;
-using MyMascada.Domain.Enums;
 using System.Text.RegularExpressions;
 
 namespace MyMascada.Application.Features.RuleSuggestions.Services;
 
 /// <summary>
-/// Basic rule suggestion analyzer that uses keyword frequency and pattern matching without AI
+/// Merchant-centric rule suggestion analyzer.
+///
+/// Instead of scoring every word that survives a stop-word filter, this analyzer mines candidate
+/// merchant phrases from transaction descriptions and ranks them by how well they *discriminate* a
+/// category across the whole dataset — not just by how pure they look over a handful of already
+/// labelled samples. Structural noise (the account holder's own name, card product names, bank
+/// prefixes, reference/card numbers) is stripped before mining, so rules no longer key off the
+/// cardholder name printed on every statement line. Overlapping candidates are de-duplicated by
+/// their full-dataset match set, so the same merchant can only be suggested once.
 /// </summary>
 public class BasicRuleSuggestionAnalyzer : IRuleSuggestionAnalyzer
 {
     private readonly ICategoryRepository _categoryRepository;
 
-    public string AnalysisMethod => "Basic Pattern Analysis";
+    public const string AnalysisMethodName = "Merchant Pattern Analysis";
+    public string AnalysisMethod => AnalysisMethodName;
     public bool RequiresAI => false;
+
+    // --- Tuning knobs -------------------------------------------------------
+    // Minimum transactions a pattern must match (anywhere in the dataset) to be considered.
+    private const int MinSupport = 3;
+    // Minimum number of *categorized* matches required as evidence for a category.
+    private const int MinCategorizedEvidence = 3;
+    // Fraction of a pattern's categorized matches that must share the dominant category.
+    private const double MinPurity = 0.8;
+    // A pattern matching more than this fraction of ALL transactions is treated as structural
+    // noise (e.g. a bank prefix or an un-stripped name) and discarded.
+    private const double MaxDatasetFraction = 0.4;
+    // Two suggestions are considered redundant when their match sets overlap by at least this much.
+    private const double OverlapRedundancyThreshold = 0.7;
+    private const int MinMeaningfulTokenLength = 3;
+    private const int MaxPhraseTokens = 3;
+
+    // Structural noise: card products, bank prefixes, and statement boilerplate that carry no
+    // merchant identity. Merged with the holder-name tokens supplied per-request.
+    private static readonly HashSet<string> StructuralNoise = new(StringComparer.OrdinalIgnoreCase)
+    {
+        // generic English / boilerplate
+        "THE", "AND", "FOR", "WITH", "FROM", "PURCHASE", "PAYMENT", "PAYMENTS", "TRANSACTION",
+        "DEBIT", "CREDIT", "CARD", "ACCOUNT", "DATE", "TIME", "LOCATION", "STORE", "SHOP",
+        "INC", "LLC", "LTD", "LIMITED", "PTY", "CORP", "REF", "AUTH", "APPROVED", "ONLINE",
+        "WWW", "COM", "RECURRING", "DIRECT", "AUTOMATIC", "VALUE",
+        // card products / schemes (NZ + general)
+        "VISA", "MASTERCARD", "MCARD", "AMEX", "EFTPOS", "GEM", "PAYWAVE", "PAYPASS", "POS",
+        // banks
+        "ANZ", "ASB", "BNZ", "WESTPAC", "KIWIBANK"
+    };
+
+    // Common dictionary words that make weak single-token patterns (high false-positive risk on
+    // their own). Only used as a scoring penalty — never a hard ban, since a word like "SAVE" can
+    // still be the only token that links spelling variants of a merchant (e.g. PAK'nSAVE).
+    private static readonly HashSet<string> WeakSingleTokens = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "SAVE", "SHOP", "STORE", "PLUS", "MART", "CLUB", "GROUP", "CENTRAL", "EXPRESS", "PRIME"
+    };
 
     public BasicRuleSuggestionAnalyzer(ICategoryRepository categoryRepository)
     {
         _categoryRepository = categoryRepository;
     }
 
-    public async Task<List<PatternSuggestion>> AnalyzePatternsAsync(RuleAnalysisInput input, CancellationToken cancellationToken = default)
+    public Task<List<PatternSuggestion>> AnalyzePatternsAsync(RuleAnalysisInput input, CancellationToken cancellationToken = default)
     {
-        var suggestions = new List<PatternSuggestion>();
+        var transactions = input.Transactions
+            .Where(t => !string.IsNullOrWhiteSpace(t.Description))
+            .ToList();
 
-        // 1. Keyword frequency analysis
-        var keywordSuggestions = await AnalyzeKeywordFrequency(input);
-        suggestions.AddRange(keywordSuggestions);
+        if (transactions.Count == 0)
+            return Task.FromResult(new List<PatternSuggestion>());
 
-        // 2. Merchant pattern analysis
-        var merchantSuggestions = await AnalyzeMerchantPatterns(input);
-        suggestions.AddRange(merchantSuggestions);
+        var categoriesById = input.AvailableCategories
+            .GroupBy(c => c.Id)
+            .ToDictionary(g => g.Key, g => g.First());
 
-        // 3. Amount pattern analysis
-        var amountSuggestions = await AnalyzeAmountPatterns(input);
-        suggestions.AddRange(amountSuggestions);
-
-        // 4. Date pattern analysis
-        var dateSuggestions = await AnalyzeDatePatterns(input);
-        suggestions.AddRange(dateSuggestions);
-
-        // Filter and rank suggestions
-        return FilterAndRankSuggestions(suggestions, input.MaxSuggestions, input.MinConfidenceThreshold);
-    }
-
-    /// <summary>
-    /// Analyzes keyword frequency in transaction descriptions
-    /// </summary>
-    private async Task<List<PatternSuggestion>> AnalyzeKeywordFrequency(RuleAnalysisInput input)
-    {
-        var suggestions = new List<PatternSuggestion>();
-        var keywordGroups = new Dictionary<string, List<Transaction>>();
-
-        // Extract keywords from each transaction
-        foreach (var transaction in input.Transactions.Where(t => !string.IsNullOrWhiteSpace(t.Description)))
+        // Noise vocabulary = structural terms + the holder's own name tokens.
+        var noise = new HashSet<string>(StructuralNoise, StringComparer.OrdinalIgnoreCase);
+        foreach (var token in input.AccountHolderNameTokens)
         {
-            var keywords = ExtractKeywords(transaction.Description);
-            
-            foreach (var keyword in keywords)
-            {
-                if (!keywordGroups.ContainsKey(keyword))
-                {
-                    keywordGroups[keyword] = new List<Transaction>();
-                }
-                keywordGroups[keyword].Add(transaction);
-            }
+            if (!string.IsNullOrWhiteSpace(token))
+                noise.Add(token.Trim());
         }
 
-        // Analyze patterns for each keyword
-        foreach (var (keyword, transactions) in keywordGroups)
+        // 1. Mine candidate merchant phrases (deduplicated across the dataset).
+        var candidates = MineCandidatePhrases(transactions, noise);
+
+        // 2. Score each candidate by discriminative power over the WHOLE dataset, then rank:
+        //    coverage first (prefer one broad rule per merchant over several narrow ones), then
+        //    confidence, then prefer a multi-token phrase over a single word covering the same
+        //    transactions (so "FLIGHT CENTRE" wins over "FLIGHT", and the merchant token wins over
+        //    an incidental location token).
+        var ranked = candidates
+            .Select(c => ScoreCandidate(c, transactions, categoriesById, input.MinConfidenceThreshold))
+            .Where(r => r != null)
+            .Select(r => r!.Value)
+            .OrderByDescending(r => r.suggestion.MatchingTransactions.Count)
+            .ThenByDescending(r => r.suggestion.ConfidenceScore)
+            .ThenByDescending(r => r.tokenCount)
+            .ThenByDescending(r => r.suggestion.Pattern.Length)
+            .ToList();
+
+        // 3. Greedy de-overlap: a merchant's transactions can only back one suggestion.
+        var result = DeduplicateByMatchSet(ranked, input.MaxSuggestions);
+
+        return Task.FromResult(result);
+    }
+
+    // Splits on any run of non-alphanumeric characters. Compiled once and reused per transaction.
+    private static readonly Regex TokenSplitRegex = new(@"[^A-Z0-9]+", RegexOptions.Compiled);
+
+    /// <summary>
+    /// Builds the set of candidate phrases (1..N consecutive meaningful tokens) seen across all
+    /// transactions. Phrases are mined within contiguous meaningful segments only, so a phrase can
+    /// never bridge over a stripped noise/name/number token — which would form a string that never
+    /// occurred contiguously in the source.
+    /// </summary>
+    private static HashSet<string> MineCandidatePhrases(List<Transaction> transactions, HashSet<string> noise)
+    {
+        var candidates = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var transaction in transactions)
         {
-            if (transactions.Count < 3) // Minimum occurrences
-                continue;
-
-            // Find the most common category for this keyword
-            var categoryCounts = transactions
-                .Where(t => t.CategoryId.HasValue)
-                .GroupBy(t => t.CategoryId!.Value)
-                .ToDictionary(g => g.Key, g => g.Count());
-
-            if (!categoryCounts.Any())
-                continue;
-
-            var (mostCommonCategoryId, categoryCount) = categoryCounts
-                .OrderByDescending(kvp => kvp.Value)
-                .First();
-
-            // Calculate confidence based on consistency
-            var confidence = (double)categoryCount / transactions.Count;
-            
-            if (confidence >= 0.6 && categoryCount >= 3)
+            foreach (var segment in MeaningfulTokenSegments(transaction.Description, noise))
             {
-                var category = input.AvailableCategories.FirstOrDefault(c => c.Id == mostCommonCategoryId);
-                if (category != null)
+                for (int start = 0; start < segment.Count; start++)
                 {
-                    suggestions.Add(new PatternSuggestion
+                    for (int len = 1; len <= MaxPhraseTokens && start + len <= segment.Count; len++)
                     {
-                        Pattern = keyword,
-                        SuggestedCategoryId = mostCommonCategoryId,
-                        SuggestedCategoryName = category.Name,
-                        ConfidenceScore = confidence,
-                        MatchingTransactions = transactions.Where(t => t.CategoryId == mostCommonCategoryId).ToList(),
-                        DetectionMethod = "Keyword Frequency Analysis",
-                        Reasoning = $"Found '{keyword}' in {categoryCount} out of {transactions.Count} transactions, consistently categorized as {category.Name}"
-                    });
+                        candidates.Add(string.Join(' ', segment.GetRange(start, len)));
+                    }
                 }
             }
         }
 
-        return suggestions;
+        return candidates;
     }
 
     /// <summary>
-    /// Analyzes common merchant patterns
+    /// Splits a description into contiguous segments of meaningful tokens. A structural/name noise
+    /// word, a too-short token, or a mostly-digit token (reference and card numbers) acts as a
+    /// separator that ends the current segment — so tokens on either side of stripped noise are
+    /// never treated as adjacent.
     /// </summary>
-    private async Task<List<PatternSuggestion>> AnalyzeMerchantPatterns(RuleAnalysisInput input)
+    private static List<List<string>> MeaningfulTokenSegments(string description, HashSet<string> noise)
     {
-        var suggestions = new List<PatternSuggestion>();
-        var merchantPatterns = new Dictionary<string, List<Transaction>>();
+        var segments = new List<List<string>>();
+        var current = new List<string>();
 
-        // Define common merchant patterns
-        var patterns = new Dictionary<string, (string Pattern, Regex Regex, int CategoryId, string CategoryName)>
+        foreach (var token in TokenSplitRegex.Split(description.ToUpperInvariant()))
         {
-            ["ATM"] = ("ATM", new Regex(@"\bATM\b", RegexOptions.IgnoreCase), GetCategoryId("Cash & ATM", input.AvailableCategories), "Cash & ATM"),
-            ["STARBUCKS"] = ("STARBUCKS", new Regex(@"\bSTARBUCKS\b", RegexOptions.IgnoreCase), GetCategoryId("Food & Dining", input.AvailableCategories), "Food & Dining"),
-            ["NETFLIX"] = ("NETFLIX", new Regex(@"\bNETFLIX\b", RegexOptions.IgnoreCase), GetCategoryId("Entertainment", input.AvailableCategories), "Entertainment"),
-            ["GROCERY"] = ("GROCERY", new Regex(@"\b(GROCERY|SUPERMARKET|GROCERIES)\b", RegexOptions.IgnoreCase), GetCategoryId("Groceries", input.AvailableCategories), "Groceries"),
-            ["GAS"] = ("GAS", new Regex(@"\b(GAS|FUEL|PETROL)\b", RegexOptions.IgnoreCase), GetCategoryId("Transportation", input.AvailableCategories), "Transportation"),
-            ["AMAZON"] = ("AMAZON", new Regex(@"\bAMAZON\b", RegexOptions.IgnoreCase), GetCategoryId("Shopping", input.AvailableCategories), "Shopping"),
-            ["PAYPAL"] = ("PAYPAL", new Regex(@"\bPAYPAL\b", RegexOptions.IgnoreCase), GetCategoryId("Transfer", input.AvailableCategories), "Transfer")
+            var isSeparator = token.Length < MinMeaningfulTokenLength
+                              || IsMostlyDigits(token)
+                              || noise.Contains(token);
+
+            if (isSeparator)
+            {
+                if (current.Count > 0)
+                {
+                    segments.Add(current);
+                    current = new List<string>();
+                }
+            }
+            else
+            {
+                current.Add(token);
+            }
+        }
+
+        if (current.Count > 0)
+            segments.Add(current);
+
+        return segments;
+    }
+
+    private static bool IsMostlyDigits(string token)
+    {
+        var digitCount = 0;
+        for (var i = 0; i < token.Length; i++)
+        {
+            if (char.IsDigit(token[i]))
+                digitCount++;
+        }
+        return digitCount > 0 && digitCount * 2 >= token.Length;
+    }
+
+    /// <summary>
+    /// Scores one candidate phrase against the full dataset using the SAME matching semantics as a
+    /// real rule (case-insensitive Contains). Returns null when the candidate fails any gate.
+    /// </summary>
+    private static (PatternSuggestion suggestion, int tokenCount)? ScoreCandidate(
+        string pattern,
+        List<Transaction> allTransactions,
+        Dictionary<int, Category> categoriesById,
+        double minConfidence)
+    {
+        var matched = allTransactions
+            .Where(t => t.Description != null &&
+                        t.Description.Contains(pattern, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        if (matched.Count < MinSupport)
+            return null;
+
+        // Structural-noise guard: a pattern matching a huge share of all spending is not a merchant.
+        var datasetFraction = (double)matched.Count / allTransactions.Count;
+        if (datasetFraction > MaxDatasetFraction)
+            return null;
+
+        var categorized = matched
+            .Where(t => t.CategoryId.HasValue && categoriesById.ContainsKey(t.CategoryId!.Value))
+            .ToList();
+
+        if (categorized.Count < MinCategorizedEvidence)
+            return null;
+
+        var categoryGroups = categorized
+            .GroupBy(t => t.CategoryId!.Value)
+            .OrderByDescending(g => g.Count())
+            .ToList();
+
+        var dominant = categoryGroups[0];
+        var purity = (double)dominant.Count() / categorized.Count;
+        if (purity < MinPurity)
+            return null;
+
+        var breadth = categoryGroups.Count; // distinct categories the pattern leaks into
+        var category = categoriesById[dominant.Key];
+        var tokenCount = pattern.Count(c => c == ' ') + 1;
+
+        // Confidence = purity, penalized for cross-category leakage and weak single tokens.
+        var breadthPenalty = breadth == 1 ? 1.0 : Math.Pow(0.8, breadth - 1);
+        var weakTokenPenalty = (tokenCount == 1 && WeakSingleTokens.Contains(pattern)) ? 0.8 : 1.0;
+        var confidence = purity * breadthPenalty * weakTokenPenalty;
+
+        if (confidence < minConfidence)
+            return null;
+
+        var purityPercent = (int)Math.Round(purity * 100);
+        var suggestion = new PatternSuggestion
+        {
+            Pattern = pattern,
+            SuggestedCategoryId = category.Id,
+            SuggestedCategoryName = category.Name,
+            ConfidenceScore = Math.Clamp(confidence, 0, 1),
+            MatchingTransactions = matched,
+            DetectionMethod = AnalysisMethodName,
+            Reasoning = $"'{pattern}' matches {matched.Count} transactions, {purityPercent}% categorized as {category.Name}"
         };
 
-        // Find matching transactions for each pattern
-        foreach (var (patternName, (pattern, regex, categoryId, categoryName)) in patterns)
-        {
-            if (categoryId == 0) continue; // Category not found
-
-            var matchingTransactions = input.Transactions
-                .Where(t => !string.IsNullOrWhiteSpace(t.Description) && regex.IsMatch(t.Description))
-                .ToList();
-
-            if (matchingTransactions.Count >= 2)
-            {
-                // Check if this pattern doesn't already exist as a rule
-                var existingRule = input.ExistingRules.Any(r => 
-                    r.Pattern.Equals(pattern, StringComparison.OrdinalIgnoreCase) && 
-                    r.CategoryId == categoryId);
-
-                if (!existingRule)
-                {
-                    suggestions.Add(new PatternSuggestion
-                    {
-                        Pattern = pattern,
-                        SuggestedCategoryId = categoryId,
-                        SuggestedCategoryName = categoryName,
-                        ConfidenceScore = 0.85, // High confidence for known merchant patterns
-                        MatchingTransactions = matchingTransactions,
-                        DetectionMethod = "Merchant Pattern Analysis",
-                        Reasoning = $"Detected recurring '{pattern}' transactions suitable for {categoryName} category"
-                    });
-                }
-            }
-        }
-
-        return suggestions;
+        return (suggestion, tokenCount);
     }
 
     /// <summary>
-    /// Analyzes amount-based patterns (e.g., recurring payments)
+    /// Greedily accepts the highest-ranked suggestions, dropping any whose matched transactions are
+    /// already largely covered by an accepted suggestion. This collapses spelling variants of the
+    /// same merchant (whose match sets nest under a shared token) into a single suggestion and
+    /// avoids two rules competing for the same transactions.
     /// </summary>
-    private async Task<List<PatternSuggestion>> AnalyzeAmountPatterns(RuleAnalysisInput input)
+    private static List<PatternSuggestion> DeduplicateByMatchSet(
+        List<(PatternSuggestion suggestion, int tokenCount)> ranked,
+        int maxSuggestions)
     {
-        var suggestions = new List<PatternSuggestion>();
+        var accepted = new List<(PatternSuggestion suggestion, HashSet<int> ids)>();
 
-        // Group transactions by exact amount to find recurring payments
-        var amountGroups = input.Transactions
-            .Where(t => !string.IsNullOrWhiteSpace(t.Description))
-            .GroupBy(t => Math.Abs(t.Amount))
-            .Where(g => g.Count() >= 3) // At least 3 transactions with same amount
-            .ToList();
-
-        foreach (var amountGroup in amountGroups)
+        foreach (var (suggestion, _) in ranked)
         {
-            var transactions = amountGroup.ToList();
-            var amount = amountGroup.Key;
+            var ids = suggestion.MatchingTransactions.Select(t => t.Id).ToHashSet();
+            if (ids.Count == 0)
+                continue;
 
-            // Look for consistent descriptions with same amount (likely subscriptions)
-            var descriptionGroups = transactions
-                .GroupBy(t => NormalizeDescription(t.Description))
-                .Where(g => g.Count() >= 3)
-                .ToList();
-
-            foreach (var descGroup in descriptionGroups)
+            var redundant = accepted.Any(a =>
             {
-                var sameDescTransactions = descGroup.ToList();
-                var normalizedDesc = descGroup.Key;
+                var overlap = ids.Count(id => a.ids.Contains(id));
+                return (double)overlap / ids.Count >= OverlapRedundancyThreshold;
+            });
 
-                // Check for consistent categorization
-                var categorizedTransactions = sameDescTransactions.Where(t => t.CategoryId.HasValue).ToList();
-                if (categorizedTransactions.Count >= 2)
-                {
-                    var mostCommonCategory = categorizedTransactions
-                        .GroupBy(t => t.CategoryId!.Value)
-                        .OrderByDescending(g => g.Count())
-                        .First();
+            if (redundant)
+                continue;
 
-                    var consistency = (double)mostCommonCategory.Count() / categorizedTransactions.Count;
-                    
-                    if (consistency >= 0.8) // High consistency required for amount-based patterns
-                    {
-                        var category = input.AvailableCategories.FirstOrDefault(c => c.Id == mostCommonCategory.Key);
-                        if (category != null)
-                        {
-                            // Create a pattern based on key words from the description
-                            var pattern = ExtractMainKeyword(normalizedDesc);
-                            
-                            suggestions.Add(new PatternSuggestion
-                            {
-                                Pattern = pattern,
-                                SuggestedCategoryId = mostCommonCategory.Key,
-                                SuggestedCategoryName = category.Name,
-                                ConfidenceScore = consistency * 0.9, // Slightly lower confidence than exact matches
-                                MatchingTransactions = sameDescTransactions,
-                                DetectionMethod = "Recurring Amount Analysis",
-                                Reasoning = $"Found recurring ${amount:F2} payments to '{pattern}' consistently categorized as {category.Name}"
-                            });
-                        }
-                    }
-                }
-            }
-        }
-
-        return suggestions;
-    }
-
-    /// <summary>
-    /// Analyzes date-based patterns (e.g., monthly subscriptions)
-    /// </summary>
-    private async Task<List<PatternSuggestion>> AnalyzeDatePatterns(RuleAnalysisInput input)
-    {
-        var suggestions = new List<PatternSuggestion>();
-
-        // Group transactions by description to find recurring patterns
-        var descriptionGroups = input.Transactions
-            .Where(t => !string.IsNullOrWhiteSpace(t.Description))
-            .GroupBy(t => NormalizeDescription(t.Description))
-            .Where(g => g.Count() >= 3)
-            .ToList();
-
-        foreach (var group in descriptionGroups)
-        {
-            var transactions = group.OrderBy(t => t.TransactionDate).ToList();
-            var intervals = new List<int>();
-
-            // Calculate intervals between transactions
-            for (int i = 1; i < transactions.Count; i++)
-            {
-                var interval = (transactions[i].TransactionDate - transactions[i-1].TransactionDate).Days;
-                if (interval > 0 && interval <= 90) // Reasonable range for recurring payments
-                {
-                    intervals.Add(interval);
-                }
-            }
-
-            if (intervals.Count >= 2)
-            {
-                // Check if intervals are consistent (monthly ~30 days, weekly ~7 days, etc.)
-                var avgInterval = intervals.Average();
-                var isMonthly = Math.Abs(avgInterval - 30) <= 5; // ~monthly
-                var isWeekly = Math.Abs(avgInterval - 7) <= 2;   // ~weekly
-
-                if (isMonthly || isWeekly)
-                {
-                    // Check for consistent categorization
-                    var categorizedTransactions = transactions.Where(t => t.CategoryId.HasValue).ToList();
-                    if (categorizedTransactions.Count >= 2)
-                    {
-                        var mostCommonCategory = categorizedTransactions
-                            .GroupBy(t => t.CategoryId!.Value)
-                            .OrderByDescending(g => g.Count())
-                            .First();
-
-                        var consistency = (double)mostCommonCategory.Count() / categorizedTransactions.Count;
-                        
-                        if (consistency >= 0.75)
-                        {
-                            var category = input.AvailableCategories.FirstOrDefault(c => c.Id == mostCommonCategory.Key);
-                            if (category != null)
-                            {
-                                var pattern = ExtractMainKeyword(group.Key);
-                                var frequency = isMonthly ? "monthly" : "weekly";
-                                
-                                suggestions.Add(new PatternSuggestion
-                                {
-                                    Pattern = pattern,
-                                    SuggestedCategoryId = mostCommonCategory.Key,
-                                    SuggestedCategoryName = category.Name,
-                                    ConfidenceScore = consistency * 0.8, // Moderate confidence for date patterns
-                                    MatchingTransactions = transactions,
-                                    DetectionMethod = "Recurring Date Analysis",
-                                    Reasoning = $"Found {frequency} recurring payments to '{pattern}' consistently categorized as {category.Name}"
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return suggestions;
-    }
-
-    /// <summary>
-    /// Filters and ranks suggestions by confidence and relevance, removing overlapping suggestions
-    /// </summary>
-    private List<PatternSuggestion> FilterAndRankSuggestions(List<PatternSuggestion> suggestions, int maxSuggestions, double minConfidence)
-    {
-        var filteredSuggestions = suggestions
-            .Where(s => s.ConfidenceScore >= minConfidence)
-            .OrderByDescending(s => s.ConfidenceScore)
-            .ThenByDescending(s => s.MatchingTransactions.Count)
-            .ToList();
-
-        // Remove overlapping suggestions (suggestions that share >50% of transactions)
-        var finalSuggestions = new List<PatternSuggestion>();
-        
-        foreach (var suggestion in filteredSuggestions)
-        {
-            bool hasSignificantOverlap = false;
-            
-            foreach (var existing in finalSuggestions)
-            {
-                var overlapCount = suggestion.MatchingTransactions
-                    .Intersect(existing.MatchingTransactions, new TransactionIdComparer())
-                    .Count();
-                
-                var minTransactionCount = Math.Min(suggestion.MatchingTransactions.Count, existing.MatchingTransactions.Count);
-                var overlapPercentage = minTransactionCount > 0 ? (double)overlapCount / minTransactionCount : 0;
-                
-                // If more than 70% overlap, consider it a duplicate
-                if (overlapPercentage > 0.7)
-                {
-                    hasSignificantOverlap = true;
-                    break;
-                }
-            }
-            
-            if (!hasSignificantOverlap)
-            {
-                finalSuggestions.Add(suggestion);
-            }
-            
-            if (finalSuggestions.Count >= maxSuggestions)
+            accepted.Add((suggestion, ids));
+            if (accepted.Count >= maxSuggestions)
                 break;
         }
 
-        return finalSuggestions;
-    }
-
-    /// <summary>
-    /// Comparer for transactions based on ID
-    /// </summary>
-    private class TransactionIdComparer : IEqualityComparer<Transaction>
-    {
-        public bool Equals(Transaction? x, Transaction? y)
-        {
-            if (x == null || y == null) return false;
-            return x.Id == y.Id;
-        }
-
-        public int GetHashCode(Transaction obj)
-        {
-            return obj?.Id.GetHashCode() ?? 0;
-        }
-    }
-
-    /// <summary>
-    /// Extracts meaningful keywords from transaction descriptions
-    /// </summary>
-    private static List<string> ExtractKeywords(string description)
-    {
-        if (string.IsNullOrWhiteSpace(description))
-            return new List<string>();
-
-        var cleaned = Regex.Replace(description.ToUpperInvariant(), @"[^\w\s]", " ");
-        var words = cleaned.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-        var stopWords = new HashSet<string> 
-        { 
-            "THE", "AND", "OR", "BUT", "IN", "ON", "AT", "TO", "FOR", "OF", "WITH", "BY",
-            "PURCHASE", "PAYMENT", "TRANSACTION", "DEBIT", "CREDIT", "CARD", "ACCOUNT",
-            "DATE", "TIME", "LOCATION", "STORE", "SHOP", "INC", "LLC", "LTD", "CO", "CORP"
-        };
-
-        return words
-            .Where(w => w.Length > 3 && !stopWords.Contains(w))
-            .Distinct()
-            .Take(5)
-            .ToList();
-    }
-
-    /// <summary>
-    /// Normalizes description for pattern matching
-    /// </summary>
-    private static string NormalizeDescription(string description)
-    {
-        if (string.IsNullOrWhiteSpace(description))
-            return string.Empty;
-
-        // Remove common variations (dates, numbers, etc.)
-        var normalized = Regex.Replace(description.ToUpperInvariant(), @"\d+", "X");
-        normalized = Regex.Replace(normalized, @"[^\w\s]", " ");
-        normalized = Regex.Replace(normalized, @"\s+", " ").Trim();
-
-        return normalized;
-    }
-
-    /// <summary>
-    /// Extracts the main keyword from a normalized description
-    /// </summary>
-    private static string ExtractMainKeyword(string normalizedDescription)
-    {
-        var words = normalizedDescription.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        return words.FirstOrDefault(w => w.Length > 3 && w != "X") ?? normalizedDescription.Split(' ').FirstOrDefault() ?? "UNKNOWN";
-    }
-
-    /// <summary>
-    /// Gets category ID by name with fallback
-    /// </summary>
-    private static int GetCategoryId(string categoryName, List<Category> availableCategories)
-    {
-        var category = availableCategories.FirstOrDefault(c => 
-            c.Name.Equals(categoryName, StringComparison.OrdinalIgnoreCase));
-        return category?.Id ?? 0;
+        return accepted.Select(a => a.suggestion).ToList();
     }
 }
