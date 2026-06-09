@@ -114,6 +114,13 @@ public static class ApplicationServiceExtensions
         services.AddScoped<INotificationService, MyMascada.Infrastructure.Services.Notifications.NotificationService>();
         services.AddScoped<INotificationTriggerService, MyMascada.Infrastructure.Services.Notifications.NotificationTriggerService>();
 
+        // Push notification services (FCM). The client is a singleton so the
+        // FirebaseApp/credentials are initialized once per process.
+        services.AddSingleton<MyMascada.Infrastructure.Services.Push.IFcmClient,
+            MyMascada.Infrastructure.Services.Push.FirebaseFcmClient>();
+        services.AddScoped<IPushNotificationService,
+            MyMascada.Infrastructure.Services.Push.FirebasePushNotificationService>();
+
         return services;
     }
 }
