@@ -133,10 +133,18 @@ export default function QuickCategorizePage() {
     if (!currentGroup || dismissing || saving) return;
     try {
       setDismissing(true);
-      await apiClient.dismissUncategorizedGroup({
-        transactionIds: currentGroup.transactionIds,
-        mode,
-      });
+      // The backend caps each dismiss-group request at 500 ids, and the
+      // quick-categorize query can return up to 1000 transactions for grouping,
+      // so a frequent merchant group can exceed the cap. Chunk like
+      // handleCategorize does.
+      const BATCH_SIZE = 500;
+      const allIds = currentGroup.transactionIds;
+      for (let i = 0; i < allIds.length; i += BATCH_SIZE) {
+        await apiClient.dismissUncategorizedGroup({
+          transactionIds: allIds.slice(i, i + BATCH_SIZE),
+          mode,
+        });
+      }
       toast.success(mode === 'snooze' ? t('snoozeSuccess') : t('ignoreSuccess'));
       goNext();
     } catch (err) {

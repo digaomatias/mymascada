@@ -287,6 +287,16 @@ public class RuleSuggestionService : IRuleSuggestionService
             .Where(r => r.IsActive)
             .ToList();
 
+        // Precompute which recent transactions are already covered by an existing
+        // active rule once (O(N*R)). Each suggestion's overlap check then becomes
+        // an O(1)-per-transaction set lookup instead of re-evaluating every rule
+        // against every matching transaction.
+        var coveredTransactionIds = recentTransactions
+            .Where(t => !string.IsNullOrWhiteSpace(t.Description) &&
+                        existingRules.Any(r => RulePatternMatcher.Matches(r, t.Description)))
+            .Select(t => t.Id)
+            .ToHashSet();
+
         foreach (var suggestion in suggestions)
         {
             // Skip low-confidence suggestions
@@ -309,7 +319,7 @@ public class RuleSuggestionService : IRuleSuggestionService
             // existing rule already catches most of the transactions the
             // suggestion would match. Catches both directions of the
             // "JETTS" vs "JETTS Transaction" problem.
-            if (HasSignificantOverlapWithExistingRules(suggestion, existingRules, recentTransactions))
+            if (HasSignificantOverlapWithExistingRules(suggestion, recentTransactions, coveredTransactionIds))
             {
                 continue;
             }
@@ -331,8 +341,8 @@ public class RuleSuggestionService : IRuleSuggestionService
     /// </summary>
     private static bool HasSignificantOverlapWithExistingRules(
         RuleSuggestion suggestion,
-        IReadOnlyList<CategorizationRule> activeRules,
-        IReadOnlyList<Transaction> recentTransactions)
+        IReadOnlyList<Transaction> recentTransactions,
+        HashSet<int> coveredTransactionIds)
     {
         const double OverlapThreshold = 0.8;
 
@@ -359,8 +369,9 @@ public class RuleSuggestionService : IRuleSuggestionService
         if (matching.Count == 0)
             return true;
 
-        var covered = matching.Count(t =>
-            activeRules.Any(r => RulePatternMatcher.Matches(r, t.Description)));
+        // coveredTransactionIds was precomputed against the same active rules,
+        // so this is an O(1) lookup per matching transaction.
+        var covered = matching.Count(t => coveredTransactionIds.Contains(t.Id));
 
         return (double)covered / matching.Count >= OverlapThreshold;
     }
