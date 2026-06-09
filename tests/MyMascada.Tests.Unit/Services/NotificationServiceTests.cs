@@ -27,6 +27,23 @@ public class NotificationServiceTests
         _userId, NotificationType.BudgetThreshold, "title", "body", groupKey: "gk-1");
 
     [Fact]
+    public async Task CreateNotification_BypassDailyLimit_SkipsRateLimitAndCreatesDirectly()
+    {
+        // groupKey-deduplicated fan-out (budget alerts) must not be capped by the
+        // per-type daily limit, or alerts past the 10th category are silently lost.
+        _preferenceRepo.GetByUserIdAsync(_userId, Arg.Any<CancellationToken>()).Returns((NotificationPreference?)null);
+        _notificationRepo.CreateAsync(Arg.Any<Notification>(), Arg.Any<CancellationToken>())
+            .Returns(ci => ci.Arg<Notification>());
+
+        await _sut.CreateNotificationAsync(
+            _userId, NotificationType.BudgetThreshold, "title", "body", groupKey: "gk-1", bypassDailyLimit: true);
+
+        await _notificationRepo.Received(1).CreateAsync(Arg.Any<Notification>(), Arg.Any<CancellationToken>());
+        await _notificationRepo.DidNotReceive().CreateIfRateLimitNotExceededAsync(
+            Arg.Any<Notification>(), Arg.Any<TimeSpan>(), Arg.Any<int>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task CreateNotification_DuringQuietHours_StillCreatesInAppNotification()
     {
         // Quiet hours cover the entire day, so "now" is always inside the window.

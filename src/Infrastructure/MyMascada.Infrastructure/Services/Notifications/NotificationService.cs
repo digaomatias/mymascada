@@ -33,6 +33,7 @@ public class NotificationService : INotificationService
         NotificationPriority priority = NotificationPriority.Normal,
         string? groupKey = null,
         DateTime? expiresAt = null,
+        bool bypassDailyLimit = false,
         CancellationToken cancellationToken = default)
     {
         // Idempotency pre-check (optimization — the real guard is the DB unique constraint on (UserId, GroupKey)).
@@ -100,13 +101,24 @@ public class NotificationService : INotificationService
             ExpiresAt = expiresAt
         };
 
-        // Rate limiting: atomically check daily count and insert to prevent races.
-        var created = await _notificationRepository.CreateIfRateLimitNotExceededAsync(
-            notification, TimeSpan.FromDays(1), MaxNotificationsPerTypePerDay, cancellationToken);
-        if (created == null)
+        if (bypassDailyLimit)
         {
-            _logger.LogDebug("Rate limit reached for user {UserId}, type {Type}. Skipping notification", userId, type);
-            return;
+            // groupKey-deduplicated fan-out (e.g. budget alerts): the per-type
+            // daily cap would silently drop legitimate distinct alerts (one per
+            // category) past the 10th. The groupKey unique constraint still
+            // prevents duplicates.
+            await _notificationRepository.CreateAsync(notification, cancellationToken);
+        }
+        else
+        {
+            // Rate limiting: atomically check daily count and insert to prevent races.
+            var created = await _notificationRepository.CreateIfRateLimitNotExceededAsync(
+                notification, TimeSpan.FromDays(1), MaxNotificationsPerTypePerDay, cancellationToken);
+            if (created == null)
+            {
+                _logger.LogDebug("Rate limit reached for user {UserId}, type {Type}. Skipping notification", userId, type);
+                return;
+            }
         }
 
         _logger.LogInformation("Created {Type} notification for user {UserId}", type, userId);

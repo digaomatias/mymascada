@@ -86,7 +86,7 @@ public class BudgetAlertTriggerTests
         await _notificationService.Received(1).CreateNotificationAsync(
             _userId, NotificationType.BudgetThreshold, Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<NotificationPriority>(), Arg.Any<string?>(),
-            Arg.Any<DateTime?>(), Arg.Any<CancellationToken>());
+            Arg.Any<DateTime?>(), Arg.Any<bool>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -99,7 +99,7 @@ public class BudgetAlertTriggerTests
         await _notificationService.Received(1).CreateNotificationAsync(
             _userId, NotificationType.BudgetExceeded, Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), NotificationPriority.High, Arg.Any<string?>(),
-            Arg.Any<DateTime?>(), Arg.Any<CancellationToken>());
+            Arg.Any<DateTime?>(), Arg.Any<bool>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -114,7 +114,7 @@ public class BudgetAlertTriggerTests
         await _notificationService.DidNotReceive().CreateNotificationAsync(
             _userId, NotificationType.BudgetThreshold, Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<NotificationPriority>(), Arg.Any<string?>(),
-            Arg.Any<DateTime?>(), Arg.Any<CancellationToken>());
+            Arg.Any<DateTime?>(), Arg.Any<bool>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -127,7 +127,7 @@ public class BudgetAlertTriggerTests
         await _notificationService.DidNotReceive().CreateNotificationAsync(
             Arg.Any<Guid>(), Arg.Any<NotificationType>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<NotificationPriority>(), Arg.Any<string?>(),
-            Arg.Any<DateTime?>(), Arg.Any<CancellationToken>());
+            Arg.Any<DateTime?>(), Arg.Any<bool>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -145,7 +145,7 @@ public class BudgetAlertTriggerTests
         await _notificationService.DidNotReceive().CreateNotificationAsync(
             Arg.Any<Guid>(), Arg.Any<NotificationType>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<NotificationPriority>(), Arg.Any<string?>(),
-            Arg.Any<DateTime?>(), Arg.Any<CancellationToken>());
+            Arg.Any<DateTime?>(), Arg.Any<bool>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -164,7 +164,7 @@ public class BudgetAlertTriggerTests
         await _notificationService.Received(1).CreateNotificationAsync(
             _userId, NotificationType.BudgetExceeded, Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), NotificationPriority.High, Arg.Any<string?>(),
-            Arg.Any<DateTime?>(), Arg.Any<CancellationToken>());
+            Arg.Any<DateTime?>(), Arg.Any<bool>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -178,7 +178,7 @@ public class BudgetAlertTriggerTests
         await _notificationService.DidNotReceive().CreateNotificationAsync(
             Arg.Any<Guid>(), Arg.Any<NotificationType>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<NotificationPriority>(), Arg.Any<string?>(),
-            Arg.Any<DateTime?>(), Arg.Any<CancellationToken>());
+            Arg.Any<DateTime?>(), Arg.Any<bool>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -192,7 +192,7 @@ public class BudgetAlertTriggerTests
         await _notificationService.Received(1).CreateNotificationAsync(
             _userId, NotificationType.BudgetThreshold, Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<NotificationPriority>(), Arg.Any<string?>(),
-            Arg.Any<DateTime?>(), Arg.Any<CancellationToken>());
+            Arg.Any<DateTime?>(), Arg.Any<bool>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -208,7 +208,7 @@ public class BudgetAlertTriggerTests
             _userId, NotificationType.BudgetThreshold, Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<NotificationPriority>(),
             Arg.Is<string?>(key => key == "budget:42:cat:7:threshold:approaching:2026-06-01"),
-            Arg.Any<DateTime?>(), Arg.Any<CancellationToken>());
+            Arg.Any<DateTime?>(), Arg.Any<bool>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -222,7 +222,7 @@ public class BudgetAlertTriggerTests
         await _notificationService.DidNotReceive().CreateNotificationAsync(
             Arg.Any<Guid>(), Arg.Any<NotificationType>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<NotificationPriority>(), Arg.Any<string?>(),
-            Arg.Any<DateTime?>(), Arg.Any<CancellationToken>());
+            Arg.Any<DateTime?>(), Arg.Any<bool>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
