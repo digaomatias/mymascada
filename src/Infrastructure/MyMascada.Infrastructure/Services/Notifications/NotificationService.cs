@@ -47,35 +47,20 @@ public class NotificationService : INotificationService
             }
         }
 
-        // Check user preferences: skip if the user has explicitly disabled in-app for this type, or if quiet hours are active
+        // Check user preferences: skip only if the user has explicitly disabled
+        // in-app for this type.
+        //
+        // Quiet hours intentionally do NOT suppress in-app notification creation.
+        // The in-app bell is a passive surface — dropping a notification here
+        // would lose it permanently (no record, no groupKey), so a recurring
+        // producer that always runs inside a user's quiet window (e.g. the daily
+        // budget-alert job) would never deliver. Quiet hours should gate
+        // *real-time* delivery (push/sound) instead — see the dispatch hook at
+        // the end of this method, where QuietHoursStart/End must be consulted
+        // once push is implemented.
         var preferences = await _preferenceRepository.GetByUserIdAsync(userId, cancellationToken);
         if (preferences != null)
         {
-            // Enforce quiet hours
-            if (preferences.QuietHoursStart.HasValue && preferences.QuietHoursEnd.HasValue)
-            {
-                try
-                {
-                    var tz = string.IsNullOrWhiteSpace(preferences.QuietHoursTimezone)
-                        ? TimeZoneInfo.Utc
-                        : TimeZoneInfo.FindSystemTimeZoneById(preferences.QuietHoursTimezone);
-                    var userNow = TimeOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz));
-                    var start = preferences.QuietHoursStart.Value;
-                    var end = preferences.QuietHoursEnd.Value;
-                    var inQuietHours = start <= end
-                        ? userNow >= start && userNow < end         // same-day window e.g. 22:00–23:59
-                        : userNow >= start || userNow < end;        // overnight window e.g. 22:00–08:00
-                    if (inQuietHours)
-                    {
-                        _logger.LogDebug("Skipping notification for user {UserId} — currently in quiet hours", userId);
-                        return;
-                    }
-                }
-                catch (TimeZoneNotFoundException ex)
-                {
-                    _logger.LogWarning(ex, "Unknown timezone '{Timezone}' in quiet hours preference for user {UserId}; skipping quiet hours check", preferences.QuietHoursTimezone, userId);
-                }
-            }
 
             // Enforce per-type channel preferences (inApp toggle)
             if (preferences.ChannelPreferences != null)
@@ -126,6 +111,10 @@ public class NotificationService : INotificationService
 
         _logger.LogInformation("Created {Type} notification for user {UserId}", type, userId);
 
-        // Future: dispatch to other delivery channels (push, email, etc.) based on preferences
+        // Future: dispatch to other delivery channels (push, email, etc.) based on
+        // preferences. Quiet hours (preferences.QuietHoursStart/End, in
+        // QuietHoursTimezone) must be enforced HERE — push/sound is the noisy
+        // delivery that should be suppressed during quiet hours, while the in-app
+        // record above is always created so the user sees it when they next look.
     }
 }
