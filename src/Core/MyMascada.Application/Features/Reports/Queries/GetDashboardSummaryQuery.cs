@@ -103,16 +103,22 @@ public class GetDashboardSummaryQueryHandler : IRequestHandler<GetDashboardSumma
             .Where(t => t.Amount < 0 && !t.TransferId.HasValue)
             .Sum(t => t.Amount));
 
-        // 3-month rolling average runway calculation
+        // Net saved and savings rate must describe the SAME displayed period as
+        // monthlyIncome/monthlyExpenses. When falling back to a previous month,
+        // these are derived from that fallback month's figures (not the empty
+        // current month, and not the 3-month averages).
+        var netSaved = monthlyIncome - monthlyExpenses;
+        var savingsRate = monthlyIncome > 0
+            ? Math.Round((netSaved / monthlyIncome) * 100, 0)
+            : 0m;
+
+        // 3-month rolling average runway calculation (intentionally separate
+        // from the displayed-period figures above).
         var (avgMonthlyIncome, avgMonthlyExpenses) = await CalculateRollingAveragesAsync(
             request.UserId, now);
 
-        var netSaved = avgMonthlyIncome - avgMonthlyExpenses;
         var runwayMonths = avgMonthlyExpenses > 0
             ? Math.Max(0m, Math.Round(totalBalance / avgMonthlyExpenses, 1))
-            : 0m;
-        var savingsRate = avgMonthlyIncome > 0
-            ? Math.Round((netSaved / avgMonthlyIncome) * 100, 0)
             : 0m;
 
         // Get recent transactions (last 5)
