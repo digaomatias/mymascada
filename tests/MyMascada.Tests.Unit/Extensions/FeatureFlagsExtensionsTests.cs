@@ -124,13 +124,43 @@ public class FeatureFlagsExtensionsTests
     }
 
     [Fact]
-    public void IsEmailConfigured_MissingProvider_ReturnsFalse()
+    public void IsEmailConfigured_MissingProviderWithSmtpHost_FallsBackToSmtp_ReturnsTrue()
+    {
+        // Provider omitted — EmailOptions defaults to "smtp" at runtime,
+        // so the flag check must mirror that fallback.
+        var config = new Dictionary<string, string?>
+        {
+            ["Email:Enabled"] = "true",
+            ["Email:DefaultFromEmail"] = "no-reply@mymascada.com",
+            ["Email:Smtp:Host"] = "mail.example.com"
+        };
+
+        var result = FeatureFlagsExtensions.IsEmailConfigured(BuildConfiguration(config));
+
+        result.Should().BeTrue();
+    }
+
+    [Fact]
+    public void IsEmailConfigured_MissingProviderWithoutSmtpHost_ReturnsFalse()
     {
         var config = new Dictionary<string, string?>
         {
             ["Email:Enabled"] = "true",
             ["Email:DefaultFromEmail"] = "no-reply@mymascada.com"
         };
+
+        var result = FeatureFlagsExtensions.IsEmailConfigured(BuildConfiguration(config));
+
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public void IsEmailConfigured_EmptyProvider_ReturnsFalse()
+    {
+        // An explicitly empty Provider binds to "" (overriding the options
+        // default) and would fail the provider factory lookup at runtime.
+        var config = ValidBaseConfig("");
+        config["Email:Smtp:Host"] = "mail.example.com";
 
         var result = FeatureFlagsExtensions.IsEmailConfigured(BuildConfiguration(config));
 
