@@ -1,3 +1,4 @@
+using System.Data;
 using MediatR;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Transactions.DTOs;
@@ -28,19 +29,29 @@ public class UpdateTransactionSplitsCommandHandler : IRequestHandler<UpdateTrans
     private readonly ITransactionRepository _transactionRepository;
     private readonly ICategoryRepository _categoryRepository;
     private readonly IAccountAccessService _accountAccessService;
+    private readonly IUnitOfWork _unitOfWork;
 
     public UpdateTransactionSplitsCommandHandler(
         ITransactionRepository transactionRepository,
         ICategoryRepository categoryRepository,
-        IAccountAccessService accountAccessService)
+        IAccountAccessService accountAccessService,
+        IUnitOfWork unitOfWork)
     {
         _transactionRepository = transactionRepository;
         _categoryRepository = categoryRepository;
         _accountAccessService = accountAccessService;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<TransactionDto> Handle(UpdateTransactionSplitsCommand request, CancellationToken cancellationToken)
     {
+        // Serializable so two overlapping replace requests for the same transaction
+        // cannot both read the same active split set and each append their own rows
+        // (which would leave two active sets that no longer sum to the amount).
+        // The database aborts one of the conflicting transactions with a
+        // serialization failure instead. Disposing without Commit rolls back.
+        await using var dbTransaction = await _unitOfWork.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+
         var transaction = await _transactionRepository.GetByIdWithSplitsAsync(request.TransactionId, request.UserId);
         if (transaction == null)
         {
@@ -93,13 +104,22 @@ public class UpdateTransactionSplitsCommandHandler : IRequestHandler<UpdateTrans
 
         transaction.UpdatedAt = now;
 
-        // Single SaveChanges inside UpdateAsync -> the replace is atomic.
         await _transactionRepository.UpdateAsync(transaction);
 
         // Re-load so newly added splits have their Category navigation populated
-        // for the response DTO (CategoryName/CategoryColor).
+        // for the response DTO (CategoryName/CategoryColor). Inside the open
+        // transaction this reads our own writes.
         var updated = await _transactionRepository.GetByIdWithSplitsAsync(request.TransactionId, request.UserId);
-        return TransactionMapper.ToDto(updated ?? transaction);
+        if (updated == null)
+        {
+            // Should be impossible inside the open transaction; fail loudly rather
+            // than return a DTO with unpopulated split category names/colors.
+            throw new InvalidOperationException($"Transaction {request.TransactionId} could not be reloaded after updating splits");
+        }
+
+        await dbTransaction.CommitAsync(cancellationToken);
+
+        return TransactionMapper.ToDto(updated);
     }
 
     private static void ValidateSplits(Transaction transaction, List<TransactionSplitInputDto> splits)

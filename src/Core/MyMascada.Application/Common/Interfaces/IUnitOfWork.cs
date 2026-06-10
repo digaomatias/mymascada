@@ -1,3 +1,5 @@
+using System.Data;
+
 namespace MyMascada.Application.Common.Interfaces;
 
 /// <summary>
@@ -12,6 +14,15 @@ public interface IUnitOfWork
     /// be rolled back when the returned scope is disposed.
     /// </summary>
     Task<IUnitOfWorkTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Begins a database transaction with the given isolation level. Use
+    /// <see cref="IsolationLevel.Serializable"/> for read-then-write sequences that must
+    /// be isolated from concurrent requests (one of two conflicting transactions is
+    /// aborted by the database with a serialization failure). The caller must Commit
+    /// or the transaction will be rolled back when the returned scope is disposed.
+    /// </summary>
+    Task<IUnitOfWorkTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default);
 }
 
 /// <summary>

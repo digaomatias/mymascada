@@ -1,3 +1,4 @@
+using System.Data;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Transactions.Commands;
 using MyMascada.Application.Features.Transactions.DTOs;
@@ -11,6 +12,8 @@ public class UpdateTransactionSplitsCommandHandlerTests
     private readonly ITransactionRepository _transactionRepository;
     private readonly ICategoryRepository _categoryRepository;
     private readonly IAccountAccessService _accountAccessService;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IUnitOfWorkTransaction _dbTransaction;
     private readonly UpdateTransactionSplitsCommandHandler _handler;
     private readonly Guid _userId = Guid.NewGuid();
 
@@ -19,8 +22,12 @@ public class UpdateTransactionSplitsCommandHandlerTests
         _transactionRepository = Substitute.For<ITransactionRepository>();
         _categoryRepository = Substitute.For<ICategoryRepository>();
         _accountAccessService = Substitute.For<IAccountAccessService>();
+        _unitOfWork = Substitute.For<IUnitOfWork>();
+        _dbTransaction = Substitute.For<IUnitOfWorkTransaction>();
+        _unitOfWork.BeginTransactionAsync(IsolationLevel.Serializable, Arg.Any<CancellationToken>())
+            .Returns(_dbTransaction);
         _handler = new UpdateTransactionSplitsCommandHandler(
-            _transactionRepository, _categoryRepository, _accountAccessService);
+            _transactionRepository, _categoryRepository, _accountAccessService, _unitOfWork);
     }
 
     private Transaction CreateTransaction(
@@ -240,9 +247,53 @@ public class UpdateTransactionSplitsCommandHandlerTests
         // Persisted exactly once (single SaveChanges -> atomic replace)
         await _transactionRepository.Received(1).UpdateAsync(transaction);
 
+        // The replace runs inside a serializable DB transaction that is committed,
+        // so concurrent replaces for the same transaction are isolated.
+        await _unitOfWork.Received(1).BeginTransactionAsync(IsolationLevel.Serializable, Arg.Any<CancellationToken>());
+        await _dbTransaction.Received(1).CommitAsync(Arg.Any<CancellationToken>());
+
         // Response carries the new splits
         result.Splits.Should().NotBeNull();
         result.Splits.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task Handle_WhenValidationFails_ShouldNotCommitDbTransaction()
+    {
+        var transaction = CreateTransaction(amount: -100m);
+        SetupHappyPath(transaction);
+
+        var command = CreateCommand(transaction.Id, new List<TransactionSplitInputDto>
+        {
+            new() { CategoryId = 1, Amount = -50m } // does not sum to -100
+        });
+
+        var act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        await act.Should().ThrowAsync<ArgumentException>();
+        await _dbTransaction.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_WhenReloadAfterUpdateReturnsNull_ShouldThrowAndNotCommit()
+    {
+        var transaction = CreateTransaction(amount: -100m);
+        _accountAccessService.CanModifyAccountAsync(_userId, transaction.AccountId).Returns(true);
+        _categoryRepository.ExistsAsync(Arg.Any<int>(), _userId).Returns(true);
+        // First load returns the transaction, reload after UpdateAsync returns null.
+        _transactionRepository.GetByIdWithSplitsAsync(transaction.Id, _userId)
+            .Returns(transaction, (Transaction?)null);
+
+        var command = CreateCommand(transaction.Id, new List<TransactionSplitInputDto>
+        {
+            new() { CategoryId = 1, Amount = -100m }
+        });
+
+        var act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*could not be reloaded after updating splits*");
+        await _dbTransaction.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]
