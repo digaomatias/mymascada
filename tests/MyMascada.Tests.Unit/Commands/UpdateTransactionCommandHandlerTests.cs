@@ -39,7 +39,15 @@ public class UpdateTransactionCommandHandlerTests
             _unitOfWork);
     }
 
-    private Transaction CreateSplitTransaction(decimal amount = -100m)
+    /// <summary>
+    /// Models the real repository contract: the splits-free initial load
+    /// (GetByIdAsync) returns the transaction with an EMPTY Splits collection;
+    /// only GetByIdWithSplitsAsync attaches the split rows (mirroring EF's
+    /// identity-map fixup on the already-tracked instance). If the handler
+    /// regresses to loading splits on ordinary edits, the splits-untouched and
+    /// DidNotReceive assertions below actually fail.
+    /// </summary>
+    private (Transaction Transaction, List<TransactionSplit> Splits) CreateSplitTransaction(decimal amount = -100m)
     {
         var transaction = new Transaction
         {
@@ -50,20 +58,24 @@ public class UpdateTransactionCommandHandlerTests
             Status = TransactionStatus.Cleared,
             AccountId = 10,
             Account = new Account { Id = 10, Name = "Checking", UserId = _userId },
-            Splits = new List<TransactionSplit>
-            {
-                new() { Id = 1, TransactionId = 1, CategoryId = 5, Amount = -60m },
-                new() { Id = 2, TransactionId = 1, CategoryId = 6, Amount = -40m }
-            }
+            Splits = new List<TransactionSplit>()
         };
 
-        // Initial load excludes splits (stale tracked splits must not be written
-        // back by ordinary edits); the with-splits load only happens inside the
-        // serializable amount-change branch.
+        var loadedSplits = new List<TransactionSplit>
+        {
+            new() { Id = 1, TransactionId = 1, CategoryId = 5, Amount = -60m },
+            new() { Id = 2, TransactionId = 1, CategoryId = 6, Amount = -40m }
+        };
+
         _transactionRepository.GetByIdAsync(transaction.Id, _userId).Returns(transaction);
-        _transactionRepository.GetByIdWithSplitsAsync(transaction.Id, _userId).Returns(transaction);
+        _transactionRepository.GetByIdWithSplitsAsync(transaction.Id, _userId)
+            .Returns(_ =>
+            {
+                transaction.Splits = loadedSplits;
+                return transaction;
+            });
         _accountAccessService.CanModifyAccountAsync(_userId, transaction.AccountId).Returns(true);
-        return transaction;
+        return (transaction, loadedSplits);
     }
 
     private UpdateTransactionCommand CreateCommand(Transaction transaction, decimal amount)
@@ -83,14 +95,14 @@ public class UpdateTransactionCommandHandlerTests
     [Fact]
     public async Task Handle_WhenAmountChangesOnSplitTransaction_ShouldClearSplits()
     {
-        var transaction = CreateSplitTransaction(amount: -100m);
+        var (transaction, splits) = CreateSplitTransaction(amount: -100m);
         var command = CreateCommand(transaction, amount: -120m);
 
         await _handler.Handle(command, CancellationToken.None);
 
         // Splits would no longer sum to the new amount, so they must be cleared
         // (soft-deleted, same pattern as the splits replace endpoint).
-        transaction.Splits.Should().AllSatisfy(s =>
+        splits.Should().AllSatisfy(s =>
         {
             s.IsDeleted.Should().BeTrue();
             s.DeletedAt.Should().NotBeNull();
@@ -112,28 +124,32 @@ public class UpdateTransactionCommandHandlerTests
     public async Task Handle_WhenAmountChangesBySubCentOnSplitTransaction_ShouldClearSplits()
     {
         // Even a sub-cent change breaks the exact-sum invariant.
-        var transaction = CreateSplitTransaction(amount: -100m);
+        var (transaction, splits) = CreateSplitTransaction(amount: -100m);
         var command = CreateCommand(transaction, amount: -100.001m);
 
         await _handler.Handle(command, CancellationToken.None);
 
-        transaction.Splits.Should().AllSatisfy(s => s.IsDeleted.Should().BeTrue());
+        splits.Should().AllSatisfy(s => s.IsDeleted.Should().BeTrue());
     }
 
     [Fact]
     public async Task Handle_WhenAmountUnchangedOnSplitTransaction_ShouldPreserveSplits()
     {
-        var transaction = CreateSplitTransaction(amount: -100m);
+        var (transaction, splits) = CreateSplitTransaction(amount: -100m);
         var command = CreateCommand(transaction, amount: -100m);
         command.Notes = "Edited notes only";
 
         await _handler.Handle(command, CancellationToken.None);
 
-        transaction.Splits.Should().AllSatisfy(s =>
+        // The split rows were never loaded, let alone touched...
+        splits.Should().AllSatisfy(s =>
         {
             s.IsDeleted.Should().BeFalse();
             s.DeletedAt.Should().BeNull();
         });
+        // ...and the saved entity graph contains no split rows at all, so
+        // UpdateAsync cannot write stale split state back.
+        transaction.Splits.Should().BeEmpty();
         transaction.Notes.Should().Be("Edited notes only");
         await _transactionRepository.Received(1).UpdateAsync(transaction);
 
@@ -147,9 +163,59 @@ public class UpdateTransactionCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenTransferAmountChangesBySubCent_ShouldSyncRelatedLegAndTransfer()
+    {
+        // The transfer-sync branch must use the same exact amount-change predicate
+        // as the split-clearing/serializable branch. With the old > 0.01m tolerance,
+        // a sub-cent edit updated this leg but skipped the related leg and the
+        // transfer record, leaving the pair inconsistent.
+        var transferId = Guid.NewGuid();
+        var transaction = new Transaction
+        {
+            Id = 1,
+            Amount = -100m,
+            TransactionDate = DateTime.UtcNow,
+            Description = "Transfer out",
+            Status = TransactionStatus.Cleared,
+            AccountId = 10,
+            Account = new Account { Id = 10, Name = "Checking", UserId = _userId },
+            Type = TransactionType.TransferComponent,
+            TransferId = transferId,
+            RelatedTransactionId = 2,
+            IsTransferSource = true
+        };
+        var relatedTransaction = new Transaction
+        {
+            Id = 2,
+            Amount = 100m,
+            TransactionDate = transaction.TransactionDate,
+            Description = "Transfer in",
+            Status = TransactionStatus.Cleared,
+            AccountId = 11,
+            Account = new Account { Id = 11, Name = "Savings", UserId = _userId }
+        };
+        var transfer = new Transfer { TransferId = transferId, Amount = 100m };
+
+        _transactionRepository.GetByIdAsync(transaction.Id, _userId).Returns(transaction);
+        _transactionRepository.GetByIdWithSplitsAsync(transaction.Id, _userId).Returns(transaction);
+        _transactionRepository.GetByIdAsync(relatedTransaction.Id, _userId).Returns(relatedTransaction);
+        _transferRepository.GetByTransferIdAsync(transferId, _userId).Returns(transfer);
+        _accountAccessService.CanModifyAccountAsync(_userId, transaction.AccountId).Returns(true);
+
+        var command = CreateCommand(transaction, amount: -100.001m);
+
+        await _handler.Handle(command, CancellationToken.None);
+
+        transaction.Amount.Should().Be(-100.001m);
+        relatedTransaction.Amount.Should().Be(100.001m);
+        transfer.Amount.Should().Be(100.001m);
+        await _transferRepository.Received(1).UpdateAsync(transfer);
+    }
+
+    [Fact]
     public async Task Handle_WhenAmountChangesAndUpdateFails_ShouldNotCommitDbTransaction()
     {
-        var transaction = CreateSplitTransaction(amount: -100m);
+        var (transaction, _) = CreateSplitTransaction(amount: -100m);
         var command = CreateCommand(transaction, amount: -120m);
         _transactionRepository.UpdateAsync(transaction)
             .Returns<Task>(_ => throw new InvalidOperationException("db down"));

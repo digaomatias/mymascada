@@ -120,9 +120,15 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
             }
         }
 
-        // Store originals before mutation
+        // Store originals before mutation. Exact comparison on purpose, shared by
+        // the split-clearing, serializable-transaction and transfer-sync branches:
+        // a mismatched tolerance (the transfer sync used > 0.01m historically) lets
+        // a sub-cent edit update this leg's amount while skipping the related
+        // transfer leg, leaving the pair inconsistent. Plain updates are not
+        // constrained to 2 decimal places by the validator, so sub-cent deltas can
+        // genuinely occur.
         var originalAmount = transaction.Amount;
-        var amountChanged = Math.Abs(originalAmount - request.Amount) > 0.01m;
+        var amountChanged = originalAmount != request.Amount;
         var originalCategoryId = transaction.CategoryId;
         var originalDescription = transaction.Description;
 
@@ -134,7 +140,7 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
         // makes the database abort one of the two conflicting requests instead.
         // Deliberately scoped to amount changes only; other field edits don't touch
         // splits and don't need it. Disposing without Commit rolls back.
-        await using IUnitOfWorkTransaction? dbTransaction = originalAmount != request.Amount
+        await using IUnitOfWorkTransaction? dbTransaction = amountChanged
             ? await _unitOfWork.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
             : null;
 
@@ -166,9 +172,9 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
         // Splits must sum to the transaction amount exactly (invariant enforced by
         // UpdateTransactionSplitsCommand). If the amount actually changed, clear the
         // splits (soft-delete, same pattern as the replace logic) rather than reject,
-        // since the web frontend has no splits UI to fix them. Exact comparison on
-        // purpose: even a sub-cent change breaks the exact-sum invariant.
-        if (originalAmount != request.Amount)
+        // since the web frontend has no splits UI to fix them. Even a sub-cent
+        // change breaks the exact-sum invariant.
+        if (amountChanged)
         {
             var now = DateTimeProvider.UtcNow;
             foreach (var split in transaction.Splits.Where(s => !s.IsDeleted))
