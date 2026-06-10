@@ -23,13 +23,17 @@ namespace MyMascada.Tests.Unit.Controllers;
 /// </summary>
 public class AuthControllerExchangeCodePkceTests
 {
-    private readonly IDataProtector _protector;
+    private readonly IDataProtector _stateProtector;
+    private readonly IDataProtector _authCodeProtector;
     private readonly AuthController _controller;
 
     public AuthControllerExchangeCodePkceTests()
     {
         var dataProtectionProvider = new EphemeralDataProtectionProvider();
-        _protector = dataProtectionProvider.CreateProtector("OAuthState");
+        // Purposes must mirror AuthController: "OAuthState" for the state
+        // blob, "OAuthAuthCode" for the short-lived auth-code blob.
+        _stateProtector = dataProtectionProvider.CreateProtector("OAuthState");
+        _authCodeProtector = dataProtectionProvider.CreateProtector("OAuthAuthCode");
 
         var appOptions = Options.Create(new AppOptions
         {
@@ -67,12 +71,11 @@ public class AuthControllerExchangeCodePkceTests
         };
     }
 
-    private string ProtectCode(
+    private static string SerializeCodePayload(
         string? codeChallenge = null,
         string? codeChallengeMethod = null,
-        DateTime? createdAt = null)
-    {
-        var payload = JsonSerializer.Serialize(new
+        DateTime? createdAt = null) =>
+        JsonSerializer.Serialize(new
         {
             Token = "jwt-token",
             ExpiresAt = DateTime.UtcNow.AddHours(1),
@@ -82,8 +85,12 @@ public class AuthControllerExchangeCodePkceTests
             CodeChallenge = codeChallenge,
             CodeChallengeMethod = codeChallengeMethod
         });
-        return _protector.Protect(payload);
-    }
+
+    private string ProtectCode(
+        string? codeChallenge = null,
+        string? codeChallengeMethod = null,
+        DateTime? createdAt = null) =>
+        _authCodeProtector.Protect(SerializeCodePayload(codeChallenge, codeChallengeMethod, createdAt));
 
     private const string Verifier = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk";
 
@@ -193,6 +200,47 @@ public class AuthControllerExchangeCodePkceTests
         Assert.IsType<BadRequestObjectResult>(result);
     }
 
+    [Fact]
+    public void ExchangeCode_PayloadProtectedWithStatePurpose_ReturnsBadRequest()
+    {
+        // Cross-purpose isolation: a blob minted under the "OAuthState"
+        // purpose — even one with a perfectly code-shaped payload — must not
+        // be exchangeable. Unprotect with the "OAuthAuthCode" purpose fails
+        // (purpose is mixed into the key derivation), closing the
+        // cross-endpoint substitution class entirely.
+        var codeShapedBlobUnderStatePurpose = _stateProtector.Protect(SerializeCodePayload());
+
+        var result = _controller.ExchangeCode(new ExchangeCodeRequest
+        {
+            Code = codeShapedBlobUnderStatePurpose
+        });
+
+        Assert.IsType<BadRequestObjectResult>(result);
+    }
+
+    [Fact]
+    public void ExchangeCode_OAuthStateBlob_ReturnsBadRequest()
+    {
+        // The original substitution scenario the reviewer flagged: feeding a
+        // genuine state blob (as minted by google-login-url) into
+        // exchange-code must fail at the cryptographic layer.
+        var stateBlob = _stateProtector.Protect(JsonSerializer.Serialize(new
+        {
+            Nonce = Guid.NewGuid().ToString("N"),
+            ReturnUrl = (string?)null,
+            InviteCode = (string?)null,
+            CodeChallenge = (string?)null,
+            CodeChallengeMethod = (string?)null
+        }));
+
+        var result = _controller.ExchangeCode(new ExchangeCodeRequest
+        {
+            Code = stateBlob
+        });
+
+        Assert.IsType<BadRequestObjectResult>(result);
+    }
+
     // ── /google-login-url ───────────────────────────────────────────────
 
     [Fact]
@@ -212,7 +260,7 @@ public class AuthControllerExchangeCodePkceTests
 
         var stateParam = Microsoft.AspNetCore.WebUtilities.QueryHelpers
             .ParseQuery(new Uri(redirectUrl!).Query)["state"].ToString();
-        var statePayload = JsonSerializer.Deserialize<JsonElement>(_protector.Unprotect(stateParam));
+        var statePayload = JsonSerializer.Deserialize<JsonElement>(_stateProtector.Unprotect(stateParam));
 
         Assert.Equal(challenge, statePayload.GetProperty("CodeChallenge").GetString());
         Assert.Equal("S256", statePayload.GetProperty("CodeChallengeMethod").GetString());
@@ -269,7 +317,7 @@ public class AuthControllerExchangeCodePkceTests
         var redirectUrl = (string)ok.Value!.GetType().GetProperty("RedirectUrl")!.GetValue(ok.Value)!;
         var stateParam = Microsoft.AspNetCore.WebUtilities.QueryHelpers
             .ParseQuery(new Uri(redirectUrl).Query)["state"].ToString();
-        var statePayload = JsonSerializer.Deserialize<JsonElement>(_protector.Unprotect(stateParam));
+        var statePayload = JsonSerializer.Deserialize<JsonElement>(_stateProtector.Unprotect(stateParam));
 
         Assert.Equal(
             JsonValueKind.Null,

@@ -26,7 +26,8 @@ public class AuthController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly IAuthenticationService _authService;
-    private readonly IDataProtector _dataProtector;
+    private readonly IDataProtector _stateProtector;
+    private readonly IDataProtector _authCodeProtector;
     private readonly IUserRepository _userRepository;
     private readonly MyMascada.Application.Common.Configuration.AppOptions _appOptions;
     private readonly IWebHostEnvironment _environment;
@@ -47,7 +48,14 @@ public class AuthController : ControllerBase
     {
         _mediator = mediator;
         _authService = authService;
-        _dataProtector = dataProtectionProvider.CreateProtector("OAuthState");
+        // Distinct DataProtector purposes cryptographically isolate the OAuth
+        // state blob (google-login-url -> google-response) from the short-lived
+        // auth-code blob (google-response -> exchange-code): a payload minted
+        // for one flow can never be unprotected by the other, ruling out
+        // cross-endpoint substitution. "OAuthState" must not change — it keeps
+        // the legacy web state flow byte-for-byte compatible.
+        _stateProtector = dataProtectionProvider.CreateProtector("OAuthState");
+        _authCodeProtector = dataProtectionProvider.CreateProtector("OAuthAuthCode");
         _userRepository = userRepository;
         _appOptions = appOptions.Value;
         _environment = environment;
@@ -625,7 +633,7 @@ public class AuthController : ControllerBase
         };
 
         // Protect the payload
-        var protectedState = _dataProtector.Protect(JsonSerializer.Serialize(statePayload));
+        var protectedState = _stateProtector.Protect(JsonSerializer.Serialize(statePayload));
 
         var apiBase = !string.IsNullOrEmpty(_appOptions.ApiBaseUrl) ? _appOptions.ApiBaseUrl.TrimEnd('/') : $"https://{Request.Host}";
         var redirectUri = $"{apiBase}/api/v1/auth/google-response";
@@ -655,7 +663,7 @@ public class AuthController : ControllerBase
         
         try
         {
-            unprotectedState = _dataProtector.Unprotect(stateFromRequest);
+            unprotectedState = _stateProtector.Unprotect(stateFromRequest);
         }
         catch (System.Security.Cryptography.CryptographicException)
         {
@@ -772,7 +780,7 @@ public class AuthController : ControllerBase
                     CodeChallenge = stateCodeChallenge,
                     CodeChallengeMethod = stateCodeChallengeMethod
                 });
-                var authCode = _dataProtector.Protect(codePayload);
+                var authCode = _authCodeProtector.Protect(codePayload);
 
                 var separator = redirectTarget.Contains('?') ? "&" : "?";
                 return Redirect($"{redirectTarget}{separator}code={Uri.EscapeDataString(authCode)}");
@@ -792,7 +800,7 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var json = _dataProtector.Unprotect(request.Code);
+            var json = _authCodeProtector.Unprotect(request.Code);
             var payload = JsonSerializer.Deserialize<JsonElement>(json);
 
             var createdAt = payload.GetProperty("CreatedAt").GetDateTime();
