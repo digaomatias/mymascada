@@ -81,10 +81,15 @@ public class NotificationService : INotificationService
                 }
             }
 
-            // Enforce per-type channel preferences (inApp toggle)
+            // Enforce per-type channel preferences (inApp toggle).
+            // KNOWN LIMITATION (intentional for this iteration): every push corresponds
+            // to an in-app Notification row — the push payload deep-links to it via
+            // notificationId — so disabling inApp for a type also suppresses push for
+            // that type. "Push only, no in-app" is not supported.
+            // See docs/push-notifications.md ("Known limitations").
             if (IsChannelExplicitlyDisabled(preferences.ChannelPreferences, type, "inApp", userId))
             {
-                _logger.LogDebug("Skipping in-app notification for user {UserId}, type {Type} — disabled by user preference", userId, type);
+                _logger.LogDebug("Skipping in-app notification (and its push counterpart) for user {UserId}, type {Type} — inApp disabled by user preference", userId, type);
                 return;
             }
         }

@@ -7,7 +7,7 @@ existing in-app notification system — every push corresponds to an in-app
 
 ## Architecture
 
-```
+```text
 NotificationService.CreateNotificationAsync
   ├─ preference / quiet-hours / rate-limit checks (existing)
   ├─ creates in-app Notification row (existing)
@@ -18,7 +18,8 @@ NotificationService.CreateNotificationAsync
        └─ IPushNotificationService (FirebasePushNotificationService)
             ├─ loads the user's devices (UserDevices table)
             ├─ IFcmClient (FirebaseFcmClient) — FirebaseAdmin SDK multicast send
-            └─ prunes tokens FCM reports as Unregistered/InvalidArgument
+            └─ prunes tokens FCM reports as Unregistered (and only Unregistered —
+                InvalidArgument can mean a malformed message, not a bad token)
 ```
 
 ## Device registration API
@@ -69,6 +70,16 @@ Per-type push toggles reuse the existing `NotificationPreference.ChannelPreferen
 JSON (`{ "BudgetExceeded": { "inApp": true, "push": false }, ... }`). Push is
 enabled by default and skipped only when explicitly set to `false`. Quiet hours
 and rate limits apply before any channel dispatch, so they cover push too.
+
+## Known limitations
+
+- **No "push only" mode.** Every push corresponds to an in-app `Notification`
+  row (the push payload deep-links to it via `notificationId`), so disabling
+  `inApp` for a type also suppresses push for that type. Supporting push
+  without an in-app row would require a separate content/deep-link path and is
+  deliberately out of scope for this iteration.
+- Push dispatch is awaited inline (single FCM multicast HTTP call, fail-soft).
+  Offloading to a background queue is a possible future optimization.
 
 ## Localization caveat
 
