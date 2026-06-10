@@ -61,8 +61,12 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
 
     public async Task<TransactionDto> Handle(UpdateTransactionCommand request, CancellationToken cancellationToken)
     {
-        // Get existing transaction (with splits, so an amount change can clear them)
-        var transaction = await _transactionRepository.GetByIdWithSplitsAsync(request.Id, request.UserId);
+        // Get existing transaction WITHOUT splits. Loading splits here would leave
+        // them tracked on the context for every edit, and UpdateAsync marks the whole
+        // tracked graph Modified — a non-amount edit could then write stale split rows
+        // back (IsDeleted = false) over a concurrent split replacement. Splits are
+        // loaded only inside the serializable amount-change branch below.
+        var transaction = await _transactionRepository.GetByIdAsync(request.Id, request.UserId);
         if (transaction == null)
         {
             throw new ArgumentException($"Transaction with ID {request.Id} not found or does not belong to user");
@@ -136,10 +140,10 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
 
         if (dbTransaction != null)
         {
-            // Re-read the splits inside the open serializable transaction so the
-            // database registers the read (the initial load above happened outside
-            // it). The identity map keeps already-tracked instances, and splits
-            // committed since the first load are attached to transaction.Splits.
+            // The ONLY place this handler loads splits: inside the open serializable
+            // transaction, so the database registers the read (the initial load above
+            // deliberately excludes splits — see comment there). The identity map
+            // attaches the loaded splits to the already-tracked transaction instance.
             await _transactionRepository.GetByIdWithSplitsAsync(request.Id, request.UserId);
         }
 

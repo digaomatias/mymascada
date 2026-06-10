@@ -57,6 +57,10 @@ public class UpdateTransactionCommandHandlerTests
             }
         };
 
+        // Initial load excludes splits (stale tracked splits must not be written
+        // back by ordinary edits); the with-splits load only happens inside the
+        // serializable amount-change branch.
+        _transactionRepository.GetByIdAsync(transaction.Id, _userId).Returns(transaction);
         _transactionRepository.GetByIdWithSplitsAsync(transaction.Id, _userId).Returns(transaction);
         _accountAccessService.CanModifyAccountAsync(_userId, transaction.AccountId).Returns(true);
         return transaction;
@@ -95,11 +99,13 @@ public class UpdateTransactionCommandHandlerTests
         await _transactionRepository.Received(1).UpdateAsync(transaction);
 
         // The clear runs inside a serializable DB transaction (committed) so it
-        // serializes against concurrent PUT /splits replacements, and the splits
-        // are re-read inside that transaction (initial load + in-transaction read).
+        // serializes against concurrent PUT /splits replacements. The splits are
+        // loaded exactly once — inside that transaction; the initial load is the
+        // splits-free GetByIdAsync.
         await _unitOfWork.Received(1).BeginTransactionAsync(IsolationLevel.Serializable, Arg.Any<CancellationToken>());
         await _dbTransaction.Received(1).CommitAsync(Arg.Any<CancellationToken>());
-        await _transactionRepository.Received(2).GetByIdWithSplitsAsync(transaction.Id, _userId);
+        await _transactionRepository.Received(1).GetByIdAsync(transaction.Id, _userId);
+        await _transactionRepository.Received(1).GetByIdWithSplitsAsync(transaction.Id, _userId);
     }
 
     [Fact]
@@ -131,9 +137,13 @@ public class UpdateTransactionCommandHandlerTests
         transaction.Notes.Should().Be("Edited notes only");
         await _transactionRepository.Received(1).UpdateAsync(transaction);
 
-        // No amount change -> splits untouched -> no serializable transaction needed.
+        // No amount change -> splits untouched -> no serializable transaction needed,
+        // and crucially no splits loaded at all: stale tracked split rows would be
+        // marked Modified by UpdateAsync and could overwrite a concurrent replacement.
         await _unitOfWork.DidNotReceiveWithAnyArgs()
             .BeginTransactionAsync(Arg.Any<IsolationLevel>(), Arg.Any<CancellationToken>());
+        await _transactionRepository.DidNotReceiveWithAnyArgs()
+            .GetByIdWithSplitsAsync(Arg.Any<int>(), Arg.Any<Guid>());
     }
 
     [Fact]
