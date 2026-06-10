@@ -14,6 +14,8 @@ public class RecurringTransactionProcessingServiceTests
     private readonly IRecurringTransactionRepository _repository = Substitute.For<IRecurringTransactionRepository>();
     private readonly IMediator _mediator = Substitute.For<IMediator>();
     private readonly INotificationTriggerService _notificationTriggerService = Substitute.For<INotificationTriggerService>();
+    private readonly IAccountAccessService _accountAccessService = Substitute.For<IAccountAccessService>();
+    private readonly FakeUnitOfWork _unitOfWork = new();
     private readonly RecurringTransactionProcessingService _service;
 
     private readonly Guid _userId = Guid.NewGuid();
@@ -25,10 +27,17 @@ public class RecurringTransactionProcessingServiceTests
             _repository,
             _mediator,
             _notificationTriggerService,
+            _accountAccessService,
+            _unitOfWork,
             Substitute.For<ILogger<RecurringTransactionProcessingService>>());
 
-        // Default: account exists; occurrence claims succeed and echo the claim back.
+        // Default: account exists and the owner retains full access; occurrence
+        // claims succeed and echo the claim back.
         _repository.AccountExistsAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(true);
+        _accountAccessService.CanModifyAccountAsync(Arg.Any<Guid>(), Arg.Any<int>())
+            .Returns(true);
+        _accountAccessService.CanAccessAccountAsync(Arg.Any<Guid>(), Arg.Any<int>())
             .Returns(true);
         _repository.TryCreateOccurrenceAsync(
                 Arg.Any<RecurringTransactionOccurrence>(), Arg.Any<CancellationToken>())
@@ -313,6 +322,139 @@ public class RecurringTransactionProcessingServiceTests
     }
 
     [Fact]
+    public async Task ProcessDueAsync_AutoCreate_TransactionInsertAndOccurrenceFinalizeShareOneDbTransaction()
+    {
+        var schedule = CreateSchedule(autoCreate: true, nextDueDate: Today);
+        SetupDue(schedule);
+        _mediator.Send(Arg.Any<CreateTransactionCommand>(), Arg.Any<CancellationToken>())
+            .Returns(_ =>
+            {
+                _unitOfWork.Events.Add("createTransaction");
+                return new TransactionDto { Id = 42 };
+            });
+        _repository.UpdateOccurrenceAsync(
+                Arg.Any<RecurringTransactionOccurrence>(), Arg.Any<CancellationToken>())
+            .Returns(ci =>
+            {
+                _unitOfWork.Events.Add("finalizeOccurrence");
+                return ci.Arg<RecurringTransactionOccurrence>();
+            });
+
+        await _service.ProcessDueAsync(Today);
+
+        // Both writes happen inside the same ambient transaction, committed after both
+        _unitOfWork.Events.Should().Equal("begin", "createTransaction", "finalizeOccurrence", "commit");
+    }
+
+    [Fact]
+    public async Task ProcessDueAsync_CrashBetweenTransactionInsertAndOccurrenceFinalize_CannotDoubleCreate()
+    {
+        // Reproduces the reviewed crash window: CreateTransactionCommand succeeds
+        // but the process dies / the occurrence update fails before the claim is
+        // marked Created. With the ambient DB transaction both writes roll back
+        // together, so the recovery run re-creates the transaction exactly once.
+        // The fake unit of work mirrors DB semantics: writes staged inside an
+        // uncommitted transaction are discarded; reads return fresh copies (the
+        // real job detaches everything via ResetChangeTracking after a failure).
+        var schedule = CreateSchedule(autoCreate: true, nextDueDate: Today);
+        _repository.GetDueAsync(Arg.Any<DateTime>(), Arg.Any<CancellationToken>())
+            .Returns(_ => new List<RecurringTransaction> { schedule });
+
+        static RecurringTransactionOccurrence Clone(RecurringTransactionOccurrence o) => new()
+        {
+            Id = o.Id,
+            RecurringTransactionId = o.RecurringTransactionId,
+            ScheduledDate = o.ScheduledDate,
+            Status = o.Status,
+            TransactionId = o.TransactionId
+        };
+
+        // Durable store. Claims commit immediately (they are inserted before the
+        // ambient transaction begins); reads hand out copies so in-memory mutations
+        // by the service cannot leak into "the database".
+        var store = new Dictionary<DateTime, RecurringTransactionOccurrence>();
+        _repository.GetOccurrenceAsync(schedule.Id, Arg.Any<DateTime>(), Arg.Any<CancellationToken>())
+            .Returns(ci =>
+            {
+                var row = store.GetValueOrDefault(ci.ArgAt<DateTime>(1).Date);
+                return row == null ? null : Clone(row);
+            });
+        _repository.TryCreateOccurrenceAsync(
+                Arg.Any<RecurringTransactionOccurrence>(), Arg.Any<CancellationToken>())
+            .Returns(ci =>
+            {
+                var occurrence = ci.Arg<RecurringTransactionOccurrence>();
+                if (store.ContainsKey(occurrence.ScheduledDate.Date))
+                {
+                    return null; // unique index violation
+                }
+
+                store[occurrence.ScheduledDate.Date] = Clone(occurrence);
+                return occurrence;
+            });
+
+        // Writes staged inside the ambient transaction become durable only on commit
+        var committedTransactions = 0;
+        var stagedTransactions = 0;
+        RecurringTransactionOccurrence? stagedOccurrence = null;
+        _unitOfWork.OnCommit = () =>
+        {
+            committedTransactions += stagedTransactions;
+            stagedTransactions = 0;
+            if (stagedOccurrence != null)
+            {
+                store[stagedOccurrence.ScheduledDate.Date] = stagedOccurrence;
+                stagedOccurrence = null;
+            }
+        };
+        _unitOfWork.OnRollback = () =>
+        {
+            stagedTransactions = 0;
+            stagedOccurrence = null;
+        };
+
+        _mediator.Send(Arg.Any<CreateTransactionCommand>(), Arg.Any<CancellationToken>())
+            .Returns(_ =>
+            {
+                stagedTransactions++; // the money record insert SUCCEEDED
+                return new TransactionDto { Id = 42 };
+            });
+
+        var failNextFinalize = true;
+        _repository.UpdateOccurrenceAsync(
+                Arg.Any<RecurringTransactionOccurrence>(), Arg.Any<CancellationToken>())
+            .Returns(ci =>
+            {
+                if (failNextFinalize)
+                {
+                    failNextFinalize = false; // run 1 dies AFTER the transaction insert
+                    throw new InvalidOperationException("process died before occurrence finalize");
+                }
+
+                stagedOccurrence = Clone(ci.Arg<RecurringTransactionOccurrence>());
+                return ci.Arg<RecurringTransactionOccurrence>();
+            });
+
+        // Run 1 — transaction inserted, finalize failed → the whole unit rolls back
+        var firstRun = await _service.ProcessDueAsync(Today);
+        firstRun.SchedulesFailed.Should().Be(1);
+        firstRun.TransactionsCreated.Should().Be(0);
+        committedTransactions.Should().Be(0, "the rolled-back transaction must not be durable");
+        store[Today].Status.Should().Be(RecurringTransactionOccurrenceStatus.Pending);
+        store[Today].TransactionId.Should().BeNull();
+
+        // Run 2 — recovers the stale Pending claim and fires exactly once
+        var secondRun = await _service.ProcessDueAsync(Today);
+        secondRun.SchedulesFailed.Should().Be(0);
+        secondRun.TransactionsCreated.Should().Be(1);
+
+        committedTransactions.Should().Be(1); // exactly one durable money record, ever
+        store.Should().HaveCount(1); // no duplicate occurrence rows
+        store[Today].Status.Should().Be(RecurringTransactionOccurrenceStatus.Created);
+        store[Today].TransactionId.Should().Be(42);
+    }
+
+    [Fact]
     public async Task ProcessDueAsync_FailedSchedule_ResetsChangeTrackingAndContinues()
     {
         var failing = CreateSchedule(autoCreate: true, nextDueDate: Today, id: 1);
@@ -430,6 +572,69 @@ public class RecurringTransactionProcessingServiceTests
     }
 
     [Fact]
+    public async Task ProcessDueAsync_AutoCreateWithModifyAccessRevoked_PausesScheduleWithoutFiring()
+    {
+        // Share revoked/downgraded after the schedule was created: auto-create
+        // would fail CreateTransactionCommand's modify-access check every night.
+        var schedule = CreateSchedule(autoCreate: true, nextDueDate: Today);
+        SetupDue(schedule);
+        _accountAccessService.CanModifyAccountAsync(_userId, schedule.AccountId).Returns(false);
+
+        var result = await _service.ProcessDueAsync(Today);
+
+        result.SchedulesDeactivated.Should().Be(1);
+        result.TransactionsCreated.Should().Be(0);
+        result.SchedulesFailed.Should().Be(0);
+        schedule.IsActive.Should().BeFalse();
+
+        await _mediator.DidNotReceive().Send(Arg.Any<CreateTransactionCommand>(), Arg.Any<CancellationToken>());
+        await _repository.DidNotReceive().TryCreateOccurrenceAsync(
+            Arg.Any<RecurringTransactionOccurrence>(), Arg.Any<CancellationToken>());
+        await _repository.Received(1).UpdateAsync(schedule, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ProcessDueAsync_RemindOnlyWithViewAccessRevoked_PausesScheduleWithoutGhostReminder()
+    {
+        // The user can no longer see the account at all — keeping the nightly
+        // reminder alive would notify about an account they have no access to.
+        var schedule = CreateSchedule(autoCreate: false, nextDueDate: Today);
+        SetupDue(schedule);
+        _accountAccessService.CanAccessAccountAsync(_userId, schedule.AccountId).Returns(false);
+
+        var result = await _service.ProcessDueAsync(Today);
+
+        result.SchedulesDeactivated.Should().Be(1);
+        result.RemindersSent.Should().Be(0);
+        schedule.IsActive.Should().BeFalse();
+
+        await _notificationTriggerService.DidNotReceiveWithAnyArgs()
+            .NotifyTransactionReminderAsync(default, default!, default, default, default);
+        await _repository.DidNotReceive().TryCreateOccurrenceAsync(
+            Arg.Any<RecurringTransactionOccurrence>(), Arg.Any<CancellationToken>());
+        await _repository.Received(1).UpdateAsync(schedule, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ProcessDueAsync_RemindOnlyDowngradedToViewer_StillSendsReminder()
+    {
+        // Viewer access is enough for reminder-only schedules — only modify
+        // access was lost, so the reminder keeps firing.
+        var schedule = CreateSchedule(autoCreate: false, nextDueDate: Today);
+        SetupDue(schedule);
+        _accountAccessService.CanModifyAccountAsync(_userId, schedule.AccountId).Returns(false);
+
+        var result = await _service.ProcessDueAsync(Today);
+
+        result.RemindersSent.Should().Be(1);
+        result.SchedulesDeactivated.Should().Be(0);
+        schedule.IsActive.Should().BeTrue();
+
+        await _notificationTriggerService.Received(1).NotifyTransactionReminderAsync(
+            _userId, "Internet bill", 89.99m, Today, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task ProcessDueAsync_NoDueSchedules_DoesNothing()
     {
         SetupDue();
@@ -441,5 +646,51 @@ public class RecurringTransactionProcessingServiceTests
         result.RemindersSent.Should().Be(0);
         await _repository.DidNotReceive().UpdateAsync(
             Arg.Any<RecurringTransaction>(), Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>
+    /// Hand-rolled IUnitOfWork fake: records begin/commit/rollback events so tests
+    /// can assert what runs inside the ambient transaction, and exposes OnCommit /
+    /// OnRollback hooks so tests can simulate database durability (writes staged
+    /// inside an uncommitted transaction are discarded on rollback).
+    /// </summary>
+    private sealed class FakeUnitOfWork : IUnitOfWork
+    {
+        public List<string> Events { get; } = new();
+        public Action? OnCommit { get; set; }
+        public Action? OnRollback { get; set; }
+
+        public Task<IUnitOfWorkTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+        {
+            Events.Add("begin");
+            return Task.FromResult<IUnitOfWorkTransaction>(new FakeTransaction(this));
+        }
+
+        private sealed class FakeTransaction : IUnitOfWorkTransaction
+        {
+            private readonly FakeUnitOfWork _owner;
+            private bool _committed;
+
+            public FakeTransaction(FakeUnitOfWork owner) => _owner = owner;
+
+            public Task CommitAsync(CancellationToken cancellationToken = default)
+            {
+                _committed = true;
+                _owner.Events.Add("commit");
+                _owner.OnCommit?.Invoke();
+                return Task.CompletedTask;
+            }
+
+            public ValueTask DisposeAsync()
+            {
+                if (!_committed)
+                {
+                    _owner.Events.Add("rollback");
+                    _owner.OnRollback?.Invoke();
+                }
+
+                return ValueTask.CompletedTask;
+            }
+        }
     }
 }
