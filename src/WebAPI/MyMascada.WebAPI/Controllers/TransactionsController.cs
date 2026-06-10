@@ -8,6 +8,7 @@ using MyMascada.Application.Features.Transactions.Commands;
 using MyMascada.Application.Features.Transactions.DTOs;
 using MyMascada.Application.Features.Transactions.Queries;
 using MyMascada.Domain.Enums;
+using MyMascada.WebAPI.Extensions;
 
 namespace MyMascada.WebAPI.Controllers;
 
@@ -188,6 +189,14 @@ public class TransactionsController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+        catch (Exception ex) when (ex.IsPostgresSerializationFailure())
+        {
+            // The amount-edit path runs in a Serializable transaction; losing a race
+            // with a concurrent split replacement aborts this request with a
+            // serialization failure. Retryable, so 409 rather than a raw 500.
+            _logger.LogWarning(ex, "Concurrent modification conflict updating transaction {TransactionId}", id);
+            return Conflict(new { message = "This transaction was modified concurrently - please retry" });
+        }
     }
 
     /// <summary>
@@ -220,6 +229,14 @@ public class TransactionsController : ControllerBase
         {
             _logger.LogWarning(ex, "Unauthorized transaction split update attempt for user {UserId}", _currentUserService.GetUserId());
             return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to update transactions on this account." });
+        }
+        catch (Exception ex) when (ex.IsPostgresSerializationFailure())
+        {
+            // The replace runs in a Serializable transaction; losing a race with a
+            // concurrent replace or amount edit aborts this request with a
+            // serialization failure. Retryable, so 409 rather than a raw 500.
+            _logger.LogWarning(ex, "Concurrent modification conflict updating splits for transaction {TransactionId}", id);
+            return Conflict(new { message = "This transaction was modified concurrently - please retry" });
         }
     }
 
