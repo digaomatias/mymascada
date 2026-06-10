@@ -111,7 +111,9 @@ public class RecurringTransactionProcessingService : IRecurringTransactionProces
             return;
         }
 
-        foreach (var dueDate in schedule.GetDueDates(today))
+        var dueDates = schedule.GetDueDates(today);
+
+        foreach (var dueDate in dueDates)
         {
             var existing = await _recurringTransactionRepository.GetOccurrenceAsync(
                 schedule.Id, dueDate, cancellationToken);
@@ -157,7 +159,19 @@ public class RecurringTransactionProcessingService : IRecurringTransactionProces
         }
 
         var wasActive = schedule.IsActive;
-        schedule.AdvanceNextDueDate(today);
+
+        if (dueDates.Count > 0)
+        {
+            // Advance from the last materialized date instead of snapping past
+            // today: when GetDueDates hits its catch-up cap the remaining dates
+            // are still due, and the next nightly run continues from where this
+            // one stopped instead of silently losing them.
+            schedule.AdvanceNextDueDateAfter(dueDates[^1]);
+        }
+        else
+        {
+            schedule.AdvanceNextDueDate(today);
+        }
 
         if (wasActive && !schedule.IsActive)
         {

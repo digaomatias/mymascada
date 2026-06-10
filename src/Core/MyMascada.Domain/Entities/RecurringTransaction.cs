@@ -141,19 +141,7 @@ public class RecurringTransaction : BaseEntity
     {
         if (NextDueDate.Date <= today.Date)
         {
-            NextDueDate = Frequency switch
-            {
-                // Fixed-interval frequencies snap forward arithmetically so a
-                // schedule years behind cannot land short of today.
-                RecurrenceFrequency.Weekly => FastForwardByDays(NextDueDate, today, 7),
-                RecurrenceFrequency.Fortnightly => FastForwardByDays(NextDueDate, today, 14),
-                RecurrenceFrequency.Custom => FastForwardByDays(NextDueDate, today, GetCustomIntervalDays()),
-
-                // Calendar frequencies advance step-by-step to preserve the
-                // anchor-day clamping. Each step moves at least 28 days, so the
-                // loop terminates without an iteration cap.
-                _ => FastForwardCalendar(NextDueDate, today)
-            };
+            NextDueDate = FastForward(NextDueDate, today);
         }
 
         if (EndDate.HasValue && NextDueDate.Date > EndDate.Value.Date)
@@ -162,6 +150,46 @@ public class RecurringTransaction : BaseEntity
         }
 
         UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Advances NextDueDate to the occurrence that follows
+    /// <paramref name="lastFiredDate"/> (the last due date a processing run
+    /// materialized). Unlike <see cref="AdvanceNextDueDate"/> the result may
+    /// still be in the past: when a run hits <see cref="MaxCatchUpIterations"/>
+    /// the remaining due dates stay due, so the next run continues catching up
+    /// instead of silently skipping them. Deactivates the schedule when the
+    /// next due date falls past EndDate.
+    /// </summary>
+    public void AdvanceNextDueDateAfter(DateTime lastFiredDate)
+    {
+        NextDueDate = CalculateNextDueDate(lastFiredDate.Date);
+
+        if (EndDate.HasValue && NextDueDate.Date > EndDate.Value.Date)
+        {
+            IsActive = false;
+        }
+
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Returns the first occurrence strictly after <paramref name="today"/>,
+    /// starting from <paramref name="from"/>. Fixed-interval frequencies snap
+    /// forward arithmetically so a schedule years behind cannot land short of
+    /// today; calendar frequencies advance step-by-step to preserve the
+    /// anchor-day clamping (each step moves at least 28 days, so the loop
+    /// terminates without an iteration cap).
+    /// </summary>
+    private DateTime FastForward(DateTime from, DateTime today)
+    {
+        return Frequency switch
+        {
+            RecurrenceFrequency.Weekly => FastForwardByDays(from, today, 7),
+            RecurrenceFrequency.Fortnightly => FastForwardByDays(from, today, 14),
+            RecurrenceFrequency.Custom => FastForwardByDays(from, today, GetCustomIntervalDays()),
+            _ => FastForwardCalendar(from, today)
+        };
     }
 
     /// <summary>
@@ -224,6 +252,15 @@ public class RecurringTransaction : BaseEntity
         var dates = new List<DateTime>();
         var current = NextDueDate.Date;
         var iterations = 0;
+
+        // A stale NextDueDate (long pause, job downtime) could otherwise burn
+        // the whole iteration budget before reaching the window and return an
+        // empty list. Jump straight to the first occurrence on/after fromDate,
+        // preserving the schedule anchor.
+        if (current < fromDate.Date)
+        {
+            current = FastForward(current, fromDate.Date.AddDays(-1)).Date;
+        }
 
         while (current <= toDate.Date && iterations < MaxCatchUpIterations)
         {
