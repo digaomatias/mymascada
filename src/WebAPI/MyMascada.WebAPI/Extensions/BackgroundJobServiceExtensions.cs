@@ -36,6 +36,10 @@ public static class BackgroundJobServiceExtensions
         services.AddScoped<MyMascada.Application.BackgroundJobs.IRecurringPatternJobService,
             MyMascada.Infrastructure.BackgroundJobs.RecurringPatternJobService>();
 
+        // Recurring transaction job service (user-created scheduled bills)
+        services.AddScoped<MyMascada.Application.BackgroundJobs.IRecurringTransactionJobService,
+            MyMascada.Infrastructure.BackgroundJobs.RecurringTransactionJobService>();
+
         // Expired budget job service
         services.AddScoped<MyMascada.Application.BackgroundJobs.IExpiredBudgetJobService,
             MyMascada.Infrastructure.BackgroundJobs.ExpiredBudgetJobService>();

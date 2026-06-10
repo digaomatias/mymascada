@@ -39,6 +39,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<BudgetCategory> BudgetCategories => Set<BudgetCategory>();
     public DbSet<RecurringPattern> RecurringPatterns => Set<RecurringPattern>();
     public DbSet<RecurringOccurrence> RecurringOccurrences => Set<RecurringOccurrence>();
+    public DbSet<RecurringTransaction> RecurringTransactions => Set<RecurringTransaction>();
+    public DbSet<RecurringTransactionOccurrence> RecurringTransactionOccurrences => Set<RecurringTransactionOccurrence>();
     public DbSet<WaitlistEntry> WaitlistEntries => Set<WaitlistEntry>();
     public DbSet<InvitationCode> InvitationCodes => Set<InvitationCode>();
     public DbSet<AccountShare> AccountShares => Set<AccountShare>();
@@ -689,6 +691,74 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => new { e.PatternId, e.Outcome });
 
             // Foreign key to Transaction
+            entity.HasOne(e => e.Transaction)
+                .WithMany()
+                .HasForeignKey(e => e.TransactionId)
+                .OnDelete(DeleteBehavior.SetNull); // Allow transaction deletion
+
+            entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
+        // RecurringTransaction configuration (user-created scheduled bills)
+        modelBuilder.Entity<RecurringTransaction>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.AccountId).IsRequired();
+            entity.Property(e => e.Description).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Amount).HasPrecision(18, 2);
+            entity.Property(e => e.Frequency).IsRequired();
+            entity.Property(e => e.StartDate).IsRequired();
+            entity.Property(e => e.NextDueDate).IsRequired();
+            entity.Property(e => e.AutoCreate).HasDefaultValue(false);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.Notes).HasMaxLength(500);
+
+            // Indexes for efficient querying
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => new { e.UserId, e.IsActive });
+            entity.HasIndex(e => new { e.IsActive, e.NextDueDate }); // daily job scan
+
+            // Foreign key to User
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Foreign key to Account
+            entity.HasOne(e => e.Account)
+                .WithMany()
+                .HasForeignKey(e => e.AccountId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Foreign key to Category (optional)
+            entity.HasOne(e => e.Category)
+                .WithMany()
+                .HasForeignKey(e => e.CategoryId)
+                .OnDelete(DeleteBehavior.SetNull); // Allow category deletion
+
+            // One-to-many relationship with occurrences
+            entity.HasMany(e => e.Occurrences)
+                .WithOne(o => o.RecurringTransaction)
+                .HasForeignKey(o => o.RecurringTransactionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
+        // RecurringTransactionOccurrence configuration
+        modelBuilder.Entity<RecurringTransactionOccurrence>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.RecurringTransactionId).IsRequired();
+            entity.Property(e => e.ScheduledDate).IsRequired();
+            entity.Property(e => e.Status).IsRequired();
+
+            // Idempotency: one occurrence per recurring transaction per scheduled date
+            entity.HasIndex(e => new { e.RecurringTransactionId, e.ScheduledDate }).IsUnique();
+            entity.HasIndex(e => e.TransactionId);
+
+            // Foreign key to Transaction (optional, only for auto-created occurrences)
             entity.HasOne(e => e.Transaction)
                 .WithMany()
                 .HasForeignKey(e => e.TransactionId)
