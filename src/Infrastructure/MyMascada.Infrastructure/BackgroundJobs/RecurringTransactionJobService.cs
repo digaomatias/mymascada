@@ -29,8 +29,12 @@ public class RecurringTransactionJobService : IRecurringTransactionJobService
     /// <summary>
     /// Processes all due recurring transactions across all users.
     /// Scheduled to run daily at 2:30 AM.
+    /// Serialized via DisableConcurrentExecution so overlapping runs (retry +
+    /// manual trigger) cannot race each other; combined with the Pending-claim
+    /// occurrence rows this guarantees each scheduled date fires at most once.
     /// </summary>
     [AutomaticRetry(Attempts = 3, DelaysInSeconds = new[] { 60, 300, 900 })]
+    [DisableConcurrentExecution(timeoutInSeconds: 30 * 60)]
     public async Task ProcessAllDueAsync(object? performContext = null)
     {
         var startTime = DateTime.UtcNow;

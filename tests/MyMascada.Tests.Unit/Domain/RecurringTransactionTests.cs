@@ -209,6 +209,79 @@ public class RecurringTransactionTests
         schedule.IsActive.Should().BeTrue();
     }
 
+    // --- AdvanceNextDueDate: far-behind schedules must snap fully past today ---
+
+    [Fact]
+    public void AdvanceNextDueDate_CustomDailyTwoYearsBehind_SnapsToTomorrow()
+    {
+        // A daily schedule 2 years behind has ~730 missed occurrences — far more
+        // than any per-run iteration cap. It must still land strictly after today.
+        var schedule = CreateSchedule(
+            RecurrenceFrequency.Custom,
+            new DateTime(2024, 6, 10),
+            customIntervalDays: 1);
+        var today = new DateTime(2026, 6, 10);
+
+        schedule.AdvanceNextDueDate(today);
+
+        schedule.NextDueDate.Should().Be(new DateTime(2026, 6, 11));
+    }
+
+    [Fact]
+    public void AdvanceNextDueDate_WeeklyTenYearsBehind_SnapsPastTodayPreservingAnchor()
+    {
+        var start = new DateTime(2016, 6, 6); // a Monday
+        var schedule = CreateSchedule(RecurrenceFrequency.Weekly, start);
+        var today = new DateTime(2026, 6, 10);
+
+        schedule.AdvanceNextDueDate(today);
+
+        schedule.NextDueDate.Should().BeAfter(today);
+        schedule.NextDueDate.Should().BeOnOrBefore(today.AddDays(7));
+        schedule.NextDueDate.DayOfWeek.Should().Be(start.DayOfWeek); // anchor weekday preserved
+        ((schedule.NextDueDate - start).Days % 7).Should().Be(0); // exact multiple of the interval
+    }
+
+    [Fact]
+    public void AdvanceNextDueDate_MonthlyFortyYearsBehind_SnapsPastToday()
+    {
+        // 480 calendar steps — exceeds the old 366-iteration cap
+        var schedule = CreateSchedule(RecurrenceFrequency.Monthly, new DateTime(1986, 1, 31));
+        var today = new DateTime(2026, 6, 10);
+
+        schedule.AdvanceNextDueDate(today);
+
+        schedule.NextDueDate.Should().Be(new DateTime(2026, 6, 30)); // anchor day 31 clamped to June 30
+    }
+
+    [Fact]
+    public void AdvanceNextDueDate_CustomDailyDueToday_AdvancesOneDay()
+    {
+        var schedule = CreateSchedule(
+            RecurrenceFrequency.Custom,
+            new DateTime(2026, 6, 10),
+            customIntervalDays: 1);
+
+        schedule.AdvanceNextDueDate(new DateTime(2026, 6, 10));
+
+        schedule.NextDueDate.Should().Be(new DateTime(2026, 6, 11));
+    }
+
+    [Fact]
+    public void Resume_AfterYearsLongPause_SnapsFullyPastToday()
+    {
+        var schedule = CreateSchedule(
+            RecurrenceFrequency.Custom,
+            new DateTime(2023, 1, 1),
+            customIntervalDays: 1);
+        schedule.Pause();
+
+        schedule.Resume(new DateTime(2026, 6, 10));
+
+        schedule.IsActive.Should().BeTrue();
+        schedule.NextDueDate.Should().Be(new DateTime(2026, 6, 11));
+    }
+
     // --- GetDueDates ---
 
     [Fact]

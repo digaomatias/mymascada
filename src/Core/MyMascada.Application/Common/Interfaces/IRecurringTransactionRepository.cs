@@ -60,9 +60,33 @@ public interface IRecurringTransactionRepository
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets the occurrence for the given schedule and date, or null when none exists
+    /// </summary>
+    Task<RecurringTransactionOccurrence?> GetOccurrenceAsync(
+        int recurringTransactionId,
+        DateTime scheduledDate,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Creates a new occurrence record
     /// </summary>
     Task<RecurringTransactionOccurrence> CreateOccurrenceAsync(
+        RecurringTransactionOccurrence occurrence,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Attempts to insert an occurrence row, returning null when the unique
+    /// (RecurringTransactionId, ScheduledDate) index rejects it because another
+    /// run already claimed that scheduled date.
+    /// </summary>
+    Task<RecurringTransactionOccurrence?> TryCreateOccurrenceAsync(
+        RecurringTransactionOccurrence occurrence,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Updates an existing occurrence record
+    /// </summary>
+    Task<RecurringTransactionOccurrence> UpdateOccurrenceAsync(
         RecurringTransactionOccurrence occurrence,
         CancellationToken cancellationToken = default);
 
@@ -74,4 +98,17 @@ public interface IRecurringTransactionRepository
         Guid userId,
         int count = 10,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Checks whether the account still exists and is not soft-deleted.
+    /// Used by the daily job to deactivate schedules pointing at removed accounts.
+    /// </summary>
+    Task<bool> AccountExistsAsync(int accountId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Detaches all tracked entities from the underlying unit of work. Called after
+    /// a failed save so one schedule's poisoned change tracker cannot fail every
+    /// subsequent schedule processed in the same scope.
+    /// </summary>
+    void ResetChangeTracking();
 }

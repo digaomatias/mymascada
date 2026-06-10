@@ -49,5 +49,14 @@ public enum RecurringTransactionOccurrenceStatus
     /// <summary>
     /// The occurrence was skipped (e.g., schedule was inactive or past its end date)
     /// </summary>
-    Skipped = 3
+    Skipped = 3,
+
+    /// <summary>
+    /// The occurrence row has been claimed by the daily job but not yet completed.
+    /// The job inserts the claim BEFORE creating the transaction / sending the
+    /// reminder (the unique (RecurringTransactionId, ScheduledDate) index rejects
+    /// concurrent claimers), so a crash mid-occurrence leaves a Pending row that
+    /// the next run completes instead of firing the bill twice.
+    /// </summary>
+    Pending = 4
 }

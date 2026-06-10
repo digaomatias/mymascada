@@ -12,8 +12,9 @@ namespace MyMascada.Domain.Entities;
 public class RecurringTransaction : BaseEntity
 {
     /// <summary>
-    /// Maximum number of schedule advancements processed in a single catch-up loop.
-    /// Guards against runaway loops (366 covers a full year of daily occurrences).
+    /// Maximum number of dates materialized by GetDueDates/GetScheduledDates.
+    /// Caps how many occurrences can be fired/displayed in one pass
+    /// (366 covers a full year of daily occurrences).
     /// </summary>
     public const int MaxCatchUpIterations = 366;
 
@@ -131,16 +132,28 @@ public class RecurringTransaction : BaseEntity
     }
 
     /// <summary>
-    /// Advances NextDueDate until it is strictly after <paramref name="today"/>.
-    /// Deactivates the schedule when the next due date falls past EndDate.
+    /// Advances NextDueDate until it is strictly after <paramref name="today"/>,
+    /// no matter how far behind the schedule is (arbitrarily old StartDate,
+    /// long pauses, etc.). Deactivates the schedule when the next due date
+    /// falls past EndDate.
     /// </summary>
     public void AdvanceNextDueDate(DateTime today)
     {
-        var iterations = 0;
-        while (NextDueDate.Date <= today.Date && iterations < MaxCatchUpIterations)
+        if (NextDueDate.Date <= today.Date)
         {
-            NextDueDate = CalculateNextDueDate(NextDueDate);
-            iterations++;
+            NextDueDate = Frequency switch
+            {
+                // Fixed-interval frequencies snap forward arithmetically so a
+                // schedule years behind cannot land short of today.
+                RecurrenceFrequency.Weekly => FastForwardByDays(NextDueDate, today, 7),
+                RecurrenceFrequency.Fortnightly => FastForwardByDays(NextDueDate, today, 14),
+                RecurrenceFrequency.Custom => FastForwardByDays(NextDueDate, today, GetCustomIntervalDays()),
+
+                // Calendar frequencies advance step-by-step to preserve the
+                // anchor-day clamping. Each step moves at least 28 days, so the
+                // loop terminates without an iteration cap.
+                _ => FastForwardCalendar(NextDueDate, today)
+            };
         }
 
         if (EndDate.HasValue && NextDueDate.Date > EndDate.Value.Date)
@@ -149,6 +162,32 @@ public class RecurringTransaction : BaseEntity
         }
 
         UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Snaps a fixed-interval schedule to the first occurrence strictly after
+    /// <paramref name="today"/>, preserving the original anchor (date + N * interval).
+    /// </summary>
+    private static DateTime FastForwardByDays(DateTime from, DateTime today, int intervalDays)
+    {
+        var daysBehind = (today.Date - from.Date).Days; // >= 0 — caller checked
+        var periods = (daysBehind / intervalDays) + 1;
+        return from.AddDays((double)periods * intervalDays);
+    }
+
+    /// <summary>
+    /// Advances a Monthly/Yearly schedule one calendar step at a time until it
+    /// is strictly after <paramref name="today"/>.
+    /// </summary>
+    private DateTime FastForwardCalendar(DateTime from, DateTime today)
+    {
+        var current = from;
+        while (current.Date <= today.Date)
+        {
+            current = CalculateNextDueDate(current);
+        }
+
+        return current;
     }
 
     /// <summary>

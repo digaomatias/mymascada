@@ -193,4 +193,95 @@ public class RecurringTransactionRepositoryTests : IDisposable
 
         recent.Should().BeEmpty();
     }
+
+    [Fact]
+    public async Task GetOccurrenceAsync_ReturnsMatchingOccurrenceOrNull()
+    {
+        var created = await _repository.CreateAsync(NewSchedule());
+        var date = new DateTime(2026, 6, 15, 0, 0, 0, DateTimeKind.Utc);
+
+        (await _repository.GetOccurrenceAsync(created.Id, date)).Should().BeNull();
+
+        await _repository.CreateOccurrenceAsync(new RecurringTransactionOccurrence
+        {
+            RecurringTransactionId = created.Id,
+            ScheduledDate = date,
+            Status = RecurringTransactionOccurrenceStatus.Pending
+        });
+
+        var found = await _repository.GetOccurrenceAsync(created.Id, date);
+        found.Should().NotBeNull();
+        found!.Status.Should().Be(RecurringTransactionOccurrenceStatus.Pending);
+        (await _repository.GetOccurrenceAsync(created.Id, date.AddDays(1))).Should().BeNull();
+    }
+
+    [Fact]
+    public async Task TryCreateOccurrenceAsync_Succeeds_AndPersistsClaim()
+    {
+        var created = await _repository.CreateAsync(NewSchedule());
+        var date = new DateTime(2026, 6, 15, 0, 0, 0, DateTimeKind.Utc);
+
+        var claim = await _repository.TryCreateOccurrenceAsync(new RecurringTransactionOccurrence
+        {
+            RecurringTransactionId = created.Id,
+            ScheduledDate = date,
+            Status = RecurringTransactionOccurrenceStatus.Pending
+        });
+
+        claim.Should().NotBeNull();
+        claim!.Id.Should().BeGreaterThan(0);
+        (await _repository.HasOccurrenceAsync(created.Id, date)).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task UpdateOccurrenceAsync_PersistsCompletion()
+    {
+        var created = await _repository.CreateAsync(NewSchedule());
+        var date = new DateTime(2026, 6, 15, 0, 0, 0, DateTimeKind.Utc);
+        var claim = await _repository.CreateOccurrenceAsync(new RecurringTransactionOccurrence
+        {
+            RecurringTransactionId = created.Id,
+            ScheduledDate = date,
+            Status = RecurringTransactionOccurrenceStatus.Pending
+        });
+
+        claim.Status = RecurringTransactionOccurrenceStatus.Created;
+        claim.TransactionId = 42;
+        await _repository.UpdateOccurrenceAsync(claim);
+
+        var stored = await _context.RecurringTransactionOccurrences.SingleAsync();
+        stored.Status.Should().Be(RecurringTransactionOccurrenceStatus.Created);
+        stored.TransactionId.Should().Be(42);
+    }
+
+    [Fact]
+    public async Task AccountExistsAsync_TracksSoftDeletion()
+    {
+        (await _repository.AccountExistsAsync(_accountId)).Should().BeTrue();
+        (await _repository.AccountExistsAsync(_accountId + 999)).Should().BeFalse();
+
+        var account = await _context.Accounts.SingleAsync(a => a.Id == _accountId);
+        account.IsDeleted = true;
+        account.DeletedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        (await _repository.AccountExistsAsync(_accountId)).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ResetChangeTracking_AllowsSubsequentSaves()
+    {
+        var created = await _repository.CreateAsync(NewSchedule());
+
+        _repository.ResetChangeTracking();
+
+        // Detached entities can still be updated and saved afterwards
+        created.Description = "Updated after reset";
+        await _repository.UpdateAsync(created);
+
+        var stored = await _context.RecurringTransactions
+            .AsNoTracking()
+            .SingleAsync(r => r.Id == created.Id);
+        stored.Description.Should().Be("Updated after reset");
+    }
 }

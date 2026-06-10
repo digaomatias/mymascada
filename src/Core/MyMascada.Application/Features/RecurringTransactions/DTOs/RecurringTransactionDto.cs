@@ -3,7 +3,10 @@ using MyMascada.Domain.Enums;
 namespace MyMascada.Application.Features.RecurringTransactions.DTOs;
 
 /// <summary>
-/// Summary DTO for a user-created recurring transaction (scheduled bill)
+/// Summary DTO for a user-created recurring transaction (scheduled bill).
+/// Dates (StartDate/EndDate/NextDueDate) are date-only values serialized at
+/// UTC midnight; Amount is always positive (expense-only — auto-created
+/// transactions are stored negative).
 /// </summary>
 public class RecurringTransactionDto
 {
