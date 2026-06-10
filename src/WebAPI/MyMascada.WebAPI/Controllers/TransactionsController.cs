@@ -190,6 +190,36 @@ public class TransactionsController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Atomically replaces the splits of a transaction.
+    /// An empty or null splits list clears all splits (un-splits the transaction).
+    /// </summary>
+    [HttpPut("{id}/splits")]
+    public async Task<ActionResult<TransactionDto>> UpdateTransactionSplits(int id, [FromBody] UpdateTransactionSplitsRequest request)
+    {
+        var command = new UpdateTransactionSplitsCommand
+        {
+            UserId = _currentUserService.GetUserId(),
+            TransactionId = id,
+            Splits = request.Splits
+        };
+
+        try
+        {
+            var result = await _mediator.Send(command);
+            return Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning(ex, "Unauthorized transaction split update attempt for user {UserId}", _currentUserService.GetUserId());
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not have permission to update transactions on this account." });
+        }
+    }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteTransaction(int id)
     {

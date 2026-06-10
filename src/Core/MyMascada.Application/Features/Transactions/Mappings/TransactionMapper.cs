@@ -14,12 +14,21 @@ public static partial class TransactionMapper
         dto.AccountName = transaction.Account?.Name ?? string.Empty;
         dto.CategoryName = transaction.Category?.Name;
         dto.CategoryColor = transaction.Category?.Color;
+        // Splits are only populated when the navigation was eagerly loaded
+        // (single-transaction read path); list queries leave it null.
+        var activeSplits = transaction.Splits?
+            .Where(s => !s.IsDeleted)
+            .ToList();
+        dto.Splits = activeSplits is { Count: > 0 }
+            ? activeSplits.Select(ToSplitDto).ToList()
+            : null;
         return dto;
     }
 
     [MapperIgnoreTarget(nameof(TransactionDto.AccountName))]
     [MapperIgnoreTarget(nameof(TransactionDto.CategoryName))]
     [MapperIgnoreTarget(nameof(TransactionDto.CategoryColor))]
+    [MapperIgnoreTarget(nameof(TransactionDto.Splits))]
     private static partial TransactionDto TransactionToDtoGenerated(Transaction transaction);
 
     // Transaction -> TransactionDetailDto (for single view)
