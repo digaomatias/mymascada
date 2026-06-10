@@ -40,6 +40,9 @@ public static class RepositoryServiceExtensions
         // Recurring pattern repositories
         services.AddScoped<IRecurringPatternRepository, RecurringPatternRepository>();
 
+        // Recurring transaction repositories (user-created scheduled bills)
+        services.AddScoped<IRecurringTransactionRepository, RecurringTransactionRepository>();
+
         // Waitlist repositories
         services.AddScoped<IWaitlistRepository, WaitlistRepository>();
         services.AddScoped<IInvitationCodeRepository, InvitationCodeRepository>();
