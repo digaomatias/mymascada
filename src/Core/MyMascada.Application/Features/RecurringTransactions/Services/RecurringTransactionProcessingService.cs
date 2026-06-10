@@ -37,17 +37,23 @@ public class RecurringTransactionProcessingService : IRecurringTransactionProces
     private readonly IRecurringTransactionRepository _recurringTransactionRepository;
     private readonly IMediator _mediator;
     private readonly INotificationTriggerService _notificationTriggerService;
+    private readonly IAccountAccessService _accountAccessService;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<RecurringTransactionProcessingService> _logger;
 
     public RecurringTransactionProcessingService(
         IRecurringTransactionRepository recurringTransactionRepository,
         IMediator mediator,
         INotificationTriggerService notificationTriggerService,
+        IAccountAccessService accountAccessService,
+        IUnitOfWork unitOfWork,
         ILogger<RecurringTransactionProcessingService> logger)
     {
         _recurringTransactionRepository = recurringTransactionRepository;
         _mediator = mediator;
         _notificationTriggerService = notificationTriggerService;
+        _accountAccessService = accountAccessService;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
@@ -104,6 +110,27 @@ public class RecurringTransactionProcessingService : IRecurringTransactionProces
             _logger.LogWarning(
                 "Account {AccountId} for recurring transaction {RecurringTransactionId} no longer exists; deactivating schedule",
                 schedule.AccountId, schedule.Id);
+
+            schedule.Pause();
+            await _recurringTransactionRepository.UpdateAsync(schedule, cancellationToken);
+            result.SchedulesDeactivated++;
+            return;
+        }
+
+        // A revoked or downgraded share leaves the account in place but the owner
+        // without the access the schedule needs: auto-create requires modify access
+        // (CreateTransactionCommand enforces it and would fail every night), and a
+        // reminder-only schedule must not keep notifying about an account the user
+        // can no longer view. Pause instead of failing/ghost-reminding forever.
+        var hasRequiredAccess = schedule.AutoCreate
+            ? await _accountAccessService.CanModifyAccountAsync(schedule.UserId, schedule.AccountId)
+            : await _accountAccessService.CanAccessAccountAsync(schedule.UserId, schedule.AccountId);
+
+        if (!hasRequiredAccess)
+        {
+            _logger.LogWarning(
+                "User {UserId} no longer has {RequiredAccess} access to account {AccountId} for recurring transaction {RecurringTransactionId}; pausing schedule",
+                schedule.UserId, schedule.AutoCreate ? "modify" : "view", schedule.AccountId, schedule.Id);
 
             schedule.Pause();
             await _recurringTransactionRepository.UpdateAsync(schedule, cancellationToken);
@@ -190,6 +217,16 @@ public class RecurringTransactionProcessingService : IRecurringTransactionProces
     {
         if (schedule.AutoCreate)
         {
+            // The real transaction insert and the occurrence's Pending → Created
+            // flip must commit atomically. Every repository in this job scope
+            // shares the same scoped DbContext, so the handler's internal
+            // SaveChanges enlists in this ambient transaction. A crash or failed
+            // occurrence update after CreateTransactionCommand therefore rolls
+            // the money record back too, instead of leaving a committed
+            // transaction behind a Pending claim for the next run's recovery
+            // path to duplicate.
+            await using var transaction = await _unitOfWork.BeginTransactionAsync(cancellationToken);
+
             // Reuse the standard transaction creation pipeline (validation,
             // categorization, account access). Expenses are stored negative.
             var transactionDto = await _mediator.Send(new CreateTransactionCommand
@@ -210,10 +247,16 @@ public class RecurringTransactionProcessingService : IRecurringTransactionProces
 
             occurrence.TransactionId = transactionDto.Id;
             occurrence.Status = RecurringTransactionOccurrenceStatus.Created;
+            await _recurringTransactionRepository.UpdateOccurrenceAsync(occurrence, cancellationToken);
+
+            await transaction.CommitAsync(cancellationToken);
             result.TransactionsCreated++;
         }
         else
         {
+            // Reminders are not money records: a rare duplicate notification is
+            // benign and the push delivery cannot be rolled back anyway, so no
+            // ambient transaction is needed here.
             await _notificationTriggerService.NotifyTransactionReminderAsync(
                 schedule.UserId,
                 schedule.Description,
@@ -223,8 +266,8 @@ public class RecurringTransactionProcessingService : IRecurringTransactionProces
 
             occurrence.Status = RecurringTransactionOccurrenceStatus.Notified;
             result.RemindersSent++;
-        }
 
-        await _recurringTransactionRepository.UpdateOccurrenceAsync(occurrence, cancellationToken);
+            await _recurringTransactionRepository.UpdateOccurrenceAsync(occurrence, cancellationToken);
+        }
     }
 }
