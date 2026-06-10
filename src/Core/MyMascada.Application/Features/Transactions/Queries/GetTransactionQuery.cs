@@ -22,7 +22,7 @@ public class GetTransactionQueryHandler : IRequestHandler<GetTransactionQuery, T
 
     public async Task<TransactionDto?> Handle(GetTransactionQuery request, CancellationToken cancellationToken)
     {
-        var transaction = await _transactionRepository.GetByIdAsync(request.Id, request.UserId);
+        var transaction = await _transactionRepository.GetByIdWithSplitsAsync(request.Id, request.UserId);
         if (transaction == null)
         {
             return null;

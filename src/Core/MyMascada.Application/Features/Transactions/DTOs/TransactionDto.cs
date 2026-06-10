@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using MyMascada.Domain.Enums;
 
 namespace MyMascada.Application.Features.Transactions.DTOs;
@@ -37,7 +38,11 @@ public class TransactionDto
     public Guid? TransferId { get; set; }
     public bool IsTransferSource { get; set; }
     public int? RelatedTransactionId { get; set; }
-    
+
+    // Splits information (additive; only populated on the single-transaction read
+    // path — null for list views and for transactions without splits)
+    public List<TransactionSplitDto>? Splits { get; set; }
+
     // Audit information
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

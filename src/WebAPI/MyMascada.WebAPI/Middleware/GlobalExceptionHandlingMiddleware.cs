@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Domain.Common;
 using MyMascada.Infrastructure.Services.BankIntegration.Providers;
+using MyMascada.WebAPI.Extensions;
 
 namespace MyMascada.WebAPI.Middleware;
 
@@ -159,6 +160,14 @@ public class GlobalExceptionHandlingMiddleware
     {
         return exception switch
         {
+            // Serializable/optimistic concurrency conflicts (PostgreSQL SQLSTATE 40001):
+            // the request lost a race with a concurrent write and is safe to retry.
+            // Checked first because the failure may arrive wrapped in other exception
+            // types. Safety net for any path the controllers don't translate themselves.
+            var concurrencyEx when concurrencyEx.IsPostgresSerializationFailure() =>
+                (HttpStatusCode.Conflict, LogLevel.Warning,
+                "This record was modified by another request at the same time - please retry."),
+
             // Business rule violations (more specific exceptions first)
             ArgumentNullException _ => (HttpStatusCode.BadRequest, LogLevel.Warning,
                 "Required information is missing. Please provide all necessary data."),

@@ -9,6 +9,15 @@ public interface ITransactionRepository
 {
     Task<Transaction?> GetByIdAsync(int id, Guid userId);
     Task<Transaction?> GetByIdAsync(int id);
+
+    /// <summary>
+    /// Loads a transaction with its active (non-deleted) splits and their categories,
+    /// in addition to the account and category navigations. Soft-deleted splits are
+    /// excluded by the global query filter on TransactionSplit (see
+    /// ApplicationDbContext), which also applies to Include. Used by the transaction
+    /// detail read path and the split write path.
+    /// </summary>
+    Task<Transaction?> GetByIdWithSplitsAsync(int id, Guid userId);
     Task<IEnumerable<Transaction>> GetByAccountIdAsync(int accountId, Guid userId);
     Task<bool> HasTransactionsAsync(int accountId, Guid userId);
     Task<IEnumerable<Transaction>> GetByCategoryIdAsync(int categoryId, Guid userId);

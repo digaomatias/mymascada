@@ -36,6 +36,18 @@ public class TransactionRepository : ITransactionRepository
                                      accessibleIds.Contains(t.AccountId));
     }
 
+    public async Task<Transaction?> GetByIdWithSplitsAsync(int id, Guid userId)
+    {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
+        return await _context.Transactions
+            .Include(t => t.Account)
+            .Include(t => t.Category)
+            .Include(t => t.Splits)
+                .ThenInclude(s => s.Category)
+            .FirstOrDefaultAsync(t => t.Id == id &&
+                                     accessibleIds.Contains(t.AccountId));
+    }
+
     public async Task<IEnumerable<Transaction>> GetByAccountIdAsync(int accountId, Guid userId)
     {
         if (!await _accountAccess.CanAccessAccountAsync(userId, accountId))
