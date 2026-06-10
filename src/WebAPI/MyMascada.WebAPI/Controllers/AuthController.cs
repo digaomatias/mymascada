@@ -11,6 +11,7 @@ using MyMascada.Application.Features.Authentication.DTOs;
 using MyMascada.Application.Features.Authentication.Queries;
 using MyMascada.Application.Common;
 using MyMascada.Application.Common.Interfaces;
+using MyMascada.Application.Common.Security;
 using Microsoft.AspNetCore.RateLimiting;
 using MyMascada.WebAPI.Constants;
 using MyMascada.WebAPI.Extensions;
@@ -550,7 +551,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("google-login-url")]
-    public IActionResult GetGoogleLoginUrl(string? returnUrl = null, string? inviteCode = null)
+    public IActionResult GetGoogleLoginUrl(string? returnUrl = null, string? inviteCode = null, string? codeChallenge = null, string? codeChallengeMethod = null)
     {
         var configuration = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
         var clientId = configuration["Authentication:Google:ClientId"];
@@ -559,6 +560,31 @@ public class AuthController : ControllerBase
             string.Equals(clientId, "YOUR_GOOGLE_CLIENT_ID", StringComparison.Ordinal))
         {
             return BadRequest("Google Client ID not configured");
+        }
+
+        // Optional PKCE (RFC 7636): mobile clients register a code challenge
+        // here; /exchange-code will then require the matching code verifier.
+        // Web clients that don't send a challenge are unaffected.
+        string? safeCodeChallenge = null;
+        var safeCodeChallengeMethod = PkceValidator.MethodS256;
+        if (!string.IsNullOrEmpty(codeChallenge))
+        {
+            var method = string.IsNullOrEmpty(codeChallengeMethod)
+                ? PkceValidator.MethodS256
+                : codeChallengeMethod;
+
+            if (!PkceValidator.IsSupportedMethod(method))
+            {
+                return BadRequest("Unsupported code challenge method. Use S256 or plain.");
+            }
+
+            if (!PkceValidator.IsValidChallengeFormat(codeChallenge))
+            {
+                return BadRequest("Invalid code challenge format.");
+            }
+
+            safeCodeChallenge = codeChallenge;
+            safeCodeChallengeMethod = method;
         }
 
         // Validate returnUrl against allowed frontend origin to prevent open redirects.
@@ -590,7 +616,9 @@ public class AuthController : ControllerBase
         {
             Nonce = Guid.NewGuid().ToString("N"),
             ReturnUrl = safeReturnUrl,
-            InviteCode = inviteCode
+            InviteCode = inviteCode,
+            CodeChallenge = safeCodeChallenge,
+            CodeChallengeMethod = safeCodeChallenge != null ? safeCodeChallengeMethod : null
         };
 
         // Protect the payload
@@ -642,6 +670,19 @@ public class AuthController : ControllerBase
         if (statePayload.TryGetProperty("InviteCode", out var inviteCodeElement) && inviteCodeElement.ValueKind != JsonValueKind.Null)
         {
             inviteCode = inviteCodeElement.GetString();
+        }
+
+        // Carry the PKCE challenge (if one was registered at flow initiation)
+        // through to the protected auth code so /exchange-code can enforce it.
+        string? stateCodeChallenge = null;
+        string? stateCodeChallengeMethod = null;
+        if (statePayload.TryGetProperty("CodeChallenge", out var challengeElement) && challengeElement.ValueKind == JsonValueKind.String)
+        {
+            stateCodeChallenge = challengeElement.GetString();
+            stateCodeChallengeMethod =
+                statePayload.TryGetProperty("CodeChallengeMethod", out var methodElement) && methodElement.ValueKind == JsonValueKind.String
+                    ? methodElement.GetString()
+                    : PkceValidator.MethodS256;
         }
 
         try
@@ -724,7 +765,9 @@ public class AuthController : ControllerBase
                     ExpiresAt = authResult.ExpiresAt,
                     RefreshToken = authResult.RefreshToken,
                     RefreshTokenExpiresAt = authResult.RefreshTokenExpiresAt,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    CodeChallenge = stateCodeChallenge,
+                    CodeChallengeMethod = stateCodeChallengeMethod
                 });
                 var authCode = _dataProtector.Protect(codePayload);
 
@@ -753,6 +796,26 @@ public class AuthController : ControllerBase
             if (DateTime.UtcNow - createdAt > TimeSpan.FromMinutes(2))
             {
                 return BadRequest(new { Error = "Code expired" });
+            }
+
+            // Enforce PKCE when a code challenge was registered at flow
+            // initiation: the caller must present the matching verifier.
+            // Codes minted without a challenge (web flow) are unaffected.
+            if (payload.TryGetProperty("CodeChallenge", out var challengeElement)
+                && challengeElement.ValueKind == JsonValueKind.String)
+            {
+                var challenge = challengeElement.GetString()!;
+                var method =
+                    payload.TryGetProperty("CodeChallengeMethod", out var methodElement)
+                        && methodElement.ValueKind == JsonValueKind.String
+                        ? methodElement.GetString()!
+                        : PkceValidator.MethodS256;
+
+                if (!PkceValidator.Verify(challenge, method, request.CodeVerifier))
+                {
+                    _logger.LogWarning("exchange-code rejected: PKCE verification failed");
+                    return BadRequest(new { Error = "Invalid or expired code" });
+                }
             }
 
             var token = payload.GetProperty("Token").GetString();
@@ -1004,6 +1067,12 @@ public class ResendVerificationRequest
 public class ExchangeCodeRequest
 {
     public string Code { get; set; } = string.Empty;
+
+    /// <summary>
+    /// PKCE code verifier (RFC 7636). Required when the login URL was
+    /// requested with a <c>codeChallenge</c>; ignored otherwise.
+    /// </summary>
+    public string? CodeVerifier { get; set; }
 }
 
 public class UpdateAiDescriptionCleaningRequest
