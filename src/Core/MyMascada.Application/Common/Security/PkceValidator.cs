@@ -15,17 +15,21 @@ namespace MyMascada.Application.Common.Security;
 public static partial class PkceValidator
 {
     public const string MethodS256 = "S256";
-    public const string MethodPlain = "plain";
 
-    [GeneratedRegex("^[A-Za-z0-9\\-._~]{43,128}$")]
+    // \z (not $): in .NET, $ also matches just before a trailing newline,
+    // which would let "<valid value>\n" slip through format validation.
+    [GeneratedRegex(@"^[A-Za-z0-9\-._~]{43,128}\z")]
     private static partial Regex UnreservedPattern();
 
     /// <summary>
-    /// Returns true when the method is a supported PKCE transform
-    /// ("S256" or "plain", case-sensitive per RFC 7636).
+    /// Returns true when the method is a supported PKCE transform.
+    /// Only "S256" is accepted (case-sensitive): the challenge travels in
+    /// query strings that can end up in proxy/server logs, and with "plain"
+    /// a logged challenge IS the verifier (RFC 7636 §7.2 recommends
+    /// rejecting "plain" when S256 is available).
     /// </summary>
     public static bool IsSupportedMethod(string method) =>
-        method is MethodS256 or MethodPlain;
+        method is MethodS256;
 
     /// <summary>
     /// Validates the code challenge format: 43–128 characters from the
@@ -50,17 +54,12 @@ public static partial class PkceValidator
             return false;
         }
 
-        var computedChallenge = codeChallengeMethod switch
-        {
-            MethodS256 => ComputeS256Challenge(codeVerifier),
-            MethodPlain => codeVerifier,
-            _ => null
-        };
-
-        if (computedChallenge is null)
+        if (codeChallengeMethod is not MethodS256)
         {
             return false;
         }
+
+        var computedChallenge = ComputeS256Challenge(codeVerifier);
 
         return CryptographicOperations.FixedTimeEquals(
             Encoding.ASCII.GetBytes(computedChallenge),

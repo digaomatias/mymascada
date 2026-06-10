@@ -15,18 +15,18 @@ public class PkceValidatorTests
     private const string RfcS256Challenge = "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM";
 
     [Fact]
-    public void IsSupportedMethod_AcceptsS256AndPlain()
+    public void IsSupportedMethod_AcceptsS256()
     {
         Assert.True(PkceValidator.IsSupportedMethod("S256"));
-        Assert.True(PkceValidator.IsSupportedMethod("plain"));
     }
 
     [Theory]
+    [InlineData("plain")] // deliberately rejected — see RFC 7636 §7.2
     [InlineData("s256")] // case-sensitive per RFC 7636
     [InlineData("PLAIN")]
     [InlineData("none")]
     [InlineData("")]
-    public void IsSupportedMethod_RejectsUnknownMethods(string method)
+    public void IsSupportedMethod_RejectsEverythingElse(string method)
     {
         Assert.False(PkceValidator.IsSupportedMethod(method));
     }
@@ -57,6 +57,16 @@ public class PkceValidatorTests
     }
 
     [Fact]
+    public void IsValidChallengeFormat_RejectsTrailingNewline()
+    {
+        // Regression: with the `$` anchor, .NET regexes match just before a
+        // trailing \n, so "<valid value>\n" used to pass. The pattern must
+        // anchor with \z.
+        Assert.False(PkceValidator.IsValidChallengeFormat(RfcS256Challenge + "\n"));
+        Assert.False(PkceValidator.IsValidChallengeFormat(new string('a', 43) + "\n"));
+    }
+
+    [Fact]
     public void ComputeS256Challenge_MatchesRfc7636ReferenceVector()
     {
         Assert.Equal(RfcS256Challenge, PkceValidator.ComputeS256Challenge(RfcVerifier));
@@ -76,16 +86,13 @@ public class PkceValidatorTests
     }
 
     [Fact]
-    public void Verify_Plain_AcceptsMatchingVerifier()
+    public void Verify_RejectsPlainMethod()
     {
+        // Even a "matching" plain pair must be rejected — only S256 is
+        // supported (the challenge travels in loggable query strings, and
+        // with plain a logged challenge IS the verifier).
         var secret = new string('k', 64);
-        Assert.True(PkceValidator.Verify(secret, "plain", secret));
-    }
-
-    [Fact]
-    public void Verify_Plain_RejectsWrongVerifier()
-    {
-        Assert.False(PkceValidator.Verify(new string('k', 64), "plain", new string('m', 64)));
+        Assert.False(PkceValidator.Verify(secret, "plain", secret));
     }
 
     [Fact]
@@ -98,16 +105,19 @@ public class PkceValidatorTests
     [Fact]
     public void Verify_RejectsUnknownMethod()
     {
-        Assert.False(PkceValidator.Verify(RfcVerifier, "none", RfcVerifier));
+        Assert.False(PkceValidator.Verify(RfcS256Challenge, "none", RfcVerifier));
     }
 
     [Fact]
     public void Verify_RejectsVerifierWithInvalidFormat()
     {
-        // Even if it would "match" as plain, a verifier outside the RFC 7636
-        // grammar is rejected outright.
-        var invalid = "short";
-        Assert.False(PkceValidator.Verify(invalid, "plain", invalid));
+        Assert.False(PkceValidator.Verify(RfcS256Challenge, "S256", "short"));
+    }
+
+    [Fact]
+    public void Verify_RejectsVerifierWithTrailingNewline()
+    {
+        Assert.False(PkceValidator.Verify(RfcS256Challenge, "S256", RfcVerifier + "\n"));
     }
 
     [Fact]

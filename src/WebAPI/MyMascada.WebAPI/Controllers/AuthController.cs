@@ -575,7 +575,10 @@ public class AuthController : ControllerBase
 
             if (!PkceValidator.IsSupportedMethod(method))
             {
-                return BadRequest("Unsupported code challenge method. Use S256 or plain.");
+                // "plain" is rejected deliberately: the challenge travels in
+                // a query string (proxy/server logs) and with plain a logged
+                // challenge IS the verifier (RFC 7636 §7.2).
+                return BadRequest("Unsupported code challenge method. Only S256 is supported.");
             }
 
             if (!PkceValidator.IsValidChallengeFormat(codeChallenge))

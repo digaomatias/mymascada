@@ -115,8 +115,10 @@ public class AuthControllerExchangeCodePkceTests
     }
 
     [Fact]
-    public void ExchangeCode_PlainChallenge_WithCorrectVerifier_ReturnsOk()
+    public void ExchangeCode_PlainChallenge_IsRejectedEvenWithMatchingVerifier()
     {
+        // Only S256 is supported — a code minted with method "plain" (which
+        // no released client ever produced) must not be exchangeable.
         var secret = new string('s', 64);
 
         var result = _controller.ExchangeCode(new ExchangeCodeRequest
@@ -125,7 +127,7 @@ public class AuthControllerExchangeCodePkceTests
             CodeVerifier = secret
         });
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.IsType<BadRequestObjectResult>(result);
     }
 
     [Fact]
@@ -156,14 +158,14 @@ public class AuthControllerExchangeCodePkceTests
     }
 
     [Fact]
-    public void ExchangeCode_PlainChallenge_WithS256StyleMismatch_ReturnsBadRequest()
+    public void ExchangeCode_Challenge_WithTrailingNewlineVerifier_ReturnsBadRequest()
     {
-        var secret = new string('s', 64);
+        var challenge = PkceValidator.ComputeS256Challenge(Verifier);
 
         var result = _controller.ExchangeCode(new ExchangeCodeRequest
         {
-            Code = ProtectCode(secret, "plain"),
-            CodeVerifier = new string('t', 64)
+            Code = ProtectCode(challenge, "S256"),
+            CodeVerifier = Verifier + "\n"
         });
 
         Assert.IsType<BadRequestObjectResult>(result);
@@ -220,24 +222,18 @@ public class AuthControllerExchangeCodePkceTests
     }
 
     [Fact]
-    public void GetGoogleLoginUrl_WithPlainMethod_EmbedsPlainMethod()
+    public void GetGoogleLoginUrl_WithPlainMethod_ReturnsBadRequest()
     {
-        var secret = new string('p', 64);
-
+        // "plain" is rejected: the challenge travels in a loggable query
+        // string, and with plain a logged challenge IS the verifier
+        // (RFC 7636 §7.2).
         var result = _controller.GetGoogleLoginUrl(
             returnUrl: "mymascada://auth/google-callback",
             inviteCode: null,
-            codeChallenge: secret,
+            codeChallenge: new string('p', 64),
             codeChallengeMethod: "plain");
 
-        var ok = Assert.IsType<OkObjectResult>(result);
-        var redirectUrl = (string)ok.Value!.GetType().GetProperty("RedirectUrl")!.GetValue(ok.Value)!;
-        var stateParam = Microsoft.AspNetCore.WebUtilities.QueryHelpers
-            .ParseQuery(new Uri(redirectUrl).Query)["state"].ToString();
-        var statePayload = JsonSerializer.Deserialize<JsonElement>(_protector.Unprotect(stateParam));
-
-        Assert.Equal(secret, statePayload.GetProperty("CodeChallenge").GetString());
-        Assert.Equal("plain", statePayload.GetProperty("CodeChallengeMethod").GetString());
+        Assert.IsType<BadRequestObjectResult>(result);
     }
 
     [Fact]
