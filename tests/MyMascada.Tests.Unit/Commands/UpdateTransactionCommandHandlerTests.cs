@@ -1,3 +1,4 @@
+using System.Data;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Categorization.Services;
 using MyMascada.Application.Features.Transactions.Commands;
@@ -13,6 +14,8 @@ public class UpdateTransactionCommandHandlerTests
     private readonly ITransferRepository _transferRepository;
     private readonly IAccountAccessService _accountAccessService;
     private readonly ICategorizationHistoryService _historyService;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IUnitOfWorkTransaction _dbTransaction;
     private readonly UpdateTransactionCommandHandler _handler;
     private readonly Guid _userId = Guid.NewGuid();
 
@@ -23,12 +26,17 @@ public class UpdateTransactionCommandHandlerTests
         _transferRepository = Substitute.For<ITransferRepository>();
         _accountAccessService = Substitute.For<IAccountAccessService>();
         _historyService = Substitute.For<ICategorizationHistoryService>();
+        _unitOfWork = Substitute.For<IUnitOfWork>();
+        _dbTransaction = Substitute.For<IUnitOfWorkTransaction>();
+        _unitOfWork.BeginTransactionAsync(IsolationLevel.Serializable, Arg.Any<CancellationToken>())
+            .Returns(_dbTransaction);
         _handler = new UpdateTransactionCommandHandler(
             _transactionRepository,
             _categoryRepository,
             _transferRepository,
             _accountAccessService,
-            _historyService);
+            _historyService,
+            _unitOfWork);
     }
 
     private Transaction CreateSplitTransaction(decimal amount = -100m)
@@ -85,6 +93,13 @@ public class UpdateTransactionCommandHandlerTests
         });
         transaction.Amount.Should().Be(-120m);
         await _transactionRepository.Received(1).UpdateAsync(transaction);
+
+        // The clear runs inside a serializable DB transaction (committed) so it
+        // serializes against concurrent PUT /splits replacements, and the splits
+        // are re-read inside that transaction (initial load + in-transaction read).
+        await _unitOfWork.Received(1).BeginTransactionAsync(IsolationLevel.Serializable, Arg.Any<CancellationToken>());
+        await _dbTransaction.Received(1).CommitAsync(Arg.Any<CancellationToken>());
+        await _transactionRepository.Received(2).GetByIdWithSplitsAsync(transaction.Id, _userId);
     }
 
     [Fact]
@@ -115,5 +130,24 @@ public class UpdateTransactionCommandHandlerTests
         });
         transaction.Notes.Should().Be("Edited notes only");
         await _transactionRepository.Received(1).UpdateAsync(transaction);
+
+        // No amount change -> splits untouched -> no serializable transaction needed.
+        await _unitOfWork.DidNotReceiveWithAnyArgs()
+            .BeginTransactionAsync(Arg.Any<IsolationLevel>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_WhenAmountChangesAndUpdateFails_ShouldNotCommitDbTransaction()
+    {
+        var transaction = CreateSplitTransaction(amount: -100m);
+        var command = CreateCommand(transaction, amount: -120m);
+        _transactionRepository.UpdateAsync(transaction)
+            .Returns<Task>(_ => throw new InvalidOperationException("db down"));
+
+        var act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        // Disposing without commit rolls back, so the half-applied clear is discarded.
+        await _dbTransaction.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
     }
 }

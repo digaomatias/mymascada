@@ -1,3 +1,4 @@
+using System.Data;
 using MediatR;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Categorization.Services;
@@ -40,19 +41,22 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
     private readonly ITransferRepository _transferRepository;
     private readonly IAccountAccessService _accountAccessService;
     private readonly ICategorizationHistoryService _historyService;
+    private readonly IUnitOfWork _unitOfWork;
 
     public UpdateTransactionCommandHandler(
         ITransactionRepository transactionRepository,
         ICategoryRepository categoryRepository,
         ITransferRepository transferRepository,
         IAccountAccessService accountAccessService,
-        ICategorizationHistoryService historyService)
+        ICategorizationHistoryService historyService,
+        IUnitOfWork unitOfWork)
     {
         _transactionRepository = transactionRepository;
         _categoryRepository = categoryRepository;
         _transferRepository = transferRepository;
         _accountAccessService = accountAccessService;
         _historyService = historyService;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<TransactionDto> Handle(UpdateTransactionCommand request, CancellationToken cancellationToken)
@@ -117,6 +121,27 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
         var amountChanged = Math.Abs(originalAmount - request.Amount) > 0.01m;
         var originalCategoryId = transaction.CategoryId;
         var originalDescription = transaction.Description;
+
+        // Amount edits must serialize against concurrent PUT /splits replacements:
+        // otherwise this handler clears only the splits it loaded, while a replace
+        // (validated against the old amount) can insert a fresh active set that
+        // commits after this save, leaving active splits that sum to the OLD amount.
+        // Serializable isolation (same mechanism as UpdateTransactionSplitsCommand)
+        // makes the database abort one of the two conflicting requests instead.
+        // Deliberately scoped to amount changes only; other field edits don't touch
+        // splits and don't need it. Disposing without Commit rolls back.
+        await using IUnitOfWorkTransaction? dbTransaction = originalAmount != request.Amount
+            ? await _unitOfWork.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
+            : null;
+
+        if (dbTransaction != null)
+        {
+            // Re-read the splits inside the open serializable transaction so the
+            // database registers the read (the initial load above happened outside
+            // it). The identity map keeps already-tracked instances, and splits
+            // committed since the first load are attached to transaction.Splits.
+            await _transactionRepository.GetByIdWithSplitsAsync(request.Id, request.UserId);
+        }
 
         // Update transaction properties
         transaction.Amount = request.Amount;
@@ -184,6 +209,11 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
         }
 
         await _transactionRepository.SaveChangesAsync();
+
+        if (dbTransaction != null)
+        {
+            await dbTransaction.CommitAsync(cancellationToken);
+        }
 
         // Record categorization history (best-effort — transaction update already persisted above)
         var categoryChanged = originalCategoryId != request.CategoryId;
