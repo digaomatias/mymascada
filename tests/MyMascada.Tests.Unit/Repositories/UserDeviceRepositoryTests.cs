@@ -143,4 +143,87 @@ public class UserDeviceRepositoryTests : IDisposable
 
         (await _repository.GetByUserIdAsync(_userId)).Should().HaveCount(1);
     }
+
+    [Fact]
+    public async Task UpsertAsync_LostInsertRace_RecoversAndUpdatesWinnerRow()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        // Simulates the concurrent registration that won the FcmToken unique index.
+        async Task SeedWinnerRow()
+        {
+            using var winnerContext = new ApplicationDbContext(options);
+            winnerContext.UserDevices.Add(new UserDevice
+            {
+                Id = Guid.NewGuid(),
+                UserId = _otherUserId,
+                FcmToken = "raced-token",
+                Platform = "android",
+                LastSeenAt = DateTime.UtcNow
+            });
+            await winnerContext.SaveChangesAsync();
+        }
+
+        using var context = new FailingFirstSaveDbContext(options, SeedWinnerRow);
+        var repository = new UserDeviceRepository(context);
+
+        var device = await repository.UpsertAsync(_userId, "raced-token", "ios");
+
+        device.UserId.Should().Be(_userId);
+        device.Platform.Should().Be("ios");
+        using var verifyContext = new ApplicationDbContext(options);
+        (await verifyContext.UserDevices.IgnoreQueryFilters().CountAsync()).Should().Be(1);
+    }
+
+    [Fact]
+    public async Task UpsertAsync_SaveFailsWithNoConflictingRow_RethrowsOriginalException()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+        using var context = new FailingFirstSaveDbContext(options, onFirstSaveFailure: null);
+        var repository = new UserDeviceRepository(context);
+
+        var act = () => repository.UpsertAsync(_userId, "token-1", "ios");
+
+        // A DbUpdateException with no conflicting row (e.g. FK violation, connection
+        // drop) must surface as-is, not as "sequence contains no elements".
+        await act.Should().ThrowAsync<DbUpdateException>()
+            .WithMessage("Simulated save failure*");
+    }
+
+    /// <summary>
+    /// Throws <see cref="DbUpdateException"/> on the first SaveChangesAsync call
+    /// (optionally running a callback first to simulate a concurrent writer) and
+    /// behaves normally afterwards.
+    /// </summary>
+    private sealed class FailingFirstSaveDbContext : ApplicationDbContext
+    {
+        private readonly Func<Task>? _onFirstSaveFailure;
+        private bool _hasFailed;
+
+        public FailingFirstSaveDbContext(DbContextOptions<ApplicationDbContext> options, Func<Task>? onFirstSaveFailure)
+            : base(options)
+        {
+            _onFirstSaveFailure = onFirstSaveFailure;
+        }
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            if (!_hasFailed)
+            {
+                _hasFailed = true;
+                if (_onFirstSaveFailure != null)
+                {
+                    await _onFirstSaveFailure();
+                }
+
+                throw new DbUpdateException("Simulated save failure (unique index violation)");
+            }
+
+            return await base.SaveChangesAsync(cancellationToken);
+        }
+    }
 }

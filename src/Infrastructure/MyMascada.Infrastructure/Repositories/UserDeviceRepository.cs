@@ -48,7 +48,15 @@ public class UserDeviceRepository : IUserDeviceRepository
                 _context.Entry(device).State = EntityState.Detached;
                 existing = await _context.UserDevices
                     .IgnoreQueryFilters()
-                    .FirstAsync(d => d.FcmToken == fcmToken, cancellationToken);
+                    .FirstOrDefaultAsync(d => d.FcmToken == fcmToken, cancellationToken);
+
+                // No winner row means the failure was NOT the FcmToken unique index
+                // (e.g. FK violation, connection drop). Rethrow the original exception
+                // instead of masking it with "sequence contains no elements".
+                if (existing == null)
+                {
+                    throw;
+                }
             }
         }
 

@@ -22,6 +22,9 @@ namespace MyMascada.Infrastructure.Services.Push;
 /// </summary>
 public class FirebaseFcmClient : IFcmClient
 {
+    /// <summary>FCM rejects multicast requests with more than 500 tokens.</summary>
+    private const int MaxTokensPerMulticast = 500;
+
     private readonly ILogger<FirebaseFcmClient> _logger;
     private readonly Lazy<FirebaseMessaging?> _messaging;
 
@@ -46,42 +49,49 @@ public class FirebaseFcmClient : IFcmClient
         if (messaging == null || tokens.Count == 0)
             return Array.Empty<FcmSendResult>();
 
-        var message = new MulticastMessage
-        {
-            Tokens = tokens.ToList(),
-            Notification = new Notification
-            {
-                Title = title,
-                Body = body
-            },
-            Data = data.ToDictionary(kv => kv.Key, kv => kv.Value)
-        };
-
-        var batchResponse = await messaging.SendEachForMulticastAsync(message, cancellationToken);
-
+        var payload = data.ToDictionary(kv => kv.Key, kv => kv.Value);
         var results = new List<FcmSendResult>(tokens.Count);
-        for (var i = 0; i < tokens.Count; i++)
-        {
-            var response = batchResponse.Responses[i];
-            if (response.IsSuccess)
-            {
-                results.Add(new FcmSendResult { Token = tokens[i], Success = true });
-                continue;
-            }
 
-            // Prune ONLY on Unregistered. InvalidArgument is ambiguous: FCM also returns
-            // INVALID_ARGUMENT for malformed *messages* (oversized payload, reserved data
-            // keys), so treating it as token-invalid would let a payload regression wipe
-            // every user's valid device registrations.
-            var messagingError = (response.Exception as FirebaseMessagingException)?.MessagingErrorCode;
-            var isTokenInvalid = messagingError is MessagingErrorCode.Unregistered;
-            results.Add(new FcmSendResult
+        // FCM rejects multicast requests with more than 500 tokens, so send in chunks
+        // and aggregate the per-token results (still ordered to match `tokens`).
+        foreach (var chunk in tokens.Chunk(MaxTokensPerMulticast))
+        {
+            var message = new MulticastMessage
             {
-                Token = tokens[i],
-                Success = false,
-                IsTokenInvalid = isTokenInvalid,
-                Error = response.Exception?.Message
-            });
+                Tokens = chunk.ToList(),
+                Notification = new Notification
+                {
+                    Title = title,
+                    Body = body
+                },
+                Data = payload
+            };
+
+            var batchResponse = await messaging.SendEachForMulticastAsync(message, cancellationToken);
+
+            for (var i = 0; i < chunk.Length; i++)
+            {
+                var response = batchResponse.Responses[i];
+                if (response.IsSuccess)
+                {
+                    results.Add(new FcmSendResult { Token = chunk[i], Success = true });
+                    continue;
+                }
+
+                // Prune ONLY on Unregistered. InvalidArgument is ambiguous: FCM also returns
+                // INVALID_ARGUMENT for malformed *messages* (oversized payload, reserved data
+                // keys), so treating it as token-invalid would let a payload regression wipe
+                // every user's valid device registrations.
+                var messagingError = (response.Exception as FirebaseMessagingException)?.MessagingErrorCode;
+                var isTokenInvalid = messagingError is MessagingErrorCode.Unregistered;
+                results.Add(new FcmSendResult
+                {
+                    Token = chunk[i],
+                    Success = false,
+                    IsTokenInvalid = isTokenInvalid,
+                    Error = response.Exception?.Message
+                });
+            }
         }
 
         return results;
