@@ -37,6 +37,7 @@ public class UserDeletionResultDto
     public int ChatMessagesDeleted { get; set; }
     public int NotificationsDeleted { get; set; }
     public int NotificationPreferencesDeleted { get; set; }
+    public int UserDevicesDeleted { get; set; }
     public int DashboardNudgeDismissalsDeleted { get; set; }
     public int BankCategoryMappingsDeleted { get; set; }
     public int DuplicateExclusionsDeleted { get; set; }

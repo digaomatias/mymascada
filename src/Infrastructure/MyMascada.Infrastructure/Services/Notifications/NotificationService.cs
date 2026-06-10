@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Domain.Entities;
 using MyMascada.Domain.Enums;
+using MyMascada.Infrastructure.Services.Push;
 
 namespace MyMascada.Infrastructure.Services.Notifications;
 
@@ -9,6 +10,7 @@ public class NotificationService : INotificationService
 {
     private readonly INotificationRepository _notificationRepository;
     private readonly INotificationPreferenceRepository _preferenceRepository;
+    private readonly IPushNotificationService _pushNotificationService;
     private readonly ILogger<NotificationService> _logger;
 
     // Rate limit: max notifications per type per day
@@ -17,10 +19,12 @@ public class NotificationService : INotificationService
     public NotificationService(
         INotificationRepository notificationRepository,
         INotificationPreferenceRepository preferenceRepository,
+        IPushNotificationService pushNotificationService,
         ILogger<NotificationService> logger)
     {
         _notificationRepository = notificationRepository;
         _preferenceRepository = preferenceRepository;
+        _pushNotificationService = pushNotificationService;
         _logger = logger;
     }
 
@@ -77,28 +81,16 @@ public class NotificationService : INotificationService
                 }
             }
 
-            // Enforce per-type channel preferences (inApp toggle)
-            if (preferences.ChannelPreferences != null)
+            // Enforce per-type channel preferences (inApp toggle).
+            // KNOWN LIMITATION (intentional for this iteration): every push corresponds
+            // to an in-app Notification row — the push payload deep-links to it via
+            // notificationId — so disabling inApp for a type also suppresses push for
+            // that type. "Push only, no in-app" is not supported.
+            // See docs/push-notifications.md ("Known limitations").
+            if (IsChannelExplicitlyDisabled(preferences.ChannelPreferences, type, "inApp", userId))
             {
-                try
-                {
-                    var channelPrefs = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, System.Text.Json.JsonElement>>(
-                        preferences.ChannelPreferences);
-                    var typeName = type.ToString();
-                    if (channelPrefs != null &&
-                        channelPrefs.TryGetValue(typeName, out var typePrefs) &&
-                        typePrefs.ValueKind == System.Text.Json.JsonValueKind.Object &&
-                        typePrefs.TryGetProperty("inApp", out var inAppProp) &&
-                        inAppProp.ValueKind == System.Text.Json.JsonValueKind.False)
-                    {
-                        _logger.LogDebug("Skipping in-app notification for user {UserId}, type {Type} — disabled by user preference", userId, type);
-                        return;
-                    }
-                }
-                catch (System.Text.Json.JsonException ex)
-                {
-                    _logger.LogWarning(ex, "Failed to parse ChannelPreferences for user {UserId}; proceeding with notification delivery", userId);
-                }
+                _logger.LogDebug("Skipping in-app notification (and its push counterpart) for user {UserId}, type {Type} — inApp disabled by user preference", userId, type);
+                return;
             }
         }
 
@@ -126,6 +118,68 @@ public class NotificationService : INotificationService
 
         _logger.LogInformation("Created {Type} notification for user {UserId}", type, userId);
 
-        // Future: dispatch to other delivery channels (push, email, etc.) based on preferences
+        // Dispatch to push channel unless the user explicitly disabled push for this type.
+        // Push failures must never roll back the in-app notification, so this is fail-soft.
+        if (!IsChannelExplicitlyDisabled(preferences?.ChannelPreferences, type, "push", userId))
+        {
+            await TrySendPushAsync(created, cancellationToken);
+        }
+        else
+        {
+            _logger.LogDebug("Skipping push notification for user {UserId}, type {Type} — disabled by user preference", userId, type);
+        }
+    }
+
+    /// <summary>
+    /// Sends the push counterpart of an in-app notification to the user's registered
+    /// devices. Never throws — push delivery is best-effort.
+    /// </summary>
+    private async Task TrySendPushAsync(Notification notification, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var (title, body) = PushContentFormatter.FormatContent(
+                notification.Title, notification.Body, notification.Data);
+            var data = PushContentFormatter.BuildDataPayload(notification.Type, notification.Id);
+
+            await _pushNotificationService.SendToUserAsync(
+                notification.UserId, title, body, data, cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send push notification {NotificationId} to user {UserId}",
+                notification.Id, notification.UserId);
+        }
+    }
+
+    /// <summary>
+    /// Returns true when the user's ChannelPreferences JSON explicitly disables the
+    /// given channel ("inApp"/"push"/"email") for the notification type.
+    /// Missing or malformed preferences default to enabled.
+    /// </summary>
+    private bool IsChannelExplicitlyDisabled(string? channelPreferencesJson, NotificationType type, string channel, Guid userId)
+    {
+        if (string.IsNullOrEmpty(channelPreferencesJson))
+            return false;
+
+        try
+        {
+            var channelPrefs = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, System.Text.Json.JsonElement>>(
+                channelPreferencesJson);
+            return channelPrefs != null &&
+                   channelPrefs.TryGetValue(type.ToString(), out var typePrefs) &&
+                   typePrefs.ValueKind == System.Text.Json.JsonValueKind.Object &&
+                   typePrefs.TryGetProperty(channel, out var channelProp) &&
+                   channelProp.ValueKind == System.Text.Json.JsonValueKind.False;
+        }
+        catch (System.Text.Json.JsonException ex)
+        {
+            _logger.LogWarning(ex, "Failed to parse ChannelPreferences for user {UserId}; proceeding with notification delivery", userId);
+            return false;
+        }
     }
 }
