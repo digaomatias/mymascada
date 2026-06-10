@@ -12,6 +12,9 @@ namespace MyMascada.Application.Features.Transactions.Commands;
 /// <see cref="Splits"/> list clears all splits (un-splits the transaction).
 /// Splitting does NOT change the parent transaction's CategoryId; analytics
 /// and budgets currently source category from the parent transaction only.
+/// Note: editing the transaction's amount via UpdateTransactionCommand clears
+/// existing splits (they would no longer sum to the new amount), so clients
+/// must re-apply splits after an amount change.
 /// </summary>
 public class UpdateTransactionSplitsCommand : IRequest<TransactionDto>
 {

@@ -193,6 +193,9 @@ public class TransactionsController : ControllerBase
     /// <summary>
     /// Atomically replaces the splits of a transaction.
     /// An empty or null splits list clears all splits (un-splits the transaction).
+    /// Note: changing the transaction's amount via PUT /transactions/{id} clears
+    /// any existing splits (they would no longer sum to the new amount), so
+    /// clients must re-apply splits after an amount change.
     /// </summary>
     [HttpPut("{id}/splits")]
     public async Task<ActionResult<TransactionDto>> UpdateTransactionSplits(int id, [FromBody] UpdateTransactionSplitsRequest request)

@@ -9,6 +9,15 @@ using MyMascada.Domain.Common;
 
 namespace MyMascada.Application.Features.Transactions.Commands;
 
+/// <summary>
+/// Updates a transaction's editable fields.
+/// Note on splits: if the transaction has splits and the amount actually changes,
+/// all splits are cleared (soft-deleted) because they would no longer sum to the
+/// new amount — an invariant enforced by UpdateTransactionSplitsCommand. The web
+/// frontend has no splits UI, so rejecting amount edits on split transactions
+/// would strand web users; clients that care about splits must re-apply them via
+/// PUT /transactions/{id}/splits after changing the amount.
+/// </summary>
 public class UpdateTransactionCommand : IRequest<TransactionDto>, ITransactionBaseCommand
 {
     public Guid UserId { get; set; }
@@ -48,8 +57,8 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
 
     public async Task<TransactionDto> Handle(UpdateTransactionCommand request, CancellationToken cancellationToken)
     {
-        // Get existing transaction
-        var transaction = await _transactionRepository.GetByIdAsync(request.Id, request.UserId);
+        // Get existing transaction (with splits, so an amount change can clear them)
+        var transaction = await _transactionRepository.GetByIdWithSplitsAsync(request.Id, request.UserId);
         if (transaction == null)
         {
             throw new ArgumentException($"Transaction with ID {request.Id} not found or does not belong to user");
@@ -124,7 +133,23 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
         {
             transaction.CategoryId = request.CategoryId;
         }
-        
+
+        // Splits must sum to the transaction amount exactly (invariant enforced by
+        // UpdateTransactionSplitsCommand). If the amount actually changed, clear the
+        // splits (soft-delete, same pattern as the replace logic) rather than reject,
+        // since the web frontend has no splits UI to fix them. Exact comparison on
+        // purpose: even a sub-cent change breaks the exact-sum invariant.
+        if (originalAmount != request.Amount)
+        {
+            var now = DateTimeProvider.UtcNow;
+            foreach (var split in transaction.Splits.Where(s => !s.IsDeleted))
+            {
+                split.IsDeleted = true;
+                split.DeletedAt = now;
+                split.UpdatedAt = now;
+            }
+        }
+
         transaction.UpdatedAt = DateTimeProvider.UtcNow;
 
         await _transactionRepository.UpdateAsync(transaction);
