@@ -29,15 +29,18 @@ public class CreateRecurringTransactionCommandHandler
     private readonly IRecurringTransactionRepository _recurringTransactionRepository;
     private readonly IAccountRepository _accountRepository;
     private readonly ICategoryRepository _categoryRepository;
+    private readonly IAccountAccessService _accountAccessService;
 
     public CreateRecurringTransactionCommandHandler(
         IRecurringTransactionRepository recurringTransactionRepository,
         IAccountRepository accountRepository,
-        ICategoryRepository categoryRepository)
+        ICategoryRepository categoryRepository,
+        IAccountAccessService accountAccessService)
     {
         _recurringTransactionRepository = recurringTransactionRepository;
         _accountRepository = accountRepository;
         _categoryRepository = categoryRepository;
+        _accountAccessService = accountAccessService;
     }
 
     public async Task<RecurringTransactionDto> Handle(
@@ -49,6 +52,17 @@ public class CreateRecurringTransactionCommandHandler
         if (account == null)
         {
             throw new ArgumentException($"Account with ID {request.AccountId} not found or does not belong to user");
+        }
+
+        // Auto-create schedules materialize real transactions through the standard
+        // pipeline, which requires modify access (owner or Manager share). Reject
+        // viewer-only accounts up front instead of letting the nightly job fail on
+        // every run. Reminder-only schedules are fine with view access.
+        if (request.AutoCreate
+            && !await _accountAccessService.CanModifyAccountAsync(request.UserId, request.AccountId))
+        {
+            throw new UnauthorizedAccessException(
+                "You do not have permission to auto-create transactions on this account.");
         }
 
         // Validate category if provided

@@ -352,6 +352,83 @@ public class RecurringTransactionTests
             new DateTime(2026, 6, 8));
     }
 
+    [Fact]
+    public void GetScheduledDates_StaleNextDueDateYearsBehind_StillReturnsWindowDates()
+    {
+        // Daily schedule whose NextDueDate is 2 years stale (long pause / job
+        // downtime). Walking day-by-day would burn all MaxCatchUpIterations
+        // before reaching the window and return an empty list.
+        var schedule = CreateSchedule(
+            RecurrenceFrequency.Custom,
+            new DateTime(2024, 6, 1),
+            customIntervalDays: 1);
+
+        var dates = schedule.GetScheduledDates(new DateTime(2026, 6, 10), new DateTime(2026, 6, 13));
+
+        dates.Should().Equal(
+            new DateTime(2026, 6, 10),
+            new DateTime(2026, 6, 11),
+            new DateTime(2026, 6, 12),
+            new DateTime(2026, 6, 13));
+    }
+
+    [Fact]
+    public void GetScheduledDates_StaleNextDueDate_PreservesScheduleAnchor()
+    {
+        // Weekly anchored on Monday 2025-06-02; a year later the materialized
+        // dates must still fall on the same weekly grid (Mondays).
+        var schedule = CreateSchedule(RecurrenceFrequency.Weekly, new DateTime(2025, 6, 2));
+
+        var dates = schedule.GetScheduledDates(new DateTime(2026, 6, 10), new DateTime(2026, 6, 30));
+
+        dates.Should().Equal(
+            new DateTime(2026, 6, 15),
+            new DateTime(2026, 6, 22),
+            new DateTime(2026, 6, 29));
+    }
+
+    [Fact]
+    public void GetScheduledDates_StaleMonthlySchedule_KeepsAnchorDayClamping()
+    {
+        // Monthly anchored on the 31st, stale for over a year: the window dates
+        // must still clamp to month length (Jun 30) instead of drifting.
+        var schedule = CreateSchedule(RecurrenceFrequency.Monthly, new DateTime(2025, 1, 31));
+
+        var dates = schedule.GetScheduledDates(new DateTime(2026, 6, 1), new DateTime(2026, 7, 31));
+
+        dates.Should().Equal(
+            new DateTime(2026, 6, 30),
+            new DateTime(2026, 7, 31));
+    }
+
+    // --- AdvanceNextDueDateAfter (incremental catch-up) ---
+
+    [Fact]
+    public void AdvanceNextDueDateAfter_SetsOccurrenceFollowingLastFiredDate()
+    {
+        var schedule = CreateSchedule(RecurrenceFrequency.Weekly, new DateTime(2026, 6, 1));
+
+        // Run only processed up to 6/8 (cap reached); next due stays in the past
+        schedule.AdvanceNextDueDateAfter(new DateTime(2026, 6, 8));
+
+        schedule.NextDueDate.Should().Be(new DateTime(2026, 6, 15));
+        schedule.IsActive.Should().BeTrue();
+    }
+
+    [Fact]
+    public void AdvanceNextDueDateAfter_PastEndDate_DeactivatesSchedule()
+    {
+        var schedule = CreateSchedule(
+            RecurrenceFrequency.Weekly,
+            new DateTime(2026, 6, 1),
+            endDate: new DateTime(2026, 6, 10));
+
+        schedule.AdvanceNextDueDateAfter(new DateTime(2026, 6, 8));
+
+        schedule.NextDueDate.Should().Be(new DateTime(2026, 6, 15));
+        schedule.IsActive.Should().BeFalse();
+    }
+
     // --- Pause / Resume ---
 
     [Fact]

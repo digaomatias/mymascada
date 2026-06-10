@@ -43,7 +43,8 @@ public class RecurringTransactionProcessingServiceTests
         DateTime nextDueDate,
         RecurrenceFrequency frequency = RecurrenceFrequency.Monthly,
         DateTime? endDate = null,
-        int id = 1)
+        int id = 1,
+        int? customIntervalDays = null)
     {
         return new RecurringTransaction
         {
@@ -54,6 +55,7 @@ public class RecurringTransactionProcessingServiceTests
             Description = "Internet bill",
             Amount = 89.99m,
             Frequency = frequency,
+            CustomIntervalDays = customIntervalDays,
             StartDate = nextDueDate,
             EndDate = endDate,
             NextDueDate = nextDueDate,
@@ -353,6 +355,36 @@ public class RecurringTransactionProcessingServiceTests
             Arg.Any<RecurringTransactionOccurrence>(), Arg.Any<CancellationToken>());
 
         schedule.NextDueDate.Should().Be(new DateTime(2026, 6, 17));
+    }
+
+    [Fact]
+    public async Task ProcessDueAsync_MoreDueDatesThanCatchUpCap_ContinuesFromLastFiredDateInsteadOfSkipping()
+    {
+        // Daily schedule 400 days behind: one run can only materialize
+        // MaxCatchUpIterations (366) occurrences. The schedule must then point
+        // at the day AFTER the last fired occurrence — still in the past, so
+        // the next nightly run picks it up and keeps catching up — instead of
+        // snapping past today and silently losing the remaining 34 days.
+        var firstDue = Today.AddDays(-400);
+        var schedule = CreateSchedule(
+            autoCreate: true,
+            nextDueDate: firstDue,
+            frequency: RecurrenceFrequency.Custom,
+            customIntervalDays: 1);
+        SetupDue(schedule);
+        _mediator.Send(Arg.Any<CreateTransactionCommand>(), Arg.Any<CancellationToken>())
+            .Returns(new TransactionDto { Id = 42 });
+
+        var result = await _service.ProcessDueAsync(Today);
+
+        result.TransactionsCreated.Should().Be(RecurringTransaction.MaxCatchUpIterations);
+
+        // Last fired date = firstDue + 365 days; next due = the day after it
+        var expectedNextDue = firstDue.AddDays(RecurringTransaction.MaxCatchUpIterations);
+        schedule.NextDueDate.Should().Be(expectedNextDue);
+        schedule.NextDueDate.Should().BeOnOrBefore(Today, "the remaining occurrences must stay due for the next run");
+        schedule.IsActive.Should().BeTrue();
+        await _repository.Received(1).UpdateAsync(schedule, Arg.Any<CancellationToken>());
     }
 
     [Fact]

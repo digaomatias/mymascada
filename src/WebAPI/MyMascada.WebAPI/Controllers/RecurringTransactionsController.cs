@@ -121,6 +121,10 @@ public class RecurringTransactionsController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+        }
     }
 
     /// <summary>
@@ -159,6 +163,10 @@ public class RecurringTransactionsController : ControllerBase
         catch (ArgumentException ex)
         {
             return BadRequest(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
         }
     }
 
