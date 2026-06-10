@@ -15,15 +15,13 @@ primary_region = 'syd'
   Jwt__Issuer = 'https://mymascada.com'
   Jwt__Audience = 'https://mymascada.com'
   BetaAccess__RequireInviteCode = 'true'
-  Email__Enabled = 'false'
-  Email__Provider = 'smtp'
-  Email__DefaultFromEmail = 'noreply@mymascada.com'
+  # Email via Resend HTTP API (https://resend.com).
+  # Requires secret: fly secrets set Email__Resend__ApiKey=re_xxx
+  # See docs/email-production-setup.md for full setup (API key + SPF/DKIM DNS).
+  Email__Enabled = 'true'
+  Email__Provider = 'resend'
+  Email__DefaultFromEmail = 'no-reply@mymascada.com'
   Email__DefaultFromName = 'MyMascada'
-  Email__Smtp__Host = 'mail.mymascada.com'
-  Email__Smtp__Port = '587'
-  Email__Smtp__Username = 'mymascada/mymascada'
-  Email__Smtp__UseStartTls = 'false'
-  Email__Smtp__UseSsl = 'false'
   PasswordReset__FrontendResetUrl = 'https://app.mymascada.com/auth/reset-password'
   EmailVerification__FrontendVerifyUrl = 'https://app.mymascada.com/auth/verify-email'
 
