@@ -35,7 +35,7 @@ public class SetRecurringTransactionActiveCommandHandler
             request.Id, request.UserId, cancellationToken);
         if (recurringTransaction == null)
         {
-            throw new ArgumentException($"Recurring transaction with ID {request.Id} not found");
+            throw new KeyNotFoundException($"Recurring transaction with ID {request.Id} not found");
         }
 
         if (request.IsActive)

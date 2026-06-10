@@ -48,7 +48,7 @@ public class UpdateRecurringTransactionCommandHandler
             request.Id, request.UserId, cancellationToken);
         if (recurringTransaction == null)
         {
-            throw new ArgumentException($"Recurring transaction with ID {request.Id} not found");
+            throw new KeyNotFoundException($"Recurring transaction with ID {request.Id} not found");
         }
 
         // Validate account exists and belongs to user

@@ -81,6 +81,10 @@ public class RecurringTransactionProcessingService : IRecurringTransactionProces
                 _logger.LogError(ex,
                     "Failed to process recurring transaction {RecurringTransactionId} for user {UserId}",
                     schedule.Id, schedule.UserId);
+
+                // A failed save leaves poisoned entries in the shared scoped change
+                // tracker; detach everything so subsequent schedules can still save.
+                _recurringTransactionRepository.ResetChangeTracking();
             }
         }
 
@@ -93,62 +97,63 @@ public class RecurringTransactionProcessingService : IRecurringTransactionProces
         RecurringTransactionProcessingResult result,
         CancellationToken cancellationToken)
     {
+        // Schedules pointing at a deleted account can never succeed — deactivate
+        // them instead of failing (or ghost-reminding) every night.
+        if (!await _recurringTransactionRepository.AccountExistsAsync(schedule.AccountId, cancellationToken))
+        {
+            _logger.LogWarning(
+                "Account {AccountId} for recurring transaction {RecurringTransactionId} no longer exists; deactivating schedule",
+                schedule.AccountId, schedule.Id);
+
+            schedule.Pause();
+            await _recurringTransactionRepository.UpdateAsync(schedule, cancellationToken);
+            result.SchedulesDeactivated++;
+            return;
+        }
+
         foreach (var dueDate in schedule.GetDueDates(today))
         {
-            // Idempotency guard: never fire the same scheduled date twice
-            if (await _recurringTransactionRepository.HasOccurrenceAsync(schedule.Id, dueDate, cancellationToken))
+            var existing = await _recurringTransactionRepository.GetOccurrenceAsync(
+                schedule.Id, dueDate, cancellationToken);
+
+            if (existing != null)
             {
+                if (existing.Status == RecurringTransactionOccurrenceStatus.Pending)
+                {
+                    // A previous run claimed this date but crashed before completing it.
+                    // Concurrent job executions are serialized (DisableConcurrentExecution),
+                    // so a Pending row seen here is stale — finish it now.
+                    await CompleteOccurrenceAsync(schedule, existing, dueDate, result, cancellationToken);
+                }
+                else
+                {
+                    // Already fired on an earlier run — never fire the same date twice.
+                    result.OccurrencesSkipped++;
+                }
+
+                continue;
+            }
+
+            // Claim the scheduled date BEFORE creating the transaction / sending the
+            // reminder. The unique (RecurringTransactionId, ScheduledDate) index makes
+            // the claim atomic: a crash after this point leaves a Pending row that the
+            // next run completes, instead of replaying the bill into a duplicate.
+            var claim = await _recurringTransactionRepository.TryCreateOccurrenceAsync(
+                new RecurringTransactionOccurrence
+                {
+                    RecurringTransactionId = schedule.Id,
+                    ScheduledDate = dueDate,
+                    Status = RecurringTransactionOccurrenceStatus.Pending
+                }, cancellationToken);
+
+            if (claim == null)
+            {
+                // Lost the insert race to another run that claimed this date.
                 result.OccurrencesSkipped++;
                 continue;
             }
 
-            int? transactionId = null;
-            RecurringTransactionOccurrenceStatus status;
-
-            if (schedule.AutoCreate)
-            {
-                // Reuse the standard transaction creation pipeline (validation,
-                // categorization, account access). Expenses are stored negative.
-                var transactionDto = await _mediator.Send(new CreateTransactionCommand
-                {
-                    UserId = schedule.UserId,
-                    AccountId = schedule.AccountId,
-                    CategoryId = schedule.CategoryId,
-                    Amount = -Math.Abs(schedule.Amount),
-                    TransactionDate = dueDate,
-                    Description = schedule.Description,
-                    Status = TransactionStatus.Pending,
-                    Notes = schedule.Notes,
-                    Tags = "recurring",
-                    // Occurrence uniqueness is our idempotency mechanism; the duplicate
-                    // checker would otherwise collapse identical catch-up occurrences.
-                    AllowDuplicates = true
-                }, cancellationToken);
-
-                transactionId = transactionDto.Id;
-                status = RecurringTransactionOccurrenceStatus.Created;
-                result.TransactionsCreated++;
-            }
-            else
-            {
-                await _notificationTriggerService.NotifyTransactionReminderAsync(
-                    schedule.UserId,
-                    schedule.Description,
-                    schedule.Amount,
-                    dueDate,
-                    cancellationToken);
-
-                status = RecurringTransactionOccurrenceStatus.Notified;
-                result.RemindersSent++;
-            }
-
-            await _recurringTransactionRepository.CreateOccurrenceAsync(new RecurringTransactionOccurrence
-            {
-                RecurringTransactionId = schedule.Id,
-                ScheduledDate = dueDate,
-                Status = status,
-                TransactionId = transactionId
-            }, cancellationToken);
+            await CompleteOccurrenceAsync(schedule, claim, dueDate, result, cancellationToken);
         }
 
         var wasActive = schedule.IsActive;
@@ -160,5 +165,52 @@ public class RecurringTransactionProcessingService : IRecurringTransactionProces
         }
 
         await _recurringTransactionRepository.UpdateAsync(schedule, cancellationToken);
+    }
+
+    private async Task CompleteOccurrenceAsync(
+        RecurringTransaction schedule,
+        RecurringTransactionOccurrence occurrence,
+        DateTime dueDate,
+        RecurringTransactionProcessingResult result,
+        CancellationToken cancellationToken)
+    {
+        if (schedule.AutoCreate)
+        {
+            // Reuse the standard transaction creation pipeline (validation,
+            // categorization, account access). Expenses are stored negative.
+            var transactionDto = await _mediator.Send(new CreateTransactionCommand
+            {
+                UserId = schedule.UserId,
+                AccountId = schedule.AccountId,
+                CategoryId = schedule.CategoryId,
+                Amount = -Math.Abs(schedule.Amount),
+                TransactionDate = dueDate,
+                Description = schedule.Description,
+                Status = TransactionStatus.Pending,
+                Notes = schedule.Notes,
+                Tags = "recurring",
+                // The claimed occurrence row is our idempotency mechanism; the duplicate
+                // checker would otherwise collapse identical catch-up occurrences.
+                AllowDuplicates = true
+            }, cancellationToken);
+
+            occurrence.TransactionId = transactionDto.Id;
+            occurrence.Status = RecurringTransactionOccurrenceStatus.Created;
+            result.TransactionsCreated++;
+        }
+        else
+        {
+            await _notificationTriggerService.NotifyTransactionReminderAsync(
+                schedule.UserId,
+                schedule.Description,
+                schedule.Amount,
+                dueDate,
+                cancellationToken);
+
+            occurrence.Status = RecurringTransactionOccurrenceStatus.Notified;
+            result.RemindersSent++;
+        }
+
+        await _recurringTransactionRepository.UpdateOccurrenceAsync(occurrence, cancellationToken);
     }
 }

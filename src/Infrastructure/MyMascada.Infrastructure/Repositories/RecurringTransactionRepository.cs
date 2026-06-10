@@ -159,6 +159,21 @@ public class RecurringTransactionRepository : IRecurringTransactionRepository
     }
 
     /// <summary>
+    /// Gets the occurrence for the given schedule and date, or null when none exists
+    /// </summary>
+    public async Task<RecurringTransactionOccurrence?> GetOccurrenceAsync(
+        int recurringTransactionId,
+        DateTime scheduledDate,
+        CancellationToken cancellationToken = default)
+    {
+        var date = scheduledDate.Date;
+        return await _context.RecurringTransactionOccurrences
+            .FirstOrDefaultAsync(o => o.RecurringTransactionId == recurringTransactionId
+                                      && o.ScheduledDate == date
+                                      && !o.IsDeleted, cancellationToken);
+    }
+
+    /// <summary>
     /// Creates a new occurrence record
     /// </summary>
     public async Task<RecurringTransactionOccurrence> CreateOccurrenceAsync(
@@ -169,6 +184,42 @@ public class RecurringTransactionRepository : IRecurringTransactionRepository
         var entry = await _context.RecurringTransactionOccurrences.AddAsync(occurrence, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
         return entry.Entity;
+    }
+
+    /// <summary>
+    /// Attempts to insert an occurrence row, returning null when the unique
+    /// (RecurringTransactionId, ScheduledDate) index rejects it
+    /// </summary>
+    public async Task<RecurringTransactionOccurrence?> TryCreateOccurrenceAsync(
+        RecurringTransactionOccurrence occurrence,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await CreateOccurrenceAsync(occurrence, cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            // Single-row insert into a table whose only constraint besides the PK is
+            // the unique (RecurringTransactionId, ScheduledDate) index — another run
+            // claimed this scheduled date first. Detach the failed entity so the
+            // change tracker stays usable for subsequent schedules.
+            _context.Entry(occurrence).State = EntityState.Detached;
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Updates an existing occurrence record
+    /// </summary>
+    public async Task<RecurringTransactionOccurrence> UpdateOccurrenceAsync(
+        RecurringTransactionOccurrence occurrence,
+        CancellationToken cancellationToken = default)
+    {
+        occurrence.UpdatedAt = DateTime.UtcNow;
+        _context.RecurringTransactionOccurrences.Update(occurrence);
+        await _context.SaveChangesAsync(cancellationToken);
+        return occurrence;
     }
 
     /// <summary>
@@ -187,5 +238,23 @@ public class RecurringTransactionRepository : IRecurringTransactionRepository
             .OrderByDescending(o => o.ScheduledDate)
             .Take(count)
             .ToListAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Checks whether the account still exists and is not soft-deleted
+    /// (the Accounts query filter hides soft-deleted rows)
+    /// </summary>
+    public async Task<bool> AccountExistsAsync(int accountId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Accounts.AnyAsync(a => a.Id == accountId, cancellationToken);
+    }
+
+    /// <summary>
+    /// Detaches all tracked entities so a failed save for one schedule cannot
+    /// poison the shared change tracker for subsequent schedules
+    /// </summary>
+    public void ResetChangeTracking()
+    {
+        _context.ChangeTracker.Clear();
     }
 }

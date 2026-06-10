@@ -12,6 +12,12 @@ namespace MyMascada.WebAPI.Controllers;
 /// <summary>
 /// Manages user-created recurring transactions (scheduled bills).
 /// Distinct from the heuristic recurring pattern detection.
+///
+/// API conventions:
+/// - All dates are date-only: send "yyyy-MM-dd" strings (timezone-offset ISO
+///   strings can shift across midnight and change the monthly anchor day).
+/// - Amounts are positive and expense-only; auto-created transactions are
+///   recorded with a negative amount. Recurring income is a future direction flag.
 /// </summary>
 [ApiController]
 [ApiVersion("1.0")]
@@ -146,6 +152,10 @@ public class RecurringTransactionsController : ControllerBase
             var result = await _mediator.Send(command);
             return Ok(result);
         }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
         catch (ArgumentException ex)
         {
             return BadRequest(new { message = ex.Message });
@@ -206,7 +216,7 @@ public class RecurringTransactionsController : ControllerBase
             var result = await _mediator.Send(command);
             return Ok(result);
         }
-        catch (ArgumentException ex)
+        catch (KeyNotFoundException ex)
         {
             return NotFound(new { message = ex.Message });
         }
