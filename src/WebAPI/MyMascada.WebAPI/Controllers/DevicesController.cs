@@ -71,16 +71,19 @@ public class DevicesController : ControllerBase
 
     /// <summary>
     /// Unregister an FCM device token (e.g. on logout). Idempotent.
+    /// The token travels in the request body so it never appears in URL/proxy logs.
     /// </summary>
-    [HttpDelete("{token}")]
-    public async Task<ActionResult> UnregisterDevice(string token, CancellationToken cancellationToken = default)
+    [HttpDelete]
+    public async Task<ActionResult> UnregisterDevice(
+        [FromBody] UnregisterDeviceRequest request,
+        CancellationToken cancellationToken = default)
     {
         try
         {
             var command = new UnregisterDeviceCommand
             {
                 UserId = _currentUserService.GetUserId(),
-                Token = token
+                Token = request.Token
             };
 
             await _mediator.Send(command, cancellationToken);

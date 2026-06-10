@@ -9,6 +9,15 @@ public class RegisterDeviceRequest
     public string Platform { get; set; } = string.Empty;
 }
 
+public class UnregisterDeviceRequest
+{
+    /// <summary>
+    /// Firebase Cloud Messaging registration token to remove. Sent in the body
+    /// (not the URL) so the token never appears in edge/proxy request logs.
+    /// </summary>
+    public string Token { get; set; } = string.Empty;
+}
+
 public class DeviceDto
 {
     public Guid Id { get; set; }

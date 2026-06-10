@@ -33,8 +33,23 @@ public class UserDeviceRepository : IUserDeviceRepository
                 LastSeenAt = DateTime.UtcNow
             };
             _context.UserDevices.Add(device);
-            await _context.SaveChangesAsync(cancellationToken);
-            return device;
+
+            try
+            {
+                await _context.SaveChangesAsync(cancellationToken);
+                return device;
+            }
+            catch (DbUpdateException)
+            {
+                // Concurrent first registration of the same token (the mobile client
+                // races login registration against onTokenRefresh) lost to the unique
+                // index on FcmToken. Fall through to update the winner's row so the
+                // operation stays idempotent.
+                _context.Entry(device).State = EntityState.Detached;
+                existing = await _context.UserDevices
+                    .IgnoreQueryFilters()
+                    .FirstAsync(d => d.FcmToken == fcmToken, cancellationToken);
+            }
         }
 
         // Reassign if a different user logged in on the same device, revive soft-deleted rows.

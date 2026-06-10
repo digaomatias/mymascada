@@ -26,10 +26,10 @@ NotificationService.CreateNotificationAsync
 | Endpoint | Description |
 |---|---|
 | `POST /api/v1/devices` `{ "token": "<fcm token>", "platform": "ios"\|"android" }` | Idempotent upsert. Re-registering refreshes `LastSeenAt`; a token previously owned by another user is reassigned. Auth required. |
-| `DELETE /api/v1/devices/{token}` | Unregister on logout. Idempotent, only removes tokens owned by the caller. |
+| `DELETE /api/v1/devices` `{ "token": "<fcm token>" }` | Unregister on logout. Idempotent, only removes tokens owned by the caller. The token travels in the request body so it never appears in URL/edge-proxy logs. |
 
 The mobile app should call `POST /api/v1/devices` after login and on every
-`onTokenRefresh` callback, and `DELETE /api/v1/devices/{token}` on logout.
+`onTokenRefresh` callback, and `DELETE /api/v1/devices` (token in body) on logout.
 
 ## Data payload (deep linking)
 

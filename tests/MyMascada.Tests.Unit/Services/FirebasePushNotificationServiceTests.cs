@@ -41,6 +41,33 @@ public class FirebasePushNotificationServiceTests
     }
 
     [Fact]
+    public async Task SendToUserAsync_DeliveryFailure_DoesNotThrow()
+    {
+        // Contract: push is best-effort and must never break the calling flow.
+        _fcmClient.IsConfigured.Returns(true);
+        _deviceRepository.GetByUserIdAsync(_userId, Arg.Any<CancellationToken>())
+            .Returns<List<UserDevice>>(_ => throw new InvalidOperationException("database unavailable"));
+
+        var act = () => _service.SendToUserAsync(_userId, "Title", "Body");
+
+        await act.Should().NotThrowAsync();
+    }
+
+    [Fact]
+    public async Task SendToUserAsync_CallerCancellation_Propagates()
+    {
+        _fcmClient.IsConfigured.Returns(true);
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+        _deviceRepository.GetByUserIdAsync(_userId, Arg.Any<CancellationToken>())
+            .Returns<List<UserDevice>>(_ => throw new OperationCanceledException(cts.Token));
+
+        var act = () => _service.SendToUserAsync(_userId, "Title", "Body", null, cts.Token);
+
+        await act.Should().ThrowAsync<OperationCanceledException>();
+    }
+
+    [Fact]
     public async Task SendToUserAsync_NoDevices_DoesNotSend()
     {
         _fcmClient.IsConfigured.Returns(true);

@@ -30,6 +30,29 @@ public class FirebasePushNotificationService : IPushNotificationService
         IReadOnlyDictionary<string, string>? data = null,
         CancellationToken cancellationToken = default)
     {
+        // Push delivery is best-effort and must never break the calling flow
+        // (see IPushNotificationService contract). Only cancellation propagates.
+        try
+        {
+            await SendToUserCoreAsync(userId, title, body, data, cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send push notification to user {UserId}", userId);
+        }
+    }
+
+    private async Task SendToUserCoreAsync(
+        Guid userId,
+        string title,
+        string body,
+        IReadOnlyDictionary<string, string>? data,
+        CancellationToken cancellationToken)
+    {
         if (!_fcmClient.IsConfigured)
         {
             _logger.LogDebug("Skipping push for user {UserId} — Firebase is not configured", userId);

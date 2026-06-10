@@ -69,8 +69,12 @@ public class FirebaseFcmClient : IFcmClient
                 continue;
             }
 
+            // Prune ONLY on Unregistered. InvalidArgument is ambiguous: FCM also returns
+            // INVALID_ARGUMENT for malformed *messages* (oversized payload, reserved data
+            // keys), so treating it as token-invalid would let a payload regression wipe
+            // every user's valid device registrations.
             var messagingError = (response.Exception as FirebaseMessagingException)?.MessagingErrorCode;
-            var isTokenInvalid = messagingError is MessagingErrorCode.Unregistered or MessagingErrorCode.InvalidArgument;
+            var isTokenInvalid = messagingError is MessagingErrorCode.Unregistered;
             results.Add(new FcmSendResult
             {
                 Token = tokens[i],

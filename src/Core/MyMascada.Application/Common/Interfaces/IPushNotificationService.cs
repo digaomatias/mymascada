@@ -5,7 +5,8 @@ public interface IPushNotificationService
     /// <summary>
     /// Sends a push notification to all devices registered for the user.
     /// Fail-soft: logs and returns without throwing when push is not configured
-    /// or delivery fails. Tokens reported as unregistered by FCM are pruned.
+    /// or delivery fails — only <see cref="OperationCanceledException"/> for the
+    /// caller's token propagates. Tokens reported as unregistered by FCM are pruned.
     /// </summary>
     /// <param name="userId">Target user.</param>
     /// <param name="title">Human-readable notification title.</param>

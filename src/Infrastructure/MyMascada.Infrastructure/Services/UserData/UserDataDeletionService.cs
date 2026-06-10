@@ -294,6 +294,12 @@ public class UserDataDeletionService : IUserDataDeletionService
                 .Where(np => np.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
+            // 23b. Delete UserDevices (FCM push notification tokens)
+            result.UserDevicesDeleted = await _context.UserDevices
+                .IgnoreQueryFilters()
+                .Where(ud => ud.UserId == userId)
+                .ExecuteDeleteAsync(cancellationToken);
+
             // 24. Delete DashboardNudgeDismissals
             result.DashboardNudgeDismissalsDeleted = await _context.DashboardNudgeDismissals
                 .IgnoreQueryFilters()
@@ -447,7 +453,8 @@ public class UserDataDeletionService : IUserDataDeletionService
                 "{Transfers} transfers, {Reconciliations} reconciliations, {BankConnections} bank connections, " +
                 "{Budgets} budgets, {Wallets} wallets, {RecurringPatterns} recurring patterns, {Goals} goals, " +
                 "{AccountShares} account shares, {ChatMessages} chat messages, {Notifications} notifications, " +
-                "{NotificationPreferences} notification preferences, {DashboardNudgeDismissals} nudge dismissals, " +
+                "{NotificationPreferences} notification preferences, {UserDevices} push devices, " +
+                "{DashboardNudgeDismissals} nudge dismissals, " +
                 "{BankCategoryMappings} bank category mappings, {DuplicateExclusions} duplicate exclusions, " +
                 "{RuleSuggestions} rule suggestions, {RefreshTokens} refresh tokens, {PasswordResetTokens} password reset tokens, " +
                 "{EmailVerificationTokens} email verification tokens, {AkahuUserCredentials} akahu credentials, " +
@@ -458,7 +465,8 @@ public class UserDataDeletionService : IUserDataDeletionService
                 result.TransfersDeleted, result.ReconciliationsDeleted, result.BankConnectionsDeleted,
                 result.BudgetsDeleted, result.WalletsDeleted, result.RecurringPatternsDeleted, result.GoalsDeleted,
                 result.AccountSharesDeleted, result.ChatMessagesDeleted, result.NotificationsDeleted,
-                result.NotificationPreferencesDeleted, result.DashboardNudgeDismissalsDeleted,
+                result.NotificationPreferencesDeleted, result.UserDevicesDeleted,
+                result.DashboardNudgeDismissalsDeleted,
                 result.BankCategoryMappingsDeleted, result.DuplicateExclusionsDeleted,
                 result.RuleSuggestionsDeleted, result.RefreshTokensDeleted, result.PasswordResetTokensDeleted,
                 result.EmailVerificationTokensDeleted, result.AkahuUserCredentialsDeleted,

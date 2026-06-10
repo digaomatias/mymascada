@@ -31,8 +31,10 @@ public sealed class FcmSendResult
     public required bool Success { get; init; }
 
     /// <summary>
-    /// True when FCM reported the token as unregistered/invalid and it should
-    /// be pruned from the device registry.
+    /// True when FCM reported the token as Unregistered and it should be pruned
+    /// from the device registry. Other error codes (including InvalidArgument,
+    /// which can indicate a malformed message rather than a bad token) are
+    /// treated as non-prunable failures.
     /// </summary>
     public bool IsTokenInvalid { get; init; }
 
