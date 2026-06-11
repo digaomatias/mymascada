@@ -1,3 +1,4 @@
+using System.Data;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using MyMascada.Application.Common.Interfaces;
@@ -659,6 +660,10 @@ public class RecurringTransactionProcessingServiceTests
         public List<string> Events { get; } = new();
         public Action? OnCommit { get; set; }
         public Action? OnRollback { get; set; }
+
+        public Task<IUnitOfWorkTransaction> BeginTransactionAsync(
+            IsolationLevel isolationLevel, CancellationToken cancellationToken = default) =>
+            BeginTransactionAsync(cancellationToken);
 
         public Task<IUnitOfWorkTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
         {
