@@ -1,6 +1,7 @@
 using MediatR;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Reconciliation.DTOs;
+using MyMascada.Domain.Common;
 using MyMascada.Domain.Entities;
 using MyMascada.Domain.Enums;
 
@@ -58,9 +59,9 @@ public class UpdateReconciliationCommandHandler : IRequestHandler<UpdateReconcil
             Notes = reconciliation.Notes
         };
 
-        // Update fields
+        // Update fields (normalize dates to UTC for PostgreSQL compatibility)
         if (request.StatementEndDate.HasValue)
-            reconciliation.StatementEndDate = request.StatementEndDate.Value;
+            reconciliation.StatementEndDate = DateTimeProvider.ToUtc(request.StatementEndDate.Value);
 
         if (request.StatementEndBalance.HasValue)
             reconciliation.StatementEndBalance = request.StatementEndBalance.Value;

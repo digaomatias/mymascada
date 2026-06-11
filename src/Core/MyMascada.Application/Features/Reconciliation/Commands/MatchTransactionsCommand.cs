@@ -2,6 +2,7 @@ using MediatR;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Reconciliation.DTOs;
 using MyMascada.Application.Features.Reconciliation.Services;
+using MyMascada.Domain.Common;
 using MyMascada.Domain.Entities;
 using MyMascada.Domain.Enums;
 
@@ -60,8 +61,14 @@ public class MatchTransactionsCommandHandler : IRequestHandler<MatchTransactions
         // Note: This includes both reviewed and unreviewed transactions for comprehensive reconciliation
         // Includes already-reconciled transactions so they can match against bank transactions
         // and avoid being incorrectly recommended as new imports
-        var startDate = request.StartDate ?? reconciliation.StatementEndDate.AddDays(-30);
-        var endDate = request.EndDate ?? reconciliation.StatementEndDate;
+        // Normalize dates to UTC for PostgreSQL compatibility
+        // (clients may send dates without timezone info, which parse as Kind=Unspecified)
+        var startDate = DateTimeProvider.ToUtc(request.StartDate ?? reconciliation.StatementEndDate.AddDays(-30));
+        var endDate = DateTimeProvider.ToUtc(request.EndDate ?? reconciliation.StatementEndDate);
+
+        var bankTransactions = request.BankTransactions
+            .Select(bt => bt with { TransactionDate = DateTimeProvider.ToUtc(bt.TransactionDate) })
+            .ToList();
 
         var accountTransactions = await _transactionRepository.GetByDateRangeAsync(
             request.UserId,
@@ -82,7 +89,7 @@ public class MatchTransactionsCommandHandler : IRequestHandler<MatchTransactions
         var matchingRequest = new TransactionMatchRequest
         {
             ReconciliationId = request.ReconciliationId,
-            BankTransactions = request.BankTransactions,
+            BankTransactions = bankTransactions,
             StartDate = startDate,
             EndDate = endDate,
             ToleranceAmount = request.ToleranceAmount,
@@ -159,7 +166,7 @@ public class MatchTransactionsCommandHandler : IRequestHandler<MatchTransactions
 
         auditLog.SetDetails(new
         {
-            BankTransactionCount = request.BankTransactions.Count(),
+            BankTransactionCount = bankTransactions.Count,
             AppTransactionCount = accountTransactions.Count(),
             ExactMatches = matchingResult.ExactMatches,
             FuzzyMatches = matchingResult.FuzzyMatches,
