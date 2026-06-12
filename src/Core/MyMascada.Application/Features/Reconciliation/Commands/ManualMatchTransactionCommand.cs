@@ -2,6 +2,7 @@ using MediatR;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Reconciliation.DTOs;
 using MyMascada.Application.Features.Reconciliation.Services;
+using MyMascada.Domain.Common;
 using MyMascada.Domain.Entities;
 using MyMascada.Domain.Enums;
 
@@ -58,13 +59,19 @@ public class ManualMatchTransactionCommandHandler : IRequestHandler<ManualMatchT
                 throw new ArgumentException($"Transaction with ID {request.SystemTransactionId} not found or does not belong to user");
         }
 
+        // Normalize the bank transaction date to UTC for PostgreSQL compatibility
+        // (clients may send dates without timezone info, which parse as Kind=Unspecified)
+        var bankTransaction = request.BankTransaction is null
+            ? null
+            : request.BankTransaction with { TransactionDate = DateTimeProvider.ToUtc(request.BankTransaction.TransactionDate) };
+
         // Calculate match confidence if both transactions are available
         decimal? matchConfidence = null;
         MatchAnalysisDto? matchAnalysis = null;
-        if (systemTransaction != null && request.BankTransaction != null)
+        if (systemTransaction != null && bankTransaction != null)
         {
-            matchConfidence = _matchConfidenceCalculator.CalculateMatchConfidence(systemTransaction, request.BankTransaction);
-            matchAnalysis = _matchConfidenceCalculator.AnalyzeMatch(systemTransaction, request.BankTransaction);
+            matchConfidence = _matchConfidenceCalculator.CalculateMatchConfidence(systemTransaction, bankTransaction);
+            matchAnalysis = _matchConfidenceCalculator.AnalyzeMatch(systemTransaction, bankTransaction);
         }
 
         // Create new reconciliation item
@@ -72,11 +79,11 @@ public class ManualMatchTransactionCommandHandler : IRequestHandler<ManualMatchT
         {
             ReconciliationId = request.ReconciliationId,
             TransactionId = request.SystemTransactionId,
-            ItemType = DetermineItemType(request.SystemTransactionId, request.BankTransaction),
+            ItemType = DetermineItemType(request.SystemTransactionId, bankTransaction),
             MatchConfidence = matchConfidence,
             MatchMethod = MatchMethod.Manual,
-            BankReferenceData = request.BankTransaction != null 
-                ? System.Text.Json.JsonSerializer.Serialize(request.BankTransaction) 
+            BankReferenceData = bankTransaction != null
+                ? System.Text.Json.JsonSerializer.Serialize(bankTransaction)
                 : null,
             CreatedBy = request.UserId.ToString(),
             UpdatedBy = request.UserId.ToString()
@@ -93,7 +100,7 @@ public class ManualMatchTransactionCommandHandler : IRequestHandler<ManualMatchT
             ItemType = reconciliationItem.ItemType,
             MatchConfidence = reconciliationItem.MatchConfidence,
             MatchMethod = reconciliationItem.MatchMethod,
-            BankTransaction = request.BankTransaction,
+            BankTransaction = bankTransaction,
             SystemTransaction = systemTransaction != null
                 ? new TransactionDetailsDto
                 {

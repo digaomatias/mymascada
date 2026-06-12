@@ -1,6 +1,7 @@
 using MediatR;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Reconciliation.DTOs;
+using MyMascada.Domain.Common;
 using MyMascada.Domain.Entities;
 using MyMascada.Domain.Enums;
 
@@ -51,12 +52,16 @@ public class CreateReconciliationCommandHandler : IRequestHandler<CreateReconcil
         // Calculate the current balance from transactions
         var calculatedBalance = await _transactionRepository.GetAccountBalanceAsync(request.AccountId, request.UserId);
 
+        // Normalize the statement end date to UTC for PostgreSQL compatibility
+        // (clients may send dates without timezone info, which parse as Kind=Unspecified)
+        var statementEndDateUtc = DateTimeProvider.ToUtc(request.StatementEndDate);
+
         // Create the reconciliation
         var reconciliation = new Domain.Entities.Reconciliation
         {
             AccountId = request.AccountId,
             ReconciliationDate = DateTime.UtcNow,
-            StatementEndDate = request.StatementEndDate,
+            StatementEndDate = statementEndDateUtc,
             StatementEndBalance = request.StatementEndBalance,
             CalculatedBalance = calculatedBalance,
             Status = ReconciliationStatus.InProgress,
@@ -82,7 +87,7 @@ public class CreateReconciliationCommandHandler : IRequestHandler<CreateReconcil
         {
             AccountId = request.AccountId,
             AccountName = account.Name,
-            StatementEndDate = request.StatementEndDate,
+            StatementEndDate = statementEndDateUtc,
             StatementEndBalance = request.StatementEndBalance,
             CalculatedBalance = calculatedBalance,
             BalanceDifference = savedReconciliation.BalanceDifference

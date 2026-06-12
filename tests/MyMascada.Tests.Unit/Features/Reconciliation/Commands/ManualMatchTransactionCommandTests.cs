@@ -154,6 +154,42 @@ public class ManualMatchTransactionCommandTests
     }
 
     [Fact]
+    public async Task Handle_WithUnspecifiedKindBankTransactionDate_NormalizesDateToUtc()
+    {
+        // Arrange — unsuffixed ISO dates parse as DateTimeKind.Unspecified, which Npgsql rejects for timestamptz
+        var reconciliation = CreateTestReconciliation();
+        _reconciliationRepository.GetByIdAsync(_reconciliationId, _userId)
+            .Returns(reconciliation);
+
+        var unspecifiedDate = DateTime.Parse("2026-06-12T00:00:00.000");
+        unspecifiedDate.Kind.Should().Be(DateTimeKind.Unspecified, "precondition: parsed date must be Unspecified");
+
+        var bankTransaction = CreateTestBankTransaction() with { TransactionDate = unspecifiedDate };
+
+        var command = new ManualMatchTransactionCommand
+        {
+            UserId = _userId,
+            ReconciliationId = _reconciliationId,
+            SystemTransactionId = null,
+            BankTransaction = bankTransaction
+        };
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert — the bank transaction date must be normalized to UTC
+        result.BankTransaction.Should().NotBeNull();
+        result.BankTransaction!.TransactionDate.Kind.Should().Be(DateTimeKind.Utc);
+        result.BankTransaction.TransactionDate.Should().Be(DateTime.SpecifyKind(unspecifiedDate, DateTimeKind.Utc));
+
+        // The serialized bank reference data persisted with the item must carry the normalized UTC date
+        await _reconciliationItemRepository.Received(1).AddAsync(Arg.Is<ReconciliationItem>(item =>
+            item.ItemType == ReconciliationItemType.UnmatchedBank &&
+            item.BankReferenceData != null &&
+            item.BankReferenceData.Contains("2026-06-12T00:00:00.000Z")));
+    }
+
+    [Fact]
     public async Task Handle_WithNonExistentReconciliation_ThrowsArgumentException()
     {
         // Arrange
