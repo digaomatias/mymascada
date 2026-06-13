@@ -1,6 +1,7 @@
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Infrastructure.Data;
 using MyMascada.Infrastructure.Repositories;
+using MyMascada.Infrastructure.Services;
 
 namespace MyMascada.WebAPI.Extensions;
 
@@ -13,6 +14,7 @@ public static class RepositoryServiceExtensions
 
         // Core repositories
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IUserFeatureService, UserFeatureService>();
         services.AddScoped<ITransactionRepository, TransactionRepository>();
         services.AddScoped<IAccountRepository, AccountRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
