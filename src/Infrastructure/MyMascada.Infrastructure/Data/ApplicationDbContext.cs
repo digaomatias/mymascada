@@ -58,6 +58,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
     public DbSet<UserDevice> UserDevices => Set<UserDevice>();
+    public DbSet<UserFeatureFlag> UserFeatureFlags => Set<UserFeatureFlag>();
     public DbSet<CategorizationHistory> CategorizationHistories => Set<CategorizationHistory>();
     public DbSet<AiCategorizationUsage> AiCategorizationUsages => Set<AiCategorizationUsage>();
 
@@ -1115,6 +1116,23 @@ public class ApplicationDbContext : DbContext
             // One row per FCM token regardless of user — registration reassigns ownership.
             entity.HasIndex(e => e.FcmToken).IsUnique();
             entity.HasIndex(e => e.UserId);
+
+            entity.HasQueryFilter(e => !e.IsDeleted);
+        });
+
+        // UserFeatureFlag configuration (per-user feature toggles / overrides)
+        modelBuilder.Entity<UserFeatureFlag>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.Property(e => e.FeatureKey).IsRequired().HasMaxLength(64);
+
+            // At most one override per (user, feature).
+            entity.HasIndex(e => new { e.UserId, e.FeatureKey }).IsUnique();
 
             entity.HasQueryFilter(e => !e.IsDeleted);
         });
