@@ -365,21 +365,35 @@ public class RecurringPatternRepository : IRecurringPatternRepository
         if (pattern == null || pattern.NormalizedMerchantKey == normalizedKey)
             return;
 
-        // The unique index on (UserId, NormalizedMerchantKey) ignores IsDeleted, so any existing
-        // row (active OR soft-deleted — hence IgnoreQueryFilters) holding the target key would
-        // cause a constraint violation. Skip the migration in that case; the next reconciliation
-        // pass will consolidate instead.
-        var keyTaken = await _context.RecurringPatterns
-            .IgnoreQueryFilters()
-            .AnyAsync(p => p.UserId == userId
-                           && p.Id != patternId
-                           && p.NormalizedMerchantKey == normalizedKey, cancellationToken);
+        var now = DateTime.UtcNow;
 
-        if (keyTaken)
+        // The unique index on (UserId, NormalizedMerchantKey) ignores IsDeleted, so any other row
+        // holding the target key (active OR soft-deleted — hence IgnoreQueryFilters) would cause a
+        // constraint violation when this row adopts it.
+        var keyHolders = await _context.RecurringPatterns
+            .IgnoreQueryFilters()
+            .Where(p => p.UserId == userId
+                        && p.Id != patternId
+                        && p.NormalizedMerchantKey == normalizedKey)
+            .ToListAsync(cancellationToken);
+
+        // A LIVE other row already owns the clean key: that pattern is the legitimate owner, so
+        // leave this stale row alone and let the next reconciliation pass merge them.
+        if (keyHolders.Any(p => !p.IsDeleted))
             return;
 
+        // Only SOFT-DELETED holders remain. They must be vacated, otherwise the next detection
+        // pass would upsert the clean key, GetByMerchantKeyAsync (filtered) wouldn't see the
+        // soft-deleted holder, the insert would hit the unique index, and the merchant would
+        // never converge.
+        foreach (var holder in keyHolders)
+        {
+            holder.NormalizedMerchantKey = BuildDeletedKey(holder.NormalizedMerchantKey, holder.Id);
+            holder.UpdatedAt = now;
+        }
+
         pattern.NormalizedMerchantKey = normalizedKey;
-        pattern.UpdatedAt = DateTime.UtcNow;
+        pattern.UpdatedAt = now;
         await _context.SaveChangesAsync(cancellationToken);
     }
 
