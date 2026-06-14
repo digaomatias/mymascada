@@ -273,6 +273,18 @@ public class RecurringPatternRepository : IRecurringPatternRepository
             occurrence.UpdatedAt = now;
         }
 
+        // Soft-delete the duplicate patterns. The unique index on (UserId, NormalizedMerchantKey)
+        // is NOT filtered on IsDeleted, so soft-deleted rows still occupy their key slot. Before
+        // the canonical row adopts the cleaned key, vacate that slot by uniquifying every
+        // duplicate's key (a duplicate may already hold the exact clean key we are about to use).
+        foreach (var duplicate in duplicates)
+        {
+            duplicate.IsDeleted = true;
+            duplicate.DeletedAt = now;
+            duplicate.UpdatedAt = now;
+            duplicate.NormalizedMerchantKey = BuildDeletedKey(duplicate.NormalizedMerchantKey, duplicate.Id);
+        }
+
         // Apply merged field values to the canonical pattern. Rewriting the normalized key to
         // the current normalizer's output ensures the next detection pass's exact-key upsert
         // updates this row instead of creating yet another duplicate.
@@ -284,15 +296,22 @@ public class RecurringPatternRepository : IRecurringPatternRepository
         canonical.NextExpectedDate = mergedNextExpectedDate;
         canonical.UpdatedAt = now;
 
-        // Soft-delete the duplicate patterns.
-        foreach (var duplicate in duplicates)
-        {
-            duplicate.IsDeleted = true;
-            duplicate.DeletedAt = now;
-            duplicate.UpdatedAt = now;
-        }
-
         await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Builds a collision-free normalized key for a soft-deleted pattern row so it no longer
+    /// occupies the unique (UserId, NormalizedMerchantKey) slot of the surviving canonical row.
+    /// Bounded to the column's 200-char limit.
+    /// </summary>
+    private static string BuildDeletedKey(string? originalKey, int patternId)
+    {
+        var suffix = $"::deleted::{patternId}";
+        var maxBaseLength = Math.Max(0, 200 - suffix.Length);
+        var baseKey = originalKey ?? string.Empty;
+        if (baseKey.Length > maxBaseLength)
+            baseKey = baseKey.Substring(0, maxBaseLength);
+        return baseKey + suffix;
     }
 
     /// <summary>
@@ -312,6 +331,17 @@ public class RecurringPatternRepository : IRecurringPatternRepository
             .FirstOrDefaultAsync(p => p.Id == patternId && p.UserId == userId && !p.IsDeleted, cancellationToken);
 
         if (pattern == null || pattern.NormalizedMerchantKey == normalizedKey)
+            return;
+
+        // The unique index on (UserId, NormalizedMerchantKey) ignores IsDeleted, so any existing
+        // row (active OR soft-deleted) holding the target key would cause a constraint violation.
+        // Skip the migration in that case; the next reconciliation pass will consolidate instead.
+        var keyTaken = await _context.RecurringPatterns
+            .AnyAsync(p => p.UserId == userId
+                           && p.Id != patternId
+                           && p.NormalizedMerchantKey == normalizedKey, cancellationToken);
+
+        if (keyTaken)
             return;
 
         pattern.NormalizedMerchantKey = normalizedKey;
