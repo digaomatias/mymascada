@@ -223,6 +223,69 @@ public class RecurringPatternRepository : IRecurringPatternRepository
         }
     }
 
+    /// <summary>
+    /// Merges duplicate recurring patterns into a single canonical pattern.
+    /// Re-parents occurrence history onto the canonical pattern, applies merged field values,
+    /// then soft-deletes the duplicates. Saved as a single unit of work.
+    /// </summary>
+    public async Task MergeDuplicatePatternsAsync(
+        Guid userId,
+        int canonicalPatternId,
+        IEnumerable<int> duplicatePatternIds,
+        int mergedOccurrenceCount,
+        decimal mergedAverageAmount,
+        DateTime mergedLastObservedAt,
+        DateTime mergedNextExpectedDate,
+        CancellationToken cancellationToken = default)
+    {
+        var duplicateIds = duplicatePatternIds.Distinct().Where(id => id != canonicalPatternId).ToList();
+        if (duplicateIds.Count == 0)
+            return;
+
+        var canonical = await _context.RecurringPatterns
+            .FirstOrDefaultAsync(p => p.Id == canonicalPatternId && p.UserId == userId && !p.IsDeleted, cancellationToken);
+
+        if (canonical == null)
+            return;
+
+        var duplicates = await _context.RecurringPatterns
+            .Where(p => duplicateIds.Contains(p.Id) && p.UserId == userId && !p.IsDeleted)
+            .ToListAsync(cancellationToken);
+
+        if (duplicates.Count == 0)
+            return;
+
+        var now = DateTime.UtcNow;
+
+        // Re-parent occurrence history from the duplicates onto the canonical pattern.
+        var occurrences = await _context.RecurringOccurrences
+            .Where(o => duplicateIds.Contains(o.PatternId) && !o.IsDeleted)
+            .ToListAsync(cancellationToken);
+
+        foreach (var occurrence in occurrences)
+        {
+            occurrence.PatternId = canonicalPatternId;
+            occurrence.UpdatedAt = now;
+        }
+
+        // Apply merged field values to the canonical pattern.
+        canonical.OccurrenceCount = mergedOccurrenceCount;
+        canonical.AverageAmount = mergedAverageAmount;
+        canonical.LastObservedAt = mergedLastObservedAt;
+        canonical.NextExpectedDate = mergedNextExpectedDate;
+        canonical.UpdatedAt = now;
+
+        // Soft-delete the duplicate patterns.
+        foreach (var duplicate in duplicates)
+        {
+            duplicate.IsDeleted = true;
+            duplicate.DeletedAt = now;
+            duplicate.UpdatedAt = now;
+        }
+
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
     // Occurrence operations
 
     /// <summary>

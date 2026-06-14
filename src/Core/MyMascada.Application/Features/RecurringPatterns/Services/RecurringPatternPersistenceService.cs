@@ -1,7 +1,7 @@
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.UpcomingBills.DTOs;
+using MyMascada.Domain.Common;
 using MyMascada.Domain.Entities;
 using MyMascada.Domain.Enums;
 
@@ -76,6 +76,11 @@ public class RecurringPatternPersistenceService : IRecurringPatternPersistenceSe
     /// </summary>
     public async Task<int> DetectAndPersistPatternsAsync(Guid userId, CancellationToken cancellationToken = default)
     {
+        // Self-heal: merge any already-persisted duplicate patterns for this user so existing
+        // accounts (which may already have several stale rows for the same merchant) converge
+        // to a single canonical pattern. Runs every detection pass via the background job.
+        await ReconcileDuplicatePatternsAsync(userId, cancellationToken);
+
         var today = DateTime.UtcNow.Date;
         var startDate = today.AddMonths(-LookbackMonths);
 
@@ -258,7 +263,13 @@ public class RecurringPatternPersistenceService : IRecurringPatternPersistenceSe
             };
         }
 
-        var bills = upcomingPatterns.Select(p => new UpcomingBillDto
+        // Safety net: even if duplicate pattern rows still exist for the same merchant
+        // (e.g. before the reconciliation pass has run), consolidate them here so the user
+        // never sees the same merchant more than once. Keep the soonest-due / highest-confidence
+        // pattern and prefer the most recently observed amount.
+        var consolidatedPatterns = ConsolidateByMerchant(upcomingPatterns, today);
+
+        var bills = consolidatedPatterns.Select(p => new UpcomingBillDto
         {
             PatternId = p.Id,
             MerchantName = p.MerchantName,
@@ -280,6 +291,50 @@ public class RecurringPatternPersistenceService : IRecurringPatternPersistenceSe
             TotalBillsCount = bills.Count,
             TotalExpectedAmount = bills.Sum(b => b.ExpectedAmount)
         };
+    }
+
+    /// <summary>
+    /// Collapses patterns that resolve to the same merchant (identical normalized key, or
+    /// near-duplicate via the shared similarity rule) into a single representative pattern.
+    /// The representative is the soonest-due, then highest-confidence pattern; its amount is
+    /// taken from the most recently observed pattern in the group.
+    /// </summary>
+    private static List<RecurringPattern> ConsolidateByMerchant(
+        IEnumerable<RecurringPattern> patterns,
+        DateTime today)
+    {
+        var patternList = patterns.ToList();
+        if (patternList.Count <= 1)
+            return patternList;
+
+        // Build a similarity grouping over the distinct normalized keys.
+        var keys = patternList
+            .Select(p => p.NormalizedMerchantKey ?? string.Empty)
+            .ToList();
+        var canonicalByKey = MerchantNormalizer.GroupSimilarKeys(keys);
+
+        var grouped = patternList
+            .GroupBy(p => canonicalByKey.TryGetValue(p.NormalizedMerchantKey ?? string.Empty, out var canonical)
+                ? canonical
+                : (p.NormalizedMerchantKey ?? string.Empty));
+
+        var result = new List<RecurringPattern>();
+        foreach (var group in grouped)
+        {
+            // Representative = soonest due, then highest confidence.
+            var representative = group
+                .OrderBy(p => p.GetDaysUntilDue(today))
+                .ThenByDescending(p => p.Confidence)
+                .First();
+
+            // Prefer the most recently observed amount across the duplicate rows.
+            var mostRecent = group.OrderByDescending(p => p.LastObservedAt).First();
+            representative.AverageAmount = mostRecent.AverageAmount;
+
+            result.Add(representative);
+        }
+
+        return result;
     }
 
     #region Private Helper Methods
@@ -305,37 +360,104 @@ public class RecurringPatternPersistenceService : IRecurringPatternPersistenceSe
         return MergeSimilarGroups(groups);
     }
 
-    private Dictionary<string, List<Transaction>> MergeSimilarGroups(Dictionary<string, List<Transaction>> groups)
+    private static Dictionary<string, List<Transaction>> MergeSimilarGroups(Dictionary<string, List<Transaction>> groups)
     {
+        if (groups.Count <= 1)
+            return groups;
+
+        // Transitive grouping: union-find collapses A~B~C into one group even when A is not
+        // directly similar to C. This is the key fix for the same-merchant-split-into-many bug.
+        var canonicalByKey = MerchantNormalizer.GroupSimilarKeys(groups.Keys.ToList());
+
         var mergedGroups = new Dictionary<string, List<Transaction>>();
-        var processedKeys = new HashSet<string>();
+        var componentMembers = new Dictionary<string, List<string>>();
 
-        foreach (var group in groups.OrderByDescending(g => g.Value.Count))
+        foreach (var key in groups.Keys)
         {
-            if (processedKeys.Contains(group.Key))
-                continue;
-
-            var mergedList = new List<Transaction>(group.Value);
-            processedKeys.Add(group.Key);
-
-            // Find similar groups
-            foreach (var otherGroup in groups)
+            var canonical = canonicalByKey.TryGetValue(key, out var c) ? c : key;
+            if (!componentMembers.TryGetValue(canonical, out var members))
             {
-                if (processedKeys.Contains(otherGroup.Key))
-                    continue;
-
-                var similarity = CalculateStringSimilarity(group.Key, otherGroup.Key);
-                if (similarity > 0.8m) // 80% similar = same merchant
-                {
-                    mergedList.AddRange(otherGroup.Value);
-                    processedKeys.Add(otherGroup.Key);
-                }
+                members = new List<string>();
+                componentMembers[canonical] = members;
             }
+            members.Add(key);
+        }
 
-            mergedGroups[group.Key] = mergedList;
+        foreach (var (_, members) in componentMembers)
+        {
+            // Choose the display key as the member with the most transactions (most common
+            // representation of the merchant), so the resulting pattern uses a sensible key.
+            var displayKey = members
+                .OrderByDescending(k => groups[k].Count)
+                .ThenBy(k => k, StringComparer.Ordinal)
+                .First();
+
+            var mergedList = members.SelectMany(k => groups[k]).ToList();
+            mergedGroups[displayKey] = mergedList;
         }
 
         return mergedGroups;
+    }
+
+    /// <summary>
+    /// Merges already-persisted duplicate <see cref="RecurringPattern"/> rows for a user.
+    /// Active patterns are grouped by normalized/similar merchant key; one canonical pattern
+    /// is kept (most occurrences, then highest confidence) with merged occurrence counts and
+    /// the most recent amount/next-expected-date, and the rest are soft-deleted.
+    /// </summary>
+    private async Task ReconcileDuplicatePatternsAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var activePatterns = (await _patternRepository.GetActiveAsync(userId, cancellationToken)).ToList();
+            if (activePatterns.Count <= 1)
+                return;
+
+            var canonicalByKey = MerchantNormalizer.GroupSimilarKeys(
+                activePatterns.Select(p => p.NormalizedMerchantKey ?? string.Empty).ToList());
+
+            var groups = activePatterns
+                .GroupBy(p => canonicalByKey.TryGetValue(p.NormalizedMerchantKey ?? string.Empty, out var canonical)
+                    ? canonical
+                    : (p.NormalizedMerchantKey ?? string.Empty))
+                .Where(g => g.Count() > 1)
+                .ToList();
+
+            foreach (var group in groups)
+            {
+                var members = group.ToList();
+
+                // Keep the strongest pattern: most occurrences, then highest confidence.
+                var canonicalPattern = members
+                    .OrderByDescending(p => p.OccurrenceCount)
+                    .ThenByDescending(p => p.Confidence)
+                    .First();
+
+                var duplicateIds = members.Where(p => p.Id != canonicalPattern.Id).Select(p => p.Id).ToList();
+
+                // Merge occurrence history (counts) and adopt the freshest observation/amount.
+                var mostRecent = members.OrderByDescending(p => p.LastObservedAt).First();
+
+                await _patternRepository.MergeDuplicatePatternsAsync(
+                    userId,
+                    canonicalPattern.Id,
+                    duplicateIds,
+                    mergedOccurrenceCount: members.Sum(p => p.OccurrenceCount),
+                    mergedAverageAmount: mostRecent.AverageAmount,
+                    mergedLastObservedAt: mostRecent.LastObservedAt,
+                    mergedNextExpectedDate: mostRecent.NextExpectedDate,
+                    cancellationToken);
+
+                _logger.LogInformation(
+                    "Reconciled {DuplicateCount} duplicate recurring pattern(s) into {CanonicalId} for merchant {MerchantName}",
+                    duplicateIds.Count, canonicalPattern.Id, canonicalPattern.MerchantName);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Reconciliation is best-effort self-healing; never let it break detection.
+            _logger.LogError(ex, "Failed to reconcile duplicate recurring patterns for user {UserId}", userId);
+        }
     }
 
     private RecurringPattern? DetectPattern(string merchantKey, List<Transaction> transactions, DateTime today)
@@ -459,31 +581,7 @@ public class RecurringPatternPersistenceService : IRecurringPatternPersistenceSe
     }
 
     private static string NormalizeDescription(string? description)
-    {
-        if (string.IsNullOrWhiteSpace(description))
-            return string.Empty;
-
-        // Convert to lowercase and remove extra whitespace
-        var normalized = Regex.Replace(description.ToLowerInvariant().Trim(), @"\s+", " ");
-
-        // Remove common transaction prefixes/suffixes
-        normalized = Regex.Replace(normalized, @"^(purchase\s+|payment\s+|pos\s+|debit\s+|eftpos\s+)", "");
-
-        // Remove reference numbers (patterns like #123, REF:ABC123, etc.)
-        normalized = Regex.Replace(normalized, @"(#|ref:?|id:?)\s*[\w\d-]+", "");
-
-        // Remove dates (patterns like 01/15, 15-Jan, etc.)
-        normalized = Regex.Replace(normalized, @"\d{1,2}[/-]\d{1,2}([/-]\d{2,4})?", "");
-
-        // Remove time patterns
-        normalized = Regex.Replace(normalized, @"\d{1,2}:\d{2}(:\d{2})?(\s*(am|pm))?", "");
-
-        // Remove trailing numbers that might be transaction IDs
-        normalized = Regex.Replace(normalized, @"\s+\d+$", "");
-
-        // Clean up extra whitespace again
-        return Regex.Replace(normalized.Trim(), @"\s+", " ");
-    }
+        => MerchantNormalizer.Normalize(description);
 
     private static string FormatMerchantName(string? description)
     {
@@ -497,47 +595,6 @@ public class RecurringPatternPersistenceService : IRecurringPatternPersistenceSe
             return "Unknown Merchant";
 
         return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(normalized);
-    }
-
-    private static decimal CalculateStringSimilarity(string str1, string str2)
-    {
-        if (string.IsNullOrEmpty(str1) && string.IsNullOrEmpty(str2))
-            return 1m;
-
-        if (string.IsNullOrEmpty(str1) || string.IsNullOrEmpty(str2))
-            return 0m;
-
-        var distance = LevenshteinDistance(str1, str2);
-        var maxLength = Math.Max(str1.Length, str2.Length);
-
-        return 1m - (decimal)distance / maxLength;
-    }
-
-    private static int LevenshteinDistance(string s1, string s2)
-    {
-        if (s1.Length == 0) return s2.Length;
-        if (s2.Length == 0) return s1.Length;
-
-        var matrix = new int[s1.Length + 1, s2.Length + 1];
-
-        for (int i = 0; i <= s1.Length; i++)
-            matrix[i, 0] = i;
-
-        for (int j = 0; j <= s2.Length; j++)
-            matrix[0, j] = j;
-
-        for (int i = 1; i <= s1.Length; i++)
-        {
-            for (int j = 1; j <= s2.Length; j++)
-            {
-                var cost = (s1[i - 1] == s2[j - 1]) ? 0 : 1;
-                matrix[i, j] = Math.Min(
-                    Math.Min(matrix[i - 1, j] + 1, matrix[i, j - 1] + 1),
-                    matrix[i - 1, j - 1] + cost);
-            }
-        }
-
-        return matrix[s1.Length, s2.Length];
     }
 
     #endregion

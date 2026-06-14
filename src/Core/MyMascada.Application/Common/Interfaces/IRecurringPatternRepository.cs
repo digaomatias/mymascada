@@ -83,6 +83,22 @@ public interface IRecurringPatternRepository
     /// </summary>
     Task<RecurringPattern> UpsertAsync(RecurringPattern pattern, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Merges duplicate recurring patterns into a single canonical pattern.
+    /// Re-parents the occurrence history of <paramref name="duplicatePatternIds"/> onto
+    /// <paramref name="canonicalPatternId"/>, applies the supplied merged field values to the
+    /// canonical pattern, then soft-deletes the duplicates. All changes are saved together.
+    /// </summary>
+    Task MergeDuplicatePatternsAsync(
+        Guid userId,
+        int canonicalPatternId,
+        IEnumerable<int> duplicatePatternIds,
+        int mergedOccurrenceCount,
+        decimal mergedAverageAmount,
+        DateTime mergedLastObservedAt,
+        DateTime mergedNextExpectedDate,
+        CancellationToken cancellationToken = default);
+
     // Occurrence operations
 
     /// <summary>
