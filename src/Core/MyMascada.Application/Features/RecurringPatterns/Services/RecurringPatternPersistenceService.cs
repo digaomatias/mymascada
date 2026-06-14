@@ -357,33 +357,37 @@ public class RecurringPatternPersistenceService : IRecurringPatternPersistenceSe
 
     /// <summary>
     /// Reconciles already-persisted <see cref="RecurringPattern"/> rows for a user so existing
-    /// accounts self-heal. Active patterns are grouped by normalized/similar merchant key:
-    ///  - groups with more than one member are merged into a single canonical pattern (most
-    ///    occurrences, then highest confidence) with merged occurrence counts, the most recent
-    ///    amount/next-expected-date, and the rewritten normalized key; the rest are soft-deleted.
+    /// accounts self-heal. ALL non-deleted patterns (any status) are grouped by normalized/similar
+    /// merchant key — including Paused/Cancelled rows, so an exact-key upsert in the next detection
+    /// pass updates them rather than inserting a fresh Active duplicate (which would resurrect a
+    /// user-paused bill):
+    ///  - groups with more than one member are merged into a single canonical pattern with merged
+    ///    occurrence counts, the most recent amount/next-expected-date, and the rewritten
+    ///    normalized key; the rest are soft-deleted. The canonical is chosen to preserve explicit
+    ///    user intent (a Paused/Cancelled row wins over Active), so merging never silently
+    ///    un-pauses a merchant.
     ///  - a lone member whose stored key differs from the current normalizer output has its key
-    ///    migrated, so the next detection pass's exact-key upsert updates it rather than creating
-    ///    a fresh duplicate.
+    ///    migrated.
     /// </summary>
     private async Task ReconcileDuplicatePatternsAsync(Guid userId, CancellationToken cancellationToken)
     {
         try
         {
-            var activePatterns = (await _patternRepository.GetActiveAsync(userId, cancellationToken)).ToList();
-            if (activePatterns.Count == 0)
+            var patterns = (await _patternRepository.GetByUserIdAsync(userId, includeOccurrences: false, cancellationToken)).ToList();
+            if (patterns.Count == 0)
                 return;
 
             // Re-normalize the stored keys first: rows persisted by an older normalizer may
             // still carry reference tokens or doubled words (e.g. "ami insurance amiinsurance"),
             // which must be cleaned before grouping so they collapse with freshly-detected keys.
-            var normalizedByPattern = activePatterns.ToDictionary(
+            var normalizedByPattern = patterns.ToDictionary(
                 p => p,
                 p => MerchantNormalizer.Normalize(p.NormalizedMerchantKey));
 
             var canonicalByKey = MerchantNormalizer.GroupSimilarKeys(
                 normalizedByPattern.Values.ToList());
 
-            var groups = activePatterns
+            var groups = patterns
                 .GroupBy(p => canonicalByKey.TryGetValue(normalizedByPattern[p], out var canonical)
                     ? canonical
                     : normalizedByPattern[p])
@@ -409,9 +413,12 @@ public class RecurringPatternPersistenceService : IRecurringPatternPersistenceSe
                     continue;
                 }
 
-                // Keep the strongest pattern: most occurrences, then highest confidence.
+                // Choose the canonical so explicit user intent survives the merge: prefer a
+                // Paused/Cancelled row (user actions that MergeDuplicatePatternsAsync preserves)
+                // over Active/AtRisk, then the strongest by occurrences and confidence.
                 var canonicalPattern = members
-                    .OrderByDescending(p => p.OccurrenceCount)
+                    .OrderByDescending(p => IsUserManagedStatus(p.Status))
+                    .ThenByDescending(p => p.OccurrenceCount)
                     .ThenByDescending(p => p.Confidence)
                     .First();
 
@@ -442,6 +449,13 @@ public class RecurringPatternPersistenceService : IRecurringPatternPersistenceSe
             _logger.LogError(ex, "Failed to reconcile duplicate recurring patterns for user {UserId}", userId);
         }
     }
+
+    /// <summary>
+    /// Whether a status reflects an explicit user action (Paused/Cancelled) that must survive a
+    /// duplicate merge, as opposed to system-managed states (Active/AtRisk).
+    /// </summary>
+    private static bool IsUserManagedStatus(RecurringPatternStatus status)
+        => status is RecurringPatternStatus.Paused or RecurringPatternStatus.Cancelled;
 
     private RecurringPattern? DetectPattern(string merchantKey, List<Transaction> transactions, DateTime today)
     {

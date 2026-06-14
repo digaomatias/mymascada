@@ -262,26 +262,32 @@ public class RecurringPatternRepository : IRecurringPatternRepository
         // occurrence re-parenting can never touch patterns outside the verified duplicate set.
         var validDuplicateIds = duplicates.Select(d => d.Id).ToList();
 
-        // Re-parent occurrence history from the duplicates onto the canonical pattern.
+        // Load the duplicates' occurrence history; re-parented onto the canonical row in phase 1a.
         var occurrences = await _context.RecurringOccurrences
             .Where(o => validDuplicateIds.Contains(o.PatternId) && !o.IsDeleted)
             .ToListAsync(cancellationToken);
 
+        var rewriteCanonicalKey = !string.IsNullOrWhiteSpace(mergedNormalizedKey)
+                                  && canonical.NormalizedMerchantKey != mergedNormalizedKey;
+
+        // The unique (UserId, NormalizedMerchantKey) index is NOT filtered on IsDeleted and is
+        // checked immediately (not deferred) by PostgreSQL. Because EF flushes all changes in one
+        // SaveChanges with no ordering guarantee relative to the unique index, the canonical row
+        // adopting the cleaned key could be written before the colliding rows vacate it, tripping
+        // the constraint mid-batch. So we run an ordered two-phase save inside a transaction:
+        //   phase 1 — re-parent occurrences, soft-delete + uniquify every colliding/duplicate row;
+        //   phase 2 — assign the cleaned key to the canonical row.
+        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+
+        // Phase 1a: re-parent occurrence history onto the canonical pattern.
         foreach (var occurrence in occurrences)
         {
             occurrence.PatternId = canonicalPatternId;
             occurrence.UpdatedAt = now;
         }
 
-        // Vacate the unique (UserId, NormalizedMerchantKey) slot before the canonical row adopts
-        // the cleaned key. The index is NOT filtered on IsDeleted, while the entity has a global
-        // !IsDeleted query filter — so collisions can come from the in-group duplicates above OR
-        // from a previously soft-deleted row that already holds the cleaned key. Load every row
-        // holding the target key (IgnoreQueryFilters) and uniquify each so SaveChanges cannot hit
-        // the constraint (which would otherwise swallow the whole reconciliation).
-        var rewriteCanonicalKey = !string.IsNullOrWhiteSpace(mergedNormalizedKey)
-                                  && canonical.NormalizedMerchantKey != mergedNormalizedKey;
-
+        // Phase 1b: vacate any other row (active or soft-deleted) already holding the cleaned key,
+        // so the canonical row can take it. Live collisions are themselves same-merchant duplicates.
         if (rewriteCanonicalKey)
         {
             // Exclude the in-group duplicates; they are uniquified in the dedicated loop below.
@@ -295,8 +301,6 @@ public class RecurringPatternRepository : IRecurringPatternRepository
 
             foreach (var holder in keyHolders)
             {
-                // Soft-delete any live collision too: an active row outside this group that maps
-                // to the same cleaned key is itself a duplicate of the same merchant.
                 if (!holder.IsDeleted)
                 {
                     holder.IsDeleted = true;
@@ -307,8 +311,8 @@ public class RecurringPatternRepository : IRecurringPatternRepository
             }
         }
 
-        // Soft-delete the in-group duplicate patterns, uniquifying their keys so they no longer
-        // occupy any (UserId, key) slot the canonical row may take.
+        // Phase 1c: soft-delete the in-group duplicate patterns, uniquifying their keys so they no
+        // longer occupy any (UserId, key) slot the canonical row may take.
         foreach (var duplicate in duplicates)
         {
             duplicate.IsDeleted = true;
@@ -317,11 +321,7 @@ public class RecurringPatternRepository : IRecurringPatternRepository
             duplicate.NormalizedMerchantKey = BuildDeletedKey(duplicate.NormalizedMerchantKey, duplicate.Id);
         }
 
-        // Apply merged field values to the canonical pattern. Rewriting the normalized key to the
-        // current normalizer's output ensures the next detection pass's exact-key upsert updates
-        // this row instead of creating yet another duplicate.
-        if (rewriteCanonicalKey)
-            canonical.NormalizedMerchantKey = mergedNormalizedKey;
+        // Merge non-key fields onto the canonical row (safe to flush alongside phase 1).
         canonical.OccurrenceCount = mergedOccurrenceCount;
         canonical.AverageAmount = mergedAverageAmount;
         canonical.LastObservedAt = mergedLastObservedAt;
@@ -329,6 +329,18 @@ public class RecurringPatternRepository : IRecurringPatternRepository
         canonical.UpdatedAt = now;
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        // Phase 2: now that the slot is free, the canonical row can adopt the cleaned key. This
+        // ensures the next detection pass's exact-key upsert updates this row rather than creating
+        // a fresh duplicate.
+        if (rewriteCanonicalKey)
+        {
+            canonical.NormalizedMerchantKey = mergedNormalizedKey;
+            canonical.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        await transaction.CommitAsync(cancellationToken);
     }
 
     /// <summary>
@@ -385,16 +397,30 @@ public class RecurringPatternRepository : IRecurringPatternRepository
         // Only SOFT-DELETED holders remain. They must be vacated, otherwise the next detection
         // pass would upsert the clean key, GetByMerchantKeyAsync (filtered) wouldn't see the
         // soft-deleted holder, the insert would hit the unique index, and the merchant would
-        // never converge.
+        // never converge. Use an ordered two-phase save inside a transaction so the index is not
+        // tripped mid-batch (see MergeDuplicatePatternsAsync for the rationale).
+        if (keyHolders.Count == 0)
+        {
+            pattern.NormalizedMerchantKey = normalizedKey;
+            pattern.UpdatedAt = now;
+            await _context.SaveChangesAsync(cancellationToken);
+            return;
+        }
+
+        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+
         foreach (var holder in keyHolders)
         {
             holder.NormalizedMerchantKey = BuildDeletedKey(holder.NormalizedMerchantKey, holder.Id);
             holder.UpdatedAt = now;
         }
+        await _context.SaveChangesAsync(cancellationToken);
 
         pattern.NormalizedMerchantKey = normalizedKey;
-        pattern.UpdatedAt = now;
+        pattern.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync(cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
     }
 
     // Occurrence operations

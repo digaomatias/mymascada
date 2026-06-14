@@ -114,7 +114,7 @@ public class RecurringPatternPersistenceServiceTests
                 lastObserved: today.AddDays(-30)),
         };
 
-        _patternRepository.GetActiveAsync(_userId, Arg.Any<CancellationToken>()).Returns(activePatterns);
+        _patternRepository.GetByUserIdAsync(_userId, Arg.Any<bool>(), Arg.Any<CancellationToken>()).Returns(activePatterns);
         _transactionRepository.GetByDateRangeAsync(_userId, Arg.Any<DateTime>(), Arg.Any<DateTime>())
             .Returns(new List<Transaction>());
 
@@ -144,7 +144,7 @@ public class RecurringPatternPersistenceServiceTests
         var stale = CreatePattern("ami insurance amiinsurance 3301234", amount: 42.75m,
             nextDue: today.AddDays(3), confidence: 0.85m, occurrences: 5);
 
-        _patternRepository.GetActiveAsync(_userId, Arg.Any<CancellationToken>())
+        _patternRepository.GetByUserIdAsync(_userId, Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(new List<RecurringPattern> { stale });
         _transactionRepository.GetByDateRangeAsync(_userId, Arg.Any<DateTime>(), Arg.Any<DateTime>())
             .Returns(new List<Transaction>());
@@ -166,7 +166,7 @@ public class RecurringPatternPersistenceServiceTests
         var clean = CreatePattern("ami insurance", amount: 42.75m,
             nextDue: today.AddDays(3), confidence: 0.85m, occurrences: 5);
 
-        _patternRepository.GetActiveAsync(_userId, Arg.Any<CancellationToken>())
+        _patternRepository.GetByUserIdAsync(_userId, Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(new List<RecurringPattern> { clean });
         _transactionRepository.GetByDateRangeAsync(_userId, Arg.Any<DateTime>(), Arg.Any<DateTime>())
             .Returns(new List<Transaction>());
@@ -180,6 +180,36 @@ public class RecurringPatternPersistenceServiceTests
     }
 
     [Fact]
+    public async Task DetectAndPersistPatternsAsync_WithPausedAndActiveDuplicate_ShouldKeepPausedAsCanonical()
+    {
+        // Arrange - the user paused this merchant; a stale Active duplicate also exists. Merging
+        // must keep the Paused row as canonical so the bill is not silently resurrected.
+        var today = DateTime.UtcNow.Date;
+        var patterns = new List<RecurringPattern>
+        {
+            CreatePattern("ami insurance", amount: 42.75m, nextDue: today.AddDays(3), confidence: 0.95m,
+                occurrences: 8, status: RecurringPatternStatus.Active),
+            CreatePattern("ami insurance", amount: 42.75m, nextDue: today.AddDays(2), confidence: 0.70m,
+                occurrences: 3, status: RecurringPatternStatus.Paused),
+        };
+
+        _patternRepository.GetByUserIdAsync(_userId, Arg.Any<bool>(), Arg.Any<CancellationToken>()).Returns(patterns);
+        _transactionRepository.GetByDateRangeAsync(_userId, Arg.Any<DateTime>(), Arg.Any<DateTime>())
+            .Returns(new List<Transaction>());
+
+        // Act
+        await _service.DetectAndPersistPatternsAsync(_userId);
+
+        // Assert - the Paused row (patterns[1]) is canonical despite weaker occurrences/confidence.
+        await _patternRepository.Received(1).MergeDuplicatePatternsAsync(
+            _userId,
+            canonicalPatternId: patterns[1].Id,
+            Arg.Is<IEnumerable<int>>(ids => ids.SequenceEqual(new[] { patterns[0].Id })),
+            Arg.Any<string>(), Arg.Any<int>(), Arg.Any<decimal>(), Arg.Any<DateTime>(),
+            Arg.Any<DateTime>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task DetectAndPersistPatternsAsync_WithDistinctMerchants_ShouldNotMerge()
     {
         // Arrange
@@ -190,7 +220,7 @@ public class RecurringPatternPersistenceServiceTests
             CreatePattern("netflix", amount: 15.99m, nextDue: today.AddDays(3), confidence: 0.90m, occurrences: 6),
         };
 
-        _patternRepository.GetActiveAsync(_userId, Arg.Any<CancellationToken>()).Returns(activePatterns);
+        _patternRepository.GetByUserIdAsync(_userId, Arg.Any<bool>(), Arg.Any<CancellationToken>()).Returns(activePatterns);
         _transactionRepository.GetByDateRangeAsync(_userId, Arg.Any<DateTime>(), Arg.Any<DateTime>())
             .Returns(new List<Transaction>());
 
@@ -210,7 +240,8 @@ public class RecurringPatternPersistenceServiceTests
         DateTime nextDue,
         decimal confidence,
         int occurrences,
-        DateTime? lastObserved = null)
+        DateTime? lastObserved = null,
+        RecurringPatternStatus status = RecurringPatternStatus.Active)
     {
         return new RecurringPattern
         {
@@ -221,7 +252,7 @@ public class RecurringPatternPersistenceServiceTests
             IntervalDays = 30,
             AverageAmount = amount,
             Confidence = confidence,
-            Status = RecurringPatternStatus.Active,
+            Status = status,
             NextExpectedDate = nextDue,
             LastObservedAt = lastObserved ?? DateTime.UtcNow.AddDays(-27),
             OccurrenceCount = occurrences,
