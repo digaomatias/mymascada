@@ -100,6 +100,31 @@ public class RecurringPatternPersistenceServiceTests
     }
 
     [Fact]
+    public async Task GetUpcomingBillsAsync_WithSimilarNamesButDifferentCadenceAndAmount_ShouldKeepBothBills()
+    {
+        // Arrange - two distinct bills with near-identical names but unrelated cadence/amount.
+        // Display consolidation must NOT collapse them, otherwise a real bill is hidden.
+        var today = DateTime.UtcNow.Date;
+        var weekly = CreatePattern("acme services", amount: 12.00m, nextDue: today.AddDays(2),
+            confidence: 0.85m, occurrences: 6);
+        weekly.IntervalDays = 7;
+        var monthly = CreatePattern("acme service", amount: 250.00m, nextDue: today.AddDays(3),
+            confidence: 0.85m, occurrences: 6);
+        monthly.IntervalDays = 30;
+
+        _patternRepository
+            .GetUpcomingAsync(_userId, Arg.Any<DateTime>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>())
+            .Returns(new List<RecurringPattern> { weekly, monthly });
+
+        // Act
+        var result = await _service.GetUpcomingBillsAsync(_userId, daysAhead: 7);
+
+        // Assert
+        result.Bills.Should().HaveCount(2);
+        result.TotalExpectedAmount.Should().Be(262.00m);
+    }
+
+    [Fact]
     public async Task DetectAndPersistPatternsAsync_WithExistingDuplicatePatterns_ShouldMergeThem()
     {
         // Arrange - existing active patterns include three duplicates for one merchant.

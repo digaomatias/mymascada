@@ -395,28 +395,31 @@ public class RecurringPatternPersistenceService : IRecurringPatternPersistenceSe
 
             foreach (var group in groups)
             {
-                var canonicalKey = group.Key;
-
                 // Name similarity alone is not enough to destructively merge two persisted
                 // patterns: two legitimately-distinct merchants can have near-identical names.
                 // Split each name-group into merge clusters that additionally require compatible
                 // evidence (same exact normalized key, OR same cadence AND close amounts), so we
                 // only soft-delete + reparent rows that are genuinely the same recurring bill.
-                var clusters = PartitionByMergeEvidence(group.ToList(), p => normalizedByPattern[p]);
+                var clusters = RecurringPatternGrouping.PartitionBySameBill(group.ToList(), p => normalizedByPattern[p]);
 
                 foreach (var cluster in clusters)
                 {
+                    // Derive the key from THIS cluster's members, not the wider name-similarity
+                    // group: a group can split into clusters belonging to different merchants, and
+                    // using the group key would rewrite a cluster to the wrong merchant's key.
+                    var clusterKey = ChooseClusterKey(cluster, normalizedByPattern);
+
                     if (cluster.Count == 1)
                     {
                         // Lone row: migrate a stale stored key to the normalized form so the next
                         // exact-key upsert updates this row instead of creating a duplicate.
                         var only = cluster[0];
-                        if (!string.IsNullOrWhiteSpace(canonicalKey) && only.NormalizedMerchantKey != canonicalKey)
+                        if (!string.IsNullOrWhiteSpace(clusterKey) && only.NormalizedMerchantKey != clusterKey)
                         {
-                            await _patternRepository.UpdateNormalizedKeyAsync(userId, only.Id, canonicalKey, cancellationToken);
+                            await _patternRepository.UpdateNormalizedKeyAsync(userId, only.Id, clusterKey, cancellationToken);
                             _logger.LogInformation(
                                 "Migrated normalized key for recurring pattern {PatternId} to '{NormalizedKey}'",
-                                only.Id, canonicalKey);
+                                only.Id, clusterKey);
                         }
                         continue;
                     }
@@ -439,7 +442,7 @@ public class RecurringPatternPersistenceService : IRecurringPatternPersistenceSe
                         userId,
                         canonicalPattern.Id,
                         duplicateIds,
-                        mergedNormalizedKey: canonicalKey,
+                        mergedNormalizedKey: clusterKey,
                         mergedOccurrenceCount: cluster.Sum(p => p.OccurrenceCount),
                         mergedAverageAmount: mostRecent.AverageAmount,
                         mergedLastObservedAt: mostRecent.LastObservedAt,
@@ -466,82 +469,23 @@ public class RecurringPatternPersistenceService : IRecurringPatternPersistenceSe
     private static bool IsUserManagedStatus(RecurringPatternStatus status)
         => status is RecurringPatternStatus.Paused or RecurringPatternStatus.Cancelled;
 
-    // Amount tolerance for treating two fuzzy-name-matched patterns as the same recurring bill.
-    private const decimal MergeAmountTolerance = 0.2m; // ±20%
-
     /// <summary>
-    /// Splits a name-similarity group into clusters that are safe to destructively merge.
-    /// Two patterns join the same cluster only when they share the exact normalized key
-    /// (unambiguous duplicate) OR they have the same cadence AND closely-matching amounts —
-    /// so two distinct merchants with merely-similar names are never merged. Uses union-find
-    /// for transitivity within the group.
+    /// Picks the normalized key to apply to a merge cluster: the most common normalized key among
+    /// its members (ties broken deterministically), so the cluster converges to its own merchant's
+    /// key rather than a wider name-similarity group's representative.
     /// </summary>
-    private static List<List<RecurringPattern>> PartitionByMergeEvidence(
-        List<RecurringPattern> members,
-        Func<RecurringPattern, string> normalizedKeyOf)
+    private static string ChooseClusterKey(
+        List<RecurringPattern> cluster,
+        IReadOnlyDictionary<RecurringPattern, string> normalizedByPattern)
     {
-        if (members.Count <= 1)
-            return new List<List<RecurringPattern>> { members };
-
-        var parent = Enumerable.Range(0, members.Count).ToArray();
-
-        int Find(int x)
-        {
-            while (parent[x] != x)
-            {
-                parent[x] = parent[parent[x]];
-                x = parent[x];
-            }
-            return x;
-        }
-
-        void Union(int a, int b)
-        {
-            var rootA = Find(a);
-            var rootB = Find(b);
-            if (rootA != rootB)
-                parent[rootB] = rootA;
-        }
-
-        for (var i = 0; i < members.Count; i++)
-        {
-            for (var j = i + 1; j < members.Count; j++)
-            {
-                if (AreSameRecurringBill(members[i], members[j], normalizedKeyOf))
-                    Union(i, j);
-            }
-        }
-
-        return members
-            .Select((pattern, index) => (pattern, root: Find(index)))
-            .GroupBy(x => x.root)
-            .Select(g => g.Select(x => x.pattern).ToList())
-            .ToList();
-    }
-
-    /// <summary>
-    /// Whether two persisted patterns are confidently the same recurring bill: an exact
-    /// normalized-key match, or a fuzzy-name match backed by the same cadence and close amounts.
-    /// </summary>
-    private static bool AreSameRecurringBill(
-        RecurringPattern a,
-        RecurringPattern b,
-        Func<RecurringPattern, string> normalizedKeyOf)
-    {
-        // Identical normalized merchant key — the unambiguous duplicate case the bug is about.
-        if (string.Equals(normalizedKeyOf(a), normalizedKeyOf(b), StringComparison.Ordinal))
-            return true;
-
-        // Fuzzy name match (same name-similarity group) requires corroborating evidence.
-        var sameCadence = a.GetIntervalName() == b.GetIntervalName();
-
-        var larger = Math.Max(a.AverageAmount, b.AverageAmount);
-        var smaller = Math.Min(a.AverageAmount, b.AverageAmount);
-        var closeAmount = larger <= 0
-            ? smaller <= 0
-            : (larger - smaller) <= larger * MergeAmountTolerance;
-
-        return sameCadence && closeAmount;
+        return cluster
+            .Select(p => normalizedByPattern[p])
+            .Where(k => !string.IsNullOrWhiteSpace(k))
+            .GroupBy(k => k)
+            .OrderByDescending(g => g.Count())
+            .ThenBy(g => g.Key, StringComparer.Ordinal)
+            .Select(g => g.Key)
+            .FirstOrDefault() ?? string.Empty;
     }
 
     private RecurringPattern? DetectPattern(string merchantKey, List<Transaction> transactions, DateTime today)

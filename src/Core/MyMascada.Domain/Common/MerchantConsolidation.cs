@@ -19,10 +19,12 @@ public static class MerchantConsolidation
     public readonly record struct ConsolidatedPattern(RecurringPattern Pattern, decimal DisplayAmount);
 
     /// <summary>
-    /// Collapses patterns that resolve to the same merchant (identical normalized key, or
-    /// near-duplicate via the shared similarity rule) into a single representative each.
-    /// The representative is the soonest-due, then highest-confidence pattern; the display
-    /// amount is taken from the most recently observed pattern in the group.
+    /// Collapses patterns that are confidently the same recurring bill into a single representative
+    /// each. Patterns are first grouped by merchant-name similarity, then each name-group is split
+    /// by corroborating evidence (exact normalized key, or same cadence + close amount) so two
+    /// distinct merchants with similar names are NOT collapsed into one — which would hide a real
+    /// bill from the dashboard. The representative is the soonest-due, then highest-confidence
+    /// pattern; the display amount is the most recently observed amount in the cluster.
     /// </summary>
     public static List<ConsolidatedPattern> ConsolidateUpcoming(
         IEnumerable<RecurringPattern> patterns,
@@ -49,25 +51,33 @@ public static class MerchantConsolidation
         var canonicalByKey = MerchantNormalizer.GroupSimilarKeys(
             normalizedByPattern.Values.ToList());
 
-        var grouped = patternList.GroupBy(p =>
+        var nameGroups = patternList.GroupBy(p =>
             canonicalByKey.TryGetValue(normalizedByPattern[p], out var canonical)
                 ? canonical
                 : normalizedByPattern[p]);
 
         var result = new List<ConsolidatedPattern>();
-        foreach (var group in grouped)
+        foreach (var nameGroup in nameGroups)
         {
-            var representative = group
-                .OrderBy(p => p.GetDaysUntilDue(today))
-                .ThenByDescending(p => p.Confidence)
-                .First();
+            // Only collapse rows that are confidently the same bill; keep distinct similarly-named
+            // merchants as separate dashboard entries.
+            var clusters = RecurringPatternGrouping.PartitionBySameBill(
+                nameGroup.ToList(), p => normalizedByPattern[p]);
 
-            var displayAmount = group
-                .OrderByDescending(p => p.LastObservedAt)
-                .First()
-                .AverageAmount;
+            foreach (var cluster in clusters)
+            {
+                var representative = cluster
+                    .OrderBy(p => p.GetDaysUntilDue(today))
+                    .ThenByDescending(p => p.Confidence)
+                    .First();
 
-            result.Add(new ConsolidatedPattern(representative, displayAmount));
+                var displayAmount = cluster
+                    .OrderByDescending(p => p.LastObservedAt)
+                    .First()
+                    .AverageAmount;
+
+                result.Add(new ConsolidatedPattern(representative, displayAmount));
+            }
         }
 
         return result;
