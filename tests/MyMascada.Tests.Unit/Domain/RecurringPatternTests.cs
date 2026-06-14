@@ -481,6 +481,22 @@ public class RecurringPatternTests
     }
 
     [Fact]
+    public void MatchesTransaction_WithStaleStoredKey_ShouldStillMatchCleanDescription()
+    {
+        // Arrange - pattern persisted by the old normalizer keeps a noisy key, while the
+        // incoming description normalizes to the clean form. They must still match.
+        var pattern = CreatePattern(
+            normalizedMerchantKey: "ami insurance amiinsurance 3301234",
+            averageAmount: 42.75m);
+
+        // Act
+        var result = pattern.MatchesTransaction("AMI INSURANCE AMIINSURANCE 3305678", -42.75m);
+
+        // Assert
+        result.Should().BeTrue();
+    }
+
+    [Fact]
     public void MatchesTransaction_WithEmptyDescription_ShouldReturnFalse()
     {
         // Arrange

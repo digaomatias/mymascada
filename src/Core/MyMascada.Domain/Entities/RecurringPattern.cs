@@ -260,7 +260,12 @@ public class RecurringPattern : BaseEntity
             return false;
 
         var normalizedDescription = NormalizeDescription(description);
-        var similarity = CalculateStringSimilarity(NormalizedMerchantKey, normalizedDescription);
+
+        // Re-normalize the stored key too: patterns persisted by an older normalizer may carry
+        // reference tokens / doubled words (e.g. "ami insurance amiinsurance") that the incoming
+        // description no longer has, which would otherwise drop the similarity below threshold.
+        var normalizedKey = NormalizeDescription(NormalizedMerchantKey);
+        var similarity = CalculateStringSimilarity(normalizedKey, normalizedDescription);
 
         // Check description similarity and amount range (±20%)
         var amountRangeMatch = Math.Abs(amount) >= AverageAmount * 0.8m

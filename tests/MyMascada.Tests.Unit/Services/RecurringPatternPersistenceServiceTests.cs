@@ -128,11 +128,55 @@ public class RecurringPatternPersistenceServiceTests
             canonicalPatternId: activePatterns[1].Id, // occurrences:5 -> canonical
             Arg.Is<IEnumerable<int>>(ids => ids.OrderBy(x => x).SequenceEqual(
                 new[] { activePatterns[0].Id, activePatterns[2].Id }.OrderBy(x => x))),
+            mergedNormalizedKey: "ami insurance",
             mergedOccurrenceCount: 12, // 4 + 5 + 3
             mergedAverageAmount: 42.75m, // most recent (lastObserved -1)
             Arg.Any<DateTime>(),
             Arg.Any<DateTime>(),
             Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task DetectAndPersistPatternsAsync_WithStaleNormalizedKey_ShouldMigrateLoneRowKey()
+    {
+        // Arrange - a single active pattern whose stored key was produced by the old normalizer.
+        var today = DateTime.UtcNow.Date;
+        var stale = CreatePattern("ami insurance amiinsurance 3301234", amount: 42.75m,
+            nextDue: today.AddDays(3), confidence: 0.85m, occurrences: 5);
+
+        _patternRepository.GetActiveAsync(_userId, Arg.Any<CancellationToken>())
+            .Returns(new List<RecurringPattern> { stale });
+        _transactionRepository.GetByDateRangeAsync(_userId, Arg.Any<DateTime>(), Arg.Any<DateTime>())
+            .Returns(new List<Transaction>());
+
+        // Act
+        await _service.DetectAndPersistPatternsAsync(_userId);
+
+        // Assert - the lone stale row's key is migrated to the clean normalized form so the next
+        // exact-key upsert updates it rather than creating a fresh duplicate.
+        await _patternRepository.Received(1).UpdateNormalizedKeyAsync(
+            _userId, stale.Id, "ami insurance", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task DetectAndPersistPatternsAsync_WithAlreadyCleanLoneKey_ShouldNotMigrate()
+    {
+        // Arrange
+        var today = DateTime.UtcNow.Date;
+        var clean = CreatePattern("ami insurance", amount: 42.75m,
+            nextDue: today.AddDays(3), confidence: 0.85m, occurrences: 5);
+
+        _patternRepository.GetActiveAsync(_userId, Arg.Any<CancellationToken>())
+            .Returns(new List<RecurringPattern> { clean });
+        _transactionRepository.GetByDateRangeAsync(_userId, Arg.Any<DateTime>(), Arg.Any<DateTime>())
+            .Returns(new List<Transaction>());
+
+        // Act
+        await _service.DetectAndPersistPatternsAsync(_userId);
+
+        // Assert
+        await _patternRepository.DidNotReceive().UpdateNormalizedKeyAsync(
+            Arg.Any<Guid>(), Arg.Any<int>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -156,8 +200,8 @@ public class RecurringPatternPersistenceServiceTests
         // Assert - no merge should occur for genuinely distinct merchants.
         await _patternRepository.DidNotReceive().MergeDuplicatePatternsAsync(
             Arg.Any<Guid>(), Arg.Any<int>(), Arg.Any<IEnumerable<int>>(),
-            Arg.Any<int>(), Arg.Any<decimal>(), Arg.Any<DateTime>(), Arg.Any<DateTime>(),
-            Arg.Any<CancellationToken>());
+            Arg.Any<string>(), Arg.Any<int>(), Arg.Any<decimal>(), Arg.Any<DateTime>(),
+            Arg.Any<DateTime>(), Arg.Any<CancellationToken>());
     }
 
     private RecurringPattern CreatePattern(

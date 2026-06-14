@@ -356,17 +356,21 @@ public class RecurringPatternPersistenceService : IRecurringPatternPersistenceSe
     }
 
     /// <summary>
-    /// Merges already-persisted duplicate <see cref="RecurringPattern"/> rows for a user.
-    /// Active patterns are grouped by normalized/similar merchant key; one canonical pattern
-    /// is kept (most occurrences, then highest confidence) with merged occurrence counts and
-    /// the most recent amount/next-expected-date, and the rest are soft-deleted.
+    /// Reconciles already-persisted <see cref="RecurringPattern"/> rows for a user so existing
+    /// accounts self-heal. Active patterns are grouped by normalized/similar merchant key:
+    ///  - groups with more than one member are merged into a single canonical pattern (most
+    ///    occurrences, then highest confidence) with merged occurrence counts, the most recent
+    ///    amount/next-expected-date, and the rewritten normalized key; the rest are soft-deleted.
+    ///  - a lone member whose stored key differs from the current normalizer output has its key
+    ///    migrated, so the next detection pass's exact-key upsert updates it rather than creating
+    ///    a fresh duplicate.
     /// </summary>
     private async Task ReconcileDuplicatePatternsAsync(Guid userId, CancellationToken cancellationToken)
     {
         try
         {
             var activePatterns = (await _patternRepository.GetActiveAsync(userId, cancellationToken)).ToList();
-            if (activePatterns.Count <= 1)
+            if (activePatterns.Count == 0)
                 return;
 
             // Re-normalize the stored keys first: rows persisted by an older normalizer may
@@ -383,12 +387,27 @@ public class RecurringPatternPersistenceService : IRecurringPatternPersistenceSe
                 .GroupBy(p => canonicalByKey.TryGetValue(normalizedByPattern[p], out var canonical)
                     ? canonical
                     : normalizedByPattern[p])
-                .Where(g => g.Count() > 1)
                 .ToList();
 
             foreach (var group in groups)
             {
                 var members = group.ToList();
+
+                if (members.Count == 1)
+                {
+                    // Lone row: migrate a stale stored key to the normalized form so the next
+                    // exact-key upsert updates this row instead of creating a duplicate.
+                    var only = members[0];
+                    var migratedKey = group.Key;
+                    if (!string.IsNullOrWhiteSpace(migratedKey) && only.NormalizedMerchantKey != migratedKey)
+                    {
+                        await _patternRepository.UpdateNormalizedKeyAsync(userId, only.Id, migratedKey, cancellationToken);
+                        _logger.LogInformation(
+                            "Migrated normalized key for recurring pattern {PatternId} to '{NormalizedKey}'",
+                            only.Id, migratedKey);
+                    }
+                    continue;
+                }
 
                 // Keep the strongest pattern: most occurrences, then highest confidence.
                 var canonicalPattern = members
@@ -405,6 +424,7 @@ public class RecurringPatternPersistenceService : IRecurringPatternPersistenceSe
                     userId,
                     canonicalPattern.Id,
                     duplicateIds,
+                    mergedNormalizedKey: group.Key,
                     mergedOccurrenceCount: members.Sum(p => p.OccurrenceCount),
                     mergedAverageAmount: mostRecent.AverageAmount,
                     mergedLastObservedAt: mostRecent.LastObservedAt,

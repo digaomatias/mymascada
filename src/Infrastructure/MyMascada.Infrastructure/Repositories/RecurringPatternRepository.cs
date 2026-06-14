@@ -232,6 +232,7 @@ public class RecurringPatternRepository : IRecurringPatternRepository
         Guid userId,
         int canonicalPatternId,
         IEnumerable<int> duplicatePatternIds,
+        string mergedNormalizedKey,
         int mergedOccurrenceCount,
         decimal mergedAverageAmount,
         DateTime mergedLastObservedAt,
@@ -272,7 +273,11 @@ public class RecurringPatternRepository : IRecurringPatternRepository
             occurrence.UpdatedAt = now;
         }
 
-        // Apply merged field values to the canonical pattern.
+        // Apply merged field values to the canonical pattern. Rewriting the normalized key to
+        // the current normalizer's output ensures the next detection pass's exact-key upsert
+        // updates this row instead of creating yet another duplicate.
+        if (!string.IsNullOrWhiteSpace(mergedNormalizedKey))
+            canonical.NormalizedMerchantKey = mergedNormalizedKey;
         canonical.OccurrenceCount = mergedOccurrenceCount;
         canonical.AverageAmount = mergedAverageAmount;
         canonical.LastObservedAt = mergedLastObservedAt;
@@ -287,6 +292,30 @@ public class RecurringPatternRepository : IRecurringPatternRepository
             duplicate.UpdatedAt = now;
         }
 
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Rewrites the normalized merchant key of a single pattern (migrates a stale row to the
+    /// current normalizer output). No-op if unchanged or not found.
+    /// </summary>
+    public async Task UpdateNormalizedKeyAsync(
+        Guid userId,
+        int patternId,
+        string normalizedKey,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(normalizedKey))
+            return;
+
+        var pattern = await _context.RecurringPatterns
+            .FirstOrDefaultAsync(p => p.Id == patternId && p.UserId == userId && !p.IsDeleted, cancellationToken);
+
+        if (pattern == null || pattern.NormalizedMerchantKey == normalizedKey)
+            return;
+
+        pattern.NormalizedMerchantKey = normalizedKey;
+        pattern.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync(cancellationToken);
     }
 
