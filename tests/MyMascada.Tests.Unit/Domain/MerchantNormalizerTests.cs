@@ -47,6 +47,24 @@ public class MerchantNormalizerTests
         MerchantNormalizer.Normalize("3 MOBILE").Should().Be("3 mobile");
     }
 
+    [Theory]
+    [InlineData("MERCHANT #12345", "merchant")]
+    [InlineData("ACME CORP REF:ABC123", "acme corp")]
+    [InlineData("STORE ID:987654", "store")]
+    public void Normalize_ShouldStripExplicitReferencePrefixes(string input, string expected)
+    {
+        MerchantNormalizer.Normalize(input).Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData("RAPID RENTALS", "rapid rentals")]   // "id" inside "rapid" must survive
+    [InlineData("VIDEO STORE", "video store")]       // "id" inside "video" must survive
+    [InlineData("REFRESH CAFE", "refresh cafe")]     // "ref" inside "refresh" must survive
+    public void Normalize_ShouldNotStripReferenceTokensInsideWords(string input, string expected)
+    {
+        MerchantNormalizer.Normalize(input).Should().Be(expected);
+    }
+
     [Fact]
     public void Normalize_ShouldNotCollapseGenuinelyDifferentMerchants()
     {

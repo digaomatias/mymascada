@@ -257,9 +257,13 @@ public class RecurringPatternRepository : IRecurringPatternRepository
 
         var now = DateTime.UtcNow;
 
+        // Only operate on duplicates that actually loaded (user-scoped, not soft-deleted), so
+        // occurrence re-parenting can never touch patterns outside the verified duplicate set.
+        var validDuplicateIds = duplicates.Select(d => d.Id).ToList();
+
         // Re-parent occurrence history from the duplicates onto the canonical pattern.
         var occurrences = await _context.RecurringOccurrences
-            .Where(o => duplicateIds.Contains(o.PatternId) && !o.IsDeleted)
+            .Where(o => validDuplicateIds.Contains(o.PatternId) && !o.IsDeleted)
             .ToListAsync(cancellationToken);
 
         foreach (var occurrence in occurrences)

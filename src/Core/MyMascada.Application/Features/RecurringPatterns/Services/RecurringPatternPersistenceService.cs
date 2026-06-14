@@ -267,19 +267,19 @@ public class RecurringPatternPersistenceService : IRecurringPatternPersistenceSe
         // (e.g. before the reconciliation pass has run), consolidate them here so the user
         // never sees the same merchant more than once. Keep the soonest-due / highest-confidence
         // pattern and prefer the most recently observed amount.
-        var consolidatedPatterns = ConsolidateByMerchant(upcomingPatterns, today);
+        var consolidated = MerchantConsolidation.ConsolidateUpcoming(upcomingPatterns, today);
 
-        var bills = consolidatedPatterns.Select(p => new UpcomingBillDto
+        var bills = consolidated.Select(c => new UpcomingBillDto
         {
-            PatternId = p.Id,
-            MerchantName = p.MerchantName,
-            ExpectedAmount = Math.Round(p.AverageAmount, 2),
-            ExpectedDate = p.NextExpectedDate,
-            DaysUntilDue = p.GetDaysUntilDue(today),
-            ConfidenceScore = Math.Round(p.Confidence, 2),
-            ConfidenceLevel = p.GetConfidenceLevel(),
-            Interval = p.GetIntervalName(),
-            OccurrenceCount = p.OccurrenceCount
+            PatternId = c.Pattern.Id,
+            MerchantName = c.Pattern.MerchantName,
+            ExpectedAmount = Math.Round(c.DisplayAmount, 2),
+            ExpectedDate = c.Pattern.NextExpectedDate,
+            DaysUntilDue = c.Pattern.GetDaysUntilDue(today),
+            ConfidenceScore = Math.Round(c.Pattern.Confidence, 2),
+            ConfidenceLevel = c.Pattern.GetConfidenceLevel(),
+            Interval = c.Pattern.GetIntervalName(),
+            OccurrenceCount = c.Pattern.OccurrenceCount
         })
         .OrderBy(b => b.DaysUntilDue)
         .ThenByDescending(b => b.ConfidenceScore)
@@ -291,50 +291,6 @@ public class RecurringPatternPersistenceService : IRecurringPatternPersistenceSe
             TotalBillsCount = bills.Count,
             TotalExpectedAmount = bills.Sum(b => b.ExpectedAmount)
         };
-    }
-
-    /// <summary>
-    /// Collapses patterns that resolve to the same merchant (identical normalized key, or
-    /// near-duplicate via the shared similarity rule) into a single representative pattern.
-    /// The representative is the soonest-due, then highest-confidence pattern; its amount is
-    /// taken from the most recently observed pattern in the group.
-    /// </summary>
-    private static List<RecurringPattern> ConsolidateByMerchant(
-        IEnumerable<RecurringPattern> patterns,
-        DateTime today)
-    {
-        var patternList = patterns.ToList();
-        if (patternList.Count <= 1)
-            return patternList;
-
-        // Build a similarity grouping over the distinct normalized keys.
-        var keys = patternList
-            .Select(p => p.NormalizedMerchantKey ?? string.Empty)
-            .ToList();
-        var canonicalByKey = MerchantNormalizer.GroupSimilarKeys(keys);
-
-        var grouped = patternList
-            .GroupBy(p => canonicalByKey.TryGetValue(p.NormalizedMerchantKey ?? string.Empty, out var canonical)
-                ? canonical
-                : (p.NormalizedMerchantKey ?? string.Empty));
-
-        var result = new List<RecurringPattern>();
-        foreach (var group in grouped)
-        {
-            // Representative = soonest due, then highest confidence.
-            var representative = group
-                .OrderBy(p => p.GetDaysUntilDue(today))
-                .ThenByDescending(p => p.Confidence)
-                .First();
-
-            // Prefer the most recently observed amount across the duplicate rows.
-            var mostRecent = group.OrderByDescending(p => p.LastObservedAt).First();
-            representative.AverageAmount = mostRecent.AverageAmount;
-
-            result.Add(representative);
-        }
-
-        return result;
     }
 
     #region Private Helper Methods
@@ -413,13 +369,20 @@ public class RecurringPatternPersistenceService : IRecurringPatternPersistenceSe
             if (activePatterns.Count <= 1)
                 return;
 
+            // Re-normalize the stored keys first: rows persisted by an older normalizer may
+            // still carry reference tokens or doubled words (e.g. "ami insurance amiinsurance"),
+            // which must be cleaned before grouping so they collapse with freshly-detected keys.
+            var normalizedByPattern = activePatterns.ToDictionary(
+                p => p,
+                p => MerchantNormalizer.Normalize(p.NormalizedMerchantKey));
+
             var canonicalByKey = MerchantNormalizer.GroupSimilarKeys(
-                activePatterns.Select(p => p.NormalizedMerchantKey ?? string.Empty).ToList());
+                normalizedByPattern.Values.ToList());
 
             var groups = activePatterns
-                .GroupBy(p => canonicalByKey.TryGetValue(p.NormalizedMerchantKey ?? string.Empty, out var canonical)
+                .GroupBy(p => canonicalByKey.TryGetValue(normalizedByPattern[p], out var canonical)
                     ? canonical
-                    : (p.NormalizedMerchantKey ?? string.Empty))
+                    : normalizedByPattern[p])
                 .Where(g => g.Count() > 1)
                 .ToList();
 

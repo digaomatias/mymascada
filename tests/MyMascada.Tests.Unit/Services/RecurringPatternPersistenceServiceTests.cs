@@ -172,7 +172,7 @@ public class RecurringPatternPersistenceServiceTests
         {
             Id = _patternIdCounter++,
             UserId = _userId,
-            MerchantName = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(normalizedKey),
+            MerchantName = System.Globalization.CultureInfo.InvariantCulture.TextInfo.ToTitleCase(normalizedKey),
             NormalizedMerchantKey = normalizedKey,
             IntervalDays = 30,
             AverageAmount = amount,

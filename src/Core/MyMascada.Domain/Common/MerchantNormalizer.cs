@@ -43,8 +43,14 @@ public static class MerchantNormalizer
         // Remove common transaction prefixes.
         normalized = Regex.Replace(normalized, @"^(purchase\s+|payment\s+|pos\s+|debit\s+|eftpos\s+)", "");
 
-        // Remove explicit reference numbers (patterns like #123, REF:ABC123, ID:987654).
-        normalized = Regex.Replace(normalized, @"(#|ref:?|id:?)\s*[\w\d-]+", "");
+        // Remove explicit reference numbers (patterns like #123, REF:ABC123, ID:987654, "ref 99").
+        // Guards against corrupting ordinary merchant text:
+        //  - (?<!\w) anchors the label to a word boundary on the left (so it can't match inside
+        //    "rapid"/"video"),
+        //  - the label must be followed by a colon or whitespace separator before the value
+        //    (so "refresh"/"identity" are left intact).
+        normalized = Regex.Replace(normalized, @"(?<!\w)#\s*[\w-]+", "");
+        normalized = Regex.Replace(normalized, @"(?<!\w)(?:ref|id)(?::\s*|:?\s+)[\w-]+", "");
 
         // Remove dates (patterns like 01/15, 12-25-2024).
         normalized = Regex.Replace(normalized, @"\d{1,2}[/-]\d{1,2}([/-]\d{2,4})?", "");

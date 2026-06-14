@@ -83,20 +83,21 @@ public class RecurringPatternService : IRecurringPatternService
 
         // Safety net: consolidate any duplicate pattern rows that resolve to the same merchant
         // so the dashboard never shows the same bill multiple times, even if stale duplicate
-        // rows still exist in the database.
-        var consolidatedPatterns = ConsolidateByMerchant(upcomingPatterns, today);
+        // rows still exist in the database. ConsolidateUpcoming is pure and does not mutate the
+        // (EF-tracked) pattern entities.
+        var consolidated = MerchantConsolidation.ConsolidateUpcoming(upcomingPatterns, today);
 
-        var bills = consolidatedPatterns.Select(p => new UpcomingBillDto
+        var bills = consolidated.Select(c => new UpcomingBillDto
         {
-            PatternId = p.Id,
-            MerchantName = p.MerchantName,
-            ExpectedAmount = Math.Round(p.AverageAmount, 2),
-            ExpectedDate = p.NextExpectedDate,
-            DaysUntilDue = p.GetDaysUntilDue(today),
-            ConfidenceScore = Math.Round(p.Confidence, 2),
-            ConfidenceLevel = p.GetConfidenceLevel(),
-            Interval = p.GetIntervalName(),
-            OccurrenceCount = p.OccurrenceCount
+            PatternId = c.Pattern.Id,
+            MerchantName = c.Pattern.MerchantName,
+            ExpectedAmount = Math.Round(c.DisplayAmount, 2),
+            ExpectedDate = c.Pattern.NextExpectedDate,
+            DaysUntilDue = c.Pattern.GetDaysUntilDue(today),
+            ConfidenceScore = Math.Round(c.Pattern.Confidence, 2),
+            ConfidenceLevel = c.Pattern.GetConfidenceLevel(),
+            Interval = c.Pattern.GetIntervalName(),
+            OccurrenceCount = c.Pattern.OccurrenceCount
         })
         .OrderBy(b => b.DaysUntilDue)
         .ThenByDescending(b => b.ConfidenceScore)
@@ -108,45 +109,6 @@ public class RecurringPatternService : IRecurringPatternService
             TotalBillsCount = bills.Count,
             TotalExpectedAmount = bills.Sum(b => b.ExpectedAmount)
         };
-    }
-
-    /// <summary>
-    /// Collapses patterns that resolve to the same merchant (identical normalized key, or
-    /// near-duplicate via the shared similarity rule) into a single representative pattern.
-    /// The representative is the soonest-due, then highest-confidence pattern; its amount is
-    /// taken from the most recently observed pattern in the group.
-    /// </summary>
-    private static List<RecurringPattern> ConsolidateByMerchant(
-        IEnumerable<RecurringPattern> patterns,
-        DateTime today)
-    {
-        var patternList = patterns.ToList();
-        if (patternList.Count <= 1)
-            return patternList;
-
-        var canonicalByKey = MerchantNormalizer.GroupSimilarKeys(
-            patternList.Select(p => p.NormalizedMerchantKey ?? string.Empty).ToList());
-
-        var grouped = patternList
-            .GroupBy(p => canonicalByKey.TryGetValue(p.NormalizedMerchantKey ?? string.Empty, out var canonical)
-                ? canonical
-                : (p.NormalizedMerchantKey ?? string.Empty));
-
-        var result = new List<RecurringPattern>();
-        foreach (var group in grouped)
-        {
-            var representative = group
-                .OrderBy(p => p.GetDaysUntilDue(today))
-                .ThenByDescending(p => p.Confidence)
-                .First();
-
-            var mostRecent = group.OrderByDescending(p => p.LastObservedAt).First();
-            representative.AverageAmount = mostRecent.AverageAmount;
-
-            result.Add(representative);
-        }
-
-        return result;
     }
 
     /// <summary>
