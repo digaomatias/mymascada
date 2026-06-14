@@ -273,10 +273,42 @@ public class RecurringPatternRepository : IRecurringPatternRepository
             occurrence.UpdatedAt = now;
         }
 
-        // Soft-delete the duplicate patterns. The unique index on (UserId, NormalizedMerchantKey)
-        // is NOT filtered on IsDeleted, so soft-deleted rows still occupy their key slot. Before
-        // the canonical row adopts the cleaned key, vacate that slot by uniquifying every
-        // duplicate's key (a duplicate may already hold the exact clean key we are about to use).
+        // Vacate the unique (UserId, NormalizedMerchantKey) slot before the canonical row adopts
+        // the cleaned key. The index is NOT filtered on IsDeleted, while the entity has a global
+        // !IsDeleted query filter — so collisions can come from the in-group duplicates above OR
+        // from a previously soft-deleted row that already holds the cleaned key. Load every row
+        // holding the target key (IgnoreQueryFilters) and uniquify each so SaveChanges cannot hit
+        // the constraint (which would otherwise swallow the whole reconciliation).
+        var rewriteCanonicalKey = !string.IsNullOrWhiteSpace(mergedNormalizedKey)
+                                  && canonical.NormalizedMerchantKey != mergedNormalizedKey;
+
+        if (rewriteCanonicalKey)
+        {
+            // Exclude the in-group duplicates; they are uniquified in the dedicated loop below.
+            var keyHolders = await _context.RecurringPatterns
+                .IgnoreQueryFilters()
+                .Where(p => p.UserId == userId
+                            && p.Id != canonicalPatternId
+                            && !validDuplicateIds.Contains(p.Id)
+                            && p.NormalizedMerchantKey == mergedNormalizedKey)
+                .ToListAsync(cancellationToken);
+
+            foreach (var holder in keyHolders)
+            {
+                // Soft-delete any live collision too: an active row outside this group that maps
+                // to the same cleaned key is itself a duplicate of the same merchant.
+                if (!holder.IsDeleted)
+                {
+                    holder.IsDeleted = true;
+                    holder.DeletedAt = now;
+                }
+                holder.NormalizedMerchantKey = BuildDeletedKey(holder.NormalizedMerchantKey, holder.Id);
+                holder.UpdatedAt = now;
+            }
+        }
+
+        // Soft-delete the in-group duplicate patterns, uniquifying their keys so they no longer
+        // occupy any (UserId, key) slot the canonical row may take.
         foreach (var duplicate in duplicates)
         {
             duplicate.IsDeleted = true;
@@ -285,10 +317,10 @@ public class RecurringPatternRepository : IRecurringPatternRepository
             duplicate.NormalizedMerchantKey = BuildDeletedKey(duplicate.NormalizedMerchantKey, duplicate.Id);
         }
 
-        // Apply merged field values to the canonical pattern. Rewriting the normalized key to
-        // the current normalizer's output ensures the next detection pass's exact-key upsert
-        // updates this row instead of creating yet another duplicate.
-        if (!string.IsNullOrWhiteSpace(mergedNormalizedKey))
+        // Apply merged field values to the canonical pattern. Rewriting the normalized key to the
+        // current normalizer's output ensures the next detection pass's exact-key upsert updates
+        // this row instead of creating yet another duplicate.
+        if (rewriteCanonicalKey)
             canonical.NormalizedMerchantKey = mergedNormalizedKey;
         canonical.OccurrenceCount = mergedOccurrenceCount;
         canonical.AverageAmount = mergedAverageAmount;
@@ -334,9 +366,11 @@ public class RecurringPatternRepository : IRecurringPatternRepository
             return;
 
         // The unique index on (UserId, NormalizedMerchantKey) ignores IsDeleted, so any existing
-        // row (active OR soft-deleted) holding the target key would cause a constraint violation.
-        // Skip the migration in that case; the next reconciliation pass will consolidate instead.
+        // row (active OR soft-deleted — hence IgnoreQueryFilters) holding the target key would
+        // cause a constraint violation. Skip the migration in that case; the next reconciliation
+        // pass will consolidate instead.
         var keyTaken = await _context.RecurringPatterns
+            .IgnoreQueryFilters()
             .AnyAsync(p => p.UserId == userId
                            && p.Id != patternId
                            && p.NormalizedMerchantKey == normalizedKey, cancellationToken);
