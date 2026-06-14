@@ -210,6 +210,62 @@ public class RecurringPatternPersistenceServiceTests
     }
 
     [Fact]
+    public async Task DetectAndPersistPatternsAsync_WithSimilarNamesButDifferentCadenceAndAmount_ShouldNotMerge()
+    {
+        // Arrange - two patterns whose names are one edit apart (so they land in the same
+        // name-similarity group) but with unrelated cadence AND amount. They are NOT the same
+        // recurring bill and must not be destructively merged.
+        var today = DateTime.UtcNow.Date;
+        var weekly = CreatePattern("acme services", amount: 12.00m, nextDue: today.AddDays(2),
+            confidence: 0.85m, occurrences: 6);
+        weekly.IntervalDays = 7; // Weekly
+        var monthly = CreatePattern("acme service", amount: 250.00m, nextDue: today.AddDays(3),
+            confidence: 0.85m, occurrences: 6);
+        monthly.IntervalDays = 30; // Monthly, ~20x the amount
+
+        _patternRepository.GetByUserIdAsync(_userId, Arg.Any<bool>(), Arg.Any<CancellationToken>())
+            .Returns(new List<RecurringPattern> { weekly, monthly });
+        _transactionRepository.GetByDateRangeAsync(_userId, Arg.Any<DateTime>(), Arg.Any<DateTime>())
+            .Returns(new List<Transaction>());
+
+        // Act
+        await _service.DetectAndPersistPatternsAsync(_userId);
+
+        // Assert - no destructive merge for distinct bills that merely share a similar name.
+        await _patternRepository.DidNotReceive().MergeDuplicatePatternsAsync(
+            Arg.Any<Guid>(), Arg.Any<int>(), Arg.Any<IEnumerable<int>>(),
+            Arg.Any<string>(), Arg.Any<int>(), Arg.Any<decimal>(), Arg.Any<DateTime>(),
+            Arg.Any<DateTime>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task DetectAndPersistPatternsAsync_WithExactSameKeyButDifferentAmounts_ShouldStillMerge()
+    {
+        // Arrange - identical normalized key is an unambiguous duplicate; merge regardless of the
+        // amount spread (this is the reported bug's exact shape: same merchant, varied amounts).
+        var today = DateTime.UtcNow.Date;
+        var patterns = new List<RecurringPattern>
+        {
+            CreatePattern("ami insurance", amount: 42.74m, nextDue: today.AddDays(2), confidence: 0.85m, occurrences: 5),
+            CreatePattern("ami insurance", amount: 99.00m, nextDue: today.AddDays(3), confidence: 0.80m, occurrences: 3),
+        };
+
+        _patternRepository.GetByUserIdAsync(_userId, Arg.Any<bool>(), Arg.Any<CancellationToken>()).Returns(patterns);
+        _transactionRepository.GetByDateRangeAsync(_userId, Arg.Any<DateTime>(), Arg.Any<DateTime>())
+            .Returns(new List<Transaction>());
+
+        // Act
+        await _service.DetectAndPersistPatternsAsync(_userId);
+
+        // Assert
+        await _patternRepository.Received(1).MergeDuplicatePatternsAsync(
+            _userId, patterns[0].Id,
+            Arg.Is<IEnumerable<int>>(ids => ids.SequenceEqual(new[] { patterns[1].Id })),
+            Arg.Any<string>(), Arg.Any<int>(), Arg.Any<decimal>(), Arg.Any<DateTime>(),
+            Arg.Any<DateTime>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task DetectAndPersistPatternsAsync_WithDistinctMerchants_ShouldNotMerge()
     {
         // Arrange
