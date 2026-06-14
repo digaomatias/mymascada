@@ -7,17 +7,34 @@ namespace MyMascada.Tests.Unit.Domain;
 public class RecurringPatternGroupingTests
 {
     [Fact]
-    public void PartitionBySameBill_ExactKeyMatch_AlwaysClustersTogether()
+    public void PartitionBySameBill_ExactKeySameCadenceCloseAmount_Clusters()
     {
+        // The reported bug's shape: same merchant key, same cadence, near-identical amounts.
         var members = new List<RecurringPattern>
         {
             Pattern("ami insurance", intervalDays: 30, amount: 42.74m),
-            Pattern("ami insurance", intervalDays: 30, amount: 99.00m), // wildly different amount
+            Pattern("ami insurance", intervalDays: 30, amount: 42.75m),
         };
 
-        var clusters = RecurringPatternGrouping.PartitionBySameBill(members, p => p.NormalizedMerchantKey);
+        var clusters = RecurringPatternGrouping.PartitionBySameBill(members);
 
-        clusters.Should().HaveCount(1, "exact normalized-key matches are unambiguous duplicates");
+        clusters.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void PartitionBySameBill_ExactKeyButDifferentAmount_StaysSeparate()
+    {
+        // Same merchant key after the normalizer strips policy/account IDs, but clearly different
+        // bills (e.g. two insurance policies). The amount evidence must keep them separate.
+        var members = new List<RecurringPattern>
+        {
+            Pattern("ami insurance", intervalDays: 30, amount: 42.74m),
+            Pattern("ami insurance", intervalDays: 30, amount: 300.00m),
+        };
+
+        var clusters = RecurringPatternGrouping.PartitionBySameBill(members);
+
+        clusters.Should().HaveCount(2, "exact key alone is not enough once reference IDs are stripped");
     }
 
     [Fact]
@@ -29,7 +46,7 @@ public class RecurringPatternGroupingTests
             Pattern("acme service", intervalDays: 30, amount: 250.00m),
         };
 
-        var clusters = RecurringPatternGrouping.PartitionBySameBill(members, p => p.NormalizedMerchantKey);
+        var clusters = RecurringPatternGrouping.PartitionBySameBill(members);
 
         clusters.Should().HaveCount(2, "similar names alone must not collapse distinct bills");
     }
@@ -43,7 +60,7 @@ public class RecurringPatternGroupingTests
             Pattern("acme service", intervalDays: 30, amount: 110.00m), // within ±20%
         };
 
-        var clusters = RecurringPatternGrouping.PartitionBySameBill(members, p => p.NormalizedMerchantKey);
+        var clusters = RecurringPatternGrouping.PartitionBySameBill(members);
 
         clusters.Should().HaveCount(1);
     }
@@ -60,7 +77,7 @@ public class RecurringPatternGroupingTests
             Pattern("acme service", intervalDays: 7, amount: 9.00m),     // C (distinct bill)
         };
 
-        var clusters = RecurringPatternGrouping.PartitionBySameBill(members, p => p.NormalizedMerchantKey);
+        var clusters = RecurringPatternGrouping.PartitionBySameBill(members);
 
         clusters.Should().HaveCount(2);
         clusters.Should().ContainSingle(c => c.Count == 2);

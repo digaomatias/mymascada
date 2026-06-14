@@ -13,20 +13,22 @@ public static class RecurringPatternGrouping
     public const decimal AmountTolerance = 0.2m; // ±20%
 
     /// <summary>
-    /// Whether two patterns are confidently the same recurring bill: an exact normalized-key
-    /// match, or a fuzzy-name match (callers pre-group by name similarity) backed by the same
-    /// cadence and amounts within <see cref="AmountTolerance"/>. Name similarity alone is not
-    /// sufficient — two distinct merchants can have near-identical names.
+    /// Whether two patterns are confidently the same recurring bill. Requires BOTH:
+    ///  - a merchant match (callers pre-group by name similarity; an exact normalized-key match
+    ///    also qualifies), AND
+    ///  - corroborating evidence: the same cadence and amounts within <see cref="AmountTolerance"/>.
+    ///
+    /// The evidence check applies even to exact normalized-key matches, because the normalizer
+    /// strips numeric policy/account IDs — so two genuinely-different bills at one merchant (e.g.
+    /// two insurance policies with different amounts) can normalize to the same key and must NOT
+    /// be collapsed. Conversely, name similarity alone is never sufficient.
     /// </summary>
-    public static bool AreSameRecurringBill(
-        RecurringPattern a,
-        RecurringPattern b,
-        string normalizedKeyA,
-        string normalizedKeyB)
+    public static bool AreSameRecurringBill(RecurringPattern a, RecurringPattern b)
     {
-        if (string.Equals(normalizedKeyA, normalizedKeyB, StringComparison.Ordinal))
-            return true;
-
+        // Callers pass members of the same name-similarity group (an exact cleaned-key match is
+        // the strongest form of that). But the key alone is NOT decisive — the normalizer strips
+        // policy/account IDs, so two distinct bills at one merchant can share a key — hence
+        // corroborating cadence + amount evidence is always required.
         var sameCadence = a.GetIntervalName() == b.GetIntervalName();
 
         var larger = Math.Max(a.AverageAmount, b.AverageAmount);
@@ -42,9 +44,7 @@ public static class RecurringPatternGrouping
     /// Partitions a name-similarity group into clusters that are confidently the same recurring
     /// bill, via union-find over <see cref="AreSameRecurringBill"/> (transitive within the group).
     /// </summary>
-    public static List<List<RecurringPattern>> PartitionBySameBill(
-        List<RecurringPattern> members,
-        Func<RecurringPattern, string> normalizedKeyOf)
+    public static List<List<RecurringPattern>> PartitionBySameBill(List<RecurringPattern> members)
     {
         if (members.Count <= 1)
             return new List<List<RecurringPattern>> { members };
@@ -73,7 +73,7 @@ public static class RecurringPatternGrouping
         {
             for (var j = i + 1; j < members.Count; j++)
             {
-                if (AreSameRecurringBill(members[i], members[j], normalizedKeyOf(members[i]), normalizedKeyOf(members[j])))
+                if (AreSameRecurringBill(members[i], members[j]))
                     Union(i, j);
             }
         }

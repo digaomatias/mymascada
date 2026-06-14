@@ -400,7 +400,7 @@ public class RecurringPatternPersistenceService : IRecurringPatternPersistenceSe
                 // Split each name-group into merge clusters that additionally require compatible
                 // evidence (same exact normalized key, OR same cadence AND close amounts), so we
                 // only soft-delete + reparent rows that are genuinely the same recurring bill.
-                var clusters = RecurringPatternGrouping.PartitionBySameBill(group.ToList(), p => normalizedByPattern[p]);
+                var clusters = RecurringPatternGrouping.PartitionBySameBill(group.ToList());
 
                 foreach (var cluster in clusters)
                 {

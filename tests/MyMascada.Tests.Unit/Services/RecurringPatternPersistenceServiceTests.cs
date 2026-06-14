@@ -264,15 +264,15 @@ public class RecurringPatternPersistenceServiceTests
     }
 
     [Fact]
-    public async Task DetectAndPersistPatternsAsync_WithExactSameKeyButDifferentAmounts_ShouldStillMerge()
+    public async Task DetectAndPersistPatternsAsync_WithSameKeyAndCloseAmounts_ShouldMerge()
     {
-        // Arrange - identical normalized key is an unambiguous duplicate; merge regardless of the
-        // amount spread (this is the reported bug's exact shape: same merchant, varied amounts).
+        // Arrange - the reported bug's exact shape: same merchant key, same cadence, near-identical
+        // amounts. These must merge into one canonical pattern.
         var today = DateTime.UtcNow.Date;
         var patterns = new List<RecurringPattern>
         {
             CreatePattern("ami insurance", amount: 42.74m, nextDue: today.AddDays(2), confidence: 0.85m, occurrences: 5),
-            CreatePattern("ami insurance", amount: 99.00m, nextDue: today.AddDays(3), confidence: 0.80m, occurrences: 3),
+            CreatePattern("ami insurance", amount: 42.75m, nextDue: today.AddDays(3), confidence: 0.80m, occurrences: 3),
         };
 
         _patternRepository.GetByUserIdAsync(_userId, Arg.Any<bool>(), Arg.Any<CancellationToken>()).Returns(patterns);
@@ -286,6 +286,32 @@ public class RecurringPatternPersistenceServiceTests
         await _patternRepository.Received(1).MergeDuplicatePatternsAsync(
             _userId, patterns[0].Id,
             Arg.Is<IEnumerable<int>>(ids => ids.SequenceEqual(new[] { patterns[1].Id })),
+            Arg.Any<string>(), Arg.Any<int>(), Arg.Any<decimal>(), Arg.Any<DateTime>(),
+            Arg.Any<DateTime>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task DetectAndPersistPatternsAsync_WithSameKeyButFarApartAmounts_ShouldNotMerge()
+    {
+        // Arrange - same normalized key (the normalizer stripped policy/account IDs) but clearly
+        // different bills (e.g. two insurance policies). The amount evidence keeps them separate.
+        var today = DateTime.UtcNow.Date;
+        var patterns = new List<RecurringPattern>
+        {
+            CreatePattern("ami insurance", amount: 42.74m, nextDue: today.AddDays(2), confidence: 0.85m, occurrences: 5),
+            CreatePattern("ami insurance", amount: 300.00m, nextDue: today.AddDays(3), confidence: 0.80m, occurrences: 3),
+        };
+
+        _patternRepository.GetByUserIdAsync(_userId, Arg.Any<bool>(), Arg.Any<CancellationToken>()).Returns(patterns);
+        _transactionRepository.GetByDateRangeAsync(_userId, Arg.Any<DateTime>(), Arg.Any<DateTime>())
+            .Returns(new List<Transaction>());
+
+        // Act
+        await _service.DetectAndPersistPatternsAsync(_userId);
+
+        // Assert
+        await _patternRepository.DidNotReceive().MergeDuplicatePatternsAsync(
+            Arg.Any<Guid>(), Arg.Any<int>(), Arg.Any<IEnumerable<int>>(),
             Arg.Any<string>(), Arg.Any<int>(), Arg.Any<decimal>(), Arg.Any<DateTime>(),
             Arg.Any<DateTime>(), Arg.Any<CancellationToken>());
     }

@@ -61,8 +61,7 @@ public static class MerchantConsolidation
         {
             // Only collapse rows that are confidently the same bill; keep distinct similarly-named
             // merchants as separate dashboard entries.
-            var clusters = RecurringPatternGrouping.PartitionBySameBill(
-                nameGroup.ToList(), p => normalizedByPattern[p]);
+            var clusters = RecurringPatternGrouping.PartitionBySameBill(nameGroup.ToList());
 
             foreach (var cluster in clusters)
             {
