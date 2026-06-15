@@ -36,6 +36,18 @@ public class TransactionRepository : ITransactionRepository
                                      accessibleIds.Contains(t.AccountId));
     }
 
+    public async Task<Transaction?> GetByIdWithSplitsAsync(int id, Guid userId)
+    {
+        var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
+        return await _context.Transactions
+            .Include(t => t.Account)
+            .Include(t => t.Category)
+            .Include(t => t.Splits)
+                .ThenInclude(s => s.Category)
+            .FirstOrDefaultAsync(t => t.Id == id &&
+                                     accessibleIds.Contains(t.AccountId));
+    }
+
     public async Task<IEnumerable<Transaction>> GetByAccountIdAsync(int accountId, Guid userId)
     {
         if (!await _accountAccess.CanAccessAccountAsync(userId, accountId))
@@ -731,10 +743,11 @@ public class TransactionRepository : ITransactionRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<Transaction>> GetUncategorizedTransactionsAsync(Guid userId, int maxCount = 500, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Transaction>> GetUncategorizedTransactionsAsync(Guid userId, int maxCount = 500, bool includeWizardHidden = false, CancellationToken cancellationToken = default)
     {
         var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
-        return await _context.Transactions
+        var now = DateTime.UtcNow;
+        var query = _context.Transactions
             .Include(t => t.Account)
             .Where(t => accessibleIds.Contains(t.AccountId) &&
                        !t.CategoryId.HasValue &&
@@ -746,15 +759,29 @@ public class TransactionRepository : ITransactionRepository
                        // wizard contents.
                        !t.Account.IsDeleted &&
                        !t.TransferId.HasValue &&
-                       t.Type != TransactionType.TransferComponent)
+                       t.Type != TransactionType.TransferComponent);
+
+        // Wizard-visibility flags hide a row from the Quick-Categorize wizard and
+        // the "needs review" surfaces that mirror it, but they DON'T opt the
+        // transaction out of categorization. The auto-categorization pipeline
+        // passes includeWizardHidden: true so snoozed/ignored rows still get
+        // categorized by rules/ML/LLM.
+        if (!includeWizardHidden)
+        {
+            query = query.Where(t => !t.IsHiddenFromQuickCategorize &&
+                       (t.QuickCategorizeSnoozedUntil == null || t.QuickCategorizeSnoozedUntil <= now));
+        }
+
+        return await query
             .OrderByDescending(t => t.CreatedAt)
             .Take(maxCount)
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<int> CountUncategorizedTransactionsAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<int> CountUncategorizedTransactionsAsync(Guid userId, bool includeWizardHidden = false, CancellationToken cancellationToken = default)
     {
         var accessibleIds = await _accountAccess.GetAccessibleAccountIdsAsync(userId);
+        var now = DateTime.UtcNow;
         // Mirror the filter applied by GetUncategorizedTransactionsAsync +
         // GetUncategorizedGroupsQueryHandler so the dashboard stats card and
         // the quick-categorize wizard agree on which rows "need review".
@@ -767,15 +794,24 @@ public class TransactionRepository : ITransactionRepository
         // post-stripping (e.g. "!!!") still drifts by a few rows, but that's
         // extraordinarily rare for bank transactions and not worth the round
         // trip to normalize server-side.
-        return await _context.Transactions
-            .CountAsync(t => accessibleIds.Contains(t.AccountId) &&
+        var query = _context.Transactions
+            .Where(t => accessibleIds.Contains(t.AccountId) &&
                              !t.CategoryId.HasValue &&
                              !t.IsDeleted &&
                              !t.Account.IsDeleted &&
                              !t.TransferId.HasValue &&
                              t.Type != TransactionType.TransferComponent &&
-                             !string.IsNullOrWhiteSpace(t.Description),
-                        cancellationToken);
+                             !string.IsNullOrWhiteSpace(t.Description));
+
+        // See GetUncategorizedTransactionsAsync — wizard-hidden rows are excluded
+        // from "needs review" counts but not from categorization itself.
+        if (!includeWizardHidden)
+        {
+            query = query.Where(t => !t.IsHiddenFromQuickCategorize &&
+                             (t.QuickCategorizeSnoozedUntil == null || t.QuickCategorizeSnoozedUntil <= now));
+        }
+
+        return await query.CountAsync(cancellationToken);
     }
 
     public async Task<Dictionary<string, int>> GetAutoCategorizationCountsByMethodAsync(

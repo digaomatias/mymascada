@@ -9,6 +9,15 @@ public interface ITransactionRepository
 {
     Task<Transaction?> GetByIdAsync(int id, Guid userId);
     Task<Transaction?> GetByIdAsync(int id);
+
+    /// <summary>
+    /// Loads a transaction with its active (non-deleted) splits and their categories,
+    /// in addition to the account and category navigations. Soft-deleted splits are
+    /// excluded by the global query filter on TransactionSplit (see
+    /// ApplicationDbContext), which also applies to Include. Used by the transaction
+    /// detail read path and the split write path.
+    /// </summary>
+    Task<Transaction?> GetByIdWithSplitsAsync(int id, Guid userId);
     Task<IEnumerable<Transaction>> GetByAccountIdAsync(int accountId, Guid userId);
     Task<bool> HasTransactionsAsync(int accountId, Guid userId);
     Task<IEnumerable<Transaction>> GetByCategoryIdAsync(int categoryId, Guid userId);
@@ -41,8 +50,11 @@ public interface ITransactionRepository
     Task<IEnumerable<Category>> GetCategoriesAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<IEnumerable<CategorizationRule>> GetCategorizationRulesAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<IEnumerable<Transaction>> GetCategorizedTransactionsAsync(Guid userId, int count = 200, CancellationToken cancellationToken = default);
-    Task<IEnumerable<Transaction>> GetUncategorizedTransactionsAsync(Guid userId, int maxCount = 500, CancellationToken cancellationToken = default);
-    Task<int> CountUncategorizedTransactionsAsync(Guid userId, CancellationToken cancellationToken = default);
+    // includeWizardHidden: when true, returns snoozed/"don't show again" rows too.
+    // The auto-categorization pipeline passes true (those flags only hide rows from
+    // the Quick-Categorize wizard; they don't opt a transaction out of categorization).
+    Task<IEnumerable<Transaction>> GetUncategorizedTransactionsAsync(Guid userId, int maxCount = 500, bool includeWizardHidden = false, CancellationToken cancellationToken = default);
+    Task<int> CountUncategorizedTransactionsAsync(Guid userId, bool includeWizardHidden = false, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Returns auto-categorization counts grouped by method ("Rule", "ML", "LLM", "Manual")

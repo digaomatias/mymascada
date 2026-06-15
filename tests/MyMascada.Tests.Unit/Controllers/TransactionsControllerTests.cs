@@ -2,6 +2,8 @@ using MyMascada.Domain.Enums;
 using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Microsoft.AspNetCore.Mvc;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Transactions.Commands;
@@ -308,6 +310,86 @@ public class TransactionsControllerTests
             cmd.UserId == _userId &&
             cmd.Id == transactionId &&
             cmd.Amount == request.Amount));
+    }
+
+    [Fact]
+    public async Task UpdateTransaction_WhenSerializationFailure_ShouldReturnConflict()
+    {
+        // Arrange: the amount-edit path runs in a Serializable transaction; losing the
+        // race surfaces as a PostgresException (SQLSTATE 40001) wrapped by EF in a
+        // DbUpdateException at SaveChanges time.
+        var transactionId = 1;
+        var request = new UpdateTransactionRequest
+        {
+            Id = transactionId,
+            Amount = -75.00m,
+            TransactionDate = DateTime.Today,
+            Description = "Updated Transaction"
+        };
+
+        var serializationFailure = new DbUpdateException(
+            "An error occurred while saving the entity changes.",
+            new PostgresException("could not serialize access due to concurrent update", "ERROR", "ERROR", "40001"));
+        _mediator.Send(Arg.Any<UpdateTransactionCommand>())
+            .Returns(Task.FromException<TransactionDto>(serializationFailure));
+
+        // Act
+        var result = await _controller.UpdateTransaction(transactionId, request);
+
+        // Assert
+        var conflictResult = result.Result.Should().BeOfType<ConflictObjectResult>().Subject;
+        var message = conflictResult.Value!.GetType().GetProperty("message")?.GetValue(conflictResult.Value);
+        message.Should().Be("This transaction was modified concurrently - please retry");
+    }
+
+    [Fact]
+    public async Task UpdateTransactionSplits_WhenSerializationFailure_ShouldReturnConflict()
+    {
+        // Arrange: at Commit time the serialization failure can surface as a bare
+        // PostgresException (not wrapped in DbUpdateException).
+        var request = new UpdateTransactionSplitsRequest
+        {
+            Splits = new List<TransactionSplitInputDto>
+            {
+                new() { CategoryId = 1, Amount = -60m },
+                new() { CategoryId = 2, Amount = -40m }
+            }
+        };
+
+        _mediator.Send(Arg.Any<UpdateTransactionSplitsCommand>())
+            .Returns(Task.FromException<TransactionDto>(
+                new PostgresException("could not serialize access due to read/write dependencies among transactions", "ERROR", "ERROR", "40001")));
+
+        // Act
+        var result = await _controller.UpdateTransactionSplits(1, request);
+
+        // Assert
+        var conflictResult = result.Result.Should().BeOfType<ConflictObjectResult>().Subject;
+        var message = conflictResult.Value!.GetType().GetProperty("message")?.GetValue(conflictResult.Value);
+        message.Should().Be("This transaction was modified concurrently - please retry");
+    }
+
+    [Fact]
+    public async Task UpdateTransactionSplits_WhenNonSerializationDbFailure_ShouldNotReturnConflict()
+    {
+        // A non-40001 database failure must NOT be swallowed into a 409 — it should
+        // propagate to the global middleware (500).
+        var request = new UpdateTransactionSplitsRequest
+        {
+            Splits = new List<TransactionSplitInputDto> { new() { CategoryId = 1, Amount = -100m } }
+        };
+
+        _mediator.Send(Arg.Any<UpdateTransactionSplitsCommand>())
+            .Returns(Task.FromException<TransactionDto>(
+                new DbUpdateException(
+                    "An error occurred while saving the entity changes.",
+                    new PostgresException("duplicate key value violates unique constraint", "ERROR", "ERROR", "23505"))));
+
+        // Act
+        var act = async () => await _controller.UpdateTransactionSplits(1, request);
+
+        // Assert
+        await act.Should().ThrowAsync<DbUpdateException>();
     }
 
     [Fact]

@@ -1,3 +1,5 @@
+using System.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using MyMascada.Application.Common.Interfaces;
@@ -23,6 +25,12 @@ public class UnitOfWork : IUnitOfWork
     public async Task<IUnitOfWorkTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
         var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+        return new UnitOfWorkTransaction(transaction, _logger);
+    }
+
+    public async Task<IUnitOfWorkTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
+    {
+        var transaction = await _context.Database.BeginTransactionAsync(isolationLevel, cancellationToken);
         return new UnitOfWorkTransaction(transaction, _logger);
     }
 

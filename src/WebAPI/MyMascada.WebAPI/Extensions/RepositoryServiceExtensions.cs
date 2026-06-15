@@ -1,6 +1,7 @@
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Infrastructure.Data;
 using MyMascada.Infrastructure.Repositories;
+using MyMascada.Infrastructure.Services;
 
 namespace MyMascada.WebAPI.Extensions;
 
@@ -13,6 +14,7 @@ public static class RepositoryServiceExtensions
 
         // Core repositories
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IUserFeatureService, UserFeatureService>();
         services.AddScoped<ITransactionRepository, TransactionRepository>();
         services.AddScoped<IAccountRepository, AccountRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
@@ -40,6 +42,9 @@ public static class RepositoryServiceExtensions
         // Recurring pattern repositories
         services.AddScoped<IRecurringPatternRepository, RecurringPatternRepository>();
 
+        // Recurring transaction repositories (user-created scheduled bills)
+        services.AddScoped<IRecurringTransactionRepository, RecurringTransactionRepository>();
+
         // Waitlist repositories
         services.AddScoped<IWaitlistRepository, WaitlistRepository>();
         services.AddScoped<IInvitationCodeRepository, InvitationCodeRepository>();
@@ -65,6 +70,7 @@ public static class RepositoryServiceExtensions
         // Notification repositories
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<INotificationPreferenceRepository, NotificationPreferenceRepository>();
+        services.AddScoped<IUserDeviceRepository, UserDeviceRepository>();
 
         return services;
     }

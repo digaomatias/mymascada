@@ -103,8 +103,11 @@ public class RuleSuggestionService : IRuleSuggestionService
         // Convert to domain entities
         var ruleSuggestions = await ConvertPatternSuggestionsToRuleSuggestions(patternSuggestions, userId, analyzer.AnalysisMethod);
 
-        // Filter out duplicates and overlapping suggestions
-        var filteredSuggestions = await FilterAndDeduplicateSuggestions(ruleSuggestions, userId, minConfidence);
+        // Filter out duplicates and overlapping suggestions. Pass the full
+        // recent-transaction list so the overlap check can evaluate each
+        // suggested pattern against the real population, not just the 5
+        // samples carried on the suggestion DTO.
+        var filteredSuggestions = await FilterAndDeduplicateSuggestions(ruleSuggestions, userId, minConfidence, transactionsList);
 
         // Save suggestions to database, skipping any that fail due to duplicate constraints
         var savedSuggestions = new List<RuleSuggestion>();
@@ -274,12 +277,33 @@ public class RuleSuggestionService : IRuleSuggestionService
     }
 
     /// <summary>
-    /// Filters out low-confidence suggestions and removes duplicates based on transaction overlap
+    /// Filters out low-confidence suggestions and removes ones already covered
+    /// by existing rules. <paramref name="recentTransactions"/> is the full
+    /// recent-transaction window (the same set passed to the analyzer); we
+    /// evaluate each suggested pattern against it to get a real population-
+    /// level overlap with existing rules instead of the 5-sample approximation
+    /// the older check used.
     /// </summary>
-    private async Task<List<RuleSuggestion>> FilterAndDeduplicateSuggestions(List<RuleSuggestion> suggestions, Guid userId, double minConfidence)
+    private async Task<List<RuleSuggestion>> FilterAndDeduplicateSuggestions(
+        List<RuleSuggestion> suggestions,
+        Guid userId,
+        double minConfidence,
+        IReadOnlyList<Transaction> recentTransactions)
     {
         var filtered = new List<RuleSuggestion>();
-        var existingRules = await _categorizationRuleRepository.GetActiveRulesForUserAsync(userId);
+        var existingRules = (await _categorizationRuleRepository.GetActiveRulesForUserAsync(userId))
+            .Where(r => r.IsActive)
+            .ToList();
+
+        // Precompute which recent transactions are already covered by an existing
+        // active rule once (O(N*R)). Each suggestion's overlap check then becomes
+        // an O(1)-per-transaction set lookup instead of re-evaluating every rule
+        // against every matching transaction.
+        var coveredTransactionIds = recentTransactions
+            .Where(t => !string.IsNullOrWhiteSpace(t.Description) &&
+                        existingRules.Any(r => RulePatternMatcher.Matches(r, t.Description)))
+            .Select(t => t.Id)
+            .ToHashSet();
 
         foreach (var suggestion in suggestions)
         {
@@ -299,10 +323,13 @@ public class RuleSuggestionService : IRuleSuggestionService
                                      r.CategoryId == suggestion.SuggestedCategoryId))
                 continue; // Skip if rule already exists
 
-            // NEW: Check for transaction overlap with existing rules
-            if (await HasSignificantOverlapWithExistingRules(suggestion, existingRules, userId))
+            // Population-level overlap check: skip the suggestion when an
+            // existing rule already catches most of the transactions the
+            // suggestion would match. Catches both directions of the
+            // "JETTS" vs "JETTS Transaction" problem.
+            if (HasSignificantOverlapWithExistingRules(suggestion, recentTransactions, coveredTransactionIds))
             {
-                continue; // Skip if transactions are already covered by existing rules
+                continue;
             }
 
             filtered.Add(suggestion);
@@ -312,46 +339,50 @@ public class RuleSuggestionService : IRuleSuggestionService
     }
 
     /// <summary>
-    /// Checks if a suggested rule has significant transaction overlap with existing rules
+    /// Returns true when an existing active rule already covers most of the
+    /// transactions a suggested rule would match. Built around the real
+    /// transaction population — for each suggestion we materialize the set of
+    /// recent transactions whose description matches the suggested pattern,
+    /// then check what share is also matched by any existing rule. A
+    /// suggestion that matches nothing is also dropped (the analyzer can't
+    /// have learned anything useful from it).
     /// </summary>
-    private async Task<bool> HasSignificantOverlapWithExistingRules(RuleSuggestion suggestion, IEnumerable<CategorizationRule> existingRules, Guid userId)
+    private static bool HasSignificantOverlapWithExistingRules(
+        RuleSuggestion suggestion,
+        IReadOnlyList<Transaction> recentTransactions,
+        HashSet<int> coveredTransactionIds)
     {
-        const double OVERLAP_THRESHOLD = 0.8; // 80% of transactions already covered = redundant
+        const double OverlapThreshold = 0.8;
 
-        // Get all transactions that would match this suggested rule pattern
-        var potentialMatches = suggestion.SampleTransactions.Select(s => s.TransactionId).ToList();
-        
-        // For a more thorough check, we could query all user transactions and test the pattern
-        // but for now we'll use the sample transactions that were used to create the suggestion
-        
-        int coveredTransactions = 0;
-        
-        foreach (var existingRule in existingRules.Where(r => r.IsActive))
+        // Synthesize a stand-in rule for the suggestion so we can reuse the
+        // shared RulePatternMatcher and stay consistent with how the engine
+        // actually evaluates rules at categorization time. Without this, the
+        // overlap check could disagree with the runtime matcher and either
+        // let through redundant suggestions or kill legitimate ones.
+        var suggestionAsRule = new CategorizationRule
         {
-            // For each existing rule, check how many of our suggested rule's transactions it would match
-            foreach (var sampleTransaction in suggestion.SampleTransactions)
-            {
-                if (DoesRuleMatchTransaction(existingRule, sampleTransaction.Description))
-                {
-                    coveredTransactions++;
-                }
-            }
-        }
+            Pattern = suggestion.Pattern,
+            Type = suggestion.Type,
+            IsCaseSensitive = suggestion.IsCaseSensitive,
+            IsActive = true,
+        };
 
-        // Calculate overlap percentage
-        double overlapPercentage = suggestion.SampleTransactions.Any() 
-            ? (double)coveredTransactions / suggestion.SampleTransactions.Count 
-            : 0;
+        var matching = recentTransactions
+            .Where(t => !string.IsNullOrWhiteSpace(t.Description) &&
+                        RulePatternMatcher.Matches(suggestionAsRule, t.Description))
+            .ToList();
 
-        return overlapPercentage >= OVERLAP_THRESHOLD;
+        // A suggested pattern that matches nothing in recent history is
+        // useless and would just clutter the suggestions list.
+        if (matching.Count == 0)
+            return true;
+
+        // coveredTransactionIds was precomputed against the same active rules,
+        // so this is an O(1) lookup per matching transaction.
+        var covered = matching.Count(t => coveredTransactionIds.Contains(t.Id));
+
+        return (double)covered / matching.Count >= OverlapThreshold;
     }
-
-    /// <summary>
-    /// Tests if a rule would match a transaction description.
-    /// Delegates to RulePatternMatcher — single source of truth for all rule types including Regex.
-    /// </summary>
-    private static bool DoesRuleMatchTransaction(CategorizationRule rule, string transactionDescription)
-        => RulePatternMatcher.Matches(rule, transactionDescription);
 
     /// <summary>
     /// Checks trigger conditions: user has enough history entries and enough uncovered patterns.

@@ -55,11 +55,16 @@ public static class FeatureFlagsExtensions
         var defaultFrom = emailSection["DefaultFromEmail"];
         if (string.IsNullOrWhiteSpace(defaultFrom)) return false;
 
-        var provider = emailSection["Provider"]?.ToLowerInvariant();
+        // An omitted Provider key falls back to EmailOptions' default ("smtp") at
+        // runtime, so mirror that here. An explicitly empty value binds to "" and
+        // would fail the EmailServiceFactory provider lookup, so it intentionally
+        // falls through to the default arm and stays unconfigured.
+        var provider = emailSection["Provider"]?.ToLowerInvariant() ?? "smtp";
         return provider switch
         {
             "smtp" => !string.IsNullOrWhiteSpace(emailSection["Smtp:Host"]),
             "postmark" => !string.IsNullOrWhiteSpace(emailSection["Postmark:ServerToken"]),
+            "resend" => !string.IsNullOrWhiteSpace(emailSection["Resend:ApiKey"]),
             _ => false
         };
     }

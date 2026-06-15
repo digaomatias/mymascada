@@ -83,6 +83,36 @@ public interface IRecurringPatternRepository
     /// </summary>
     Task<RecurringPattern> UpsertAsync(RecurringPattern pattern, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Merges duplicate recurring patterns into a single canonical pattern.
+    /// Re-parents the occurrence history of <paramref name="duplicatePatternIds"/> onto
+    /// <paramref name="canonicalPatternId"/>, applies the supplied merged field values
+    /// (including the rewritten <paramref name="mergedNormalizedKey"/>) to the canonical
+    /// pattern, then soft-deletes the duplicates. All changes are saved together.
+    /// </summary>
+    Task MergeDuplicatePatternsAsync(
+        Guid userId,
+        int canonicalPatternId,
+        IEnumerable<int> duplicatePatternIds,
+        string mergedNormalizedKey,
+        int mergedOccurrenceCount,
+        decimal mergedAverageAmount,
+        DateTime mergedLastObservedAt,
+        DateTime mergedNextExpectedDate,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Rewrites the <see cref="RecurringPattern.NormalizedMerchantKey"/> of a single pattern
+    /// (used to migrate a lone stale row to the current normalizer's output so subsequent
+    /// exact-key upserts update it rather than creating a new duplicate). No-op if the value
+    /// is unchanged or the pattern is not found.
+    /// </summary>
+    Task UpdateNormalizedKeyAsync(
+        Guid userId,
+        int patternId,
+        string normalizedKey,
+        CancellationToken cancellationToken = default);
+
     // Occurrence operations
 
     /// <summary>

@@ -1,6 +1,6 @@
-using System.Text.RegularExpressions;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.UpcomingBills.DTOs;
+using MyMascada.Domain.Common;
 using MyMascada.Domain.Entities;
 
 namespace MyMascada.Application.Features.UpcomingBills.Services;
@@ -81,17 +81,23 @@ public class RecurringPatternService : IRecurringPatternService
             };
         }
 
-        var bills = upcomingPatterns.Select(p => new UpcomingBillDto
+        // Safety net: consolidate any duplicate pattern rows that resolve to the same merchant
+        // so the dashboard never shows the same bill multiple times, even if stale duplicate
+        // rows still exist in the database. ConsolidateUpcoming is pure and does not mutate the
+        // (EF-tracked) pattern entities.
+        var consolidated = MerchantConsolidation.ConsolidateUpcoming(upcomingPatterns, today);
+
+        var bills = consolidated.Select(c => new UpcomingBillDto
         {
-            PatternId = p.Id,
-            MerchantName = p.MerchantName,
-            ExpectedAmount = Math.Round(p.AverageAmount, 2),
-            ExpectedDate = p.NextExpectedDate,
-            DaysUntilDue = p.GetDaysUntilDue(today),
-            ConfidenceScore = Math.Round(p.Confidence, 2),
-            ConfidenceLevel = p.GetConfidenceLevel(),
-            Interval = p.GetIntervalName(),
-            OccurrenceCount = p.OccurrenceCount
+            PatternId = c.Pattern.Id,
+            MerchantName = c.Pattern.MerchantName,
+            ExpectedAmount = Math.Round(c.DisplayAmount, 2),
+            ExpectedDate = c.Pattern.NextExpectedDate,
+            DaysUntilDue = c.Pattern.GetDaysUntilDue(today),
+            ConfidenceScore = Math.Round(c.Pattern.Confidence, 2),
+            ConfidenceLevel = c.Pattern.GetConfidenceLevel(),
+            Interval = c.Pattern.GetIntervalName(),
+            OccurrenceCount = c.Pattern.OccurrenceCount
         })
         .OrderBy(b => b.DaysUntilDue)
         .ThenByDescending(b => b.ConfidenceScore)
@@ -184,34 +190,36 @@ public class RecurringPatternService : IRecurringPatternService
         return MergeSimilarGroups(groups);
     }
 
-    private Dictionary<string, List<Transaction>> MergeSimilarGroups(Dictionary<string, List<Transaction>> groups)
+    private static Dictionary<string, List<Transaction>> MergeSimilarGroups(Dictionary<string, List<Transaction>> groups)
     {
-        var mergedGroups = new Dictionary<string, List<Transaction>>();
-        var processedKeys = new HashSet<string>();
+        if (groups.Count <= 1)
+            return groups;
 
-        foreach (var group in groups.OrderByDescending(g => g.Value.Count))
+        // Transitive grouping via union-find: collapses A~B~C into one group even when A is
+        // not directly similar to C, so a single merchant never splits into multiple bills.
+        var canonicalByKey = MerchantNormalizer.GroupSimilarKeys(groups.Keys.ToList());
+
+        var componentMembers = new Dictionary<string, List<string>>();
+        foreach (var key in groups.Keys)
         {
-            if (processedKeys.Contains(group.Key))
-                continue;
-
-            var mergedList = new List<Transaction>(group.Value);
-            processedKeys.Add(group.Key);
-
-            // Find similar groups
-            foreach (var otherGroup in groups)
+            var canonical = canonicalByKey.TryGetValue(key, out var c) ? c : key;
+            if (!componentMembers.TryGetValue(canonical, out var members))
             {
-                if (processedKeys.Contains(otherGroup.Key))
-                    continue;
-
-                var similarity = CalculateStringSimilarity(group.Key, otherGroup.Key);
-                if (similarity > 0.8m) // 80% similar = same merchant
-                {
-                    mergedList.AddRange(otherGroup.Value);
-                    processedKeys.Add(otherGroup.Key);
-                }
+                members = new List<string>();
+                componentMembers[canonical] = members;
             }
+            members.Add(key);
+        }
 
-            mergedGroups[group.Key] = mergedList;
+        var mergedGroups = new Dictionary<string, List<Transaction>>();
+        foreach (var (_, members) in componentMembers)
+        {
+            var displayKey = members
+                .OrderByDescending(k => groups[k].Count)
+                .ThenBy(k => k, StringComparer.Ordinal)
+                .First();
+
+            mergedGroups[displayKey] = members.SelectMany(k => groups[k]).ToList();
         }
 
         return mergedGroups;
@@ -355,36 +363,10 @@ public class RecurringPatternService : IRecurringPatternService
         return Math.Min(1.0m, confidenceScore);
     }
 
-    private string NormalizeDescription(string? description)
-    {
-        if (string.IsNullOrWhiteSpace(description))
-            return string.Empty;
+    private static string NormalizeDescription(string? description)
+        => MerchantNormalizer.Normalize(description);
 
-        // Convert to lowercase and remove extra whitespace
-        var normalized = Regex.Replace(description.ToLowerInvariant().Trim(), @"\s+", " ");
-
-        // Remove common transaction prefixes/suffixes
-        normalized = Regex.Replace(normalized, @"^(purchase\s+|payment\s+|pos\s+|debit\s+|eftpos\s+)", "");
-
-        // Remove reference numbers (patterns like #123, REF:ABC123, etc.)
-        normalized = Regex.Replace(normalized, @"(#|ref:?|id:?)\s*[\w\d-]+", "");
-
-        // Remove dates (patterns like 01/15, 15-Jan, etc.)
-        normalized = Regex.Replace(normalized, @"\d{1,2}[/-]\d{1,2}([/-]\d{2,4})?", "");
-
-        // Remove time patterns
-        normalized = Regex.Replace(normalized, @"\d{1,2}:\d{2}(:\d{2})?(\s*(am|pm))?", "");
-
-        // Remove trailing numbers that might be transaction IDs
-        normalized = Regex.Replace(normalized, @"\s+\d+$", "");
-
-        // Clean up extra whitespace again
-        normalized = Regex.Replace(normalized.Trim(), @"\s+", " ");
-
-        return normalized;
-    }
-
-    private string FormatMerchantName(string? description)
+    private static string FormatMerchantName(string? description)
     {
         if (string.IsNullOrWhiteSpace(description))
             return "Unknown Merchant";
@@ -396,46 +378,5 @@ public class RecurringPatternService : IRecurringPatternService
             return "Unknown Merchant";
 
         return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(normalized);
-    }
-
-    private decimal CalculateStringSimilarity(string str1, string str2)
-    {
-        if (string.IsNullOrEmpty(str1) && string.IsNullOrEmpty(str2))
-            return 1m;
-
-        if (string.IsNullOrEmpty(str1) || string.IsNullOrEmpty(str2))
-            return 0m;
-
-        var distance = LevenshteinDistance(str1, str2);
-        var maxLength = Math.Max(str1.Length, str2.Length);
-
-        return 1m - (decimal)distance / maxLength;
-    }
-
-    private int LevenshteinDistance(string s1, string s2)
-    {
-        if (s1.Length == 0) return s2.Length;
-        if (s2.Length == 0) return s1.Length;
-
-        var matrix = new int[s1.Length + 1, s2.Length + 1];
-
-        for (int i = 0; i <= s1.Length; i++)
-            matrix[i, 0] = i;
-
-        for (int j = 0; j <= s2.Length; j++)
-            matrix[0, j] = j;
-
-        for (int i = 1; i <= s1.Length; i++)
-        {
-            for (int j = 1; j <= s2.Length; j++)
-            {
-                var cost = (s1[i - 1] == s2[j - 1]) ? 0 : 1;
-                matrix[i, j] = Math.Min(
-                    Math.Min(matrix[i - 1, j] + 1, matrix[i, j - 1] + 1),
-                    matrix[i - 1, j - 1] + cost);
-            }
-        }
-
-        return matrix[s1.Length, s2.Length];
     }
 }

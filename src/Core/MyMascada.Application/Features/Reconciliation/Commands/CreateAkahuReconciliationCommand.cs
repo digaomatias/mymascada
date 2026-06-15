@@ -4,6 +4,7 @@ using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.BankConnections.DTOs;
 using MyMascada.Application.Features.Reconciliation.DTOs;
 using MyMascada.Application.Features.Reconciliation.Services;
+using MyMascada.Domain.Common;
 using MyMascada.Domain.Entities;
 using MyMascada.Domain.Enums;
 using ProviderBankTransactionDto = MyMascada.Application.Features.BankConnections.DTOs.BankTransactionDto;
@@ -103,12 +104,8 @@ public class CreateAkahuReconciliationCommandHandler
         }
 
         // Normalize dates to UTC for PostgreSQL compatibility
-        var startDateUtc = request.StartDate.Kind == DateTimeKind.Unspecified
-            ? DateTime.SpecifyKind(request.StartDate, DateTimeKind.Utc)
-            : request.StartDate.ToUniversalTime();
-        var endDateUtc = request.EndDate.Kind == DateTimeKind.Unspecified
-            ? DateTime.SpecifyKind(request.EndDate, DateTimeKind.Utc)
-            : request.EndDate.ToUniversalTime();
+        var startDateUtc = DateTimeProvider.ToUtc(request.StartDate);
+        var endDateUtc = DateTimeProvider.ToUtc(request.EndDate);
 
         // Build the connection config
         var connectionConfig = BuildConnectionConfig(bankConnection);

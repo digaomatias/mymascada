@@ -12,10 +12,17 @@ namespace MyMascada.WebAPI.Controllers;
 public class FeaturesController : ControllerBase
 {
     private readonly IFeatureFlags _featureFlags;
+    private readonly IUserFeatureService _userFeatures;
+    private readonly ICurrentUserService _currentUser;
 
-    public FeaturesController(IFeatureFlags featureFlags)
+    public FeaturesController(
+        IFeatureFlags featureFlags,
+        IUserFeatureService userFeatures,
+        ICurrentUserService currentUser)
     {
         _featureFlags = featureFlags;
+        _userFeatures = userFeatures;
+        _currentUser = currentUser;
     }
 
     [HttpGet]
@@ -32,6 +39,21 @@ public class FeaturesController : ControllerBase
         };
 
         return Ok(response);
+    }
+
+    /// <summary>
+    /// Per-user feature toggles for the authenticated caller. The client uses this
+    /// to gate UI (Ask Alce, receipt scan, bank connections). Each value is already
+    /// AND-ed with the global capability, so the client can trust it directly.
+    /// </summary>
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<ActionResult<IReadOnlyDictionary<string, bool>>> GetMyFeatures(
+        CancellationToken cancellationToken)
+    {
+        var userId = _currentUser.GetUserId();
+        var resolved = await _userFeatures.GetResolvedAsync(userId, cancellationToken);
+        return Ok(resolved);
     }
 }
 

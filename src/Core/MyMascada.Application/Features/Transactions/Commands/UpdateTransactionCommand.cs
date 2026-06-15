@@ -1,3 +1,4 @@
+using System.Data;
 using MediatR;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Categorization.Services;
@@ -9,6 +10,15 @@ using MyMascada.Domain.Common;
 
 namespace MyMascada.Application.Features.Transactions.Commands;
 
+/// <summary>
+/// Updates a transaction's editable fields.
+/// Note on splits: if the transaction has splits and the amount actually changes,
+/// all splits are cleared (soft-deleted) because they would no longer sum to the
+/// new amount — an invariant enforced by UpdateTransactionSplitsCommand. The web
+/// frontend has no splits UI, so rejecting amount edits on split transactions
+/// would strand web users; clients that care about splits must re-apply them via
+/// PUT /transactions/{id}/splits after changing the amount.
+/// </summary>
 public class UpdateTransactionCommand : IRequest<TransactionDto>, ITransactionBaseCommand
 {
     public Guid UserId { get; set; }
@@ -31,24 +41,31 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
     private readonly ITransferRepository _transferRepository;
     private readonly IAccountAccessService _accountAccessService;
     private readonly ICategorizationHistoryService _historyService;
+    private readonly IUnitOfWork _unitOfWork;
 
     public UpdateTransactionCommandHandler(
         ITransactionRepository transactionRepository,
         ICategoryRepository categoryRepository,
         ITransferRepository transferRepository,
         IAccountAccessService accountAccessService,
-        ICategorizationHistoryService historyService)
+        ICategorizationHistoryService historyService,
+        IUnitOfWork unitOfWork)
     {
         _transactionRepository = transactionRepository;
         _categoryRepository = categoryRepository;
         _transferRepository = transferRepository;
         _accountAccessService = accountAccessService;
         _historyService = historyService;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<TransactionDto> Handle(UpdateTransactionCommand request, CancellationToken cancellationToken)
     {
-        // Get existing transaction
+        // Get existing transaction WITHOUT splits. Loading splits here would leave
+        // them tracked on the context for every edit, and UpdateAsync marks the whole
+        // tracked graph Modified — a non-amount edit could then write stale split rows
+        // back (IsDeleted = false) over a concurrent split replacement. Splits are
+        // loaded only inside the serializable amount-change branch below.
         var transaction = await _transactionRepository.GetByIdAsync(request.Id, request.UserId);
         if (transaction == null)
         {
@@ -103,11 +120,38 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
             }
         }
 
-        // Store originals before mutation
+        // Store originals before mutation. Exact comparison on purpose, shared by
+        // the split-clearing, serializable-transaction and transfer-sync branches:
+        // a mismatched tolerance (the transfer sync used > 0.01m historically) lets
+        // a sub-cent edit update this leg's amount while skipping the related
+        // transfer leg, leaving the pair inconsistent. Plain updates are not
+        // constrained to 2 decimal places by the validator, so sub-cent deltas can
+        // genuinely occur.
         var originalAmount = transaction.Amount;
-        var amountChanged = Math.Abs(originalAmount - request.Amount) > 0.01m;
+        var amountChanged = originalAmount != request.Amount;
         var originalCategoryId = transaction.CategoryId;
         var originalDescription = transaction.Description;
+
+        // Amount edits must serialize against concurrent PUT /splits replacements:
+        // otherwise this handler clears only the splits it loaded, while a replace
+        // (validated against the old amount) can insert a fresh active set that
+        // commits after this save, leaving active splits that sum to the OLD amount.
+        // Serializable isolation (same mechanism as UpdateTransactionSplitsCommand)
+        // makes the database abort one of the two conflicting requests instead.
+        // Deliberately scoped to amount changes only; other field edits don't touch
+        // splits and don't need it. Disposing without Commit rolls back.
+        await using IUnitOfWorkTransaction? dbTransaction = amountChanged
+            ? await _unitOfWork.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
+            : null;
+
+        if (dbTransaction != null)
+        {
+            // The ONLY place this handler loads splits: inside the open serializable
+            // transaction, so the database registers the read (the initial load above
+            // deliberately excludes splits — see comment there). The identity map
+            // attaches the loaded splits to the already-tracked transaction instance.
+            await _transactionRepository.GetByIdWithSplitsAsync(request.Id, request.UserId);
+        }
 
         // Update transaction properties
         transaction.Amount = request.Amount;
@@ -124,7 +168,23 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
         {
             transaction.CategoryId = request.CategoryId;
         }
-        
+
+        // Splits must sum to the transaction amount exactly (invariant enforced by
+        // UpdateTransactionSplitsCommand). If the amount actually changed, clear the
+        // splits (soft-delete, same pattern as the replace logic) rather than reject,
+        // since the web frontend has no splits UI to fix them. Even a sub-cent
+        // change breaks the exact-sum invariant.
+        if (amountChanged)
+        {
+            var now = DateTimeProvider.UtcNow;
+            foreach (var split in transaction.Splits.Where(s => !s.IsDeleted))
+            {
+                split.IsDeleted = true;
+                split.DeletedAt = now;
+                split.UpdatedAt = now;
+            }
+        }
+
         transaction.UpdatedAt = DateTimeProvider.UtcNow;
 
         await _transactionRepository.UpdateAsync(transaction);
@@ -159,6 +219,11 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
         }
 
         await _transactionRepository.SaveChangesAsync();
+
+        if (dbTransaction != null)
+        {
+            await dbTransaction.CommitAsync(cancellationToken);
+        }
 
         // Record categorization history (best-effort — transaction update already persisted above)
         var categoryChanged = originalCategoryId != request.CategoryId;

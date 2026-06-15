@@ -29,7 +29,7 @@ public class GetCategorizationStatsQueryHandlerTests
                 ["LLM"] = 10,
                 ["BankCategory"] = 15
             });
-        _transactionRepo.CountUncategorizedTransactionsAsync(_userId, Arg.Any<CancellationToken>())
+        _transactionRepo.CountUncategorizedTransactionsAsync(_userId, Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(7);
         _ruleSuggestionRepo.CountPendingSuggestionsAsync(_userId, Arg.Any<CancellationToken>())
             .Returns(3);
@@ -56,7 +56,7 @@ public class GetCategorizationStatsQueryHandlerTests
         _transactionRepo.GetAutoCategorizationCountsByMethodAsync(
                 _userId, Arg.Any<DateTime>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>())
             .Returns(new Dictionary<string, int>());
-        _transactionRepo.CountUncategorizedTransactionsAsync(_userId, Arg.Any<CancellationToken>())
+        _transactionRepo.CountUncategorizedTransactionsAsync(_userId, Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(0);
         _ruleSuggestionRepo.CountPendingSuggestionsAsync(_userId, Arg.Any<CancellationToken>())
             .Returns(0);
@@ -83,7 +83,7 @@ public class GetCategorizationStatsQueryHandlerTests
                 ["Rule"] = 20,
                 ["Rules"] = 5
             });
-        _transactionRepo.CountUncategorizedTransactionsAsync(_userId, Arg.Any<CancellationToken>())
+        _transactionRepo.CountUncategorizedTransactionsAsync(_userId, Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(0);
         _ruleSuggestionRepo.CountPendingSuggestionsAsync(_userId, Arg.Any<CancellationToken>())
             .Returns(0);
@@ -106,7 +106,7 @@ public class GetCategorizationStatsQueryHandlerTests
                 ["BankCategory"] = 40,
                 ["Rule"] = 60
             });
-        _transactionRepo.CountUncategorizedTransactionsAsync(_userId, Arg.Any<CancellationToken>())
+        _transactionRepo.CountUncategorizedTransactionsAsync(_userId, Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(0);
         _ruleSuggestionRepo.CountPendingSuggestionsAsync(_userId, Arg.Any<CancellationToken>())
             .Returns(0);
@@ -134,7 +134,7 @@ public class GetCategorizationStatsQueryHandlerTests
                 ["ML"] = 1,
                 ["LLM"] = 1
             });
-        _transactionRepo.CountUncategorizedTransactionsAsync(_userId, Arg.Any<CancellationToken>())
+        _transactionRepo.CountUncategorizedTransactionsAsync(_userId, Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(0);
         _ruleSuggestionRepo.CountPendingSuggestionsAsync(_userId, Arg.Any<CancellationToken>())
             .Returns(0);
@@ -156,7 +156,7 @@ public class GetCategorizationStatsQueryHandlerTests
         _transactionRepo.GetAutoCategorizationCountsByMethodAsync(
                 _userId, Arg.Any<DateTime>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>())
             .Returns(new Dictionary<string, int>());
-        _transactionRepo.CountUncategorizedTransactionsAsync(_userId, Arg.Any<CancellationToken>())
+        _transactionRepo.CountUncategorizedTransactionsAsync(_userId, Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(0);
         _ruleSuggestionRepo.CountPendingSuggestionsAsync(_userId, Arg.Any<CancellationToken>())
             .Returns(42);

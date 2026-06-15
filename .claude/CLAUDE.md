@@ -93,9 +93,9 @@ The standard pattern is:
 
 ### Pages that MUST follow this pattern:
 - `/budgets/new` and `/budgets/[id]/edit` ✅ (reference)
-- `/goals/new` and `/goals/[id]/edit` ❌ (currently centered card — needs fix)
-- `/transactions/new` and `/transactions/[id]/edit` ❌ (currently modal — needs fix)
-- `/accounts/new` and `/accounts/[id]/edit` ❌ (currently modal — needs fix)
+- `/goals/new` and `/goals/[id]/edit` ✅ (full-page pattern)
+- `/transactions/new` and `/transactions/[id]/edit` ✅ (full-page pattern)
+- `/accounts/new` and `/accounts/[id]/edit` ✅ (full-page pattern)
 - `/categories/new` and `/categories/[id]/edit`
 - `/rules/new` (wizard — already follows similar pattern)
 

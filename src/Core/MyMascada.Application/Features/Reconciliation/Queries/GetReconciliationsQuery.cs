@@ -1,6 +1,7 @@
 using MediatR;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Reconciliation.DTOs;
+using MyMascada.Domain.Common;
 using MyMascada.Domain.Enums;
 
 namespace MyMascada.Application.Features.Reconciliation.Queries;
@@ -39,8 +40,10 @@ public class GetReconciliationsQueryHandler : IRequestHandler<GetReconciliations
             request.PageSize,
             request.AccountId,
             request.Status,
-            request.StartDate,
-            request.EndDate,
+            // Normalize dates to UTC for PostgreSQL compatibility
+            // (clients may send dates without timezone info, which parse as Kind=Unspecified)
+            DateTimeProvider.ToUtc(request.StartDate),
+            DateTimeProvider.ToUtc(request.EndDate),
             request.SortBy,
             request.SortDirection);
 
