@@ -10,12 +10,13 @@ public class NotificationServiceTests
 {
     private readonly INotificationRepository _notificationRepo = Substitute.For<INotificationRepository>();
     private readonly INotificationPreferenceRepository _preferenceRepo = Substitute.For<INotificationPreferenceRepository>();
+    private readonly IPushNotificationService _pushService = Substitute.For<IPushNotificationService>();
     private readonly NotificationService _sut;
     private readonly Guid _userId = Guid.NewGuid();
 
     public NotificationServiceTests()
     {
-        _sut = new NotificationService(_notificationRepo, _preferenceRepo, Substitute.For<ILogger<NotificationService>>());
+        _sut = new NotificationService(_notificationRepo, _preferenceRepo, _pushService, Substitute.For<ILogger<NotificationService>>());
         // Default: not a duplicate, and the rate-limited create succeeds.
         _notificationRepo.ExistsByGroupKeyAsync(_userId, Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<CancellationToken>()).Returns(false);
         _notificationRepo.CreateIfRateLimitNotExceededAsync(
