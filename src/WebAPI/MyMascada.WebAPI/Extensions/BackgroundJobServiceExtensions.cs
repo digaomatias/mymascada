@@ -64,6 +64,10 @@ public static class BackgroundJobServiceExtensions
         services.AddScoped<MyMascada.Application.BackgroundJobs.IRuleSuggestionGenerationJobService,
             MyMascada.Infrastructure.BackgroundJobs.RuleSuggestionGenerationJobService>();
 
+        // Budget alert (threshold/exceeded) job service
+        services.AddScoped<MyMascada.Application.BackgroundJobs.IBudgetAlertJobService,
+            MyMascada.Infrastructure.BackgroundJobs.BudgetAlertJobService>();
+
         return services;
     }
 }

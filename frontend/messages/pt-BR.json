@@ -1941,6 +1941,16 @@
       "description": "Escolha seu idioma preferido para o aplicativo",
       "saving": "Salvando preferência..."
     },
+    "budgetAlerts": {
+      "title": "Alertas de Orçamento",
+      "description": "Seja notificado quando uma categoria do orçamento se aproximar ou exceder seu limite",
+      "thresholdLabel": "Limite de alerta",
+      "thresholdHelp": "Vamos alertá-lo quando uma categoria atingir esta porcentagem do seu orçamento. Padrão: 80%.",
+      "save": "Salvar",
+      "saving": "Salvando...",
+      "invalid": "Insira um número inteiro entre 1 e 100",
+      "saveError": "Não foi possível salvar o limite de alerta de orçamento"
+    },
     "items": {
       "bankConnections": {
         "title": "Conexões Bancárias",
@@ -3678,6 +3688,14 @@
       "RuleSuggestionsAvailable": {
         "title": "Novas sugestões de regras",
         "body": "{count, plural, one {1 nova sugestão de regra de categorização disponível} other {# novas sugestões de regras de categorização disponíveis}}"
+      },
+      "BudgetThreshold": {
+        "title": "Alerta de orçamento: {categoryName}",
+        "body": "{categoryName} está em {usedPercentage}% do seu orçamento"
+      },
+      "BudgetExceeded": {
+        "title": "Orçamento excedido: {categoryName}",
+        "body": "{categoryName} ultrapassou o orçamento — {usedPercentage}% gasto"
       }
     }
   },

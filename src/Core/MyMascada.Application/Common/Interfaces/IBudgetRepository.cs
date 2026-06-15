@@ -95,6 +95,13 @@ public interface IBudgetRepository
     Task<IEnumerable<Guid>> GetUserIdsWithExpiredActiveBudgetsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets all distinct user IDs that have at least one active (non-deleted) budget,
+    /// regardless of whether its period has expired. Used by the daily budget-alert
+    /// job to enumerate users whose budgets need a threshold check.
+    /// </summary>
+    Task<IEnumerable<Guid>> GetUserIdsWithActiveBudgetsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Checks if a budget name already exists for the user
     /// </summary>
     Task<bool> BudgetNameExistsAsync(Guid userId, string name, int? excludeBudgetId = null, CancellationToken cancellationToken = default);

@@ -146,11 +146,19 @@ public class NotificationRepository : INotificationRepository
                 cancellationToken);
     }
 
-    public async Task<bool> ExistsByGroupKeyAsync(Guid userId, string groupKey, CancellationToken cancellationToken = default)
+    public async Task<bool> ExistsByGroupKeyAsync(Guid userId, string groupKey, bool includeDeleted = false, CancellationToken cancellationToken = default)
     {
-        return await _context.Notifications
-            .AsNoTracking()
-            .AnyAsync(n => n.UserId == userId && n.GroupKey == groupKey && !n.IsDeleted, cancellationToken);
+        var query = _context.Notifications.AsNoTracking();
+
+        // Notification has a global HasQueryFilter(!IsDeleted), so soft-deleted
+        // rows are excluded before any predicate runs. When the caller wants them
+        // counted (period-deduplicated producers), bypass the filter explicitly —
+        // otherwise the (includeDeleted || ...) predicate can never see them.
+        if (includeDeleted)
+            query = query.IgnoreQueryFilters();
+
+        return await query
+            .AnyAsync(n => n.UserId == userId && n.GroupKey == groupKey && (includeDeleted || !n.IsDeleted), cancellationToken);
     }
 
     public async Task<int> CountRecentByTypeAsync(Guid userId, NotificationType type, TimeSpan window, CancellationToken cancellationToken = default)

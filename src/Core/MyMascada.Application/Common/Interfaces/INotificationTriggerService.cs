@@ -25,4 +25,11 @@ public interface INotificationTriggerService
     /// Notify that new rule suggestions are available for the user.
     /// </summary>
     Task NotifyRuleSuggestionsAvailableAsync(Guid userId, int suggestionCount, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Check the user's active budgets and send a notification for each category
+    /// that has reached its alert threshold (approaching) or exceeded its limit.
+    /// Idempotent per budget category per period — safe to call repeatedly.
+    /// </summary>
+    Task CheckBudgetThresholdsAsync(Guid userId, CancellationToken cancellationToken = default);
 }

@@ -262,6 +262,16 @@ public class BudgetRepository : IBudgetRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IEnumerable<Guid>> GetUserIdsWithActiveBudgetsAsync(CancellationToken cancellationToken = default)
+    {
+        // Filtered at the database level; returns one row per distinct user.
+        return await _context.Budgets
+            .Where(b => b.Status == BudgetStatus.Active && !b.IsDeleted)
+            .Select(b => b.UserId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<bool> BudgetNameExistsAsync(Guid userId, string name, int? excludeBudgetId = null, CancellationToken cancellationToken = default)
     {
         var query = _context.Budgets

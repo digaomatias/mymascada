@@ -37,13 +37,25 @@ public class NotificationService : INotificationService
         NotificationPriority priority = NotificationPriority.Normal,
         string? groupKey = null,
         DateTime? expiresAt = null,
+        bool periodDeduplicated = false,
         CancellationToken cancellationToken = default)
     {
+        // periodDeduplicated relies entirely on the groupKey for dedup and skips the
+        // per-type daily cap; without a groupKey it would have no duplicate
+        // protection at all and could spam. Treat that combination as a misuse.
+        if (periodDeduplicated && string.IsNullOrEmpty(groupKey))
+            throw new ArgumentException(
+                "periodDeduplicated notifications require a groupKey — it is the only dedup mechanism.",
+                nameof(groupKey));
+
         // Idempotency pre-check (optimization — the real guard is the DB unique constraint on (UserId, GroupKey)).
         // A concurrent insert that races past this check will be caught by DbUpdateException in CreateAsync.
+        // Period-deduplicated producers also count soft-deleted rows, so deleting an
+        // alert from the bell doesn't un-suppress it for the rest of the period.
         if (!string.IsNullOrEmpty(groupKey))
         {
-            var exists = await _notificationRepository.ExistsByGroupKeyAsync(userId, groupKey, cancellationToken);
+            var exists = await _notificationRepository.ExistsByGroupKeyAsync(
+                userId, groupKey, includeDeleted: periodDeduplicated, cancellationToken);
             if (exists)
             {
                 _logger.LogDebug("Skipping duplicate notification for user {UserId} with groupKey {GroupKey}", userId, groupKey);
@@ -51,35 +63,20 @@ public class NotificationService : INotificationService
             }
         }
 
-        // Check user preferences: skip if the user has explicitly disabled in-app for this type, or if quiet hours are active
+        // Check user preferences: skip only if the user has explicitly disabled
+        // in-app for this type.
+        //
+        // Quiet hours intentionally do NOT suppress in-app notification creation.
+        // The in-app bell is a passive surface — dropping a notification here
+        // would lose it permanently (no record, no groupKey), so a recurring
+        // producer that always runs inside a user's quiet window (e.g. the daily
+        // budget-alert job) would never deliver. Quiet hours should gate
+        // *real-time* delivery (push/sound) instead — see the dispatch hook at
+        // the end of this method, where QuietHoursStart/End must be consulted
+        // once push is implemented.
         var preferences = await _preferenceRepository.GetByUserIdAsync(userId, cancellationToken);
         if (preferences != null)
         {
-            // Enforce quiet hours
-            if (preferences.QuietHoursStart.HasValue && preferences.QuietHoursEnd.HasValue)
-            {
-                try
-                {
-                    var tz = string.IsNullOrWhiteSpace(preferences.QuietHoursTimezone)
-                        ? TimeZoneInfo.Utc
-                        : TimeZoneInfo.FindSystemTimeZoneById(preferences.QuietHoursTimezone);
-                    var userNow = TimeOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz));
-                    var start = preferences.QuietHoursStart.Value;
-                    var end = preferences.QuietHoursEnd.Value;
-                    var inQuietHours = start <= end
-                        ? userNow >= start && userNow < end         // same-day window e.g. 22:00–23:59
-                        : userNow >= start || userNow < end;        // overnight window e.g. 22:00–08:00
-                    if (inQuietHours)
-                    {
-                        _logger.LogDebug("Skipping notification for user {UserId} — currently in quiet hours", userId);
-                        return;
-                    }
-                }
-                catch (TimeZoneNotFoundException ex)
-                {
-                    _logger.LogWarning(ex, "Unknown timezone '{Timezone}' in quiet hours preference for user {UserId}; skipping quiet hours check", preferences.QuietHoursTimezone, userId);
-                }
-            }
 
             // Enforce per-type channel preferences (inApp toggle).
             // KNOWN LIMITATION (intentional for this iteration): every push corresponds
@@ -107,13 +104,26 @@ public class NotificationService : INotificationService
             ExpiresAt = expiresAt
         };
 
-        // Rate limiting: atomically check daily count and insert to prevent races.
-        var created = await _notificationRepository.CreateIfRateLimitNotExceededAsync(
-            notification, TimeSpan.FromDays(1), MaxNotificationsPerTypePerDay, cancellationToken);
-        if (created == null)
+        Notification created;
+        if (periodDeduplicated)
         {
-            _logger.LogDebug("Rate limit reached for user {UserId}, type {Type}. Skipping notification", userId, type);
-            return;
+            // Period-deduplicated fan-out (e.g. budget alerts): the per-type daily
+            // cap would silently drop legitimate distinct alerts (one per category)
+            // past the 10th. The groupKey check above (including soft-deleted) is
+            // what bounds these, not the daily cap.
+            created = await _notificationRepository.CreateAsync(notification, cancellationToken);
+        }
+        else
+        {
+            // Rate limiting: atomically check daily count and insert to prevent races.
+            var rateLimited = await _notificationRepository.CreateIfRateLimitNotExceededAsync(
+                notification, TimeSpan.FromDays(1), MaxNotificationsPerTypePerDay, cancellationToken);
+            if (rateLimited == null)
+            {
+                _logger.LogDebug("Rate limit reached for user {UserId}, type {Type}. Skipping notification", userId, type);
+                return;
+            }
+            created = rateLimited;
         }
 
         _logger.LogInformation("Created {Type} notification for user {UserId}", type, userId);
