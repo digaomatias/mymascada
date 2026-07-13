@@ -1,9 +1,14 @@
-# ⚠️ LEGACY — RETIRED, DOES NOT RUN.
+# ⚠️ LEGACY — RETIRED. Kept for reference only.
 #
 # Production moved to Fly.io. The live deploy is .github/workflows/deploy-fly.yml
 # (push to main on GitHub → flyctl deploy). This workflow deployed to the Mordor
-# self-hosted server (192.168.50.225) via SCP + SSH and is kept only for reference
-# in case Mordor is ever revived.
+# self-hosted server (192.168.50.225) via SCP + SSH, and is kept only in case
+# Mordor is ever revived.
+#
+# The automatic `push: branches: [main]` trigger has been REMOVED deliberately.
+# The `all` git remote still pushes to the Forgejo instance, so if a runner there
+# is ever live, an auto-trigger would redeploy the retired Mordor stack with stale
+# config. It is now manual-only (workflow_dispatch) and cannot fire on its own.
 #
 # Do NOT add new environment variables or secrets here — they will have no effect.
 # Production config lives in fly.toml ([env]) and Fly secrets (`fly secrets set`).
@@ -11,8 +16,7 @@
 name: Deploy to Production (LEGACY - Mordor, retired)
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
   deploy:
