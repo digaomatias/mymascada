@@ -83,8 +83,9 @@ public static class ApplicationServiceExtensions
         services.AddScoped<MyMascada.Application.Features.RuleSuggestions.Services.IPatternDetectionService,
             MyMascada.Application.Features.RuleSuggestions.Services.PatternDetectionService>();
 
-        // OAuth state store (singleton — backed by IMemoryCache which is also singleton)
-        services.AddSingleton<MyMascada.Application.Common.Interfaces.IOAuthStateStore,
+        // OAuth state store (scoped — persisted via the scoped ApplicationDbContext).
+        // Must NOT be a singleton: it would capture a scoped DbContext.
+        services.AddScoped<MyMascada.Application.Common.Interfaces.IOAuthStateStore,
             MyMascada.Infrastructure.Services.Auth.OAuthStateStore>();
 
         // Event Handlers
