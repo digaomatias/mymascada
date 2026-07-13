@@ -61,10 +61,27 @@ public class ApplicationDbContext : DbContext
     public DbSet<UserFeatureFlag> UserFeatureFlags => Set<UserFeatureFlag>();
     public DbSet<CategorizationHistory> CategorizationHistories => Set<CategorizationHistory>();
     public DbSet<AiCategorizationUsage> AiCategorizationUsages => Set<AiCategorizationUsage>();
+    public DbSet<OAuthState> OAuthStates => Set<OAuthState>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // OAuth state configuration.
+        // No soft-delete filter: states are single-use and hard-deleted on consume.
+        modelBuilder.Entity<OAuthState>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.State).IsRequired().HasMaxLength(128);
+            entity.Property(e => e.ExpiresAt).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+
+            // One live state per user — StoreAsync replaces any existing row.
+            entity.HasIndex(e => e.UserId).IsUnique();
+
+            // Supports the expiry sweep.
+            entity.HasIndex(e => e.ExpiresAt);
+        });
 
         // User configuration
         modelBuilder.Entity<User>(entity =>

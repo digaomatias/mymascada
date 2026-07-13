@@ -1,95 +1,203 @@
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using MyMascada.Domain.Common;
+using MyMascada.Domain.Entities;
+using MyMascada.Infrastructure.Data;
 using MyMascada.Infrastructure.Services.Auth;
 
 namespace MyMascada.Tests.Unit.Services;
 
 public class OAuthStateStoreTests
 {
+    // Each store gets a fresh DbContext over the same backing database, so "a new
+    // store" models a new request — or, crucially, a restarted/idled-down machine.
+    private static DbContextOptions<ApplicationDbContext> NewDatabase() =>
+        new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+    private static OAuthStateStore StoreFor(DbContextOptions<ApplicationDbContext> options) =>
+        new(new ApplicationDbContext(options), NullLogger<OAuthStateStore>.Instance);
+
     [Fact]
-    public async Task ValidateAndConsumeAsync_WhenCalledConcurrently_OnlyOneRequestSucceeds()
+    public async Task ValidateAndConsumeAsync_WithMatchingState_Succeeds()
     {
-        using var memoryCache = new MemoryCache(new MemoryCacheOptions());
-        var stateStore = new OAuthStateStore(memoryCache, NullLogger<OAuthStateStore>.Instance);
+        var options = NewDatabase();
         var userId = Guid.NewGuid();
-        const string state = "state-123";
 
-        await stateStore.StoreAsync(userId, state);
+        await StoreFor(options).StoreAsync(userId, "state-abc");
+        var result = await StoreFor(options).ValidateAndConsumeAsync(userId, "state-abc");
 
-        var validationTasks = Enumerable.Range(0, 20)
-            .Select(_ => stateStore.ValidateAndConsumeAsync(userId, state))
-            .ToArray();
+        result.Should().BeTrue();
+    }
 
-        var results = await Task.WhenAll(validationTasks);
+    /// <summary>
+    /// The regression this store exists for. On Fly the API scales to zero, so the
+    /// machine can idle down or restart while the user is away authenticating with
+    /// their bank. State held in process memory would be gone by the time the
+    /// callback lands, rejecting a valid consent. A fresh context stands in for that
+    /// new process — nothing survives except what was persisted.
+    /// </summary>
+    [Fact]
+    public async Task ValidateAndConsumeAsync_AfterProcessRestart_StillSucceeds()
+    {
+        var options = NewDatabase();
+        var userId = Guid.NewGuid();
 
-        results.Count(result => result).Should().Be(1);
+        await StoreFor(options).StoreAsync(userId, "survives-restart");
+
+        var afterRestart = StoreFor(options);
+        var result = await afterRestart.ValidateAndConsumeAsync(userId, "survives-restart");
+
+        result.Should().BeTrue();
     }
 
     [Fact]
-    public async Task StoreAsync_WhileValidationIsInProgress_PreservesNewState()
+    public async Task ValidateAndConsumeAsync_IsSingleUse()
     {
-        using var memoryCache = new BlockingMemoryCache();
-        var stateStore = new OAuthStateStore(memoryCache, NullLogger<OAuthStateStore>.Instance);
+        var options = NewDatabase();
         var userId = Guid.NewGuid();
 
-        await stateStore.StoreAsync(userId, "state-1");
+        await StoreFor(options).StoreAsync(userId, "one-shot");
 
-        memoryCache.BlockNextRemove();
-        var firstValidationTask = Task.Run(() => stateStore.ValidateAndConsumeAsync(userId, "state-1"));
-        memoryCache.WaitUntilRemoveStarts();
+        var first = await StoreFor(options).ValidateAndConsumeAsync(userId, "one-shot");
+        var second = await StoreFor(options).ValidateAndConsumeAsync(userId, "one-shot");
 
-        var concurrentStoreTask = Task.Run(() => stateStore.StoreAsync(userId, "state-2"));
-        memoryCache.AllowRemoveToContinue();
-
-        (await firstValidationTask).Should().BeTrue();
-        await concurrentStoreTask;
-
-        var secondValidationResult = await stateStore.ValidateAndConsumeAsync(userId, "state-2");
-        secondValidationResult.Should().BeTrue();
+        first.Should().BeTrue();
+        second.Should().BeFalse("the state is consumed on first use");
     }
 
-    private sealed class BlockingMemoryCache : IMemoryCache
+    [Fact]
+    public async Task ValidateAndConsumeAsync_WithMismatchedState_FailsAndBurnsTheStoredState()
     {
-        private readonly IMemoryCache _innerCache = new MemoryCache(new MemoryCacheOptions());
-        private readonly ManualResetEventSlim _removeStarted = new(false);
-        private readonly ManualResetEventSlim _allowRemove = new(false);
-        private volatile bool _blockNextRemove;
+        var options = NewDatabase();
+        var userId = Guid.NewGuid();
 
-        public ICacheEntry CreateEntry(object key) => _innerCache.CreateEntry(key);
+        await StoreFor(options).StoreAsync(userId, "real-state");
 
-        public void Remove(object key)
+        var wrongGuess = await StoreFor(options).ValidateAndConsumeAsync(userId, "wrong-guess");
+        wrongGuess.Should().BeFalse();
+
+        // The stored state must be burned even though the guess was wrong, otherwise
+        // an attacker could keep guessing against the same live state.
+        var correctAfterWrongGuess = await StoreFor(options).ValidateAndConsumeAsync(userId, "real-state");
+        correctAfterWrongGuess.Should().BeFalse("a failed attempt must still consume the state");
+    }
+
+    [Fact]
+    public async Task ValidateAndConsumeAsync_WhenExpired_Fails()
+    {
+        var options = NewDatabase();
+        var userId = Guid.NewGuid();
+
+        await using (var seed = new ApplicationDbContext(options))
         {
-            if (_blockNextRemove)
+            seed.OAuthStates.Add(new OAuthState
             {
-                _removeStarted.Set();
-                _allowRemove.Wait(TimeSpan.FromSeconds(5)).Should().BeTrue();
-                _blockNextRemove = false;
-            }
-
-            _innerCache.Remove(key);
+                UserId = userId,
+                State = "stale",
+                ExpiresAt = DateTimeProvider.UtcNow.AddMinutes(-1),
+                CreatedAt = DateTimeProvider.UtcNow.AddMinutes(-11)
+            });
+            await seed.SaveChangesAsync();
         }
 
-        public bool TryGetValue(object key, out object? value) => _innerCache.TryGetValue(key, out value);
+        var result = await StoreFor(options).ValidateAndConsumeAsync(userId, "stale");
 
-        public void BlockNextRemove()
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ValidateAndConsumeAsync_WithAnotherUsersState_Fails()
+    {
+        var options = NewDatabase();
+        var victimId = Guid.NewGuid();
+        var attackerId = Guid.NewGuid();
+
+        await StoreFor(options).StoreAsync(victimId, "victim-state");
+
+        var result = await StoreFor(options).ValidateAndConsumeAsync(attackerId, "victim-state");
+
+        result.Should().BeFalse("state is bound to the user it was issued to");
+    }
+
+    [Fact]
+    public async Task StoreAsync_CalledTwice_InvalidatesTheAbandonedState()
+    {
+        var options = NewDatabase();
+        var userId = Guid.NewGuid();
+
+        await StoreFor(options).StoreAsync(userId, "first-attempt");
+        await StoreFor(options).StoreAsync(userId, "second-attempt");
+
+        var abandoned = await StoreFor(options).ValidateAndConsumeAsync(userId, "first-attempt");
+        abandoned.Should().BeFalse("re-initiating replaces the earlier attempt's state");
+    }
+
+    [Fact]
+    public async Task StoreAsync_CalledTwice_KeepsTheNewestStateValid()
+    {
+        var options = NewDatabase();
+        var userId = Guid.NewGuid();
+
+        await StoreFor(options).StoreAsync(userId, "first-attempt");
+        await StoreFor(options).StoreAsync(userId, "second-attempt");
+
+        var current = await StoreFor(options).ValidateAndConsumeAsync(userId, "second-attempt");
+        current.Should().BeTrue();
+    }
+
+    /// <summary>
+    /// Two authorization attempts racing (an impatient double-click on Connect) must
+    /// not surface as a 500 from /akahu/initiate. The newest attempt wins, since that
+    /// is the one the user is actually completing.
+    /// </summary>
+    [Fact]
+    public async Task StoreAsync_WhenAnotherAttemptRacesIt_DoesNotThrowAndNewestWins()
+    {
+        var options = NewDatabase();
+        var userId = Guid.NewGuid();
+
+        var storeA = StoreFor(options);
+        var storeB = StoreFor(options);
+
+        var raced = async () =>
         {
-            _removeStarted.Reset();
-            _allowRemove.Reset();
-            _blockNextRemove = true;
-        }
+            await Task.WhenAll(
+                storeA.StoreAsync(userId, "attempt-a"),
+                storeB.StoreAsync(userId, "attempt-b"));
+        };
 
-        public void WaitUntilRemoveStarts()
+        await raced.Should().NotThrowAsync("a concurrent re-initiate must not 500");
+
+        await using var verify = new ApplicationDbContext(options);
+        var rows = await verify.OAuthStates.Where(s => s.UserId == userId).ToListAsync();
+        rows.Should().HaveCount(1, "one live state per user");
+        rows[0].State.Should().BeOneOf("attempt-a", "attempt-b");
+    }
+
+    [Fact]
+    public async Task StoreAsync_SweepsExpiredStatesOfOtherUsers()
+    {
+        var options = NewDatabase();
+        var expiredUser = Guid.NewGuid();
+
+        await using (var seed = new ApplicationDbContext(options))
         {
-            _removeStarted.Wait(TimeSpan.FromSeconds(5)).Should().BeTrue();
+            seed.OAuthStates.Add(new OAuthState
+            {
+                UserId = expiredUser,
+                State = "expired",
+                ExpiresAt = DateTimeProvider.UtcNow.AddMinutes(-5),
+                CreatedAt = DateTimeProvider.UtcNow.AddMinutes(-15)
+            });
+            await seed.SaveChangesAsync();
         }
 
-        public void AllowRemoveToContinue() => _allowRemove.Set();
+        await StoreFor(options).StoreAsync(Guid.NewGuid(), "fresh");
 
-        public void Dispose()
-        {
-            _innerCache.Dispose();
-            _removeStarted.Dispose();
-            _allowRemove.Dispose();
-        }
+        await using var verify = new ApplicationDbContext(options);
+        var stillThere = await verify.OAuthStates.AnyAsync(s => s.UserId == expiredUser);
+        stillThere.Should().BeFalse("expired states are swept when a new one is stored");
     }
 }

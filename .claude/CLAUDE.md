@@ -1,7 +1,7 @@
 # MyMascada - Development Guidelines
 
 ## Project Overview
-A personal finance management application with AI-powered transaction categorization and proactive notifications. Self-hosted on a local Linux server (Mordor), with architecture designed to support eventual SaaS deployment.
+A personal finance management application with AI-powered transaction categorization and proactive notifications. Deployed as a SaaS on Fly.io; the Docker Compose stack in the repo remains supported for self-hosters.
 
 ## Local Development Setup
 
@@ -59,7 +59,10 @@ Clean Architecture with four layers:
 - **Logging**: Serilog
 
 ## Infrastructure
-- **Mordor** (`192.168.50.225`): Self-hosted server running Forgejo and production deployment via Docker Compose.
+- **Production**: Fly.io (Sydney region). API app `mymascada-api` (`fly.toml`), frontend app (`frontend/fly.toml`), Fly managed Postgres.
+- **Deploys**: push to `main` on GitHub → `.github/workflows/deploy-fly.yml` → `flyctl deploy`. Path filters mean API and frontend deploy independently.
+- **Secrets**: `fly secrets set <Key>=<value> -a mymascada-api`. Non-secret config goes in `[env]` in `fly.toml`.
+- **Legacy**: Mordor (`192.168.50.225`) + `.forgejo/workflows/deploy-production.yml` are retired and no longer deploy anything. Do not add new config there.
 
 ## Frontend Component Rules
 - **Dropdowns/selects**: Use `<Select>` from `@/components/ui/select`
