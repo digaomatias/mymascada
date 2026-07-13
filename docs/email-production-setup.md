@@ -18,11 +18,10 @@ fly secrets set Email__Resend__ApiKey=re_xxxxxxxxxxxxxxxx -a mymascada-api
 Get the key from https://resend.com → API Keys (a "Sending access" key
 restricted to the `mymascada.com` domain is sufficient).
 
-The Forgejo docker-based production deploy
-(`.forgejo/workflows/deploy-production.yml`) uses the same provider and needs
-the same key as a repository secret named `RESEND_API_KEY`. If that secret is
-missing, the deploy still succeeds but email is reported as unconfigured (see
-the failure mode below).
+The retired Forgejo/Mordor deploy (`.forgejo/workflows/deploy-production.yml`)
+also read this key, as a repository secret named `RESEND_API_KEY`. That pipeline
+no longer runs — Fly is the only production deploy — so the Fly secret above is
+the one that matters.
 
 Non-secret settings already live in `[env]` in the Fly config:
 

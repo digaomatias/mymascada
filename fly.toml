@@ -24,6 +24,14 @@ primary_region = 'syd'
   Email__DefaultFromName = 'MyMascada'
   PasswordReset__FrontendResetUrl = 'https://app.mymascada.com/auth/reset-password'
   EmailVerification__FrontendVerifyUrl = 'https://app.mymascada.com/auth/verify-email'
+  # Akahu bank sync via hosted OAuth. Setting both Akahu__AppIdToken and
+  # Akahu__AppSecret is what flips BankProviderModeResolver from personal_tokens
+  # to hosted_oauth — so both must be present or the OAuth flow stays disabled:
+  #   fly secrets set Akahu__AppIdToken=app_token_xxx Akahu__AppSecret=xxx
+  # OAuthBaseUrl points at Akahu's dev/sandbox environment (5-user cap).
+  Akahu__Enabled = 'true'
+  Akahu__RedirectUri = 'https://app.mymascada.com/settings/bank-connections/callback'
+  Akahu__OAuthBaseUrl = 'https://next.oauth.akahu.nz'
 
 [http_service]
   internal_port = 5126

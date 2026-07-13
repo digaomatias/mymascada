@@ -1,4 +1,14 @@
-name: Deploy to Production
+# ⚠️ LEGACY — RETIRED, DOES NOT RUN.
+#
+# Production moved to Fly.io. The live deploy is .github/workflows/deploy-fly.yml
+# (push to main on GitHub → flyctl deploy). This workflow deployed to the Mordor
+# self-hosted server (192.168.50.225) via SCP + SSH and is kept only for reference
+# in case Mordor is ever revived.
+#
+# Do NOT add new environment variables or secrets here — they will have no effect.
+# Production config lives in fly.toml ([env]) and Fly secrets (`fly secrets set`).
+
+name: Deploy to Production (LEGACY - Mordor, retired)
 
 on:
   push:
