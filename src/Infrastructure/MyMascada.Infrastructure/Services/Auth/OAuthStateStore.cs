@@ -22,6 +22,9 @@ public class OAuthStateStore : IOAuthStateStore
 {
     private static readonly TimeSpan StateExpiry = TimeSpan.FromMinutes(10);
 
+    /// <summary>Bounded so a pathological write loop can never spin forever.</summary>
+    private const int MaxStoreAttempts = 3;
+
     private readonly ApplicationDbContext _context;
     private readonly ILogger<OAuthStateStore> _logger;
 
@@ -31,7 +34,41 @@ public class OAuthStateStore : IOAuthStateStore
         _logger = logger;
     }
 
+    /// <summary>
+    /// Stores a fresh state for the user, replacing any previous one.
+    ///
+    /// The read-then-replace is not atomic on its own: two authorization attempts
+    /// racing (an impatient double-click on Connect) can both see no existing row and
+    /// then collide on the unique UserId index, or one can have its row consumed by a
+    /// callback mid-flight. Either way SaveChanges throws. Rather than let that
+    /// surface as a 500 from /akahu/initiate, we retry — on a second pass the winner's
+    /// row is visible and gets replaced normally. Last writer wins, which is exactly
+    /// the desired semantics: the newest attempt is the one the user is completing.
+    /// </summary>
     public async Task StoreAsync(Guid userId, string state, CancellationToken cancellationToken = default)
+    {
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                await StoreOnceAsync(userId, state, cancellationToken);
+                _logger.LogDebug("Stored OAuth state for user {UserId}", userId);
+                return;
+            }
+            // DbUpdateConcurrencyException derives from DbUpdateException, so this
+            // covers both the unique-index collision and the deleted-row race.
+            catch (DbUpdateException) when (attempt < MaxStoreAttempts)
+            {
+                // Drop the failed tracked entries so the retry re-reads live DB state.
+                _context.ChangeTracker.Clear();
+                _logger.LogWarning(
+                    "Concurrent OAuth state write for user {UserId} (attempt {Attempt}) — retrying",
+                    userId, attempt);
+            }
+        }
+    }
+
+    private async Task StoreOnceAsync(Guid userId, string state, CancellationToken cancellationToken)
     {
         var now = DateTimeProvider.UtcNow;
 
@@ -56,7 +93,6 @@ public class OAuthStateStore : IOAuthStateStore
         });
 
         await _context.SaveChangesAsync(cancellationToken);
-        _logger.LogDebug("Stored OAuth state for user {UserId}", userId);
     }
 
     public async Task<bool> ValidateAndConsumeAsync(Guid userId, string state, CancellationToken cancellationToken = default)

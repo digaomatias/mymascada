@@ -300,6 +300,14 @@ public class UserDataDeletionService : IUserDataDeletionService
                 .Where(ud => ud.UserId == userId)
                 .ExecuteDeleteAsync(cancellationToken);
 
+            // 23c. Delete OAuthStates (pending OAuth authorization state).
+            // Short-lived, but a flow left in-flight at deletion time would otherwise
+            // outlive the account — and "right to be forgotten" means no residue.
+            await _context.OAuthStates
+                .IgnoreQueryFilters()
+                .Where(os => os.UserId == userId)
+                .ExecuteDeleteAsync(cancellationToken);
+
             // 24. Delete DashboardNudgeDismissals
             result.DashboardNudgeDismissalsDeleted = await _context.DashboardNudgeDismissals
                 .IgnoreQueryFilters()

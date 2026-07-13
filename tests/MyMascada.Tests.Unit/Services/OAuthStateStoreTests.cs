@@ -147,6 +147,35 @@ public class OAuthStateStoreTests
         current.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Two authorization attempts racing (an impatient double-click on Connect) must
+    /// not surface as a 500 from /akahu/initiate. The newest attempt wins, since that
+    /// is the one the user is actually completing.
+    /// </summary>
+    [Fact]
+    public async Task StoreAsync_WhenAnotherAttemptRacesIt_DoesNotThrowAndNewestWins()
+    {
+        var options = NewDatabase();
+        var userId = Guid.NewGuid();
+
+        var storeA = StoreFor(options);
+        var storeB = StoreFor(options);
+
+        var raced = async () =>
+        {
+            await Task.WhenAll(
+                storeA.StoreAsync(userId, "attempt-a"),
+                storeB.StoreAsync(userId, "attempt-b"));
+        };
+
+        await raced.Should().NotThrowAsync("a concurrent re-initiate must not 500");
+
+        await using var verify = new ApplicationDbContext(options);
+        var rows = await verify.OAuthStates.Where(s => s.UserId == userId).ToListAsync();
+        rows.Should().HaveCount(1, "one live state per user");
+        rows[0].State.Should().BeOneOf("attempt-a", "attempt-b");
+    }
+
     [Fact]
     public async Task StoreAsync_SweepsExpiredStatesOfOtherUsers()
     {
