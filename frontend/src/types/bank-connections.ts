@@ -103,6 +103,9 @@ export interface InitiateConnectionResult {
 // Request types
 export interface InitiateAkahuRequest {
   email?: string;
+  // Re-run Akahu's hosted OAuth consent even when usable credentials already exist,
+  // so the user can add or manage additional banks on Akahu's side.
+  forceReauthorize?: boolean;
 }
 
 // Simplified request - no longer needs code/state for Personal App mode

@@ -96,7 +96,8 @@ public class BankConnectionsController : ControllerBase
     {
         var command = new InitiateAkahuConnectionCommand(
             _currentUserService.GetUserId(),
-            request?.Email
+            request?.Email,
+            request?.ForceReauthorize ?? false
         );
         var result = await _mediator.Send(command);
         return Ok(result);
@@ -444,7 +445,13 @@ public record InitiateAkahuRequest(
     /// <summary>
     /// Optional email hint to pre-fill in the Akahu login form.
     /// </summary>
-    [property: JsonPropertyName("email")] string? Email = null
+    [property: JsonPropertyName("email")] string? Email = null,
+
+    /// <summary>
+    /// When true, re-run Akahu's hosted OAuth consent even if usable credentials already
+    /// exist. Used to add or manage additional banks on Akahu's side.
+    /// </summary>
+    [property: JsonPropertyName("forceReauthorize")] bool ForceReauthorize = false
 );
 
 /// <summary>
