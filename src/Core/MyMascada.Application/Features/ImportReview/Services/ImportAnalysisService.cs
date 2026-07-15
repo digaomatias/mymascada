@@ -405,8 +405,15 @@ public class ImportAnalysisService : IImportAnalysisService
                 var isExactAmountAndDate = amountDifference == 0 && daysDifference == 0;
                 var isCloseMatch = daysDifference <= 1 && amountDifference <= 0.01m;
                 
-                // Calculate confidence based primarily on amount/date match
-                var dateConfidence = 1.0 - (daysDifference / options.DateToleranceDays);
+                // Calculate confidence based primarily on amount/date match.
+                // Guard the divisors: bank syncs use DateToleranceDays == 0 (exact match),
+                // and dividing by it yields double.NaN, which throws OverflowException when
+                // later cast to decimal ("Value was either too large or too small for a
+                // Decimal"). A zero tolerance means we only get here on an exact match, so
+                // confidence on that axis is 1.0.
+                var dateConfidence = options.DateToleranceDays == 0
+                    ? 1.0
+                    : 1.0 - (daysDifference / options.DateToleranceDays);
                 var amountConfidence = amountDifference == 0 ? 1.0 : (1.0 - (double)amountDifference / (double)options.AmountTolerance);
                 var baseConfidence = (dateConfidence * 0.5 + amountConfidence * 0.5);
                 
@@ -446,8 +453,12 @@ public class ImportAnalysisService : IImportAnalysisService
                     ? ConflictSeverity.High 
                     : ConflictSeverity.Medium;
                 
-                var confidence = amountDifference == 0 
-                    ? (decimal)(1.0 - daysDifference / options.DateToleranceDays)
+                // Same DateToleranceDays == 0 guard as above: avoid dividing by zero
+                // (double.NaN) and the subsequent OverflowException on the decimal cast.
+                var confidence = amountDifference == 0
+                    ? (decimal)(options.DateToleranceDays == 0
+                        ? 1.0
+                        : 1.0 - daysDifference / options.DateToleranceDays)
                     : 0.7m;
 
                 conflicts.Add(new ConflictInfoDto
