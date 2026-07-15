@@ -435,8 +435,16 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.EncryptedSettings); // No max length - can be large encrypted JSON
             entity.Property(e => e.LastSyncError).HasMaxLength(1000);
 
-            // Unique index on AccountId and ProviderId - one connection per provider per account
-            entity.HasIndex(e => new { e.AccountId, e.ProviderId }).IsUnique();
+            // One active connection per account (the 1:1 with Account below relies on
+            // this uniqueness). Filtered to non-deleted rows because connections are
+            // soft-deleted: disconnecting then re-linking the same account must not
+            // collide with the dead row still holding the AccountId slot. An unfiltered
+            // constraint surfaces as a 23505 duplicate-key 500 on /akahu/complete.
+            // A composite (AccountId, ProviderId) unique index would be redundant here —
+            // AccountId is already unique among active rows regardless of provider.
+            entity.HasIndex(e => e.AccountId)
+                .IsUnique()
+                .HasFilter("\"IsDeleted\" = false");
 
             // Index on ExternalAccountId for lookups
             entity.HasIndex(e => e.ExternalAccountId);
