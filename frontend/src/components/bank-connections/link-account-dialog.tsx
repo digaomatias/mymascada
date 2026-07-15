@@ -138,6 +138,7 @@ export function LinkAccountDialog({
                     <div className="mt-6">
                       <p className="text-sm text-ink-500 mb-3">{t('addMoreBanksPrompt')}</p>
                       <Button
+                        type="button"
                         onClick={onReauthorize}
                         className="flex items-center gap-2 mx-auto"
                       >
@@ -179,6 +180,7 @@ export function LinkAccountDialog({
 
               {availableAkahuAccounts.length > 0 && onReauthorize && (
                 <button
+                  type="button"
                   onClick={onReauthorize}
                   className="w-full flex items-center justify-center gap-1.5 pt-2 text-sm text-primary-600 hover:text-primary-700 transition-colors"
                 >

@@ -387,6 +387,7 @@ export default function BankConnectionsPage() {
 
               {canConnectProvider && supportsReauthorize && connections.length > 0 && (
                 <Button
+                  type="button"
                   variant="outline"
                   onClick={() => handleInitiateConnection(primaryProvider.providerId, { forceReauth: true })}
                   disabled={isInitiatingConnection}
