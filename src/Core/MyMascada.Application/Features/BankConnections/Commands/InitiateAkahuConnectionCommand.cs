@@ -11,7 +11,11 @@ namespace MyMascada.Application.Features.BankConnections.Commands;
 /// </summary>
 public record InitiateAkahuConnectionCommand(
     Guid UserId,
-    string? Email = null
+    string? Email = null,
+    // When true, always re-run the hosted OAuth consent instead of reusing the stored
+    // token. This is how the user goes back to Akahu to enrol additional banks — the
+    // existing token only enumerates the banks it was originally granted.
+    bool ForceReauthorize = false
 ) : IRequest<InitiateConnectionResult>;
 
 /// <summary>
@@ -51,14 +55,20 @@ public class InitiateAkahuConnectionCommandHandler : IRequestHandler<InitiateAka
 
         var mode = _modeResolver.Resolve("akahu");
 
+        // A forced re-authorization means the user wants to add or manage banks on Akahu's
+        // side, which requires going through the hosted OAuth consent again. Only hosted_oauth
+        // has a consent screen; personal_tokens has nothing to re-run, so the flag is ignored there.
+        var forceReauthorize = request.ForceReauthorize && mode.DefaultMode == "hosted_oauth";
+
         // If the user already has valid (non-revoked) credentials, fetch accounts directly
         // instead of forcing another OAuth round-trip. This applies to both hosted_oauth
         // and personal_app modes — once authorized, the user shouldn't have to re-authorize
-        // just to link an additional account.
+        // just to link an additional account. A forced re-authorization deliberately skips
+        // this so Akahu's consent screen is shown again.
         var credential = await _credentialRepository.GetByUserIdAsync(request.UserId, cancellationToken);
         var hasUsableCredential = credential != null && credential.ConsentRevokedAt == null;
 
-        if (hasUsableCredential)
+        if (hasUsableCredential && !forceReauthorize)
         {
             var reuseResult = await TryReuseExistingCredentialsAsync(credential!, request.UserId, mode.DefaultMode, cancellationToken);
             if (reuseResult != null)

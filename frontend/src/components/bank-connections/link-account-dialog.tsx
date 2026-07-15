@@ -8,7 +8,8 @@ import {
   CheckCircleIcon,
   XMarkIcon,
   ArrowRightIcon,
-  CurrencyDollarIcon
+  CurrencyDollarIcon,
+  ArrowTopRightOnSquareIcon
 } from '@heroicons/react/24/outline';
 import { apiClient } from '@/lib/api-client';
 import { formatCurrency } from '@/lib/utils';
@@ -29,13 +30,17 @@ interface LinkAccountDialogProps {
   onClose: () => void;
   akahuAccounts: AkahuAccount[];
   onComplete: (accountId: number, akahuAccountId: string) => Promise<void>;
+  // Re-run Akahu's hosted OAuth consent to enrol additional banks. Only provided in
+  // hosted OAuth mode; undefined (and hidden) otherwise.
+  onReauthorize?: () => void;
 }
 
 export function LinkAccountDialog({
   isOpen,
   onClose,
   akahuAccounts,
-  onComplete
+  onComplete,
+  onReauthorize
 }: LinkAccountDialogProps) {
   const t = useTranslations('bankConnections');
   const [step, setStep] = useState<'select-akahu' | 'select-local'>('select-akahu');
@@ -127,8 +132,20 @@ export function LinkAccountDialog({
                   <CheckCircleIcon className="w-12 h-12 text-green-500 mx-auto mb-3" />
                   <h3 className="font-medium text-ink-900">{t('allAccountsLinked')}</h3>
                   <p className="text-sm text-ink-500 mt-1">
-                    All your Akahu accounts are already connected.
+                    {t('allAccountsLinkedDescription')}
                   </p>
+                  {onReauthorize && (
+                    <div className="mt-6">
+                      <p className="text-sm text-ink-500 mb-3">{t('addMoreBanksPrompt')}</p>
+                      <Button
+                        onClick={onReauthorize}
+                        className="flex items-center gap-2 mx-auto"
+                      >
+                        <ArrowTopRightOnSquareIcon className="w-4 h-4" />
+                        {t('addNewBankOnAkahu')}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 availableAkahuAccounts.map((account) => (
@@ -158,6 +175,16 @@ export function LinkAccountDialog({
                     </div>
                   </button>
                 ))
+              )}
+
+              {availableAkahuAccounts.length > 0 && onReauthorize && (
+                <button
+                  onClick={onReauthorize}
+                  className="w-full flex items-center justify-center gap-1.5 pt-2 text-sm text-primary-600 hover:text-primary-700 transition-colors"
+                >
+                  <ArrowTopRightOnSquareIcon className="w-4 h-4" />
+                  {t('dontSeeYourBank')}
+                </button>
               )}
             </div>
           ) : (

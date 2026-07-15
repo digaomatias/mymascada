@@ -16,7 +16,8 @@ import {
   BuildingLibraryIcon,
   PlusIcon,
   InformationCircleIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  ArrowTopRightOnSquareIcon
 } from '@heroicons/react/24/outline';
 import { BackButton } from '@/components/ui/back-button';
 import { useTranslations } from 'next-intl';
@@ -101,7 +102,7 @@ export default function BankConnectionsPage() {
     }
   }, [isAuthenticated, loadConnections, loadProviders]);
 
-  const handleInitiateConnection = async (providerId: string) => {
+  const handleInitiateConnection = async (providerId: string, options?: { forceReauth?: boolean }) => {
     if (providerId !== 'akahu') {
       toast.info(`${providerId} is not available yet.`);
       return;
@@ -109,7 +110,9 @@ export default function BankConnectionsPage() {
 
     setIsInitiatingConnection(true);
     try {
-      const result = await apiClient.initiateAkahuConnection();
+      const result = await apiClient.initiateAkahuConnection(
+        options?.forceReauth ? { forceReauthorize: true } : undefined
+      );
 
       if (result.requiresCredentials) {
         // User needs to set up credentials first
@@ -350,6 +353,9 @@ export default function BankConnectionsPage() {
 
   const primaryProvider = providers.find(p => p.providerId === 'akahu');
   const canConnectProvider = !!primaryProvider;
+  // "Add more banks" re-runs Akahu's hosted OAuth consent, which only exists in
+  // hosted_oauth mode. In personal-tokens mode the user manages banks via their tokens.
+  const supportsReauthorize = primaryProvider?.defaultAuthMode === 'hosted_oauth';
   return (
     <AppLayout>
       {/* Header */}
@@ -376,6 +382,18 @@ export default function BankConnectionsPage() {
                 >
                   <ArrowPathIcon className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
                   {isSyncing ? t('syncing') : t('syncAll')}
+                </Button>
+              )}
+
+              {canConnectProvider && supportsReauthorize && connections.length > 0 && (
+                <Button
+                  variant="outline"
+                  onClick={() => handleInitiateConnection(primaryProvider.providerId, { forceReauth: true })}
+                  disabled={isInitiatingConnection}
+                  className="flex items-center gap-2"
+                >
+                  <ArrowTopRightOnSquareIcon className="w-4 h-4" />
+                  {t('manageBanksOnAkahu')}
                 </Button>
               )}
 
@@ -464,6 +482,11 @@ export default function BankConnectionsPage() {
         }}
         akahuAccounts={akahuAccounts}
         onComplete={handleCompleteConnection}
+        onReauthorize={
+          supportsReauthorize && primaryProvider
+            ? () => handleInitiateConnection(primaryProvider.providerId, { forceReauth: true })
+            : undefined
+        }
       />
     </AppLayout>
   );
