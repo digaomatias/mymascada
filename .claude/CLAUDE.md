@@ -12,16 +12,30 @@ A personal finance management application with AI-powered transaction categoriza
 
 ### Start Infrastructure
 ```bash
-docker compose -f docker-compose.dev.yml up -d
+docker compose up -d postgres redis
 ```
-Starts PostgreSQL (port 5432) and Redis (port 6379).
+Starts PostgreSQL (port 5432) and Redis (port 6379). Requires `DB_PASSWORD` in `.env`.
+
+> Naming only these two services is deliberate — a bare `docker compose up -d` would
+> also start the api/frontend/caddy containers and fight the locally-run ones below.
+>
+> If something else already owns port 5432 (e.g. a Postgres installed via Homebrew),
+> the container will not be the database you connect to. Check with
+> `lsof -nP -iTCP:5432 -sTCP:LISTEN` before assuming the container is in use.
 
 ### Start Backend
 ```bash
-cd src/WebAPI
-dotnet run
+dotnet run --project src/WebAPI/MyMascada.WebAPI
 ```
 Backend runs on `http://localhost:5126`. Applies EF migrations automatically on startup.
+
+> The project lives at `src/WebAPI/MyMascada.WebAPI`, so `cd src/WebAPI && dotnet run`
+> fails with "Couldn't find a project to run".
+>
+> Run it via the launch profile (as above). Passing `--no-launch-profile` drops the
+> `http://localhost:5126` binding and the Development environment, so it tries port
+> 5000 and the container-only Data Protection key path `/app` — both of which fail
+> locally.
 
 ### Start Frontend
 ```bash
