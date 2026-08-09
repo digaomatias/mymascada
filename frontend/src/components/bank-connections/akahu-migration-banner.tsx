@@ -10,6 +10,7 @@ import {
   ArrowTopRightOnSquareIcon,
 } from '@heroicons/react/24/outline';
 import { apiClient } from '@/lib/api-client';
+import { redirectToUrl } from '@/lib/navigation-utils';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type {
@@ -128,7 +129,7 @@ export function AkahuMigrationBanner({ className }: AkahuMigrationBannerProps) {
           window.localStorage.setItem('akahu_oauth_state', result.state);
         }
         if (typeof window !== 'undefined') {
-          window.location.href = result.authorizationUrl;
+          redirectToUrl(result.authorizationUrl);
         }
         return;
       }

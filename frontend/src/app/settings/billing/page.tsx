@@ -14,6 +14,7 @@ import {
 import { BackButton } from '@/components/ui/back-button';
 import { useTranslations } from 'next-intl';
 import { apiClient, BillingStatusResponse } from '@/lib/api-client';
+import { redirectToUrl } from '@/lib/navigation-utils';
 import { toast } from 'sonner';
 import { useFeatures } from '@/contexts/features-context';
 import { useLocale } from '@/contexts/locale-context';
@@ -65,7 +66,9 @@ export default function BillingPage() {
         priceId,
         window.location.href
       );
-      window.location.href = response.url;
+      if (!redirectToUrl(response.url)) {
+        throw new Error('Received an invalid checkout URL');
+      }
     } catch (error) {
       console.error('Checkout failed:', error);
       toast.error(t('checkoutError'));
@@ -80,7 +83,9 @@ export default function BillingPage() {
       const response = await apiClient.createPortalSession(
         window.location.href
       );
-      window.location.href = response.url;
+      if (!redirectToUrl(response.url)) {
+        throw new Error('Received an invalid billing portal URL');
+      }
     } catch (error) {
       console.error('Portal failed:', error);
       toast.error(t('portalError'));

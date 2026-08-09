@@ -2,15 +2,20 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0
 WORKDIR /app
 
-# Copy source files
-COPY src/ ./
+# Copy source files, owned by the image's built-in non-root 'app' user
+# (uid 1654). Sources must be writable by the runtime user because
+# `dotnet ef database update` compiles the project at run time.
+COPY --chown=app:app src/ ./
 
-# Restore dependencies
+# Run everything below (restore, tool install, runtime) as non-root
+USER app
+
+# Restore dependencies (NuGet cache lives under /home/app/.nuget)
 RUN dotnet restore WebAPI/MyMascada.WebAPI/MyMascada.WebAPI.csproj
 
-# Install EF Core tools
+# Install EF Core tools into the app user's tool directory
 RUN dotnet tool install --global dotnet-ef --version 10.0.0
-ENV PATH="$PATH:/root/.dotnet/tools"
+ENV PATH="$PATH:/home/app/.dotnet/tools"
 
 # Set working directory to the WebAPI project for migrations
 WORKDIR /app/WebAPI/MyMascada.WebAPI

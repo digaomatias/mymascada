@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Options;
 using MyMascada.Application.Common.Configuration;
@@ -16,6 +17,12 @@ namespace MyMascada.Infrastructure.Services.Email.Templates;
 /// </summary>
 public class EmailTemplateService : IEmailTemplateService
 {
+    // Template names are kebab-case identifiers (e.g. "password-reset"); locales are
+    // language-region codes (e.g. "en-US"). Anything else is rejected to prevent
+    // path traversal — these values are used to build file paths under _templatePath.
+    private static readonly Regex SafeTemplateNamePattern = new("^[A-Za-z0-9][A-Za-z0-9_-]*$", RegexOptions.Compiled);
+    private static readonly Regex SafeLocalePattern = new("^[a-z]{2,3}-[A-Z0-9]{2,8}$", RegexOptions.Compiled);
+
     private readonly EmailOptions _options;
     private readonly IApplicationLogger<EmailTemplateService> _logger;
     private readonly string _templatePath;
@@ -42,6 +49,9 @@ public class EmailTemplateService : IEmailTemplateService
     {
         if (string.IsNullOrWhiteSpace(templateName))
             throw new ArgumentException("Template name cannot be null or empty", nameof(templateName));
+
+        if (!SafeTemplateNamePattern.IsMatch(templateName))
+            throw new ArgumentException($"Invalid template name: {templateName}", nameof(templateName));
 
         // Normalize locale or use default
         var effectiveLocale = NormalizeLocale(locale);
@@ -95,7 +105,7 @@ public class EmailTemplateService : IEmailTemplateService
     /// <inheritdoc />
     public bool TemplateExists(string templateName, string? locale = null)
     {
-        if (string.IsNullOrWhiteSpace(templateName))
+        if (string.IsNullOrWhiteSpace(templateName) || !SafeTemplateNamePattern.IsMatch(templateName))
             return false;
 
         var effectiveLocale = NormalizeLocale(locale);
@@ -214,7 +224,18 @@ public class EmailTemplateService : IEmailTemplateService
 
     private async Task<Template> LoadAndCacheTemplateAsync(string filePath, string cacheKey, CancellationToken ct)
     {
-        var content = await File.ReadAllTextAsync(filePath, ct);
+        // Defense in depth: never read a file that resolves outside the template root,
+        // even if an unvalidated value slips into a Path.Combine upstream.
+        var fullPath = Path.GetFullPath(filePath);
+        var templateRoot = Path.GetFullPath(_templatePath);
+        if (!fullPath.StartsWith(templateRoot + Path.DirectorySeparatorChar, StringComparison.Ordinal))
+        {
+            _logger.LogError(null, "Refusing to load template outside template root: {FilePath}",
+                new { FilePath = filePath });
+            throw new UnauthorizedAccessException("Template path resolves outside the template directory.");
+        }
+
+        var content = await File.ReadAllTextAsync(fullPath, ct);
         var template = Template.Parse(content, filePath);
 
         if (template.HasErrors)
@@ -236,21 +257,26 @@ public class EmailTemplateService : IEmailTemplateService
         if (string.IsNullOrWhiteSpace(locale))
             return IEmailTemplateService.DefaultLocale;
 
+        // Only plain language[-region] codes are accepted; anything else (path
+        // separators, dots, etc.) falls back to the default locale so the value
+        // can never influence the file path outside the template directory.
+        if (!Regex.IsMatch(locale, "^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})?$"))
+            return IEmailTemplateService.DefaultLocale;
+
         // Handle common variations (e.g., "pt-br" -> "pt-BR", "en" -> "en-US")
         var parts = locale.Split('-');
-        if (parts.Length == 1)
-        {
-            // Language only - map to common locale
-            return parts[0].ToLowerInvariant() switch
+        var normalized = parts.Length == 1
+            ? parts[0].ToLowerInvariant() switch
             {
+                // Language only - map to common locale
                 "en" => "en-US",
                 "pt" => "pt-BR",
                 _ => $"{parts[0].ToLowerInvariant()}-{parts[0].ToUpperInvariant()}"
-            };
-        }
+            }
+            // Normalize format: lowercase language, uppercase region
+            : $"{parts[0].ToLowerInvariant()}-{parts[1].ToUpperInvariant()}";
 
-        // Normalize format: lowercase language, uppercase region
-        return $"{parts[0].ToLowerInvariant()}-{parts[1].ToUpperInvariant()}";
+        return SafeLocalePattern.IsMatch(normalized) ? normalized : IEmailTemplateService.DefaultLocale;
     }
 
     private static TemplateContext CreateTemplateContext(IReadOnlyDictionary<string, object> data)

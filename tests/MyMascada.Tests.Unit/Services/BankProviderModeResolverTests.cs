@@ -12,8 +12,8 @@ public class BankProviderModeResolverTests
     {
         var options = Options.Create(new AkahuOptions
         {
-            AppIdToken = "app_token_123",
-            AppSecret = "secret_123"
+            AppIdToken = "test-fake-app-token",
+            AppSecret = "test-fake-app-secret"
         });
 
         var resolver = new BankProviderModeResolver(options);

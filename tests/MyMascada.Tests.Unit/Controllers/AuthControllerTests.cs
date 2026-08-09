@@ -60,8 +60,8 @@ public class AuthControllerTests
         {
             Email = "test@example.com",
             UserName = "testuser",
-            Password = "TestPass123!",
-            ConfirmPassword = "TestPass123!",
+            Password = "test-fake-password",
+            ConfirmPassword = "test-fake-password",
             FirstName = "Test",
             LastName = "User",
             PhoneNumber = "+1234567890",
@@ -119,8 +119,8 @@ public class AuthControllerTests
         {
             Email = "mobile@example.com",
             UserName = "mobileuser",
-            Password = "TestPass123!",
-            ConfirmPassword = "TestPass123!",
+            Password = "test-fake-password",
+            ConfirmPassword = "test-fake-password",
             FirstName = "Mobile",
             LastName = "User",
             Currency = "USD",
@@ -150,8 +150,8 @@ public class AuthControllerTests
         {
             Email = "secure@example.com",
             UserName = "secureuser",
-            Password = "TestPass123!",
-            ConfirmPassword = "TestPass123!",
+            Password = "test-fake-password",
+            ConfirmPassword = "test-fake-password",
             FirstName = "Secure",
             LastName = "User",
             Currency = "USD",
@@ -187,8 +187,8 @@ public class AuthControllerTests
         {
             Email = "dev@example.com",
             UserName = "devuser",
-            Password = "TestPass123!",
-            ConfirmPassword = "TestPass123!",
+            Password = "test-fake-password",
+            ConfirmPassword = "test-fake-password",
             FirstName = "Dev",
             LastName = "User",
             Currency = "USD",
@@ -251,7 +251,7 @@ public class AuthControllerTests
         var request = new LoginRequest
         {
             EmailOrUserName = "test@example.com",
-            Password = "TestPass123!",
+            Password = "test-fake-password",
             RememberMe = true
         };
 

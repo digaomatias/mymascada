@@ -1,18 +1,23 @@
 using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MediatR;
 using MyMascada.Application.Features.Testing.Commands;
+using MyMascada.WebAPI.Filters;
 
 namespace MyMascada.WebAPI.Controllers;
 
 /// <summary>
 /// Controller for testing and development utilities
-/// Only available in development environment
+/// Only available in development environment: [DevelopmentOnly] returns 404 for
+/// every action outside Development, before model binding runs.
 /// </summary>
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
 [Route("api/latest/[controller]")]
+[DevelopmentOnly]
+[AllowAnonymous] // pre-auth test utilities; unreachable outside Development
 public class TestingController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -31,10 +36,10 @@ public class TestingController : ControllerBase
     [HttpPost("create-test-user")]
     public async Task<ActionResult<CreateTestUserResponse>> CreateTestUser([FromBody] CreateTestUserCommand command)
     {
-        // Only allow in development environment
+        // Defense in depth: [DevelopmentOnly] already 404s outside Development
         if (!_environment.IsDevelopment())
         {
-            return BadRequest("This endpoint is only available in development environment");
+            return NotFound();
         }
 
         var result = await _mediator.Send(command);

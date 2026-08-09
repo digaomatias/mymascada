@@ -657,7 +657,7 @@ export function ReconciliationModal({
                           className="mt-3"
                           onClick={() => {
                             // Navigate to detailed reconciliation view
-                            window.location.href = `/reconciliation/${reconciliation.id}`;
+                            window.location.href = `/reconciliation/${encodeURIComponent(String(reconciliation.id))}`;
                           }}
                         >
                           {t('viewDetailedResults')}

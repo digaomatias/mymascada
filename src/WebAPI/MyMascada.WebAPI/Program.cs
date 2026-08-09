@@ -353,6 +353,15 @@ if (app.Environment.IsDevelopment())
 // Use forwarded headers (must be first, before any middleware that needs Request.Scheme/Host)
 app.UseForwardedHeaders();
 
+// HSTS for browsers hitting the API origin directly. TLS terminates at the
+// proxy/edge; UseForwardedHeaders above restores the https scheme so the
+// header is emitted. Browsers ignore HSTS over plain HTTP, so this is a no-op
+// for local development traffic even outside the Development environment.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
+
 // API version backward compatibility — rewrite /api/* to /api/v1/*
 // This allows older clients that haven't migrated to /v1 or /latest yet.
 // Excludes /api/v* (already versioned) and /api/latest/* (new web-app prefix).
@@ -529,14 +538,14 @@ app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks
 {
     Predicate = _ => false, // no individual checks — just confirms the process is alive
     ResponseWriter = WriteHealthCheckResponse
-});
+}).AllowAnonymous();
 
 // Readiness probe — runs checks tagged "ready" (database, external services)
 app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
 {
     Predicate = check => check.Tags.Contains("ready"),
     ResponseWriter = WriteHealthCheckResponse
-});
+}).AllowAnonymous();
 
 // Public health check endpoint — minimal response, no dependency checks exposed
 app.MapHealthChecks("/api/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
@@ -558,7 +567,7 @@ app.MapHealthChecks("/api/health", new Microsoft.AspNetCore.Diagnostics.HealthCh
 }).AllowAnonymous();
 
 // Add a simple test endpoint
-app.MapGet("/", () => "MyMascada API is running!");
+app.MapGet("/", () => "MyMascada API is running!").AllowAnonymous();
 
     app.Run();
     

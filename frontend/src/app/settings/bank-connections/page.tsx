@@ -11,6 +11,7 @@ import { LinkAccountDialog } from '@/components/bank-connections/link-account-di
 import { AkahuSetupDialog } from '@/components/bank-connections/akahu-setup-dialog';
 import { AkahuMigrationBanner } from '@/components/bank-connections/akahu-migration-banner';
 import { apiClient } from '@/lib/api-client';
+import { redirectToUrl } from '@/lib/navigation-utils';
 import { toast } from 'sonner';
 import {
   BuildingLibraryIcon,
@@ -131,10 +132,8 @@ export default function BankConnectionsPage() {
         }
 
         // Redirect to Akahu OAuth page
-        if (result.authorizationUrl) {
-          window.location.href = result.authorizationUrl;
-        } else {
-          throw new Error('No authorization URL returned');
+        if (!result.authorizationUrl || !redirectToUrl(result.authorizationUrl)) {
+          throw new Error('No valid authorization URL returned');
         }
       }
     } catch (error) {

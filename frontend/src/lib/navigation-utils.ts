@@ -38,19 +38,49 @@ export function createTransactionEditUrl(
 }
 
 /**
- * Gets the return URL from query parameters or provides a sensible fallback
+ * Returns the URL only if it is a safe internal path ("/..." but not "//...").
+ * Rejects absolute URLs ("https://evil.com"), scheme URLs ("javascript:..."),
+ * protocol-relative URLs ("//evil.com") and backslash tricks ("/\evil.com"),
+ * which would otherwise enable open redirects or XSS via navigation sinks.
+ */
+export function sanitizeInternalUrl(url: string, fallback: string = '/transactions'): string {
+  return /^\/(?![/\\])/.test(url) ? url : fallback;
+}
+
+/**
+ * Redirects the browser to an external (or internal) URL only when it parses
+ * to http(s). Blocks javascript:, data: and other dangerous schemes so that
+ * server-provided URLs can never execute script via window.location.href.
+ */
+export function redirectToUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url, window.location.origin);
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+      window.location.href = parsed.href;
+      return true;
+    }
+  } catch {
+    // fall through to the error below
+  }
+  console.error('Blocked redirect to unsafe URL');
+  return false;
+}
+
+/**
+ * Gets the return URL from query parameters or provides a sensible fallback.
+ * Only internal paths are returned; external/scheme URLs fall back.
  */
 export function getReturnUrl(searchParams: URLSearchParams): string {
   const returnUrl = searchParams.get('returnUrl');
-  
+
   if (returnUrl) {
     try {
-      return decodeURIComponent(returnUrl);
+      return sanitizeInternalUrl(decodeURIComponent(returnUrl));
     } catch {
       console.warn('Failed to decode return URL:', returnUrl);
     }
   }
-  
+
   // Fallback to transactions page
   return '/transactions';
 }

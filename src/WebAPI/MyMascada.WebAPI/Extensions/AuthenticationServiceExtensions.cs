@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 
 namespace MyMascada.WebAPI.Extensions;
@@ -27,6 +28,16 @@ public static class AuthenticationServiceExtensions
                 ValidAudience = configuration["Jwt:Audience"],
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtKey))
             };
+        });
+
+        // Secure by default: every endpoint requires an authenticated user unless it
+        // explicitly opts out with [AllowAnonymous] (or a stronger scheme such as the
+        // AdminApiKey filter). Prevents accidentally-public controllers.
+        services.AddAuthorization(options =>
+        {
+            options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .Build();
         });
 
         return services;

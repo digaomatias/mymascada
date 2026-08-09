@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyMascada.Application.Common.Interfaces;
 using MyMascada.Application.Features.Waitlist.Commands;
@@ -12,7 +13,8 @@ namespace MyMascada.WebAPI.Controllers;
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/admin")]
 [Route("api/latest/admin")]
-[AdminApiKey]
+[AdminApiKey] // authenticates via X-Admin-Key header (constant-time compare), not JWT
+[AllowAnonymous] // opt out of the JWT fallback policy; AdminApiKey enforces access
 public class AdminController : ControllerBase
 {
     private readonly IMediator _mediator;
