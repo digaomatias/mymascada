@@ -227,7 +227,10 @@ public class EmailTemplateService : IEmailTemplateService
         // Defense in depth: never read a file that resolves outside the template root,
         // even if an unvalidated value slips into a Path.Combine upstream.
         var fullPath = Path.GetFullPath(filePath);
-        var templateRoot = Path.GetFullPath(_templatePath);
+        // Trim any trailing separator: .NET's GetFullPath preserves it, which would
+        // otherwise break the prefix check when TemplateDirectory is configured
+        // with a trailing slash (e.g. "EmailTemplates/").
+        var templateRoot = Path.TrimEndingDirectorySeparator(Path.GetFullPath(_templatePath));
         if (!fullPath.StartsWith(templateRoot + Path.DirectorySeparatorChar, StringComparison.Ordinal))
         {
             _logger.LogError(null, "Refusing to load template outside template root: {FilePath}",

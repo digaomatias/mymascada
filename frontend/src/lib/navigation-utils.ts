@@ -44,6 +44,11 @@ export function createTransactionEditUrl(
  * which would otherwise enable open redirects or XSS via navigation sinks.
  */
 export function sanitizeInternalUrl(url: string, fallback: string = '/transactions'): string {
+  // Reject ASCII control characters outright: browsers strip \n, \r and \t while
+  // parsing URLs, so "/\n//evil.com" would otherwise normalize into "//evil.com"
+  // after passing the shape check below.
+  // eslint-disable-next-line no-control-regex
+  if (/[\u0000-\u001f\u007f]/.test(url)) return fallback;
   return /^\/(?![/\\])/.test(url) ? url : fallback;
 }
 

@@ -93,4 +93,24 @@ public class EmailTemplateServiceTests : IDisposable
     {
         _sut.TemplateExists("welcome", "en-US").Should().BeTrue();
     }
+
+    [Fact]
+    public async Task RenderAsync_WithTrailingSeparatorInTemplateDirectory_StillRenders()
+    {
+        // .NET's GetFullPath preserves trailing separators; the containment check
+        // must not reject valid templates when configured as "EmailTemplates/"
+        var env = Substitute.For<IWebHostEnvironment>();
+        env.ContentRootPath.Returns(_contentRoot);
+        var sut = new EmailTemplateService(
+            Options.Create(new EmailOptions { TemplateDirectory = "EmailTemplates/" }),
+            env,
+            Substitute.For<IApplicationLogger<EmailTemplateService>>());
+
+        var (subject, _) = await sut.RenderAsync(
+            "welcome",
+            new Dictionary<string, object> { ["name"] = "x" },
+            "en-US");
+
+        subject.Should().Be("Hello x");
+    }
 }

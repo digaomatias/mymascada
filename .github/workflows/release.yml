@@ -24,8 +24,10 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # create the GitHub Release
+      contents: read
       packages: write # push images to GHCR
+    outputs:
+      version: ${{ steps.version.outputs.version }}
 
     steps:
       - name: Checkout repository
@@ -94,7 +96,15 @@ jobs:
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
 
-      # --- GitHub Release ---
+  # --- GitHub Release ---
+  # Separate job so the image-build steps never run with contents:write
+  create-release:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    permissions:
+      contents: write # create the GitHub Release
+
+    steps:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
@@ -105,9 +115,9 @@ jobs:
             ## Docker Images
 
             ```
-            docker pull ${{ env.IMAGE_PREFIX }}/api:${{ steps.version.outputs.version }}
-            docker pull ${{ env.IMAGE_PREFIX }}/migration:${{ steps.version.outputs.version }}
-            docker pull ${{ env.IMAGE_PREFIX }}/frontend:${{ steps.version.outputs.version }}
+            docker pull ${{ env.IMAGE_PREFIX }}/api:${{ needs.build-and-push.outputs.version }}
+            docker pull ${{ env.IMAGE_PREFIX }}/migration:${{ needs.build-and-push.outputs.version }}
+            docker pull ${{ env.IMAGE_PREFIX }}/frontend:${{ needs.build-and-push.outputs.version }}
             ```
 
             All images are multi-platform: `linux/amd64` and `linux/arm64`.

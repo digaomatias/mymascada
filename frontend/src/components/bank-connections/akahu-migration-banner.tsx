@@ -128,8 +128,8 @@ export function AkahuMigrationBanner({ className }: AkahuMigrationBannerProps) {
         if (typeof window !== 'undefined' && result.state) {
           window.localStorage.setItem('akahu_oauth_state', result.state);
         }
-        if (typeof window !== 'undefined') {
-          redirectToUrl(result.authorizationUrl);
+        if (typeof window !== 'undefined' && !redirectToUrl(result.authorizationUrl)) {
+          throw new Error('Received an invalid Akahu authorization URL');
         }
         return;
       }
