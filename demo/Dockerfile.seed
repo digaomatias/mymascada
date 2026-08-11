@@ -1,5 +1,8 @@
 FROM alpine:3.21
-RUN apk add --no-cache curl jq
+RUN apk add --no-cache curl jq \
+    && addgroup -S seed && adduser -S -G seed seed
 COPY seed.sh /seed.sh
 RUN chmod +x /seed.sh
+# Run as non-root: the script only calls the API and writes to /tmp
+USER seed
 ENTRYPOINT ["/seed.sh"]

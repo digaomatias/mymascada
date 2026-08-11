@@ -64,8 +64,8 @@ public class RegisterCommandHandlerTests
         {
             Email = "test@example.com",
             UserName = "testuser",
-            Password = "TestPass123!",
-            ConfirmPassword = "TestPass123!",
+            Password = "test-fake-password",
+            ConfirmPassword = "test-fake-password",
             FirstName = "Test",
             LastName = "User",
             Currency = "USD",

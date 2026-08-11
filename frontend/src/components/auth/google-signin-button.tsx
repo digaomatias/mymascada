@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { apiClient } from '@/lib/api-client';
+import { redirectToUrl } from '@/lib/navigation-utils';
 
 interface GoogleSignInButtonProps {
   onError?: (error: string) => void;
@@ -24,8 +25,10 @@ export function GoogleSignInButton({ onError, inviteCode }: GoogleSignInButtonPr
         url += `&inviteCode=${encodeURIComponent(inviteCode)}`;
       }
       const { redirectUrl } = await apiClient.request<{ redirectUrl: string }>(url);
-      
-      window.location.href = redirectUrl;
+
+      if (!redirectToUrl(redirectUrl)) {
+        throw new Error('Received an invalid sign-in redirect URL');
+      }
     } catch (error) {
       setIsLoading(false);
       console.error('Google sign-in error:', error);

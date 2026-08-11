@@ -8,6 +8,9 @@ concurrency:
   group: deploy-${{ github.ref }}
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   # Detect which apps need deploying based on changed files
   changes:
@@ -16,8 +19,10 @@ jobs:
       api: ${{ steps.filter.outputs.api }}
       web: ${{ steps.filter.outputs.web }}
     steps:
-      - uses: actions/checkout@v6
-      - uses: dorny/paths-filter@v4
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: filter
         with:
           filters: |
@@ -32,8 +37,10 @@ jobs:
     if: needs.changes.outputs.api == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1 # v1.6 (master)
       - run: flyctl deploy --config fly.toml --remote-only --yes
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
@@ -43,8 +50,10 @@ jobs:
     if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1 # v1.6 (master)
       - run: flyctl deploy --remote-only --yes
         working-directory: frontend
         env:

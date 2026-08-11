@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MyMascada.Application.Features.Waitlist.Commands;
@@ -12,6 +13,7 @@ namespace MyMascada.WebAPI.Controllers;
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
 [Route("api/latest/[controller]")]
+[AllowAnonymous] // public signup endpoint; rate-limited per action
 public class WaitlistController : ControllerBase
 {
     private readonly IMediator _mediator;

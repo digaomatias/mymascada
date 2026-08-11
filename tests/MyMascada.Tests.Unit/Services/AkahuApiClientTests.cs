@@ -9,8 +9,8 @@ namespace MyMascada.Tests.Unit.Services;
 
 public class AkahuApiClientTests
 {
-    private const string TestAppToken = "app_token_123";
-    private const string TestAppSecret = "secret_456";
+    private const string TestAppToken = "test-fake-app-token";
+    private const string TestAppSecret = "test-fake-app-secret";
     private const string TestRedirectUri = "http://localhost:3000/settings/bank-connections/callback";
     private const string TestApiBaseUrl = "https://api.akahu.io/v1/";
 
@@ -52,7 +52,7 @@ public class AkahuApiClientTests
             var responseJson = JsonSerializer.Serialize(new
             {
                 success = true,
-                access_token = "user_token_abc",
+                access_token = "test-fake-user-token",
                 token_type = "bearer",
                 scope = "ENDURING_CONSENT"
             });
@@ -96,7 +96,7 @@ public class AkahuApiClientTests
         bodyJson.RootElement.GetProperty("client_secret").GetString().Should().Be(TestAppSecret);
 
         // Assert - response parsed correctly
-        result.AccessToken.Should().Be("user_token_abc");
+        result.AccessToken.Should().Be("test-fake-user-token");
         result.TokenType.Should().Be("bearer");
     }
 
@@ -115,7 +115,7 @@ public class AkahuApiClientTests
         var client = CreateClient(handler);
 
         // Act
-        await client.RevokeTokenAsync(TestAppToken, "user_token_to_revoke");
+        await client.RevokeTokenAsync(TestAppToken, "test-fake-token-to-revoke");
 
         // Assert
         capturedRequest.Should().NotBeNull();
@@ -125,7 +125,7 @@ public class AkahuApiClientTests
         // Assert - Bearer token for the user token being revoked
         capturedRequest.Headers.Authorization.Should().NotBeNull();
         capturedRequest.Headers.Authorization!.Scheme.Should().Be("Bearer");
-        capturedRequest.Headers.Authorization.Parameter.Should().Be("user_token_to_revoke");
+        capturedRequest.Headers.Authorization.Parameter.Should().Be("test-fake-token-to-revoke");
 
         // Assert - X-Akahu-Id header uses the explicitly passed appIdToken, not config
         capturedRequest.Headers.GetValues("X-Akahu-Id").Should().ContainSingle()
@@ -140,7 +140,7 @@ public class AkahuApiClientTests
         var client = CreateClient(handler);
 
         Func<Task> act = async () =>
-            await client.GetAccountsInternalAsync(TestAppToken, "user_token_abc");
+            await client.GetAccountsInternalAsync(TestAppToken, "test-fake-user-token");
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>();
     }
@@ -158,7 +158,7 @@ public class AkahuApiClientTests
         var client = CreateClient(handler);
 
         Func<Task> act = async () =>
-            await client.GetAccountsInternalAsync(TestAppToken, "user_token_abc");
+            await client.GetAccountsInternalAsync(TestAppToken, "test-fake-user-token");
 
         var ex = await act.Should().ThrowAsync<AkahuApiException>();
         ex.Which.AkahuStatusCode.Should().Be(statusCode);
@@ -168,7 +168,7 @@ public class AkahuApiClientTests
     public async Task GetAccountInternalAsync_ErrorLog_ExcludesSensitiveIdentifiers()
     {
         const string sensitiveAccountId = "acc_sensitive_123";
-        const string sensitiveTokenFragment = "user_token_sensitive_456";
+        const string sensitiveTokenFragment = "test-fake-sensitive-token";
 
         var response = new HttpResponseMessage(HttpStatusCode.BadRequest)
         {
@@ -186,7 +186,7 @@ public class AkahuApiClientTests
         var (client, logger) = CreateClientWithLogger(handler);
 
         Func<Task> act = async () =>
-            await client.GetAccountInternalAsync(TestAppToken, "user_token_abc", sensitiveAccountId);
+            await client.GetAccountInternalAsync(TestAppToken, "test-fake-user-token", sensitiveAccountId);
 
         await act.Should().ThrowAsync<AkahuApiException>();
 
@@ -288,7 +288,7 @@ public class AkahuApiClientTests
     {
         // The Akahu response body echoes the request state (= user GUID). It must not bleed
         // into the exception message; the structured logger receives it instead.
-        var stateValue = "user_guid_12345_secret";
+        var stateValue = "test-fake-state-value";
         var responseJson = "{\"success\":true,\"item\":{\"webhook_type\":\"TOKEN\",\"state\":\"" + stateValue + "\"}}";
         var handler = new DelegatingHandlerStub((_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
         {

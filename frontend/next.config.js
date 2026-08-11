@@ -40,10 +40,57 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 const { withSentryConfig } = require('@sentry/nextjs');
 
+// Security headers for every response. CSP allows Next.js inline runtime scripts
+// ('unsafe-inline'; 'unsafe-eval' is dev-only for react-refresh) and restricts
+// connections to self + the API origin. Fonts are self-hosted via next/font.
+const apiOrigin = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5126').origin;
+  } catch {
+    return 'http://localhost:5126';
+  }
+})();
+
+const isDev = process.env.NODE_ENV === 'development';
+
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  `connect-src 'self' ${apiOrigin}${isDev ? ' ws:' : ''}`,
+  "worker-src 'self' blob:",
+  "manifest-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join('; ');
+
+const securityHeaders = [
+  { key: 'Content-Security-Policy', value: contentSecurityPolicy },
+  { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' },
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   env: {
     NEXT_PUBLIC_APP_VERSION: require('./package.json').version,
+  },
+  // Don't advertise the framework in responses
+  poweredByHeader: false,
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: securityHeaders,
+      },
+    ];
   },
   turbopack: {
     rules: {

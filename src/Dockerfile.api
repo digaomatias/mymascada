@@ -38,8 +38,10 @@ RUN apt-get update && apt-get install -y curl gosu && rm -rf /var/lib/apt/lists/
 # Create non-root user
 RUN groupadd -r mymascada && useradd -r -g mymascada mymascada
 
-# Create directories for volumes
-RUN mkdir -p /app/data/keys /app/logs
+# Create directories for volumes, owned by the runtime user so freshly
+# created Docker named volumes inherit the correct ownership
+RUN mkdir -p /app/data/keys /app/logs \
+    && chown -R mymascada:mymascada /app/data /app/logs
 
 # Copy published files
 COPY --from=build /app/publish .
@@ -67,5 +69,9 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 ENV ASPNETCORE_URLS="http://+:5126"
 ENV ASPNETCORE_ENVIRONMENT=Production
 
+# NOTE (no USER directive on purpose): the entrypoint must start as root to
+# chown pre-existing volumes (Fly.io mounts fresh volumes root-owned at
+# /app/data), then it immediately drops to the non-root 'mymascada' user via
+# gosu before starting the app. The application process never runs as root.
 # Entrypoint fixes volume permissions then drops to non-root user
 ENTRYPOINT ["/app/docker-entrypoint.sh"]

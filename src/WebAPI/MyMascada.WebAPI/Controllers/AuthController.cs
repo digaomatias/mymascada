@@ -65,6 +65,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
+    [AllowAnonymous]
     [EnableRateLimiting(RateLimitingServiceExtensions.Policies.Authentication)]
     public async Task<ActionResult<AuthenticationResponse>> Register([FromBody] RegisterRequest request)
     {
@@ -176,6 +177,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
+    [AllowAnonymous]
     [EnableRateLimiting(RateLimitingServiceExtensions.Policies.Authentication)]
     public async Task<ActionResult<AuthenticationResponse>> Login([FromBody] LoginRequest request)
     {
@@ -234,6 +236,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("health")]
+    [AllowAnonymous]
     public IActionResult Health()
     {
         return Ok(new { Status = "Healthy", Timestamp = DateTime.UtcNow });
@@ -369,6 +372,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("refresh")]
+    [AllowAnonymous]
     public async Task<ActionResult<AuthenticationResponse>> RefreshToken()
     {
         try
@@ -452,6 +456,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("forgot-password")]
+    [AllowAnonymous]
     [EnableRateLimiting(RateLimitingServiceExtensions.Policies.Authentication)]
     public async Task<ActionResult<PasswordResetResponse>> ForgotPassword([FromBody] ForgotPasswordRequest request)
     {
@@ -469,6 +474,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("reset-password")]
+    [AllowAnonymous]
     [EnableRateLimiting(RateLimitingServiceExtensions.Policies.Authentication)]
     public async Task<ActionResult<PasswordResetResponse>> ResetPassword([FromBody] ResetPasswordRequest request)
     {
@@ -523,6 +529,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("confirm-email")]
+    [AllowAnonymous]
     public async Task<ActionResult<ConfirmEmailResult>> ConfirmEmail([FromBody] ConfirmEmailRequest request)
     {
         var command = new ConfirmEmailCommand
@@ -542,6 +549,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("resend-verification")]
+    [AllowAnonymous]
     [EnableRateLimiting(RateLimitingServiceExtensions.Policies.Authentication)]
     public async Task<ActionResult<ResendVerificationEmailResult>> ResendVerificationEmail([FromBody] ResendVerificationRequest request)
     {
@@ -559,6 +567,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("google-login-url")]
+    [AllowAnonymous]
     public IActionResult GetGoogleLoginUrl(string? returnUrl = null, string? inviteCode = null, string? codeChallenge = null, string? codeChallengeMethod = null)
     {
         var configuration = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
@@ -656,6 +665,7 @@ public class AuthController : ControllerBase
 
     [HttpGet("google-response")]
     [HttpPost("google-response")] // Also handle POST requests
+    [AllowAnonymous]
     public async Task<IActionResult> GoogleResponse()
     {
         var stateFromRequest = Request.Query["state"].ToString();
@@ -796,6 +806,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("exchange-code")]
+    [AllowAnonymous]
     public IActionResult ExchangeCode([FromBody] ExchangeCodeRequest request)
     {
         try
@@ -860,6 +871,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("google-token")]
+    [AllowAnonymous]
     public async Task<ActionResult<AuthenticationResponse>> GoogleTokenLogin([FromBody] GoogleTokenRequest request)
     {
         try
@@ -906,6 +918,7 @@ public class AuthController : ControllerBase
     // Catch-all for any Google auth routes that might be misconfigured
     // Only available in Development to prevent reflected XSS in production
     [HttpGet("google-{action}")]
+    [AllowAnonymous]
     public IActionResult GoogleCatchAll(string action)
     {
         if (!_environment.IsDevelopment())
