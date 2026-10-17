@@ -1,6 +1,6 @@
 # Production Email Setup (Resend)
 
-Production email is enabled in `fly.toml` / `deploy/fly/fly.api.toml` using the
+Production email is enabled in `deploy/mordor/docker-compose.yml` using the
 **Resend HTTP API** provider (`Email__Provider = 'resend'`). The backend already
 ships three providers behind `IEmailServiceFactory` — `smtp`, `postmark`, and
 `resend` — selected via `Email__Provider`. Resend was chosen for production
@@ -9,21 +9,20 @@ because it needs no SMTP server, uses a single API key, and the provider
 
 ## 1. Required secret
 
-The API key is the only secret. Set it once per Fly app:
+The API key is the only secret. It lives on Mordor in
+`/home/rodrigo/apps/mymascada/api.env` (mode 600, never committed):
 
 ```bash
-fly secrets set Email__Resend__ApiKey=re_xxxxxxxxxxxxxxxx -a mymascada-api
+ssh mordor
+nano /home/rodrigo/apps/mymascada/api.env   # Email__Resend__ApiKey='re_xxxxxxxxxxxxxxxx'
+/home/rodrigo/apps/mymascada/repo/deploy/mordor/deploy.sh --force
 ```
 
 Get the key from https://resend.com → API Keys (a "Sending access" key
 restricted to the `mymascada.com` domain is sufficient).
 
-The retired Forgejo/Mordor deploy (`.forgejo/workflows/deploy-production.yml`)
-also read this key, as a repository secret named `RESEND_API_KEY`. That pipeline
-no longer runs — Fly is the only production deploy — so the Fly secret above is
-the one that matters.
-
-Non-secret settings already live in `[env]` in the Fly config:
+Non-secret settings live in the API service's `environment:` block in
+`deploy/mordor/docker-compose.yml`:
 
 | Variable | Value |
 |---|---|
@@ -78,7 +77,7 @@ delivery.
 > configured; it does not call Resend or check domain verification status.
 >
 > Required order: **(1)** add the DNS records and wait until Resend shows the
-> domain as **Verified** → **(2)** `fly secrets set Email__Resend__ApiKey=...`
+> domain as **Verified** → **(2)** add `Email__Resend__ApiKey` to `api.env` on Mordor
 > → **(3)** deploy this config → **(4)** test the full flow (section 4).
 
 ## 3. Password-reset links and the mobile app
@@ -110,8 +109,7 @@ no individual checks at all; the email check is only included in
 `/health/ready`. Inspect the response **body**:
 
 ```bash
-fly deploy
-curl -s https://mymascada-api.fly.dev/health/ready \
+curl -s https://api.mymascada.com/health/ready \
   | jq '.checks[] | select(.name == "email")'
 ```
 
