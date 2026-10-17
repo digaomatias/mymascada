@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +12,14 @@ using MyMascada.Application.Features.BankConnections.DTOs;
 
 namespace MyMascada.WebAPI.Controllers;
 
+// Akahu delivers to /api/v1/webhooks/akahu, which had no route, so the global
+// fallback authorization policy rejected every delivery with 401. The
+// /api -> /api/v1 rewrite in Program.cs cannot help: endpoint routing runs
+// before it. Keep the unversioned route too, whichever URL Akahu is given.
 [ApiController]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/webhooks/akahu")]
+[Route("api/latest/webhooks/akahu")]
 [Route("api/webhooks/akahu")]
 [AllowAnonymous]
 public class AkahuWebhookController : ControllerBase
