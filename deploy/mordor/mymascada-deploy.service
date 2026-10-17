@@ -1,0 +1,12 @@
+[Unit]
+Description=MyMascada pull-based deploy (origin/main -> Mordor)
+Wants=network-online.target docker.service
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+User=rodrigo
+Group=docker
+ExecStart=/home/rodrigo/apps/mymascada/repo/deploy/mordor/deploy.sh
+TimeoutStartSec=45min
+Nice=10
