@@ -75,11 +75,11 @@ main() {
     fi
   done
 
-  if [[ "$mode" == manual ]]; then
-    echo "$main_sha" > "$PIN_FILE"
-  fi
+  # Roll back to the last recorded deploy, or on a first run to whatever is
+  # checked out now (that is what the running containers were built from).
+  rollback_to="${deployed:-$(git -C "$REPO" rev-parse HEAD)}"
 
-  echo "=== Deploying ${target:0:7} (was ${deployed:0:7}) ==="
+  echo "=== Deploying ${target:0:7} (was ${rollback_to:0:7}) ==="
 
   # Keep the images that are running now so a failed deploy can be reverted.
   local svc
@@ -99,6 +99,9 @@ main() {
 
   echo "$target" > "$DEPLOYED_FILE"
   rm -f "$FAILED_FILE"
+  if [[ "$mode" == manual ]]; then
+    echo "$main_sha" > "$PIN_FILE"
+  fi
   docker image prune -f --filter "until=168h" > /dev/null
 
   compose ps --format "table {{.Name}}\t{{.Status}}"
@@ -146,12 +149,8 @@ fail() {
 # Put the previous checkout and images back and bring them up again. A no-op
 # for containers that never changed (build or migration failures).
 rollback() {
-  if [[ -z "$deployed" ]]; then
-    echo "!!! No previous deployment recorded; leaving the stack as it is."
-    return 0
-  fi
-  echo "--- Rolling back to ${deployed:0:7}"
-  git -C "$REPO" checkout --quiet --force --detach "$deployed"
+  echo "--- Rolling back to ${rollback_to:0:7}"
+  git -C "$REPO" checkout --quiet --force --detach "$rollback_to"
   local svc
   for svc in api web; do
     if docker image inspect "mymascada-$svc:rollback" > /dev/null 2>&1; then

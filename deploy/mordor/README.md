@@ -62,8 +62,9 @@ them back up, and records the commit in `failed-sha` so the timer skips it until
 `main` moves again. **Migrations are not rolled back**, so keep them compatible
 with the previous release (additive changes).
 
-`deploy.sh <sha>` writes the current `main` into `pinned-main`; the timer leaves
-the pinned deploy alone until `main` moves to a new commit, then resumes.
+A successful `deploy.sh <sha>` writes the current `main` into `pinned-main`; the
+timer leaves the pinned deploy alone until `main` moves to a new commit, then
+resumes.
 Commits from before `deploy/mordor/` existed are refused, because checking them
 out would delete the deploy script itself.
 
@@ -95,8 +96,9 @@ code. Re-copy the unit files only if they change.
 `~/apps/mymascada/backups`. After each dump, `backup-hooks/10-dp-keys` also saves
 the API's **Data Protection keys** to `backups/keys/dp-keys-YYYYMMDD.tgz` (mode
 600, kept 30 days). A dump is only useful together with its keys: without them,
-encrypted bank tokens and settings cannot be decrypted. Copy both off Mordor
-if you want protection against losing the disk.
+encrypted bank tokens and settings cannot be decrypted. `backups/keys` is
+root-only, so use `sudo` to copy it; copy dumps and keys off Mordor together if
+you want protection against losing the disk.
 
 Restore a dump and its keys:
 
