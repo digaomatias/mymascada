@@ -48,11 +48,16 @@ Firebase credentials are resolved in this order (first match wins):
 
 1. **`Firebase:ServiceAccountJson`** configuration value — env var
    **`Firebase__ServiceAccountJson`**. Accepts either the raw Firebase service
-   account JSON or a path to the JSON file. On fly.io:
+   account JSON or a path to the JSON file. In production (Mordor) it lives in
+   `/home/rodrigo/apps/mymascada/api.env`, compacted to one line and
+   single-quoted so compose's env-file parser keeps it verbatim. Replace the
+   existing line with the output of:
 
    ```bash
-   fly secrets set Firebase__ServiceAccountJson="$(cat service-account.json)"
+   echo "Firebase__ServiceAccountJson='$(jq -c . service-account.json)'"
    ```
+
+   then run `deploy/mordor/deploy.sh --force` on Mordor to recreate the API.
 
 2. **`GOOGLE_APPLICATION_CREDENTIALS`** env var pointing at the service account
    JSON file (standard Google application-default credentials).

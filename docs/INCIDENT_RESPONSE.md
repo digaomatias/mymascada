@@ -112,10 +112,13 @@ Every incident follows these phases, regardless of type:
    - **Telegram bot token** -- revoke via [@BotFather](https://t.me/BotFather), create a new token, update `Telegram:BotToken` in production config.
 3. **Restart the API** to pick up new credentials:
    ```bash
-   # Fly.io
-   fly deploy --app mymascada-api
+   # Production (Mordor): app secrets live in /home/rodrigo/apps/mymascada/api.env.
+   # The database password is the exception: after ALTER USER, set the new value
+   # as DB_PASSWORD in /home/rodrigo/apps/mymascada/.env (compose builds the API
+   # connection string and the backup credentials from it). Then:
+   /home/rodrigo/apps/mymascada/repo/deploy/mordor/deploy.sh --force
 
-   # Self-hosted Docker
+   # Other self-hosted Docker
    docker compose -f docker-compose.prod.yml up -d --force-recreate api
    ```
 4. **Audit access** -- check database query logs and API access logs for unauthorized activity during the exposure window.
@@ -141,10 +144,15 @@ Every incident follows these phases, regardless of type:
 
 1. **Isolate the attack vector** -- if the breach is via a compromised endpoint, deploy an emergency fix or disable the endpoint:
    ```bash
-   # Fly.io: scale down to stop serving traffic if needed
-   fly scale count 0 --app mymascada-api
+   # Production (Mordor): stop automatic deploys first - a deploy would start the
+   # API again - and make sure none is running, then stop the API container.
+   sudo systemctl stop mymascada-deploy.timer
+   systemctl is-active mymascada-deploy.service   # wait until "inactive"
+   docker stop mymascada-api
+   # Resume deploys only after remediation:
+   #   sudo systemctl start mymascada-deploy.timer
 
-   # Self-hosted: stop the API container
+   # Other self-hosted: stop the API container
    docker compose -f docker-compose.prod.yml stop api
    ```
 2. **Preserve evidence** before making changes:
@@ -153,10 +161,10 @@ Every incident follows these phases, regardless of type:
    pg_dump -h <host> -U <user> mymascada > incident_$(date +%Y%m%d_%H%M%S).sql
 
    # Archive application logs
-   # Fly.io
-   fly logs --app mymascada-api > logs_$(date +%Y%m%d_%H%M%S).txt
+   # Production (Mordor)
+   docker logs mymascada-api > logs_$(date +%Y%m%d_%H%M%S).txt 2>&1
 
-   # Self-hosted
+   # Other self-hosted
    docker compose -f docker-compose.prod.yml logs api > logs_$(date +%Y%m%d_%H%M%S).txt
    ```
 3. **Determine scope** -- identify which users and what data was accessed. Check:
@@ -184,11 +192,11 @@ Every incident follows these phases, regardless of type:
 
 | Component | How to Check | Restart Command |
 |-----------|-------------|-----------------|
-| **API (Fly.io)** | `fly status --app mymascada-api` | `fly machine restart --app mymascada-api` |
+| **API (Mordor)** | `docker ps --filter name=mymascada` | `docker restart mymascada-api` |
 | **API (Self-hosted)** | `docker compose -f docker-compose.prod.yml ps` | `docker compose -f docker-compose.prod.yml restart api` |
 | **PostgreSQL** | `docker compose -f docker-compose.prod.yml exec db pg_isready` | `docker compose -f docker-compose.prod.yml restart db` |
 | **Redis** | `docker compose -f docker-compose.prod.yml exec redis redis-cli ping` | `docker compose -f docker-compose.prod.yml restart redis` |
-| **Frontend (Fly.io)** | `fly status --app mymascada-web` | `fly machine restart --app mymascada-web` |
+| **Frontend (Mordor)** | `docker ps --filter name=mymascada-web` | `docker restart mymascada-web` |
 | **Hangfire jobs** | Check `/hangfire` dashboard (requires admin auth) | Restart the API (Hangfire runs in-process) |
 | **DNS/TLS** | `curl -I https://your-domain.com` | Check DNS provider and certificate expiry |
 
@@ -226,25 +234,28 @@ free -h
 docker stats --no-stream
 ```
 
-### Fly.io Specific
+### Production (Mordor) Specific
+
+See `deploy/mordor/README.md` for the full runbook.
 
 ```bash
-# Check deployment status
-fly status --app mymascada-api
+ssh mordor
 
-# View recent logs
-fly logs --app mymascada-api
+# Container status and recent logs
+docker ps --filter name=mymascada
+docker logs --tail 200 mymascada-api
 
-# Check machine health
-fly machine list --app mymascada-api
+# Last deploys (pull-based timer)
+journalctl -u mymascada-deploy --since today
+cat /home/rodrigo/apps/mymascada/deployed-sha /home/rodrigo/apps/mymascada/failed-sha
 
-# Restart a stuck machine
-fly machine restart <machine-id> --app mymascada-api
-
-# Roll back to previous deployment
-fly releases --app mymascada-api
-fly deploy --image <previous-image-ref> --app mymascada-api
+# Roll back: deploy a known-good commit (the timer redeploys main once it moves)
+/home/rodrigo/apps/mymascada/repo/deploy/mordor/deploy.sh <good-commit-sha>
 ```
+
+Upstream of Mordor: Cloudflare DNS (proxied) → home router port-forward 443 →
+nginx-proxy-manager (`server-nginx-proxy-manager-1`). If the containers are
+healthy but the site is down, check those in that order.
 
 ---
 
@@ -433,10 +444,10 @@ Financial data (transaction history, account balances, bank connection details) 
 
 | Resource | Location |
 |----------|----------|
-| Production logs (Fly.io) | `fly logs --app mymascada-api` |
+| Production logs (Mordor) | `ssh mordor docker logs mymascada-api` |
 | Production logs (Self-hosted) | `docker compose logs api` |
 | Hangfire dashboard | `https://[your-domain]/hangfire` |
-| Database backups | Per your backup configuration (check `docker-compose.prod.yml`) |
+| Database backups | Mordor: `/home/rodrigo/apps/mymascada/backups` (daily `pg_dump -Fc`, `mymascada-backup` container) |
 | Akahu status | https://status.akahu.nz/ |
 | OpenAI status | https://status.openai.com/ |
 | NZ Privacy Commissioner | https://privacy.org.nz/responsibilities/privacy-breaches/notify-us/ |

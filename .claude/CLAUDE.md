@@ -1,7 +1,7 @@
 # MyMascada - Development Guidelines
 
 ## Project Overview
-A personal finance management application with AI-powered transaction categorization and proactive notifications. Deployed as a SaaS on Fly.io; the Docker Compose stack in the repo remains supported for self-hosters.
+A personal finance management application with AI-powered transaction categorization and proactive notifications. Self-hosted on Mordor (home server) for personal, invite-only use; the root Docker Compose stack remains supported for other self-hosters.
 
 ## Local Development Setup
 
@@ -73,10 +73,11 @@ Clean Architecture with four layers:
 - **Logging**: Serilog
 
 ## Infrastructure
-- **Production**: Fly.io (Sydney region). API app `mymascada-api` (`fly.toml`), frontend app (`frontend/fly.toml`), Fly managed Postgres.
-- **Deploys**: push to `main` on GitHub → `.github/workflows/deploy-fly.yml` → `flyctl deploy`. Path filters mean API and frontend deploy independently.
-- **Secrets**: `fly secrets set <Key>=<value> -a mymascada-api`. Non-secret config goes in `[env]` in `fly.toml`.
-- **Legacy**: Mordor (`192.168.50.225`) + `.forgejo/workflows/deploy-production.yml` are retired and no longer deploy anything. Do not add new config there.
+- **Production**: Mordor (`192.168.50.225`, `ssh mordor`), stack defined in `deploy/mordor/docker-compose.yml` (Postgres 17, API, web, daily DB backups). Runbook: `deploy/mordor/README.md`.
+- **Traffic**: Cloudflare (proxied) → home IP → nginx-proxy-manager → `mymascada-web:3000` / `mymascada-api:5126` on the `server_default` Docker network. `app.mymascada.com` and `api.mymascada.com`; `mymascada.com`/`www` redirect to the app.
+- **Deploys**: pull-based. `mymascada-deploy.timer` on Mordor runs `deploy/mordor/deploy.sh` every 5 minutes; when GitHub `main` moved it builds, migrates and rolls the stack. Merging a PR deploys within ~5 minutes plus build time. Logs: `journalctl -u mymascada-deploy`.
+- **Config**: non-secret settings go in `environment:` in `deploy/mordor/docker-compose.yml` (deploys with the next merge). Secrets live only on Mordor in `/home/rodrigo/apps/mymascada/api.env` (mode 600) — edit there and run `deploy.sh --force`.
+- **Retired**: Fly.io (shut down 2026-10) and the old Forgejo pipeline. Do not add config for either.
 
 ## Frontend Component Rules
 - **Dropdowns/selects**: Use `<Select>` from `@/components/ui/select`
