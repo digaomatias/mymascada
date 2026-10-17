@@ -1,0 +1,13 @@
+#!/bin/sh
+# post-backup hook for mymascada-backup (prodrigestivill/postgres-backup-local
+# runs every executable in /hooks with pre-backup / post-backup / error).
+# Saves the API's Data Protection keys next to the database dumps: without
+# them, encrypted bank tokens and settings in a restored dump are unreadable.
+set -eu
+[ "${1:-}" = "post-backup" ] || exit 0
+
+umask 077
+mkdir -p /backups/keys
+tar czf "/backups/keys/dp-keys-$(date +%Y%m%d).tgz" -C /dp-keys keys
+find /backups/keys -name 'dp-keys-*.tgz' -mtime +30 -delete
+echo "Data Protection keys saved to /backups/keys"

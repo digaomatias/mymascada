@@ -112,7 +112,10 @@ Every incident follows these phases, regardless of type:
    - **Telegram bot token** -- revoke via [@BotFather](https://t.me/BotFather), create a new token, update `Telegram:BotToken` in production config.
 3. **Restart the API** to pick up new credentials:
    ```bash
-   # Production (Mordor): edit /home/rodrigo/apps/mymascada/api.env, then
+   # Production (Mordor): app secrets live in /home/rodrigo/apps/mymascada/api.env.
+   # The database password is the exception: after ALTER USER, set the new value
+   # as DB_PASSWORD in /home/rodrigo/apps/mymascada/.env (compose builds the API
+   # connection string and the backup credentials from it). Then:
    /home/rodrigo/apps/mymascada/repo/deploy/mordor/deploy.sh --force
 
    # Other self-hosted Docker
@@ -141,8 +144,13 @@ Every incident follows these phases, regardless of type:
 
 1. **Isolate the attack vector** -- if the breach is via a compromised endpoint, deploy an emergency fix or disable the endpoint:
    ```bash
-   # Production (Mordor): stop the API container
+   # Production (Mordor): stop automatic deploys first - a deploy would start the
+   # API again - and make sure none is running, then stop the API container.
+   sudo systemctl stop mymascada-deploy.timer
+   systemctl is-active mymascada-deploy.service   # wait until "inactive"
    docker stop mymascada-api
+   # Resume deploys only after remediation:
+   #   sudo systemctl start mymascada-deploy.timer
 
    # Other self-hosted: stop the API container
    docker compose -f docker-compose.prod.yml stop api

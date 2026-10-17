@@ -124,13 +124,16 @@ services:
           memory: 512M
     logging: *default-logging
 
-  # Daily pg_dump to /home/rodrigo/apps/mymascada/backups (7 daily, 4 weekly, 6 monthly)
+  # Daily pg_dump to /home/rodrigo/apps/mymascada/backups (7 daily, 4 weekly,
+  # 6 monthly), plus the Data Protection keys via backup-hooks/10-dp-keys.
   backup:
     image: prodrigestivill/postgres-backup-local:17
     container_name: mymascada-backup
     restart: unless-stopped
     volumes:
       - ${MYMASCADA_HOME:-/home/rodrigo/apps/mymascada}/backups:/backups
+      - ./backup-hooks:/hooks:ro
+      - api-data:/dp-keys:ro
     environment:
       POSTGRES_HOST: mymascada-postgres
       POSTGRES_DB: mymascada

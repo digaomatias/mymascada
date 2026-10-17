@@ -52,13 +52,20 @@ GitHub Actions runner.)
 ```bash
 journalctl -u mymascada-deploy -f               # watch deploys
 systemctl list-timers mymascada-deploy.timer    # next run
-~/apps/mymascada/repo/deploy/mordor/deploy.sh --force      # redeploy main now
-~/apps/mymascada/repo/deploy/mordor/deploy.sh <sha>        # deploy/roll back to a commit
+~/apps/mymascada/repo/deploy/mordor/deploy.sh --force      # redeploy main now (clears a pin)
+~/apps/mymascada/repo/deploy/mordor/deploy.sh <sha>        # deploy/roll back to a commit and pin it
 ```
 
-A commit that fails to build, migrate or pass health checks is written to
-`failed-sha` and skipped until `main` moves again; the previous containers keep
-running. Rolling back to `<sha>` sticks only until the next merge to `main`.
+If a commit fails to build, migrate or pass health checks, `deploy.sh` restores
+the previous checkout and images (kept as `mymascada-{api,web}:rollback`), brings
+them back up, and records the commit in `failed-sha` so the timer skips it until
+`main` moves again. **Migrations are not rolled back**, so keep them compatible
+with the previous release (additive changes).
+
+`deploy.sh <sha>` writes the current `main` into `pinned-main`; the timer leaves
+the pinned deploy alone until `main` moves to a new commit, then resumes.
+Commits from before `deploy/mordor/` existed are refused, because checking them
+out would delete the deploy script itself.
 
 ### Changing a secret
 
@@ -85,21 +92,24 @@ code. Re-copy the unit files only if they change.
 ## Backups and restore
 
 `mymascada-backup` keeps 7 daily, 4 weekly and 6 monthly dumps in
-`~/apps/mymascada/backups`. **Back up the Data Protection keys too** — without
-them, encrypted bank tokens and settings in the database cannot be decrypted:
+`~/apps/mymascada/backups`. After each dump, `backup-hooks/10-dp-keys` also saves
+the API's **Data Protection keys** to `backups/keys/dp-keys-YYYYMMDD.tgz` (mode
+600, kept 30 days). A dump is only useful together with its keys: without them,
+encrypted bank tokens and settings cannot be decrypted. Copy both off Mordor
+if you want protection against losing the disk.
 
-```bash
-docker run --rm -v mymascada_api_data:/data alpine tar czf - -C /data keys > dp-keys.tgz
-```
-
-Restore a dump into a fresh database:
+Restore a dump and its keys:
 
 ```bash
 cd ~/apps/mymascada
+sudo systemctl stop mymascada-deploy.timer
 docker stop mymascada-api
+docker run --rm -v mymascada_api_data:/data -v "$PWD/backups/keys:/k:ro" alpine \
+  sh -c 'rm -rf /data/keys && tar xzf /k/dp-keys-<date>.tgz -C /data'
 docker exec -i mymascada-postgres pg_restore -U mymascada -d mymascada \
   --clean --if-exists --no-owner --no-privileges < backups/daily/<file>.dump
 docker start mymascada-api
+sudo systemctl start mymascada-deploy.timer
 ```
 
 ## TLS
