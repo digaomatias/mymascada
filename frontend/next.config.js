@@ -38,7 +38,7 @@ const withPWA = require('next-pwa')({
 const createNextIntlPlugin = require('next-intl/plugin');
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
-const { withSentryConfig } = require('@sentry/nextjs');
+const { withSentryConfig } = require('@sentry/nextjs/config');
 
 // Security headers for every response. CSP allows Next.js inline runtime scripts
 // ('unsafe-inline'; 'unsafe-eval' is dev-only for react-refresh) and restricts

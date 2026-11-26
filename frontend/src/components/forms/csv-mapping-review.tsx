@@ -538,7 +538,7 @@ export function CSVMappingReview({
     }
   };
 
-  const handlePreview = () => {
+  function handlePreview() {
     // Generate preview data based on mappings
     const preview = analysisResult.sampleRows.slice(0, 5).map(row => {
       const amount = mappings.amountColumn ? row[mappings.amountColumn] : '';
@@ -611,7 +611,7 @@ export function CSVMappingReview({
     
     setPreviewData(preview);
     setShowPreview(true);
-  };
+  }
 
   const getConfidenceBadge = (confidence: number) => {
     if (confidence >= 0.8) {

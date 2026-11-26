@@ -95,11 +95,6 @@ export function CategorizationRibbon({
   // Use the batch AI suggestions hook
   const { isLoading: isProcessing, batchCategorize } = useAiSuggestionsBatch();
 
-  // Check service health on mount
-  useEffect(() => {
-    checkServiceHealth();
-  }, []);
-
   const checkServiceHealth = async () => {
     setIsCheckingHealth(true);
     try {
@@ -112,6 +107,11 @@ export function CategorizationRibbon({
       setIsCheckingHealth(false);
     }
   };
+
+  // Check service health on mount
+  useEffect(() => {
+    checkServiceHealth();
+  }, []);
 
   const handleSelectAll = () => {
     if (selectedTransactions.length === transactions.length) {

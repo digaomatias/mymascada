@@ -139,9 +139,9 @@ export default function RulesPage() {
     }
   };
 
-  const refreshRulesData = async () => {
+  async function refreshRulesData() {
     await Promise.all([loadRules(), loadStatistics()]);
-  };
+  }
 
   const toggleRuleStatus = async (ruleId: number, isActive: boolean) => {
     try {

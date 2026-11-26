@@ -97,22 +97,6 @@ export function TransactionForm({
     ...initialData
   });
 
-  // Load accounts and categories when component mounts
-  useEffect(() => {
-    loadAccounts();
-    loadCategories();
-  }, []);
-
-  // Auto-select first account if none selected
-  useEffect(() => {
-    if (accounts.length > 0 && !formData.accountId) {
-      setFormData(prev => ({
-        ...prev,
-        accountId: accounts[0].id.toString()
-      }));
-    }
-  }, [accounts, formData.accountId]);
-
   const loadAccounts = async () => {
     try {
       const accountsData = await apiClient.getAccounts() as Account[];
@@ -136,6 +120,22 @@ export function TransactionForm({
       setCategories([]);
     }
   };
+
+  // Load accounts and categories when component mounts
+  useEffect(() => {
+    loadAccounts();
+    loadCategories();
+  }, []);
+
+  // Auto-select first account if none selected
+  useEffect(() => {
+    if (accounts.length > 0 && !formData.accountId) {
+      setFormData(prev => ({
+        ...prev,
+        accountId: accounts[0].id.toString()
+      }));
+    }
+  }, [accounts, formData.accountId]);
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};

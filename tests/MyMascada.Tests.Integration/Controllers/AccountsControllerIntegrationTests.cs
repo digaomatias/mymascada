@@ -1,20 +1,14 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
-using Microsoft.AspNetCore.Mvc.Testing;
 using MyMascada.Application.Features.Accounts.DTOs;
 using MyMascada.Domain.Enums;
-using MyMascada.WebAPI;
 using Xunit;
 
 namespace MyMascada.Tests.Integration.Controllers;
 
 public class AccountsControllerIntegrationTests : IntegrationTestBase
 {
-    public AccountsControllerIntegrationTests(WebApplicationFactory<Program> factory) : base(factory)
-    {
-    }
-
     [Fact]
     public async Task CreateAccount_WithValidData_ShouldCreateAccountWithCorrectInitialBalance()
     {
@@ -220,6 +214,7 @@ public class AccountsControllerIntegrationTests : IntegrationTestBase
         updatedAccountDto.Notes.Should().Be("Updated notes");
         
         // Verify in database
+        DbContext.ChangeTracker.Clear();
         var accountInDb = await DbContext.Accounts.FindAsync(account.Id);
         accountInDb!.Name.Should().Be("Updated Name");
         accountInDb.Type.Should().Be(AccountType.Savings);
@@ -242,6 +237,7 @@ public class AccountsControllerIntegrationTests : IntegrationTestBase
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
         
         // Verify account is marked as deleted (soft delete)
+        DbContext.ChangeTracker.Clear();
         var accountInDb = await DbContext.Accounts.FindAsync(account.Id);
         accountInDb.Should().BeNull(); // Should be soft-deleted
     }
@@ -303,13 +299,10 @@ public class AccountsControllerIntegrationTests : IntegrationTestBase
         await CreateTestTransactionAsync(account.Id, 100m, "Test Transaction");
 
         // Act
-        var response = await Client.GetAsync($"/api/latest/accounts/{account.Id}/has-transactions");
+        var response = await Client.GetAsync($"/api/latest/accounts/{account.Id}/transactions");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<dynamic>();
-        
-        // Note: Due to JSON deserialization, we need to check the property dynamically
         var jsonString = await response.Content.ReadAsStringAsync();
         jsonString.Should().Contain("\"hasTransactions\":true");
     }
@@ -322,7 +315,7 @@ public class AccountsControllerIntegrationTests : IntegrationTestBase
         var account = await CreateTestAccountAsync("Account without Transactions");
 
         // Act
-        var response = await Client.GetAsync($"/api/latest/accounts/{account.Id}/has-transactions");
+        var response = await Client.GetAsync($"/api/latest/accounts/{account.Id}/transactions");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);

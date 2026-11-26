@@ -12,7 +12,9 @@ import { test, expect, Page } from '@playwright/test';
  * All backend calls are mocked so the test is hermetic and runs quickly.
  */
 
-const AUTH_TOKEN = 'quick-cat-mock-token';
+const fixtureExpiry = Math.floor(Date.now() / 1000) + 600;
+const fixturePayload = Buffer.from(JSON.stringify({ exp: fixtureExpiry })).toString('base64');
+const AUTH_TOKEN = `mock.${fixturePayload}.fixture`;
 
 // Three groups of uncategorized transactions, ordered by frequency.
 const MOCK_GROUPS = {
@@ -204,7 +206,7 @@ test.describe('Quick-Categorize Wizard (mocked)', () => {
   });
 
   test('loads groups and walks through the wizard', async ({ page }) => {
-    await page.goto('http://localhost:3000/transactions/quick-categorize');
+    await page.goto('/transactions/quick-categorize');
 
     // Wait for the first group card. The component loads both groups AND
     // categories in parallel before rendering.
@@ -212,13 +214,16 @@ test.describe('Quick-Categorize Wizard (mocked)', () => {
       timeout: 15000,
     });
 
+    await page.getByRole('dialog', { name: 'Cookie consent' }).getByRole('button', { name: 'Got it' }).click();
+
     // First group is the highest-frequency one
     await expect(page.getByTestId('quick-categorize-group-description')).toHaveText(
       'NETFLIX.COM',
     );
 
     // Pick a category
-    await page.getByTestId('quick-categorize-category-select').selectOption('1');
+    await page.getByTestId('quick-categorize-category-select').getByRole('textbox').fill('Entertainment');
+    await page.getByRole('button', { name: 'Entertainment', exact: true }).click();
 
     // Submit — should request bulk-categorize-group and advance
     const bulkCall = page.waitForRequest((req) =>
@@ -258,7 +263,8 @@ test.describe('Quick-Categorize Wizard (mocked)', () => {
     );
 
     // Categorize third group
-    await page.getByTestId('quick-categorize-category-select').selectOption('3');
+    await page.getByTestId('quick-categorize-category-select').getByRole('textbox').fill('Restaurants');
+    await page.getByRole('button', { name: 'Restaurants', exact: true }).click();
     await page.getByTestId('quick-categorize-submit').click();
 
     // All-done screen appears
@@ -280,7 +286,7 @@ test.describe('Quick-Categorize Wizard (mocked)', () => {
       }),
     );
 
-    await page.goto('http://localhost:3000/transactions/quick-categorize');
+    await page.goto('/transactions/quick-categorize');
 
     await expect(page.getByTestId('quick-categorize-empty-back')).toBeVisible({
       timeout: 15000,

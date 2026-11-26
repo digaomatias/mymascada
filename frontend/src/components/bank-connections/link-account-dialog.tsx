@@ -49,6 +49,19 @@ export function LinkAccountDialog({
   const [loadingAccounts, setLoadingAccounts] = useState(false);
   const [isLinking, setIsLinking] = useState(false);
 
+  const loadLocalAccounts = async () => {
+    setLoadingAccounts(true);
+    try {
+      const accounts = await apiClient.getAccountsWithBalances() as Account[];
+      // Filter to active accounts without existing bank connections
+      setLocalAccounts(accounts.filter((a: Account) => a.isActive));
+    } catch (error) {
+      console.error('Failed to load accounts:', error);
+    } finally {
+      setLoadingAccounts(false);
+    }
+  };
+
   useEffect(() => {
     if (isOpen && step === 'select-local') {
       loadLocalAccounts();
@@ -62,19 +75,6 @@ export function LinkAccountDialog({
       setSelectedAkahu(null);
     }
   }, [isOpen]);
-
-  const loadLocalAccounts = async () => {
-    setLoadingAccounts(true);
-    try {
-      const accounts = await apiClient.getAccountsWithBalances() as Account[];
-      // Filter to active accounts without existing bank connections
-      setLocalAccounts(accounts.filter((a: Account) => a.isActive));
-    } catch (error) {
-      console.error('Failed to load accounts:', error);
-    } finally {
-      setLoadingAccounts(false);
-    }
-  };
 
   const handleSelectAkahu = (account: AkahuAccount) => {
     setSelectedAkahu(account);

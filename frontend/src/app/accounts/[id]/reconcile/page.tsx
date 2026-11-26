@@ -118,14 +118,6 @@ export default function ReconcileAccountPage() {
     }
   }, [accountId, router, t]);
 
-  useEffect(() => {
-    if (isAuthenticated && accountId) {
-      loadAccount();
-      checkAkahuAvailability();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, accountId, loadAccount]);
-
   const checkAkahuAvailability = async () => {
     try {
       setCheckingAkahu(true);
@@ -142,6 +134,14 @@ export default function ReconcileAccountPage() {
       setCheckingAkahu(false);
     }
   };
+
+  useEffect(() => {
+    if (isAuthenticated && accountId) {
+      loadAccount();
+      checkAkahuAvailability();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, accountId, loadAccount]);
 
   const handleStartReconciliation = async () => {
     try {

@@ -57,12 +57,6 @@ export default function NewCategoryPage() {
     }
   }, [isAuthenticated, isLoading, router]);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadCategories();
-    }
-  }, [isAuthenticated]);
-
   const loadCategories = async () => {
     try {
       const categoriesData = await apiClient.getCategories() as Category[];
@@ -72,6 +66,12 @@ export default function NewCategoryPage() {
       setCategories([]);
     }
   };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadCategories();
+    }
+  }, [isAuthenticated]);
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};

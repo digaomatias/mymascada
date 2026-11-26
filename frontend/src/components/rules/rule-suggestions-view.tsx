@@ -72,7 +72,7 @@ export function RuleSuggestionsView() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadSuggestions = async () => {
+  async function loadSuggestions() {
     try {
       setLoading(true);
       const response = await apiClient.getRuleSuggestions();
@@ -83,7 +83,7 @@ export function RuleSuggestionsView() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const createRuleFromSuggestion = async (suggestion: RuleSuggestion, index: number) => {
     try {
