@@ -131,11 +131,6 @@ export function RuleBuilderWizard() {
     { number: 6, title: t('builder.steps.review'), description: t('builder.steps.reviewDesc') }
   ];
 
-  useEffect(() => {
-    loadCategories();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const loadCategories = async () => {
     try {
       const response = await apiClient.get<Category[]>('/api/categories');
@@ -145,6 +140,11 @@ export function RuleBuilderWizard() {
       toast.error(t('toasts.loadCategoriesFailed'));
     }
   };
+
+  useEffect(() => {
+    loadCategories();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const updateFormData = (field: string, value: string | number | boolean | string[] | RuleCondition[]) => {
     setFormData(prev => ({

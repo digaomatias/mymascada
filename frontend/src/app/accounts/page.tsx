@@ -71,7 +71,7 @@ export default function AccountsPage() {
     }
   }, [isAuthResolved]);
 
-  const loadAccounts = async () => {
+  async function loadAccounts() {
     try {
       setLoading(true);
       const accountsData = await apiClient.getAccountsWithBalances() as Account[];
@@ -82,7 +82,7 @@ export default function AccountsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   // Compute net worth (assets - liabilities)
   const { totalAssets, totalLiabilities, netWorth } = useMemo(() => {
@@ -101,14 +101,14 @@ export default function AccountsPage() {
 
   const activeCount = useMemo(() => accounts.filter((a) => a.isActive).length, [accounts]);
 
-  const loadPendingInvitations = async () => {
+  async function loadPendingInvitations() {
     try {
       const shares = await apiClient.getReceivedShares();
       setPendingInvitations((shares || []).filter(s => s.status === 1));
     } catch (error) {
       console.error('Failed to load pending invitations:', error);
     }
-  };
+  }
 
   const handleAcceptInvitation = async (shareId: number) => {
     if (processingShareIds.has(shareId)) return;

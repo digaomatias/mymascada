@@ -104,6 +104,23 @@ export function ReconciliationModal({
   const [importSource, setImportSource] = useState<ImportSource>('file');
   const [akahuBalanceData, setAkahuBalanceData] = useState<AkahuBalanceData | null>(null);
 
+  const checkAkahuAvailability = async () => {
+    try {
+      setCheckingAkahu(true);
+      const availability = await apiClient.checkAkahuReconciliationAvailability(accountId);
+      setAkahuAvailability(availability);
+      // If Akahu is available, default to Akahu import
+      if (availability.isAvailable) {
+        setImportSource('akahu');
+      }
+    } catch (error) {
+      console.error('Failed to check Akahu availability:', error);
+      setAkahuAvailability({ isAvailable: false, unavailableReason: t('akahuAvailabilityFailed') });
+    } finally {
+      setCheckingAkahu(false);
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
       // Reset to initial state when modal opens
@@ -125,23 +142,6 @@ export function ReconciliationModal({
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, accountId]);
-
-  const checkAkahuAvailability = async () => {
-    try {
-      setCheckingAkahu(true);
-      const availability = await apiClient.checkAkahuReconciliationAvailability(accountId);
-      setAkahuAvailability(availability);
-      // If Akahu is available, default to Akahu import
-      if (availability.isAvailable) {
-        setImportSource('akahu');
-      }
-    } catch (error) {
-      console.error('Failed to check Akahu availability:', error);
-      setAkahuAvailability({ isAvailable: false, unavailableReason: t('akahuAvailabilityFailed') });
-    } finally {
-      setCheckingAkahu(false);
-    }
-  };
 
   const handleClose = () => {
     onClose();

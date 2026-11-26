@@ -93,7 +93,7 @@ export default function BankCategoryMappings() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadMappings = async () => {
+  async function loadMappings() {
     try {
       setLoading(true);
       const response = await apiClient.getBankCategoryMappings({ activeOnly: true });
@@ -105,9 +105,9 @@ export default function BankCategoryMappings() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const loadCategories = async () => {
+  async function loadCategories() {
     try {
       setLoadingCategories(true);
       const categoriesData = await apiClient.getCategories({
@@ -154,7 +154,7 @@ export default function BankCategoryMappings() {
     } finally {
       setLoadingCategories(false);
     }
-  };
+  }
 
   const handleEditMapping = (mapping: BankCategoryMapping) => {
     setEditingMapping(mapping);

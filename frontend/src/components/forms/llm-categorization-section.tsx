@@ -56,7 +56,7 @@ export function LlmCategorizationSection({
     checkServiceHealth();
   }, []);
 
-  const checkServiceHealth = async () => {
+  async function checkServiceHealth() {
     setIsCheckingHealth(true);
     try {
       const health = await apiClient.getLlmServiceHealth();
@@ -67,7 +67,7 @@ export function LlmCategorizationSection({
     } finally {
       setIsCheckingHealth(false);
     }
-  };
+  }
 
   const handleSelectAll = () => {
     if (selectedTransactions.length === transactions.length) {

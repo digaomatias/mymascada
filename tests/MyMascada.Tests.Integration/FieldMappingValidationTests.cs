@@ -1,10 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
-using Microsoft.AspNetCore.Mvc.Testing;
 using MyMascada.Application.Features.Accounts.DTOs;
 using MyMascada.Domain.Enums;
-using MyMascada.WebAPI;
 using Xunit;
 
 namespace MyMascada.Tests.Integration;
@@ -15,10 +13,6 @@ namespace MyMascada.Tests.Integration;
 /// </summary>
 public class FieldMappingValidationTests : IntegrationTestBase
 {
-    public FieldMappingValidationTests(WebApplicationFactory<Program> factory) : base(factory)
-    {
-    }
-
     [Fact]
     public async Task CreateAccount_WithCorrectInitialBalanceField_ShouldCreateAccountSuccessfully()
     {

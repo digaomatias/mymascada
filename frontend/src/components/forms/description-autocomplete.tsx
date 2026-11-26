@@ -42,7 +42,7 @@ export default function DescriptionAutocomplete({
     return () => clearTimeout(timeoutId);
   }, [value]);
 
-  const loadSuggestions = async (searchTerm?: string) => {
+  async function loadSuggestions(searchTerm?: string) {
     try {
       setLoading(true);
       const results = await apiClient.getDescriptionSuggestions(searchTerm, 10);
@@ -53,7 +53,7 @@ export default function DescriptionAutocomplete({
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;

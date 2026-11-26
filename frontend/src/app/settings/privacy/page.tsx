@@ -36,13 +36,6 @@ export default function PrivacySettingsPage() {
     }
   }, [isAuthenticated, isLoading, router]);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadSummary();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated]);
-
   const loadSummary = async () => {
     try {
       setLoadingSummary(true);
@@ -55,6 +48,13 @@ export default function PrivacySettingsPage() {
       setLoadingSummary(false);
     }
   };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadSummary();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
 
   const handleExportData = async () => {
     try {

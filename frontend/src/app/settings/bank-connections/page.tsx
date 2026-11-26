@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/contexts/auth-context';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AppLayout } from '@/components/app-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -252,8 +252,9 @@ export default function BankConnectionsPage() {
     }
   }, [handleTerminalJob, removeActiveJob, schedulePoll, t]);
 
-  // Keep ref in sync so schedulePoll always calls the latest pollSyncJob
-  pollSyncJobRef.current = pollSyncJob;
+  useLayoutEffect(() => {
+    pollSyncJobRef.current = pollSyncJob;
+  }, [pollSyncJob]);
 
   const trackAcceptedJob = useCallback((accepted: BankSyncJobAccepted) => {
     const queuedStatus: BankSyncJobStatus = {

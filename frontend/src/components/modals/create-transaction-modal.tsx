@@ -76,6 +76,19 @@ export function CreateTransactionModal({
     status: 2 // Cleared
   });
 
+  const loadCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      const response = await apiClient.getCategories() as Category[];
+      setCategories(response || []);
+    } catch (error) {
+      console.error('Failed to load categories:', error);
+      toast.error(tToasts('categoriesLoadFailed'));
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
       loadCategories();
@@ -92,19 +105,6 @@ export function CreateTransactionModal({
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, bankTransaction]);
-
-  const loadCategories = async () => {
-    try {
-      setLoadingCategories(true);
-      const response = await apiClient.getCategories() as Category[];
-      setCategories(response || []);
-    } catch (error) {
-      console.error('Failed to load categories:', error);
-      toast.error(tToasts('categoriesLoadFailed'));
-    } finally {
-      setLoadingCategories(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

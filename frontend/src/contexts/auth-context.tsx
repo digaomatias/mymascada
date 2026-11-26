@@ -129,7 +129,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   // Helper function to check if token is structurally valid and not expired
-  const isTokenStructurallyValid = (token: string): boolean => {
+  function isTokenStructurallyValid(token: string): boolean {
     try {
       // Basic JWT structure check (3 parts separated by dots)
       const parts = token.split('.');
@@ -153,7 +153,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.error('Error validating token structure:', error);
       return false;
     }
-  };
+  }
 
   const login = async (credentials: LoginRequest): Promise<AuthenticationResponse> => {
     try {

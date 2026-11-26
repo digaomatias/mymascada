@@ -95,7 +95,7 @@ export default function CategoriesPage() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const loadCategories = async () => {
+  async function loadCategories() {
     try {
       setLoading(true);
       // Fetch both: all categories + filtered (with transaction counts)
@@ -128,7 +128,7 @@ export default function CategoriesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const confirmDeleteCategory = (id: number, name: string) => {
     setDeleteCategoryTarget({ id, name });

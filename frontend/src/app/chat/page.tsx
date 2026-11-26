@@ -140,11 +140,12 @@ export default function ChatPage() {
     setInput('');
 
     // Optimistically add user message
+    const sentAt = new Date();
     const tempUserMessage: ChatMessageDto = {
-      id: -Date.now(),
+      id: -sentAt.getTime(),
       role: 'user',
       content: messageContent,
-      createdAt: new Date().toISOString(),
+      createdAt: sentAt.toISOString(),
     };
     setMessages((prev) => [...prev, tempUserMessage]);
 
@@ -159,11 +160,12 @@ export default function ChatPage() {
         });
       } else {
         // Error from AI - show error message in a bubble
+        const failedAt = new Date();
         const errorMessage: ChatMessageDto = {
-          id: -(Date.now() + 1),
+          id: -(failedAt.getTime() + 1),
           role: 'assistant',
           content: response.error || t('errors.sendFailed'),
-          createdAt: new Date().toISOString(),
+          createdAt: failedAt.toISOString(),
         };
         setMessages((prev) => [...prev, errorMessage]);
       }

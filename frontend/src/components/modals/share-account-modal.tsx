@@ -41,7 +41,7 @@ export function ShareAccountModal({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, accountId]);
 
-  const loadShares = async () => {
+  async function loadShares() {
     try {
       setLoadingShares(true);
       const data = await apiClient.getAccountShares(accountId);
@@ -51,7 +51,7 @@ export function ShareAccountModal({
     } finally {
       setLoadingShares(false);
     }
-  };
+  }
 
   const handleSendInvitation = async (e: React.FormEvent) => {
     e.preventDefault();

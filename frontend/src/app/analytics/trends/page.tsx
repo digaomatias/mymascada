@@ -61,7 +61,7 @@ export default function CategoryTrendsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
 
-  const loadCategoryTrends = async () => {
+  async function loadCategoryTrends() {
     try {
       setLoading(true);
       setError(null);
@@ -80,7 +80,7 @@ export default function CategoryTrendsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const stats = useMemo<TrendStats | null>(() => {
     if (!trendData) return null;

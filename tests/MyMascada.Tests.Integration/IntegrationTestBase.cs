@@ -1,69 +1,76 @@
-using MyMascada.Domain.Enums;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
+using Asp.Versioning;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using MyMascada.Application.Common.Interfaces;
+using MyMascada.Application.Features.Accounts.Queries;
 using MyMascada.Domain.Entities;
 using MyMascada.Infrastructure.Data;
-using MyMascada.WebAPI;
+using MyMascada.Infrastructure.Repositories;
+using MyMascada.Infrastructure.Services;
+using MyMascada.WebAPI.Controllers;
+using MyMascada.WebAPI.Extensions;
+using MyMascada.WebAPI.Services;
 using Xunit;
 
 namespace MyMascada.Tests.Integration;
 
-public abstract class IntegrationTestBase : IClassFixture<WebApplicationFactory<Program>>, IDisposable
+public abstract class IntegrationTestBase : IAsyncLifetime
 {
-    protected readonly WebApplicationFactory<Program> Factory;
-    protected readonly HttpClient Client;
-    protected readonly ApplicationDbContext DbContext;
+    private const string Issuer = "mymascada-accounts-test";
+    private const string Audience = "mymascada-accounts-test-api";
+    private readonly string _signingKey = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
+    private WebApplication _app = null!;
+    private AsyncServiceScope _scope;
+    protected HttpClient Client = null!;
+    protected ApplicationDbContext DbContext = null!;
     protected readonly Guid TestUserId = Guid.NewGuid();
 
-    protected IntegrationTestBase(WebApplicationFactory<Program> factory)
+    public async Task InitializeAsync()
     {
-        Factory = factory.WithWebHostBuilder(builder =>
+        var builder = WebApplication.CreateBuilder(new WebApplicationOptions { EnvironmentName = "Testing" });
+        builder.WebHost.UseTestServer();
+        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
         {
-            builder.UseEnvironment("Testing");
-            
-            builder.ConfigureServices(services =>
-            {
-                // Remove all existing DbContext registrations
-                var dbContextDescriptors = services.Where(
-                    d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>) ||
-                         d.ServiceType == typeof(ApplicationDbContext) ||
-                         d.ServiceType.Name.Contains("DbContext")).ToList();
-                         
-                foreach (var descriptor in dbContextDescriptors)
-                {
-                    services.Remove(descriptor);
-                }
-
-                // Add in-memory database for testing
-                services.AddDbContext<ApplicationDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}");
-                    options.EnableSensitiveDataLogging();
-                }, ServiceLifetime.Scoped);
-
-                // Reduce logging noise
-                services.AddLogging(builder => builder.SetMinimumLevel(LogLevel.Warning));
-            });
+            ["Jwt:Key"] = _signingKey,
+            ["Jwt:Issuer"] = Issuer,
+            ["Jwt:Audience"] = Audience
         });
 
-        Client = Factory.CreateClient();
-        
-        // Get the database context
-        var scope = Factory.Services.CreateScope();
-        DbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        
-        // Ensure database is created
-        DbContext.Database.EnsureCreated();
-        
-        // Set up authentication
+        var databaseName = Guid.NewGuid().ToString("N");
+        var services = builder.Services;
+        services.AddControllers().AddApplicationPart(typeof(AccountsController).Assembly);
+        services.AddApiVersioning(options =>
+        {
+            options.DefaultApiVersion = new ApiVersion(1, 0);
+            options.AssumeDefaultVersionWhenUnspecified = true;
+            options.ApiVersionReader = new UrlSegmentApiVersionReader();
+        }).AddMvc();
+        services.AddJwtAuthentication(builder.Configuration);
+        services.AddHttpContextAccessor();
+        services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(databaseName));
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<IAccountAccessService, AccountAccessService>();
+        services.AddScoped<IAccountRepository, AccountRepository>();
+        services.AddScoped<IAccountShareRepository, AccountShareRepository>();
+        services.AddScoped<ITransactionRepository, TransactionRepository>();
+        services.AddScoped<ITransactionQueryService, TransactionQueryService>();
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(GetAccountDetailsQuery).Assembly));
+
+        _app = builder.Build();
+        _app.UseAuthentication();
+        _app.UseAuthorization();
+        _app.MapControllers();
+        await _app.StartAsync();
+        Client = _app.GetTestClient();
+        _scope = _app.Services.CreateAsyncScope();
+        DbContext = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await DbContext.Database.EnsureCreatedAsync();
         SetupAuthentication();
     }
 
@@ -77,7 +84,7 @@ public abstract class IntegrationTestBase : IClassFixture<WebApplicationFactory<
     private string GenerateJwtToken(Guid userId)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes("super-secret-key-for-testing-that-is-32-chars-long!!");
+        var key = Encoding.ASCII.GetBytes(_signingKey);
         
         var tokenDescriptor = new SecurityTokenDescriptor
         {
@@ -87,7 +94,9 @@ public abstract class IntegrationTestBase : IClassFixture<WebApplicationFactory<
                 new Claim(ClaimTypes.Name, "Test User"),
                 new Claim(ClaimTypes.Email, "test@example.com")
             }),
-            Expires = DateTime.UtcNow.AddHours(1),
+            Issuer = Issuer,
+            Audience = Audience,
+            Expires = DateTime.UtcNow.AddMinutes(5),
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
         };
 
@@ -154,7 +163,6 @@ public abstract class IntegrationTestBase : IClassFixture<WebApplicationFactory<
         var category = new Category
         {
             Name = name,
-            Type = Domain.Enums.CategoryType.Expense,
             Color = "#FF0000",
             IsSystemCategory = false,
             IsActive = true,
@@ -167,9 +175,11 @@ public abstract class IntegrationTestBase : IClassFixture<WebApplicationFactory<
         return category;
     }
 
-    public void Dispose()
+    public async Task DisposeAsync()
     {
-        DbContext?.Dispose();
         Client?.Dispose();
+        await _scope.DisposeAsync();
+        if (_app is not null)
+            await _app.DisposeAsync();
     }
 }

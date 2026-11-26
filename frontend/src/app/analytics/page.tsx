@@ -116,13 +116,6 @@ export default function AnalyticsPage() {
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [timeRange, setTimeRange] = useState<PeriodType>('year');
 
-  useEffect(() => {
-    if (isAuthResolved) {
-      loadAnalyticsData();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthResolved, selectedYear, selectedMonth, timeRange]);
-
   const loadAnalyticsSummary = async (
     range: PeriodType,
     year: number,
@@ -181,6 +174,13 @@ export default function AnalyticsPage() {
     loadAnalyticsSummary(timeRange, selectedYear, selectedMonth);
     loadCategoryData(timeRange, selectedYear, selectedMonth);
   };
+
+  useEffect(() => {
+    if (isAuthResolved) {
+      loadAnalyticsData();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthResolved, selectedYear, selectedMonth, timeRange]);
 
   const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string }) => {
     if (active && payload && payload[0]) {
